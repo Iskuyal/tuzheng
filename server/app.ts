@@ -2,7 +2,13 @@ import express, { type Express } from "express";
 import multer, { MulterError } from "multer";
 import { z } from "zod";
 import { evaluateGrowth } from "../shared/audit.js";
-import { VisionModelError } from "./openai-vision.js";
+import { OpenAIResponsesVisionAdapter, VisionModelError } from "./openai-vision.js";
+import {
+  FileModelSettingsStore,
+  type ModelSettings,
+  type ModelSettingsStore,
+  toPublicModelSettings,
+} from "./model-settings.js";
 import { parseVisionObservation } from "./observation.js";
 import { sampleCases } from "../shared/samples.js";
 
@@ -17,7 +23,28 @@ export interface VisionAdapter {
 
 export interface AppOptions {
   visionAdapter?: VisionAdapter | null;
+  visionAdapterFactory?: (settings: ModelSettings) => VisionAdapter;
+  settingsStore?: ModelSettingsStore;
 }
+
+const settingsUpdateSchema = z.object({
+  baseUrl: z.string().url().max(500).refine((value) => {
+    const url = new URL(value);
+    const localHost = url.hostname === "localhost"
+      || url.hostname.endsWith(".localhost")
+      || url.hostname === "[::1]"
+      || url.hostname.startsWith("127.");
+    const secureTransport = url.protocol === "https:" || (url.protocol === "http:" && localHost);
+    return secureTransport
+      && !url.username
+      && !url.password
+      && !url.search
+      && !url.hash;
+  }),
+  model: z.string().trim().min(1).max(120),
+  apiKey: z.string().max(1000).optional(),
+  clearApiKey: z.boolean().optional(),
+}).strict();
 
 const auditPointSchema = z.object({
   period: z.string().trim().max(80).nullable(),
@@ -52,11 +79,41 @@ function detectImageMime(buffer: Buffer): UploadedChartImage["mimeType"] | null 
 
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
+  const settingsStore = options.settingsStore ?? new FileModelSettingsStore();
+  const createVisionAdapter = options.visionAdapterFactory ?? ((settings: ModelSettings) =>
+    new OpenAIResponsesVisionAdapter(settings));
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024, files: 1 },
   });
   app.use(express.json({ limit: "32kb" }));
+
+  app.get("/api/settings", async (_request, response) => {
+    const settings = await settingsStore.read();
+    response.json({ settings: toPublicModelSettings(settings) });
+  });
+
+  app.put("/api/settings", async (request, response) => {
+    const parsed = settingsUpdateSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({
+        error: { code: "INVALID_SETTINGS", message: "远程服务请使用 HTTPS；HTTP 仅支持 localhost 回环地址。请同时检查模型名。" },
+      });
+      return;
+    }
+
+    const current = await settingsStore.read();
+    const apiKey = parsed.data.clearApiKey
+      ? ""
+      : parsed.data.apiKey?.trim() || current.apiKey;
+    const settings: ModelSettings = {
+      baseUrl: parsed.data.baseUrl.replace(/\/$/, ""),
+      model: parsed.data.model,
+      apiKey,
+    };
+    await settingsStore.write(settings);
+    response.json({ settings: toPublicModelSettings(settings) });
+  });
 
   app.get("/api/samples", (_request, response) => {
     response.json({
@@ -113,18 +170,28 @@ export function createApp(options: AppOptions = {}): Express {
       return;
     }
 
-    if (!options.visionAdapter) {
+    let visionAdapter: VisionAdapter | null;
+    if (options.visionAdapter !== undefined) {
+      visionAdapter = options.visionAdapter;
+    } else {
+      const storedSettings = await settingsStore.read();
+      visionAdapter = storedSettings.apiKey.trim()
+        ? createVisionAdapter(storedSettings)
+        : null;
+    }
+
+    if (!visionAdapter) {
       response.status(503).json({
         error: {
           code: "MODEL_NOT_CONFIGURED",
-          message: "实时视觉读取尚未配置。请在服务端设置 OPENAI_API_KEY 后重启。",
+          message: "实时视觉读取尚未配置。请前往模型设置页填写 Responses API 地址、模型名和 API Key。",
         },
       });
       return;
     }
 
     try {
-      const parsed = parseVisionObservation(await options.visionAdapter.extract({
+      const parsed = parseVisionObservation(await visionAdapter.extract({
         buffer: request.file.buffer,
         mimeType,
       }));

@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  createVisionAdapterFromEnv,
-  OpenAIResponsesVisionAdapter,
-} from "../server/openai-vision.js";
+import { OpenAIResponsesVisionAdapter } from "../server/openai-vision.js";
 import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses.js";
 
 const validObservation = {
@@ -17,7 +14,7 @@ describe("OpenAI Responses 视觉适配器", () => {
   it("以服务端图片数据请求严格 JSON 观察值并关闭响应存储", async () => {
     let sent: ResponseCreateParamsNonStreaming | undefined;
     const adapter = new OpenAIResponsesVisionAdapter(
-      { apiKey: "test-key", model: "gpt-4.1-mini" },
+      { baseUrl: "https://proxy.example/v1", apiKey: "test-key", model: "gpt-4.1-mini" },
       async (payload) => {
         sent = payload;
         return { output_text: JSON.stringify(validObservation) };
@@ -42,13 +39,17 @@ describe("OpenAI Responses 视觉适配器", () => {
     });
   });
 
-  it("没有服务端密钥时不创建模型适配器", () => {
-    expect(createVisionAdapterFromEnv({ OPENAI_API_KEY: "  " })).toBeNull();
+  it("没有 API Key 时拒绝构造适配器", () => {
+    expect(() => new OpenAIResponsesVisionAdapter({
+      baseUrl: "https://api.openai.com/v1",
+      apiKey: "  ",
+      model: "gpt-4.1-mini",
+    })).toThrow("API Key is required");
   });
 
   it("拒绝无法解析的模型 JSON 文本", async () => {
     const adapter = new OpenAIResponsesVisionAdapter(
-      { apiKey: "test-key", model: "gpt-4.1-mini" },
+      { baseUrl: "https://api.openai.com/v1", apiKey: "test-key", model: "gpt-4.1-mini" },
       async () => ({ output_text: "not-json" }),
     );
 

@@ -5,7 +5,6 @@ import type {
 } from "openai/resources/responses/responses.js";
 import type { UploadedChartImage, VisionAdapter } from "./app.js";
 
-const DEFAULT_MODEL = "gpt-4.1-mini";
 const REQUEST_TIMEOUT_MS = 45_000;
 
 const observationSchema = {
@@ -68,6 +67,7 @@ export class VisionModelError extends Error {
 }
 
 export interface OpenAIVisionConfig {
+  baseUrl: string;
   apiKey: string;
   model: string;
 }
@@ -76,14 +76,15 @@ export class OpenAIResponsesVisionAdapter implements VisionAdapter {
   private readonly send: ResponsesRequester;
 
   constructor(config: OpenAIVisionConfig, requester?: ResponsesRequester) {
-    if (!config.apiKey.trim()) throw new Error("OPENAI_API_KEY is required");
-    if (!config.model.trim()) throw new Error("OPENAI_MODEL is required");
+    if (!config.apiKey.trim()) throw new Error("API Key is required");
+    if (!config.model.trim()) throw new Error("模型名称是必填项。");
 
     if (requester) {
       this.send = requester;
     } else {
       const client = new OpenAI({
         apiKey: config.apiKey,
+        baseURL: config.baseUrl,
         timeout: REQUEST_TIMEOUT_MS,
         maxRetries: 0,
       });
@@ -137,16 +138,4 @@ export class OpenAIResponsesVisionAdapter implements VisionAdapter {
       throw new VisionModelError("invalid-output", { cause: error });
     }
   }
-}
-
-export function createVisionAdapterFromEnv(
-  environment: NodeJS.ProcessEnv = process.env,
-): VisionAdapter | null {
-  const apiKey = environment.OPENAI_API_KEY?.trim();
-  if (!apiKey) return null;
-
-  return new OpenAIResponsesVisionAdapter({
-    apiKey,
-    model: environment.OPENAI_MODEL?.trim() || DEFAULT_MODEL,
-  });
 }
