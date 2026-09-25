@@ -44,7 +44,7 @@ npm test
 npm run build
 ```
 
-阶段验收细节与未验证项见 [分阶段路线图](docs/PHASES.md) 和 [阶段一验收记录](docs/STAGE-1.md)。样例图片、预置观察值与预期结果分开保存：图片在 `web/public/samples/`，观察值在 `shared/samples.ts`，预期结果在 `samples/expectations.json`。
+阶段验收细节与未验证项见 [分阶段路线图](docs/PHASES.md) 和 [阶段一验收记录](docs/STAGE-1.md)。样例图片、预置观察值与预期结果分开保存：图片在 `web/public/samples/`，观察值在 `shared/samples.ts`，预期结果在 `samples/expectations.json`。样例以 SVG 保存供页面展示；上传与视觉读取只接受 PNG、JPG、WebP，因此同内容另存了同名的 PNG 栅格渲染，可直接用来在首页试用「上传新图片 → 模型读取」这条路径。
 
 ## 产品边界
 
