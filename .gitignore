@@ -1,0 +1,12 @@
+.firecrawl/
+node_modules/
+dist/
+coverage/
+.cache/
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
