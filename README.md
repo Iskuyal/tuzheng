@@ -23,6 +23,12 @@ Copy-Item .env.example .env
 
 `OPENAI_MODEL` 可改为账户可用的视觉模型，默认候选为 `gpt-4.1-mini`。密钥只由 Node 服务端读取；不要使用 `VITE_` 前缀或把真实密钥提交到仓库。上传的新图会发送给 OpenAI 处理；预置样例不调用云端模型。
 
+### 在 WebStorm 里构建与运行
+
+可以不碰终端，直接在 IDE 里完成：打开根目录 `package.json`，点 `dependencies` 上方的“Run 'npm install'”提示装依赖，再点 `scripts` 里各条命令左侧的 ▶ 运行。`dev` 会同时起前后端，`build` 做类型检查加打包，`test` 跑行为测试。全部脚本也能在 View → Tool Windows → npm 里看到。
+
+`tsconfig.json` 是一份“解决方案”配置：它自己不检查任何文件，只指向 `tsconfig.web.json`（`web/` 与 `shared/`，带 DOM 与 vite/client 类型）和 `tsconfig.server.json`（`server/`、`shared/`、`tests/`，带 Node 类型）。这是刻意的——一旦让它认领源文件，IDE 就会用缺少这些类型的设置去检查代码，报出并不存在的错误。命令行与 IDE 的检查入口都保持为 `npm run typecheck` 与 `npm run build`。
+
 ## 当前能力状态
 
 | 能力 | 状态 | 验证证据 |
