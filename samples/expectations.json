@@ -20,5 +20,12 @@
       "growthPercent": 25,
       "formula": "(100 - 80) / 80 × 100 = 25%"
     }
+  },
+  "multiClaims": {
+    "resultsAfterReview": [
+      { "id": "revenue-growth", "olderValue": 80, "observedNewer": 100, "correctedNewer": null, "newerEvidenceText": "2025 年营业收入 100 万元", "status": "consistent", "growthPercent": 25 },
+      { "id": "profit-growth", "olderValue": 50, "observedNewer": 70, "correctedNewer": 100, "newerEvidenceText": "2025 年利润 100 万元", "status": "contradictory", "growthPercent": 100 },
+      { "id": "user-count-growth", "olderValue": 50, "observedNewer": null, "correctedNewer": null, "newerEvidenceText": null, "status": "needs-confirmation", "growthPercent": null }
+    ]
   }
 }

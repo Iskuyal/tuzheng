@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
 import { takeLandingUpload } from "../upload-transfer.js";
-import type { AuditObservation, AuditResult, DataPointObservation } from "../../shared/audit.js";
+import { toAuditObservation, type AuditObservation, type AuditResult, type ChartObservation, type DataPointObservation, type GrowthClaimObservation } from "../../shared/audit.js";
 
 interface SampleSummary {
   id: string;
@@ -21,6 +21,7 @@ interface CropSelection {
 
 const samples = ref<SampleSummary[]>([]);
 const activeSampleId = ref<string | null>(null);
+const chartObservation = ref<ChartObservation | null>(null);
 const observation = ref<AuditObservation | null>(null);
 const result = ref<AuditResult | null>(null);
 const imageUrl = ref("");
@@ -51,6 +52,8 @@ const route = useRoute();
 const activeSample = computed(
   () => samples.value.find(({ id }) => id === activeSampleId.value) ?? null,
 );
+const hasMultipleClaims = computed(() => (chartObservation.value?.claims.length ?? 0) > 1);
+const hasNoClaims = computed(() => chartObservation.value?.claims.length === 0);
 const cropSelectionStyle = computed(() => {
   const selection = cropSelection.value;
   const image = previewImage.value;
@@ -78,8 +81,8 @@ const cropSelectionStyle = computed(() => {
   };
 });
 const sourceLabel = computed(() => {
-  if (observation.value?.source === "vision-model") return "模型读取";
-  if (observation.value?.source === "preset-example") return "预置示例";
+  if (chartObservation.value?.source === "vision-model") return "模型读取";
+  if (chartObservation.value?.source === "preset-example") return "预置示例";
   return "等待图片";
 });
 const confirmationLabel = computed(() => {
@@ -201,6 +204,15 @@ function updateErrorFrom(response: Response, payload: { error?: { message?: stri
   return `请求失败（${response.status}）。请重试。`;
 }
 
+function setChartObservation(value: ChartObservation): void {
+  chartObservation.value = value;
+  const [claim] = value.claims;
+  observation.value = value.claims.length === 1 && claim
+    ? toAuditObservation(value, claim)
+    : null;
+  result.value = null;
+}
+
 async function loadSample(id: string): Promise<void> {
   busyMessage.value = "正在载入预置示例…";
   errorMessage.value = "";
@@ -212,7 +224,7 @@ async function loadSample(id: string): Promise<void> {
       body: JSON.stringify({ id }),
     });
     const payload = await response.json().catch(() => null) as {
-      observation?: AuditObservation;
+      observation?: ChartObservation;
       error?: { message?: string };
     } | null;
     if (!response.ok || !payload?.observation) {
@@ -228,7 +240,7 @@ async function loadSample(id: string): Promise<void> {
     imageAlt.value = `${sample.name}，团队自制图表示例`;
     selectedFileName.value = "";
     activeSampleId.value = id;
-    observation.value = payload.observation;
+    setChartObservation(payload.observation);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "样例载入失败，请重试。";
   } finally {
@@ -283,6 +295,7 @@ function prepareUploadFile(file: File): void {
   selectedFileName.value = file.name;
   pendingUpload.value = file;
   activeSampleId.value = null;
+  chartObservation.value = null;
   observation.value = null;
   result.value = null;
   errorMessage.value = "";
@@ -303,13 +316,13 @@ async function analyzePendingUpload(): Promise<void> {
 
     const response = await fetch("/api/audit/image", { method: "POST", body: form });
     const payload = await response.json().catch(() => null) as {
-      observation?: AuditObservation;
+      observation?: ChartObservation;
       error?: { message?: string };
     } | null;
     if (!response.ok || !payload?.observation) {
       throw new Error(updateErrorFrom(response, payload));
     }
-    observation.value = payload.observation;
+    setChartObservation(payload.observation);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "图片读取失败，请重试。";
   } finally {
@@ -471,6 +484,11 @@ function formatValue(value: number | null, unit: string | null): string {
   return unit === "%" ? `${formatted}%` : `${formatted}${unit ? ` ${unit}` : ""}`;
 }
 
+function formatClaimPointValue(point: GrowthClaimObservation["older"]): string {
+  if (point.value === null) return point.evidenceText?.trim() ? "尚未读清" : "缺少图内依据";
+  return formatValue(point.value, point.unit);
+}
+
 function valueSourceLabel(source: DataPointObservation["valueSource"]): string {
   if (source === "model") return "模型读取 · 待确认";
   if (source === "user") return "用户手动更正";
@@ -509,7 +527,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="scope-stamp" aria-label="当前检查范围：一张图片">
           <span class="scope-stamp-mark" aria-hidden="true">图</span>
-          <span>检查范围<br /><strong>一张图 · 一个增长率主张</strong></span>
+          <span>检查范围<br /><strong>一张图 · 多条图内主张</strong></span>
         </div>
       </section>
 
@@ -671,7 +689,7 @@ onBeforeUnmount(() => {
           </div>
           <p v-if="cropError" class="crop-error" role="alert">{{ cropError }}</p>
           <p class="privacy-note">
-            预置样例使用本地保存的预置观察值。上传图片仅在点击读取时发送给你配置的 Responses API 服务；可先框选需要检查的区域。
+            预置示例使用本地观察值。上传图片仅在点击读取时发送给你配置的 Responses API 服务；可先框选需要检查的区域。
           </p>
         </section>
 
@@ -679,15 +697,47 @@ onBeforeUnmount(() => {
           <div class="section-heading review-heading">
             <div>
               <p class="eyebrow">先检查识别结果</p>
-              <h2 id="observation-title">图中观察值</h2>
+              <h2 id="observation-title">图中主张与观察</h2>
             </div>
-            <div v-if="observation" class="observation-meta">
-              <span class="source-badge" :class="observation.source">{{ sourceLabel }}</span>
-              <span class="confirmation-state" :class="{ confirmed: observation.confirmed }">{{ confirmationLabel }}</span>
+            <div v-if="chartObservation" class="observation-meta">
+              <span class="source-badge" :class="chartObservation.source">{{ sourceLabel }}</span>
+              <span v-if="observation" class="confirmation-state" :class="{ confirmed: observation.confirmed }">{{ confirmationLabel }}</span>
+              <span v-else-if="hasMultipleClaims" class="confirmation-state">各项观察待核对</span>
+              <span v-else-if="hasNoClaims" class="confirmation-state">未发现可核对主张</span>
             </div>
           </div>
 
-          <div v-if="observation" class="observation-form">
+          <div v-if="hasMultipleClaims && chartObservation" class="claim-observation-list" aria-label="图内主张和证据">
+            <details v-for="(claim, index) in chartObservation.claims" :key="claim.id" class="claim-observation-card" :open="index === 0">
+              <summary class="claim-observation-summary">
+                <span class="claim-observation-number">主张 {{ index + 1 }}</span>
+                <span class="claim-observation-pending">待核对</span>
+                <strong class="claim-observation-title">{{ claim.claimText || "主张原文尚未读清" }}</strong>
+                <span class="claim-observation-toggle"><span class="claim-toggle-closed">查看证据</span><span class="claim-toggle-open">收起证据</span></span>
+              </summary>
+              <div class="claim-observation-body">
+                <p v-if="claim.claimedGrowthPercent !== null" class="claim-observation-rate">标题主张：增长 {{ formatValue(claim.claimedGrowthPercent, "%") }}</p>
+                <div class="claim-observation-points">
+                  <section class="claim-observation-point">
+                    <span class="field-label">较早观察</span>
+                    <strong>{{ claim.older.period || "时间未读取" }} · {{ formatClaimPointValue(claim.older) }}</strong>
+                    <blockquote>{{ claim.older.evidenceText || "缺少图中文字依据" }}</blockquote>
+                  </section>
+                  <section class="claim-observation-point">
+                    <span class="field-label">较新观察</span>
+                    <strong>{{ claim.newer.period || "时间未读取" }} · {{ formatClaimPointValue(claim.newer) }}</strong>
+                    <blockquote>{{ claim.newer.evidenceText || "缺少图中文字依据" }}</blockquote>
+                  </section>
+                </div>
+                <ul v-if="claim.unreadableItems.length" class="unreadable-list" aria-label="无法辨认内容">
+                  <li v-for="item in claim.unreadableItems" :key="item">暂时无法辨认：{{ item }}</li>
+                </ul>
+                <p class="claim-observation-source">图上观察尚未确认</p>
+              </div>
+            </details>
+          </div>
+
+          <div v-else-if="observation" class="observation-form">
             <label class="field-block title-field">
               <span class="field-label">图表标题 · 原图摘录 · 只读</span>
               <textarea
@@ -821,6 +871,12 @@ onBeforeUnmount(() => {
             </p>
           </div>
 
+          <div v-else-if="hasNoClaims" class="review-empty">
+            <span class="review-empty-mark" aria-hidden="true">?</span>
+            <strong>没有发现可核对的增长率主张</strong>
+            <p>当前图片没有返回可核对的主张，因此不会生成图内结论。</p>
+          </div>
+
           <div v-else class="review-empty">
             <span class="review-empty-mark" aria-hidden="true">?</span>
             <strong>{{ pendingUpload ? "图片已就绪，读取后由你核对数字" : "读取后，先由你核对每个数字" }}</strong>
@@ -909,7 +965,7 @@ onBeforeUnmount(() => {
       </details>
 
       <footer class="page-footer">
-        <span>图证 / 阶段一 · 单图图内审计</span>
+        <span>图证 / 单图图内审计</span>
         <span>判断范围止于这张截图</span>
       </footer>
     </main>

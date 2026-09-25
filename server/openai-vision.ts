@@ -7,11 +7,11 @@ import type { UploadedChartImage, VisionAdapter } from "./app.js";
 
 const REQUEST_TIMEOUT_MS = 45_000;
 
-const observationSchema = {
+const claimSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    titleOriginal: { type: ["string", "null"] },
+    claimText: { type: ["string", "null"] },
     claimedGrowthPercent: { type: ["number", "null"] },
     older: {
       type: "object",
@@ -37,13 +37,22 @@ const observationSchema = {
     },
     unreadableItems: { type: "array", items: { type: "string" } },
   },
-  required: ["titleOriginal", "claimedGrowthPercent", "older", "newer", "unreadableItems"],
+  required: ["claimText", "claimedGrowthPercent", "older", "newer", "unreadableItems"],
+} satisfies ResponseFormatTextJSONSchemaConfig["schema"];
+
+const observationSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    claims: { type: "array", items: claimSchema },
+  },
+  required: ["claims"],
 } satisfies ResponseFormatTextJSONSchemaConfig["schema"];
 
 const responseFormat: ResponseFormatTextJSONSchemaConfig = {
   type: "json_schema",
-  name: "chart_observation",
-  description: "图表截图的原文、两个按时间排序的数据点及无法辨认的内容",
+  name: "chart_claim_observations",
+  description: "图表截图中的增长率主张、对应观察值、图内证据和无法辨认项，不包含用户确认或计算结果",
   strict: true,
   schema: observationSchema,
 };
@@ -111,11 +120,11 @@ export class OpenAIResponsesVisionAdapter implements VisionAdapter {
               {
                 type: "input_text",
                 text: [
-                  "只检查这张图表截图。逐字读取标题，并记录标题明确写出的增长百分比。",
-                  "只抄录明确印出的较早和较新两个数值；不得根据柱高、折线位置或常识推测数字。",
-                  "按清楚可见的年份先后填写 older 和 newer。顺序、数值、单位或文字看不清时填 null，并在 unreadableItems 说明。",
-                  "evidenceText 只引用图片上确实可见的文字；不要计算增长率，不要判断真实数据是否正确。",
-                  "若图中不是可比较的两个标注值，也将相应字段留空。",
+                  "只检查这张图表截图。把每条明确写出的增长率主张分别放入 claims 数组，并逐字抄录对应的主张文字。",
+                  "每条主张只记录与其对应的较早和较新观察值；不得根据柱高、折线位置或常识推测数字。",
+                  "按清楚可见的年份先后填写 older 和 newer。顺序、数值、单位或图内证据看不清或不存在时填 null，并在 unreadableItems 说明无法辨认的内容。",
+                  "evidenceText 只引用图片上确实可见、且对应这条主张的文字；不要补写缺失证据。",
+                  "只返回原始观察与证据，不要给出用户确认值、增长率计算、结果状态或现实数据判断。若没有可核对的增长率主张，返回空 claims 数组。",
                 ].join(" "),
               },
               { type: "input_image", image_url: dataUrl, detail: "high" },

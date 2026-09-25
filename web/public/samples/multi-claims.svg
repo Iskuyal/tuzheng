@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" role="img" aria-labelledby="title desc">
+  <title id="title">年度经营数据的三条增长主张</title>
+  <desc id="desc">团队自制预置示例。营业收入由 80 万元到 100 万元，利润图中文字为 50 万元到 100 万元，用户数只给出 2024 年 50 万人，没有 2025 年数值。</desc>
+  <rect width="960" height="640" fill="#edf2f0"/>
+  <rect width="960" height="12" fill="#143c46"/>
+  <text x="54" y="76" fill="#17333e" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="17" font-weight="700" letter-spacing="2">团队自制图表样例 / 预置示例</text>
+  <text x="54" y="119" fill="#17333e" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="30" font-weight="800">年度经营数据增长摘要</text>
+  <text x="54" y="149" fill="#52646b" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">请逐项核对标题主张、图上观察与数字摘录</text>
+
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif">
+    <rect x="54" y="176" width="270" height="390" rx="5" fill="#ffffff" stroke="#c9d8d2" stroke-width="2"/>
+    <rect x="54" y="176" width="270" height="8" fill="#2f8b7d"/>
+    <text x="74" y="220" fill="#52646b" font-size="14" font-weight="700">主张 01 / 营业收入</text>
+    <text x="74" y="259" fill="#17333e" font-size="21" font-weight="800">营业收入增长 25%</text>
+    <line x1="74" y1="278" x2="304" y2="278" stroke="#e0e8e4"/>
+    <text x="74" y="316" fill="#52646b" font-size="15">2024 年</text>
+    <text x="304" y="316" fill="#17333e" font-size="17" font-weight="700" text-anchor="end">80 万元</text>
+    <text x="74" y="356" fill="#52646b" font-size="15">2025 年</text>
+    <text x="304" y="356" fill="#17333e" font-size="17" font-weight="700" text-anchor="end">100 万元</text>
+    <rect x="74" y="390" width="230" height="104" rx="3" fill="#edf6f2"/>
+    <text x="90" y="420" fill="#2f7167" font-size="13" font-weight="700">图内数字摘录</text>
+    <text x="90" y="450" fill="#17333e" font-size="15">2024 年营业收入 80 万元</text>
+    <text x="90" y="477" fill="#17333e" font-size="15">2025 年营业收入 100 万元</text>
+    <text x="74" y="535" fill="#805313" font-size="13">读数待逐条确认</text>
+
+    <rect x="345" y="176" width="270" height="390" rx="5" fill="#ffffff" stroke="#c9d8d2" stroke-width="2"/>
+    <rect x="345" y="176" width="270" height="8" fill="#c58c36"/>
+    <text x="365" y="220" fill="#52646b" font-size="14" font-weight="700">主张 02 / 利润</text>
+    <text x="365" y="259" fill="#17333e" font-size="21" font-weight="800">利润增长 40%</text>
+    <line x1="365" y1="278" x2="595" y2="278" stroke="#e0e8e4"/>
+    <text x="365" y="316" fill="#52646b" font-size="15">2024 年</text>
+    <text x="595" y="316" fill="#17333e" font-size="17" font-weight="700" text-anchor="end">50 万元</text>
+    <text x="365" y="356" fill="#52646b" font-size="15">2025 年</text>
+    <text x="595" y="356" fill="#17333e" font-size="17" font-weight="700" text-anchor="end">100 万元</text>
+    <rect x="365" y="390" width="230" height="104" rx="3" fill="#fff6e5"/>
+    <text x="381" y="420" fill="#805313" font-size="13" font-weight="700">图内数字摘录</text>
+    <text x="381" y="450" fill="#17333e" font-size="15">2024 年利润 50 万元</text>
+    <text x="381" y="477" fill="#17333e" font-size="15">2025 年利润 100 万元</text>
+    <text x="365" y="535" fill="#805313" font-size="13">预置观察值 70，待核对</text>
+
+    <rect x="636" y="176" width="270" height="390" rx="5" fill="#ffffff" stroke="#c9d8d2" stroke-width="2"/>
+    <rect x="636" y="176" width="270" height="8" fill="#a45c4d"/>
+    <text x="656" y="220" fill="#52646b" font-size="14" font-weight="700">主张 03 / 用户数</text>
+    <text x="656" y="259" fill="#17333e" font-size="21" font-weight="800">用户数增长 20%</text>
+    <line x1="656" y1="278" x2="886" y2="278" stroke="#e0e8e4"/>
+    <text x="656" y="316" fill="#52646b" font-size="15">2024 年</text>
+    <text x="886" y="316" fill="#17333e" font-size="17" font-weight="700" text-anchor="end">50 万人</text>
+    <text x="656" y="356" fill="#52646b" font-size="15">2025 年</text>
+    <text x="886" y="356" fill="#805313" font-size="15" font-weight="700" text-anchor="end">图中未标数值</text>
+    <rect x="656" y="390" width="230" height="104" rx="3" fill="#f5f6f4"/>
+    <text x="672" y="420" fill="#52646b" font-size="13" font-weight="700">图内数字摘录</text>
+    <text x="672" y="450" fill="#17333e" font-size="15">2024 年用户数 50 万人</text>
+    <text x="672" y="477" fill="#805313" font-size="15">缺少新值对应依据</text>
+    <text x="656" y="535" fill="#805313" font-size="13">图内证据不足，待确认</text>
+  </g>
+
+  <line x1="54" y1="592" x2="906" y2="592" stroke="#cad7d2"/>
+  <text x="54" y="620" fill="#52646b" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">判断范围仅限这张图；预置观察值不代表真实模型读取。</text>
+</svg>

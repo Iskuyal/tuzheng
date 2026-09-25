@@ -16,6 +16,13 @@ const samples = ref<SampleSummary[]>([]);
 const loadError = ref("");
 const uploadError = ref("");
 
+const samplePresentation: Record<string, { tone: string; kind: string }> = {
+  conflict: { tone: "coral", kind: "图内矛盾" },
+  consistent: { tone: "blue", kind: "图内一致" },
+  unclear: { tone: "amber", kind: "需要确认" },
+  "multi-claims": { tone: "blue", kind: "多主张" },
+};
+
 async function loadSamples(): Promise<void> {
   try {
     const response = await fetch("/api/samples");
@@ -52,9 +59,11 @@ function uploadScreenshot(event: Event): void {
 }
 
 function sampleTone(id: string): string {
-  if (id === "conflict") return "coral";
-  if (id === "consistent") return "blue";
-  return "amber";
+  return samplePresentation[id]?.tone ?? "amber";
+}
+
+function sampleKind(id: string): string {
+  return samplePresentation[id]?.kind ?? "团队自制";
 }
 
 onMounted(loadSamples);
@@ -75,7 +84,7 @@ onMounted(loadSamples);
               上传我的截图 <span aria-hidden="true">↑</span>
               <input id="landing-upload" type="file" accept="image/png,image/jpeg,image/webp" @change="uploadScreenshot" />
             </label>
-            <a class="pixel-button secondary-sample-action" href="#sample-dock">浏览三个自制样例 <span aria-hidden="true">↓</span></a>
+            <a class="pixel-button secondary-sample-action" href="#sample-dock">浏览四个自制样例 <span aria-hidden="true">↓</span></a>
           </div>
           <p class="upload-support-note">支持 PNG、JPG、WebP；单张不超过 5 MB。</p>
           <p v-if="uploadError" class="landing-error" role="alert">{{ uploadError }}</p>
@@ -140,7 +149,7 @@ onMounted(loadSamples);
           >
             <div class="sample-tile-top">
               <span class="sample-tile-index">{{ String(index + 1).padStart(2, "0") }}</span>
-            <span class="sample-tile-kind">{{ sample.id === "conflict" ? "图内矛盾" : sample.id === "consistent" ? "图内一致" : "需要确认" }}</span>
+            <span class="sample-tile-kind">{{ sampleKind(sample.id) }}</span>
             </div>
             <div class="sample-thumb"><img :src="sample.imageUrl" :alt="sample.name" loading="lazy" /></div>
             <div class="sample-tile-bottom">
@@ -152,7 +161,7 @@ onMounted(loadSamples);
       </section>
 
       <footer class="landing-footer">
-        <span>图证 / 阶段一 · 单图图内审计</span>
+        <span>图证 / 单图图内审计</span>
         <RouterLink to="/audit?sample=conflict">试跑矛盾样例 <span aria-hidden="true">→</span></RouterLink>
       </footer>
     </main>

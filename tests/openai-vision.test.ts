@@ -3,11 +3,13 @@ import { OpenAIResponsesVisionAdapter } from "../server/openai-vision.js";
 import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses.js";
 
 const validObservation = {
-  titleOriginal: "2025 年收入增长 40%",
-  claimedGrowthPercent: 40,
-  older: { period: "2024 年", value: 80, unit: "万元", evidenceText: "2024 年 80 万元" },
-  newer: { period: "2025 年", value: 100, unit: "万元", evidenceText: "2025 年 100 万元" },
-  unreadableItems: [],
+  claims: [{
+    claimText: "2025 年收入增长 40%",
+    claimedGrowthPercent: 40,
+    older: { period: "2024 年", value: 80, unit: "万元", evidenceText: "2024 年 80 万元" },
+    newer: { period: "2025 年", value: 100, unit: "万元", evidenceText: "2025 年 100 万元" },
+    unreadableItems: [],
+  }],
 };
 
 describe("OpenAI Responses 视觉适配器", () => {
@@ -28,7 +30,12 @@ describe("OpenAI Responses 视觉适配器", () => {
 
     expect(result).toEqual(validObservation);
     expect(sent?.store).toBe(false);
-    expect(sent?.text?.format).toMatchObject({ type: "json_schema", strict: true });
+    expect(sent?.text?.format).toMatchObject({
+      type: "json_schema",
+      name: "chart_claim_observations",
+      strict: true,
+      schema: { type: "object", properties: { claims: { type: "array" } } },
+    });
     const userMessage = Array.isArray(sent?.input) ? sent.input[0] : undefined;
     expect(userMessage).toMatchObject({
       role: "user",

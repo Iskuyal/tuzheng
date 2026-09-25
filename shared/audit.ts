@@ -10,6 +10,27 @@ export interface DataPointObservation {
   valueSource: ValueSource;
 }
 
+export interface RawDataPointObservation {
+  period: string | null;
+  value: number | null;
+  unit: string | null;
+  evidenceText: string | null;
+}
+
+export interface GrowthClaimObservation {
+  id: string;
+  claimText: string | null;
+  claimedGrowthPercent: number | null;
+  older: RawDataPointObservation;
+  newer: RawDataPointObservation;
+  unreadableItems: string[];
+}
+
+export interface ChartObservation {
+  source: ObservationSource;
+  claims: GrowthClaimObservation[];
+}
+
 export interface AuditObservation {
   titleOriginal: string | null;
   claimedGrowthPercent: number | null;
@@ -26,6 +47,26 @@ export interface AuditResult {
   formula: string | null;
   summary: string;
   reasons: string[];
+}
+
+export function toAuditObservation(
+  chartObservation: ChartObservation,
+  claim: GrowthClaimObservation,
+): AuditObservation {
+  const valueSource = (point: RawDataPointObservation): ValueSource => {
+    if (point.value === null) return "unreadable";
+    return chartObservation.source === "preset-example" ? "preset" : "model";
+  };
+
+  return {
+    titleOriginal: claim.claimText,
+    claimedGrowthPercent: claim.claimedGrowthPercent,
+    older: { ...claim.older, valueSource: valueSource(claim.older) },
+    newer: { ...claim.newer, valueSource: valueSource(claim.newer) },
+    unreadableItems: [...claim.unreadableItems],
+    confirmed: false,
+    source: chartObservation.source,
+  };
 }
 
 function formatNumber(value: number, maximumFractionDigits = 2): string {

@@ -154,6 +154,24 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .confirmation-state { border-color: #d7c69c; color: #805313; background: #fff1d1; }
 .confirmation-state.confirmed { border-color: #b9d8cc; color: #21675e; background: #e2f2ec; }
 .observation-form { display: flex; flex-direction: column; gap: 13px; }
+.claim-observation-list { display: flex; flex-direction: column; gap: 12px; }
+.claim-observation-card { min-width: 0; padding: 0; border: 1px solid #d5e0db; background: #fbfcfb; }
+.claim-observation-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 8px; padding: 12px; list-style: none; cursor: pointer; }
+.claim-observation-summary::-webkit-details-marker { display: none; }
+.claim-observation-number { color: var(--muted); font-size: 12px; font-weight: 700; }
+.claim-observation-title { min-width: 0; color: var(--ink); font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.claim-observation-toggle { align-self: end; color: var(--pixel-blue); font-size: 12px; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.claim-toggle-open { display: none; }
+.claim-observation-card[open] .claim-toggle-closed { display: none; }
+.claim-observation-card[open] .claim-toggle-open { display: inline; }
+.claim-observation-body { padding: 0 12px 12px; }
+.claim-observation-pending { padding: 4px 7px; color: #805313; background: #fff1d1; font-size: 12px; font-weight: 700; }
+.claim-observation-rate { margin: 6px 0 0; color: #52646b; font-size: 13px; }
+.claim-observation-points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.claim-observation-point { min-width: 0; padding: 9px; border: 1px solid #e0e8e4; background: #f5f8f6; }
+.claim-observation-point strong { display: block; margin-top: 5px; color: var(--ink); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.claim-observation-point blockquote { margin: 7px 0 0; color: #52646b; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.claim-observation-source { margin: 9px 0 0; color: #805313; font-size: 12px; }
 .field-block { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .field-label { color: #435d68; font-size: 14px; font-weight: 700; }
 .point-editor-head .field-label { color: var(--pixel-ink); font-size: 14px; }
@@ -287,6 +305,7 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
   .image-stage-head { padding-inline: 10px; }
   .chart-frame { min-height: 220px; padding: 7px; }
   .point-fields { grid-template-columns: 1fr 1fr; }
+  .claim-observation-points { grid-template-columns: minmax(0, 1fr); }
   .period-field { grid-column: 1 / -1; }
   .unit-field { grid-column: 2; grid-row: 2; }
   .number-field { grid-column: 1; grid-row: 2; }

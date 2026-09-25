@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import multer, { MulterError } from "multer";
 import { z } from "zod";
-import { evaluateGrowth } from "../shared/audit.js";
+import { evaluateGrowth, type ChartObservation } from "../shared/audit.js";
 import { OpenAIResponsesVisionAdapter, VisionModelError } from "./openai-vision.js";
 import {
   FileModelSettingsStore,
@@ -195,21 +195,14 @@ export function createApp(options: AppOptions = {}): Express {
         buffer: request.file.buffer,
         mimeType,
       }));
-      response.json({
-        observation: {
-          ...parsed,
-          older: {
-            ...parsed.older,
-            valueSource: parsed.older.value === null ? "unreadable" : "model",
-          },
-          newer: {
-            ...parsed.newer,
-            valueSource: parsed.newer.value === null ? "unreadable" : "model",
-          },
-          confirmed: false,
-          source: "vision-model",
-        },
-      });
+      const observation: ChartObservation = {
+        source: "vision-model",
+        claims: parsed.claims.map((claim, index) => ({
+          id: `claim-${index + 1}`,
+          ...claim,
+        })),
+      };
+      response.json({ observation });
     } catch (error) {
       if (error instanceof VisionModelError && error.kind === "timeout") {
         response.status(504).json({
