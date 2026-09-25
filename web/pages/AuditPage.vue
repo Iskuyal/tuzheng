@@ -4,6 +4,14 @@ import { useRoute } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
 import { takeLandingUpload } from "../upload-transfer.js";
 import { toAuditObservation, type AuditObservation, type AuditResult, type ChartObservation, type DataPointObservation, type GrowthClaimObservation } from "../../shared/audit.js";
+import {
+  completeClaimReview,
+  createClaimWorkspace,
+  toClaimAuditSubmission,
+  updateClaimDraft,
+  type ClaimWorkspace,
+  type ClaimWorkspaceEdit,
+} from "../../shared/claim-workspace.js";
 
 interface SampleSummary {
   id: string;
@@ -22,6 +30,9 @@ interface CropSelection {
 const samples = ref<SampleSummary[]>([]);
 const activeSampleId = ref<string | null>(null);
 const chartObservation = ref<ChartObservation | null>(null);
+const claimWorkspace = ref<ClaimWorkspace | null>(null);
+const claimErrors = ref<Record<string, string>>({});
+const busyClaimId = ref<string | null>(null);
 const observation = ref<AuditObservation | null>(null);
 const result = ref<AuditResult | null>(null);
 const imageUrl = ref("");
@@ -54,6 +65,7 @@ const activeSample = computed(
 );
 const hasMultipleClaims = computed(() => (chartObservation.value?.claims.length ?? 0) > 1);
 const hasNoClaims = computed(() => chartObservation.value?.claims.length === 0);
+const hasAnyAuditResult = computed(() => Boolean(result.value) || Boolean(claimWorkspace.value?.claims.some((claim) => claim.result)));
 const cropSelectionStyle = computed(() => {
   const selection = cropSelection.value;
   const image = previewImage.value;
@@ -152,7 +164,9 @@ function updateActiveAuditStep(): void {
   const stepTargets: Array<{ step: "image" | "review" | "result"; id: string }> = [
     { step: "image", id: "audit-image" },
     { step: "review", id: "audit-review" },
-    ...(result.value ? [{ step: "result" as const, id: "audit-result" }] : []),
+    ...(hasAnyAuditResult.value
+      ? [{ step: "result" as const, id: result.value ? "audit-result" : "audit-claim-results" }]
+      : []),
   ];
   let active: "image" | "review" | "result" = "image";
   const stepLine = window.innerHeight * 0.45;
@@ -194,8 +208,12 @@ function returnToImage(): void {
 
 function jumpToAuditStep(event: Event): void {
   const step = (event.target as HTMLSelectElement).value as typeof activeAuditStep.value;
-  if (step === "result" && !result.value) return;
-  const targetId = step === "image" ? "audit-image" : step === "review" ? "audit-review" : "audit-result";
+  if (step === "result" && !hasAnyAuditResult.value) return;
+  const targetId = step === "image"
+    ? "audit-image"
+    : step === "review"
+      ? "audit-review"
+      : result.value ? "audit-result" : "audit-claim-results";
   document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -206,6 +224,9 @@ function updateErrorFrom(response: Response, payload: { error?: { message?: stri
 
 function setChartObservation(value: ChartObservation): void {
   chartObservation.value = value;
+  claimWorkspace.value = value.claims.length > 1 ? createClaimWorkspace(value) : null;
+  claimErrors.value = {};
+  busyClaimId.value = null;
   const [claim] = value.claims;
   observation.value = value.claims.length === 1 && claim
     ? toAuditObservation(value, claim)
@@ -296,6 +317,9 @@ function prepareUploadFile(file: File): void {
   pendingUpload.value = file;
   activeSampleId.value = null;
   chartObservation.value = null;
+  claimWorkspace.value = null;
+  claimErrors.value = {};
+  busyClaimId.value = null;
   observation.value = null;
   result.value = null;
   errorMessage.value = "";
@@ -478,6 +502,87 @@ async function confirmAndCalculate(): Promise<void> {
   }
 }
 
+function editWorkspaceClaim(claimId: string, edit: ClaimWorkspaceEdit): void {
+  const workspace = claimWorkspace.value;
+  if (!workspace) return;
+  claimWorkspace.value = updateClaimDraft(workspace, claimId, edit);
+  const errors = { ...claimErrors.value };
+  delete errors[claimId];
+  claimErrors.value = errors;
+}
+
+function editWorkspaceGrowth(event: Event, claimId: string): void {
+  const input = event.target as HTMLInputElement;
+  const value = input.value === "" ? null : Number(input.value);
+  editWorkspaceClaim(claimId, {
+    kind: "growth-percent",
+    value: value !== null && Number.isFinite(value) ? value : null,
+  });
+}
+
+function editWorkspacePoint(
+  claimId: string,
+  point: "older" | "newer",
+  field: "period" | "value" | "unit",
+  event: Event,
+): void {
+  const input = event.target as HTMLInputElement;
+  if (field === "value") {
+    const value = input.value === "" ? null : Number(input.value);
+    editWorkspaceClaim(claimId, {
+      kind: "value",
+      point,
+      value: value !== null && Number.isFinite(value) ? value : null,
+    });
+    return;
+  }
+  editWorkspaceClaim(claimId, {
+    kind: field,
+    point,
+    value: input.value || null,
+  });
+}
+
+async function confirmWorkspaceClaim(claimId: string): Promise<void> {
+  const workspace = claimWorkspace.value;
+  const chartAtStart = chartObservation.value;
+  const submission = workspace ? toClaimAuditSubmission(workspace, claimId) : null;
+  if (!workspace || !chartAtStart || !submission || busyClaimId.value) return;
+
+  busyClaimId.value = claimId;
+  const errors = { ...claimErrors.value };
+  delete errors[claimId];
+  claimErrors.value = errors;
+  try {
+    const response = await fetch("/api/audit/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(submission),
+    });
+    const payload = await response.json().catch(() => null) as {
+      result?: AuditResult;
+      error?: { message?: string };
+    } | null;
+    if (!response.ok || !payload?.result) {
+      throw new Error(updateErrorFrom(response, payload));
+    }
+    if (chartObservation.value === chartAtStart && claimWorkspace.value) {
+      claimWorkspace.value = completeClaimReview(claimWorkspace.value, claimId, payload.result);
+    }
+  } catch (error) {
+    if (chartObservation.value === chartAtStart) {
+      claimErrors.value = {
+        ...claimErrors.value,
+        [claimId]: error instanceof Error ? error.message : "计算失败，请重试。",
+      };
+    }
+  } finally {
+    if (chartObservation.value === chartAtStart && busyClaimId.value === claimId) {
+      busyClaimId.value = null;
+    }
+  }
+}
+
 function formatValue(value: number | null, unit: string | null): string {
   if (value === null) return "尚未读清";
   const formatted = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(value);
@@ -494,6 +599,12 @@ function valueSourceLabel(source: DataPointObservation["valueSource"]): string {
   if (source === "user") return "用户手动更正";
   if (source === "unreadable") return "图上暂不可读";
   return "预置示例值";
+}
+
+function auditStatusLabel(status: AuditResult["status"]): string {
+  if (status === "consistent") return "图内一致";
+  if (status === "contradictory") return "图内矛盾";
+  return "需要确认";
 }
 
 onMounted(() => {
@@ -539,14 +650,14 @@ onBeforeUnmount(() => {
         </span>
         <a href="#audit-image" :class="{ active: activeAuditStep === 'image' }" :aria-current="activeAuditStep === 'image' ? 'location' : undefined"><span>01</span> 图表</a>
         <a href="#audit-review" :class="{ active: activeAuditStep === 'review' }" :aria-current="activeAuditStep === 'review' ? 'location' : undefined"><span>02</span> 核对</a>
-        <a v-if="result" href="#audit-result" :class="{ active: activeAuditStep === 'result' }" :aria-current="activeAuditStep === 'result' ? 'location' : undefined"><span>03</span> 结论</a>
-        <span v-else aria-disabled="true"><span>03</span> 待计算</span>
+          <a v-if="hasAnyAuditResult" :href="result ? '#audit-result' : '#audit-claim-results'" :class="{ active: activeAuditStep === 'result' }" :aria-current="activeAuditStep === 'result' ? 'location' : undefined"><span>03</span> 结论</a>
+          <span v-else aria-disabled="true"><span>03</span> 待计算</span>
         <label class="audit-mobile-step-picker">
           <span>当前步骤</span>
           <select aria-label="跳转到审计步骤" :value="activeAuditStep" @change="jumpToAuditStep">
             <option value="image">01 · 图表</option>
             <option value="review">02 · 核对</option>
-            <option v-if="result" value="result">03 · 结论</option>
+            <option v-if="hasAnyAuditResult" value="result">03 · 结论</option>
             <option v-else value="result" disabled>03 · 计算后查看</option>
           </select>
         </label>
@@ -699,40 +810,100 @@ onBeforeUnmount(() => {
               <p class="eyebrow">先检查识别结果</p>
               <h2 id="observation-title">图中主张与观察</h2>
             </div>
-            <div v-if="chartObservation" class="observation-meta">
+          <div v-if="chartObservation" class="observation-meta">
               <span class="source-badge" :class="chartObservation.source">{{ sourceLabel }}</span>
               <span v-if="observation" class="confirmation-state" :class="{ confirmed: observation.confirmed }">{{ confirmationLabel }}</span>
-              <span v-else-if="hasMultipleClaims" class="confirmation-state">各项观察待核对</span>
+              <span v-else-if="hasMultipleClaims" class="confirmation-state">各项主张可独立核对</span>
               <span v-else-if="hasNoClaims" class="confirmation-state">未发现可核对主张</span>
             </div>
           </div>
 
-          <div v-if="hasMultipleClaims && chartObservation" class="claim-observation-list" aria-label="图内主张和证据">
-            <details v-for="(claim, index) in chartObservation.claims" :key="claim.id" class="claim-observation-card" :open="index === 0">
+          <div v-if="hasMultipleClaims && chartObservation && claimWorkspace" id="audit-claim-results" class="claim-observation-list" aria-label="图内主张和证据">
+            <details v-for="(entry, index) in claimWorkspace.claims" :key="entry.observation.id" class="claim-observation-card" :open="index === 0">
               <summary class="claim-observation-summary">
                 <span class="claim-observation-number">主张 {{ index + 1 }}</span>
-                <span class="claim-observation-pending">待核对</span>
-                <strong class="claim-observation-title">{{ claim.claimText || "主张原文尚未读清" }}</strong>
+                <span class="confirmation-state" :class="{ confirmed: entry.confirmationState === 'confirmed' }">{{ entry.confirmationState === "confirmed" ? "输入已确认" : "待核对" }}</span>
+                <strong class="claim-observation-title">{{ entry.observation.claimText || "主张原文尚未读清" }}</strong>
                 <span class="claim-observation-toggle"><span class="claim-toggle-closed">查看证据</span><span class="claim-toggle-open">收起证据</span></span>
               </summary>
               <div class="claim-observation-body">
-                <p v-if="claim.claimedGrowthPercent !== null" class="claim-observation-rate">标题主张：增长 {{ formatValue(claim.claimedGrowthPercent, "%") }}</p>
+                <label class="field-block claim-workspace-growth">
+                  <span class="field-label">标题声称增长</span>
+                  <span class="input-with-suffix">
+                    <input
+                      :value="entry.draftValues.claimedGrowthPercent ?? ''"
+                      type="number"
+                      step="any"
+                      :disabled="busyClaimId === entry.observation.id"
+                      @input="editWorkspaceGrowth($event, entry.observation.id)"
+                    />
+                    <span>%</span>
+                  </span>
+                  <small>图上原文：{{ entry.observation.claimText || "尚未读清" }}</small>
+                </label>
                 <div class="claim-observation-points">
                   <section class="claim-observation-point">
                     <span class="field-label">较早观察</span>
-                    <strong>{{ claim.older.period || "时间未读取" }} · {{ formatClaimPointValue(claim.older) }}</strong>
-                    <blockquote>{{ claim.older.evidenceText || "缺少图中文字依据" }}</blockquote>
+                    <p class="claim-raw-observation">图上原始读数：{{ entry.observation.older.period || "时间未读取" }} · {{ formatClaimPointValue(entry.observation.older) }}</p>
+                    <div class="claim-workspace-point-fields">
+                      <label class="field-block">
+                        <span class="field-label">核对时间</span>
+                        <input :value="entry.draftValues.older.period ?? ''" maxlength="80" :disabled="busyClaimId === entry.observation.id" @input="editWorkspacePoint(entry.observation.id, 'older', 'period', $event)" />
+                      </label>
+                      <label class="field-block">
+                        <span class="field-label">核对数值</span>
+                        <input :value="entry.draftValues.older.value ?? ''" type="number" step="any" :disabled="busyClaimId === entry.observation.id" @input="editWorkspacePoint(entry.observation.id, 'older', 'value', $event)" />
+                      </label>
+                      <label class="field-block">
+                        <span class="field-label">单位</span>
+                        <input :value="entry.draftValues.older.unit ?? ''" maxlength="40" :disabled="busyClaimId === entry.observation.id" @input="editWorkspacePoint(entry.observation.id, 'older', 'unit', $event)" />
+                      </label>
+                    </div>
+                    <blockquote><span class="claim-evidence-label">图内证据</span>{{ entry.observation.older.evidenceText || "缺少图中文字依据" }}</blockquote>
                   </section>
                   <section class="claim-observation-point">
                     <span class="field-label">较新观察</span>
-                    <strong>{{ claim.newer.period || "时间未读取" }} · {{ formatClaimPointValue(claim.newer) }}</strong>
-                    <blockquote>{{ claim.newer.evidenceText || "缺少图中文字依据" }}</blockquote>
+                    <p class="claim-raw-observation">图上原始读数：{{ entry.observation.newer.period || "时间未读取" }} · {{ formatClaimPointValue(entry.observation.newer) }}</p>
+                    <div class="claim-workspace-point-fields">
+                      <label class="field-block">
+                        <span class="field-label">核对时间</span>
+                        <input :value="entry.draftValues.newer.period ?? ''" maxlength="80" :disabled="busyClaimId === entry.observation.id" @input="editWorkspacePoint(entry.observation.id, 'newer', 'period', $event)" />
+                      </label>
+                      <label class="field-block">
+                        <span class="field-label">核对数值</span>
+                        <input :value="entry.draftValues.newer.value ?? ''" type="number" step="any" :disabled="busyClaimId === entry.observation.id" @input="editWorkspacePoint(entry.observation.id, 'newer', 'value', $event)" />
+                      </label>
+                      <label class="field-block">
+                        <span class="field-label">单位</span>
+                        <input :value="entry.draftValues.newer.unit ?? ''" maxlength="40" :disabled="busyClaimId === entry.observation.id" @input="editWorkspacePoint(entry.observation.id, 'newer', 'unit', $event)" />
+                      </label>
+                    </div>
+                    <blockquote><span class="claim-evidence-label">图内证据</span>{{ entry.observation.newer.evidenceText || "缺少图中文字依据" }}</blockquote>
                   </section>
                 </div>
-                <ul v-if="claim.unreadableItems.length" class="unreadable-list" aria-label="无法辨认内容">
-                  <li v-for="item in claim.unreadableItems" :key="item">暂时无法辨认：{{ item }}</li>
+                <ul v-if="entry.observation.unreadableItems.length" class="unreadable-list" aria-label="无法辨认内容">
+                  <li v-for="item in entry.observation.unreadableItems" :key="item">暂时无法辨认：{{ item }}</li>
                 </ul>
-                <p class="claim-observation-source">图上观察尚未确认</p>
+                <button class="confirm-button" :disabled="busyClaimId !== null" @click="confirmWorkspaceClaim(entry.observation.id)">
+                  {{ busyClaimId === entry.observation.id ? "正在计算…" : entry.confirmationState === "confirmed" ? "重新计算此主张" : "确认并计算此主张" }}
+                </button>
+                <p class="confirm-hint">此操作只更新当前主张；其他主张的确认状态与结果保持不变。</p>
+                <div v-if="claimErrors[entry.observation.id]" class="error-message" role="alert">{{ claimErrors[entry.observation.id] }}</div>
+                <section v-if="entry.result" class="result-sheet claim-result-sheet" :aria-label="`${entry.observation.claimText || '主张'}的图内结果`">
+                  <div class="result-sheet-top">
+                    <span class="result-kicker">当前主张的图内结果</span>
+                    <span class="result-status" :class="entry.result.status">
+                      <span class="result-status-mark" aria-hidden="true"></span>
+                      {{ auditStatusLabel(entry.result.status) }}
+                    </span>
+                  </div>
+                  <h4 class="result-title">{{ entry.result.summary }}</h4>
+                  <p v-if="entry.result.formula" class="formula-line"><span>公式</span><code>{{ entry.result.formula }}</code></p>
+                  <ul v-if="entry.result.reasons.length" class="result-reasons">
+                    <li v-for="reason in entry.result.reasons" :key="reason">{{ reason }}</li>
+                  </ul>
+                  <p class="result-boundary">这只说明已确认的图内观察与主张是否一致，不代表现实数据已核实。</p>
+                </section>
               </div>
             </details>
           </div>

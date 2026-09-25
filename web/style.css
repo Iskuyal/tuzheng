@@ -167,8 +167,16 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .claim-observation-body { padding: 0 12px 12px; }
 .claim-observation-pending { padding: 4px 7px; color: #805313; background: #fff1d1; font-size: 12px; font-weight: 700; }
 .claim-observation-rate { margin: 6px 0 0; color: #52646b; font-size: 13px; }
+.claim-workspace-growth { max-width: 190px; margin: 10px 0; }
+.claim-workspace-growth small { color: var(--muted); font-size: 12px; line-height: 1.4; }
 .claim-observation-points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .claim-observation-point { min-width: 0; padding: 9px; border: 1px solid #e0e8e4; background: #f5f8f6; }
+.claim-raw-observation { margin: 5px 0 0; color: #52646b; font-size: 12px; line-height: 1.4; }
+.claim-workspace-point-fields { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(64px, .8fr) minmax(60px, .65fr); gap: 7px; margin-top: 8px; }
+.claim-workspace-point-fields input { height: 36px; padding-inline: 7px; font-size: 12px; }
+.claim-evidence-label { display: block; margin-bottom: 3px; color: #435d68; font-size: 11px; font-weight: 700; }
+.claim-result-sheet { margin-top: 10px; padding: 11px; }
+.claim-result-sheet .result-title { margin-block: 9px; }
 .claim-observation-point strong { display: block; margin-top: 5px; color: var(--ink); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
 .claim-observation-point blockquote { margin: 7px 0 0; color: #52646b; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
 .claim-observation-source { margin: 9px 0 0; color: #805313; font-size: 12px; }
