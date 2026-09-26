@@ -19,7 +19,12 @@ describe("OpenAI Responses 视觉适配器", () => {
       { baseUrl: "https://proxy.example/v1", apiKey: "test-key", model: "gpt-4.1-mini" },
       async (payload) => {
         sent = payload;
-        return { output_text: JSON.stringify(validObservation) };
+        return {
+          output_text: JSON.stringify(validObservation),
+          model: "gpt-4.1-mini-2025-04-14",
+          id: "resp_abc123",
+          usage: { input_tokens: 1_500, output_tokens: 120 },
+        };
       },
     );
 
@@ -28,7 +33,13 @@ describe("OpenAI Responses 视觉适配器", () => {
       mimeType: "image/png",
     });
 
-    expect(result).toEqual(validObservation);
+    expect(result).toEqual({
+      observation: validObservation,
+      model: "gpt-4.1-mini-2025-04-14",
+      requestId: "resp_abc123",
+      usage: { inputTokens: 1_500, outputTokens: 120 },
+      rawText: JSON.stringify(validObservation),
+    });
     expect(sent?.store).toBe(false);
     expect(sent?.text?.format).toMatchObject({
       type: "json_schema",

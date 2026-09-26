@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import multer, { MulterError } from "multer";
 import { z } from "zod";
-import { evaluateGrowth, type ChartObservation } from "../shared/audit.js";
+import { evaluateGrowth, type ChartObservation, type ModelReadTrace } from "../shared/audit.js";
 import { OpenAIResponsesVisionAdapter, VisionModelError } from "./openai-vision.js";
 import {
   FileModelSettingsStore,
@@ -17,8 +17,16 @@ export interface UploadedChartImage {
   mimeType: "image/png" | "image/jpeg" | "image/webp";
 }
 
+export interface VisionReadResult {
+  observation: unknown;
+  model: string;
+  requestId: string | null;
+  usage: { inputTokens: number | null; outputTokens: number | null } | null;
+  rawText: string;
+}
+
 export interface VisionAdapter {
-  extract(image: UploadedChartImage): Promise<unknown>;
+  extract(image: UploadedChartImage): Promise<VisionReadResult>;
 }
 
 export interface AppOptions {
@@ -191,10 +199,10 @@ export function createApp(options: AppOptions = {}): Express {
     }
 
     try {
-      const parsed = parseVisionObservation(await visionAdapter.extract({
-        buffer: request.file.buffer,
-        mimeType,
-      }));
+      const image: UploadedChartImage = { buffer: request.file.buffer, mimeType };
+      const startedAt = Date.now();
+      const read = await visionAdapter.extract(image);
+      const parsed = parseVisionObservation(read.observation);
       const observation: ChartObservation = {
         source: "vision-model",
         claims: parsed.claims.map((claim, index) => ({
@@ -202,7 +210,15 @@ export function createApp(options: AppOptions = {}): Express {
           ...claim,
         })),
       };
-      response.json({ observation });
+      const modelRead: ModelReadTrace = {
+        model: read.model,
+        requestId: read.requestId,
+        usage: read.usage,
+        rawText: read.rawText,
+        latencyMs: Date.now() - startedAt,
+        imageBytes: request.file.buffer.byteLength,
+      };
+      response.json({ observation, modelRead });
     } catch (error) {
       if (error instanceof VisionModelError && error.kind === "timeout") {
         response.status(504).json({

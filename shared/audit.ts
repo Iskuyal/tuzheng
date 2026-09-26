@@ -31,6 +31,15 @@ export interface ChartObservation {
   claims: GrowthClaimObservation[];
 }
 
+export interface ModelReadTrace {
+  model: string;
+  latencyMs: number;
+  imageBytes: number;
+  requestId: string | null;
+  usage: { inputTokens: number | null; outputTokens: number | null } | null;
+  rawText: string;
+}
+
 export interface AuditObservation {
   titleOriginal: string | null;
   claimedGrowthPercent: number | null;

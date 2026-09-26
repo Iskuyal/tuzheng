@@ -1,6 +1,6 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { createApp, type VisionAdapter } from "../server/app.js";
+import { createApp, type VisionAdapter, type VisionReadResult } from "../server/app.js";
 import type { ModelSettings, ModelSettingsStore } from "../server/model-settings.js";
 import type { AuditObservation } from "../shared/audit.js";
 
@@ -23,6 +23,14 @@ const visionClaim = {
 };
 
 const visionObservation = { claims: [visionClaim] };
+
+const visionRead: VisionReadResult = {
+  observation: visionObservation,
+  model: "vision-test-model",
+  requestId: "resp_test_1",
+  usage: { inputTokens: 1_204, outputTokens: 88 },
+  rawText: JSON.stringify(visionObservation),
+};
 
 function memorySettingsStore(initial: ModelSettings): ModelSettingsStore {
   let current = { ...initial };
@@ -87,7 +95,7 @@ describe("单图审计 API", () => {
 
   it("把上传图片交给适配器并返回只含原始观察的 claims[]", async () => {
     const visionAdapter: VisionAdapter = {
-      extract: async () => visionObservation,
+      extract: async () => visionRead,
     };
 
     const response = await request(createApp({ visionAdapter }))
@@ -107,8 +115,43 @@ describe("单图审计 API", () => {
     expect(response.body.observation.claims[0]).not.toHaveProperty("result");
   });
 
+  it("返回这次模型读取的模型名、耗时、用量和原始返回", async () => {
+    const visionAdapter: VisionAdapter = { extract: async () => visionRead };
+    const response = await request(createApp({ visionAdapter }))
+      .post("/api/audit/image")
+      .attach("image", Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), {
+        filename: "chart.png",
+        contentType: "image/png",
+      })
+      .expect(200);
+
+    expect(response.body.modelRead).toMatchObject({
+      model: "vision-test-model",
+      requestId: "resp_test_1",
+      usage: { inputTokens: 1_204, outputTokens: 88 },
+      rawText: JSON.stringify(visionObservation),
+      imageBytes: 8,
+    });
+    expect(typeof response.body.modelRead.latencyMs).toBe("number");
+    expect(response.body.modelRead.latencyMs).toBeGreaterThanOrEqual(0);
+    expect(JSON.stringify(response.body)).not.toContain("private-test-key");
+    expect(JSON.stringify(response.body)).not.toContain("example.com");
+  });
+
+  it("预置样例不返回模型读取轨迹", async () => {
+    const response = await request(createApp())
+      .post("/api/audit/sample")
+      .send({ id: "multi-claims" })
+      .expect(200);
+
+    expect(response.body.observation.source).toBe("preset-example");
+    expect(response.body).not.toHaveProperty("modelRead");
+  });
+
   it("接受没有发现主张的有效空 claims[]", async () => {
-    const visionAdapter: VisionAdapter = { extract: async () => ({ claims: [] }) };
+    const visionAdapter: VisionAdapter = {
+      extract: async () => ({ ...visionRead, observation: { claims: [] }, rawText: '{"claims":[]}' }),
+    };
     const response = await request(createApp({ visionAdapter }))
       .post("/api/audit/image")
       .attach("image", Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), {
@@ -221,7 +264,7 @@ describe("单图审计 API", () => {
     let received: ModelSettings | undefined;
     const visionAdapterFactory = (settings: ModelSettings): VisionAdapter => {
       received = settings;
-      return { extract: async () => visionObservation };
+      return { extract: async () => visionRead };
     };
 
     const response = await request(createApp({ settingsStore, visionAdapterFactory }))

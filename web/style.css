@@ -154,6 +154,17 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .confirmation-state { border-color: #d7c69c; color: #805313; background: #fff1d1; }
 .confirmation-state.confirmed { border-color: #b9d8cc; color: #21675e; background: #e2f2ec; }
 .observation-form { display: flex; flex-direction: column; gap: 13px; }
+.model-read { margin-bottom: 12px; padding: 9px 11px; border: 1px solid #cbd9d4; border-left: 3px solid var(--pixel-blue); background: #f6f8fd; }
+.model-read-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 10px; }
+.model-read-kicker { color: var(--ink); font-size: 12px; font-weight: 800; }
+.model-read-facts { display: flex; flex-wrap: wrap; gap: 5px 10px; color: #52646b; font-size: 12px; line-height: 1.45; }
+.model-read-model { color: #243e45; font-family: var(--mono); font-size: 11px; }
+.model-read-raw { margin-top: 7px; }
+.model-read-raw > summary { min-height: 40px; display: flex; align-items: center; list-style: none; color: var(--pixel-blue); font-size: 12px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.model-read-raw > summary::-webkit-details-marker { display: none; }
+.model-read-raw pre { max-height: 220px; margin: 0 0 7px; padding: 9px; overflow: auto; border: 1px solid #dfe6f2; background: #fff; color: #243e45; font-family: var(--mono); font-size: 11px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.model-read-note { margin: 0; color: #52646b; font-size: 12px; line-height: 1.5; }
+.model-read-request { display: block; margin-top: 4px; color: var(--quiet); font-family: var(--mono); font-size: 11px; }
 .claim-observation-list { display: flex; flex-direction: column; gap: 12px; }
 .claim-observation-card { min-width: 0; padding: 0; border: 1px solid #d5e0db; background: #fbfcfb; }
 .claim-observation-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 8px; padding: 12px; list-style: none; cursor: pointer; }

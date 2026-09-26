@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
 import { takeLandingUpload } from "../upload-transfer.js";
-import { toAuditObservation, type AuditObservation, type AuditResult, type ChartObservation, type DataPointObservation, type GrowthClaimObservation } from "../../shared/audit.js";
+import { toAuditObservation, type AuditObservation, type AuditResult, type ChartObservation, type DataPointObservation, type GrowthClaimObservation, type ModelReadTrace } from "../../shared/audit.js";
 import {
   completeClaimReview,
   createClaimWorkspace,
@@ -47,6 +47,8 @@ const selectedFileName = ref("");
 const pendingUpload = ref<File | null>(null);
 const errorMessage = ref("");
 const busyMessage = ref("");
+const modelRead = ref<ModelReadTrace | null>(null);
+const modelReadRegion = ref<"crop" | "full">("full");
 const cropMode = ref(false);
 const cropSelection = ref<CropSelection | null>(null);
 const cropPreview = ref("");
@@ -305,6 +307,7 @@ async function loadSample(id: string): Promise<void> {
     imageAlt.value = `${sample.name}，团队自制图表示例`;
     selectedFileName.value = "";
     activeSampleId.value = id;
+    modelRead.value = null;
     setChartObservation(payload.observation);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "样例载入失败，请重试。";
@@ -366,12 +369,14 @@ function prepareUploadFile(file: File): void {
   busyClaimId.value = null;
   observation.value = null;
   result.value = null;
+  modelRead.value = null;
   errorMessage.value = "";
   busyMessage.value = "";
 }
 
 async function analyzePendingUpload(): Promise<void> {
   if (!pendingUpload.value) return;
+  const sentRegion: "crop" | "full" = cropPreview.value ? "crop" : "full";
   busyMessage.value = "正在请求模型读取图表文字…";
   try {
     const form = new FormData();
@@ -385,13 +390,17 @@ async function analyzePendingUpload(): Promise<void> {
     const response = await fetch("/api/audit/image", { method: "POST", body: form });
     const payload = await response.json().catch(() => null) as {
       observation?: ChartObservation;
+      modelRead?: ModelReadTrace;
       error?: { message?: string };
     } | null;
     if (!response.ok || !payload?.observation) {
       throw new Error(updateErrorFrom(response, payload));
     }
+    modelRead.value = payload.modelRead ?? null;
+    modelReadRegion.value = sentRegion;
     setChartObservation(payload.observation);
   } catch (error) {
+    modelRead.value = null;
     errorMessage.value = error instanceof Error ? error.message : "图片读取失败，请重试。";
   } finally {
     busyMessage.value = "";
@@ -639,6 +648,21 @@ function formatValue(value: number | null, unit: string | null): string {
   if (value === null) return "尚未读清";
   const formatted = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(value);
   return unit === "%" ? `${formatted}%` : `${formatted}${unit ? ` ${unit}` : ""}`;
+}
+
+function formatDuration(milliseconds: number): string {
+  if (milliseconds < 1000) return `${milliseconds} 毫秒`;
+  return `${(milliseconds / 1000).toFixed(1)} 秒`;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
+}
+
+function formatTokenCount(value: number | null): string {
+  if (value === null) return "未返回";
+  return new Intl.NumberFormat("zh-CN").format(value);
 }
 
 function formatClaimPointValue(point: GrowthClaimObservation["older"]): string {
@@ -902,6 +926,28 @@ onBeforeUnmount(() => {
               <span v-else-if="hasNoClaims" class="confirmation-state">未发现可核对主张</span>
             </div>
           </div>
+
+          <section v-if="modelRead" class="model-read" aria-label="模型读取过程">
+            <div class="model-read-head">
+              <span class="model-read-kicker">模型读取过程</span>
+              <span class="model-read-facts">
+                <span class="model-read-model">{{ modelRead.model }}</span>
+                <span>耗时 {{ formatDuration(modelRead.latencyMs) }}</span>
+                <span>发送{{ modelReadRegion === "crop" ? "框选区域" : "整张图片" }}（{{ formatBytes(modelRead.imageBytes) }}）</span>
+                <span v-if="modelRead.usage">
+                  用量 输入 {{ formatTokenCount(modelRead.usage.inputTokens) }} / 输出 {{ formatTokenCount(modelRead.usage.outputTokens) }} tokens
+                </span>
+              </span>
+            </div>
+            <details class="model-read-raw">
+              <summary>模型原始返回（未经校验）</summary>
+              <pre>{{ modelRead.rawText }}</pre>
+              <p class="model-read-note">
+                以上是模型直接返回的文本。它通过结构校验后才生成下方核对表里的观察值与来源标记；模型不返回确认状态、计算值或结论。
+                <span v-if="modelRead.requestId" class="model-read-request">响应 id：{{ modelRead.requestId }}</span>
+              </p>
+            </details>
+          </section>
 
           <div v-if="hasMultipleClaims && chartObservation && claimWorkspace" class="claim-audit-bar">
             <span>记录只保留在本次会话；刷新、切换图片或重置后清空。</span>
