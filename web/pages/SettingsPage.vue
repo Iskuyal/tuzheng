@@ -95,7 +95,7 @@ onMounted(loadSettings);
         <div>
           <p class="section-kicker">本机连接 / 仅服务端读取</p>
           <h1>模型设置</h1>
-          <p class="settings-lede">可填写任意 Responses API 兼容服务。当前预填 OpenAI 候选示例；地址与模型均可替换，真实调用尚未验证。</p>
+          <p class="settings-lede">可填写任意 Responses API 兼容服务。默认填入的是示例地址与模型名，均可替换；填错时读取会给出失败提示。</p>
         </div>
       </section>
 

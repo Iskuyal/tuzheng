@@ -1,43 +1,78 @@
 import { describe, expect, it } from "vitest";
 import { parseVisionObservation } from "../server/observation.js";
 
-const validObservation = {
-  titleOriginal: "2025 年收入增长 40%",
-  claimedGrowthPercent: 40,
+const incomeClaim = {
+  claimText: "2025 年营业收入增长 25%",
+  claimedGrowthPercent: 25,
   older: {
     period: "2024 年",
     value: 80,
     unit: "万元",
-    evidenceText: "2024 年 80 万元",
+    evidenceText: "2024 年营业收入 80 万元",
   },
   newer: {
     period: "2025 年",
     value: 100,
     unit: "万元",
-    evidenceText: "2025 年 100 万元",
+    evidenceText: "2025 年营业收入 100 万元",
   },
   unreadableItems: [],
 };
 
-describe("视觉模型结构化观察值校验", () => {
-  it("接受符合阶段一观察值结构的输出", () => {
+const validObservation = { claims: [incomeClaim] };
+
+describe("视觉模型 claims[] 结构化观察值校验", () => {
+  it("接受单条与多条主张的图上观察", () => {
+    const multiClaimObservation = {
+      claims: [
+        incomeClaim,
+        {
+          ...incomeClaim,
+          claimText: "2025 年利润增长 40%",
+          claimedGrowthPercent: 40,
+        },
+      ],
+    };
+
     expect(parseVisionObservation(validObservation)).toEqual(validObservation);
+    expect(parseVisionObservation(multiClaimObservation)).toEqual(multiClaimObservation);
   });
 
-  it("拒绝把缺失数字猜成文本、也拒绝模型增加未声明字段", () => {
-    const wrongValue = {
-      ...validObservation,
-      newer: { ...validObservation.newer, value: "约 100" },
+  it("允许无法辨认的值或缺失证据作为有效观察", () => {
+    const observation = {
+      claims: [{
+        ...incomeClaim,
+        newer: { ...incomeClaim.newer, value: null, evidenceText: null },
+        unreadableItems: ["2025 年营业收入数值无法辨认"],
+      }],
     };
-    const unexpectedField = { ...validObservation, confidence: 0.99 };
+
+    expect(parseVisionObservation(observation)).toEqual(observation);
+  });
+
+  it("接受空 claims[]，不把它伪造成一条主张", () => {
+    expect(parseVisionObservation({ claims: [] })).toEqual({ claims: [] });
+  });
+
+  it("拒绝字段类型错误、意外字段和模型生成的审计结果", () => {
+    const wrongValue = {
+      claims: [{ ...incomeClaim, newer: { ...incomeClaim.newer, value: "约 100" } }],
+    };
+    const unexpectedField = {
+      claims: [{ ...incomeClaim, result: { status: "consistent" } }],
+    };
+    const userState = {
+      claims: [{ ...incomeClaim, confirmed: true }],
+    };
 
     expect(() => parseVisionObservation(wrongValue)).toThrow();
     expect(() => parseVisionObservation(unexpectedField)).toThrow();
+    expect(() => parseVisionObservation(userState)).toThrow();
   });
 
-  it("缺少任何必要观察字段时拒绝整个结果", () => {
-    const { unreadableItems: _omitted, ...incomplete } = validObservation;
+  it("拒绝缺少必要观察字段的主张", () => {
+    const { unreadableItems: _omitted, ...incompleteClaim } = incomeClaim;
 
-    expect(() => parseVisionObservation(incomplete)).toThrow();
+    expect(() => parseVisionObservation({ claims: [incompleteClaim] })).toThrow();
   });
 });

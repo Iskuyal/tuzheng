@@ -10,6 +10,36 @@ export interface DataPointObservation {
   valueSource: ValueSource;
 }
 
+export interface RawDataPointObservation {
+  period: string | null;
+  value: number | null;
+  unit: string | null;
+  evidenceText: string | null;
+}
+
+export interface GrowthClaimObservation {
+  id: string;
+  claimText: string | null;
+  claimedGrowthPercent: number | null;
+  older: RawDataPointObservation;
+  newer: RawDataPointObservation;
+  unreadableItems: string[];
+}
+
+export interface ChartObservation {
+  source: ObservationSource;
+  claims: GrowthClaimObservation[];
+}
+
+export interface ModelReadTrace {
+  model: string;
+  latencyMs: number;
+  imageBytes: number;
+  requestId: string | null;
+  usage: { inputTokens: number | null; outputTokens: number | null } | null;
+  rawText: string;
+}
+
 export interface AuditObservation {
   titleOriginal: string | null;
   claimedGrowthPercent: number | null;
@@ -26,6 +56,36 @@ export interface AuditResult {
   formula: string | null;
   summary: string;
   reasons: string[];
+}
+
+export function initialValueSource(
+  source: ObservationSource,
+  point: RawDataPointObservation,
+): ValueSource {
+  if (point.value === null) return "unreadable";
+  return source === "preset-example" ? "preset" : "model";
+}
+
+export function toDataPointObservation(
+  source: ObservationSource,
+  point: RawDataPointObservation,
+): DataPointObservation {
+  return { ...point, valueSource: initialValueSource(source, point) };
+}
+
+export function toAuditObservation(
+  chartObservation: ChartObservation,
+  claim: GrowthClaimObservation,
+): AuditObservation {
+  return {
+    titleOriginal: claim.claimText,
+    claimedGrowthPercent: claim.claimedGrowthPercent,
+    older: toDataPointObservation(chartObservation.source, claim.older),
+    newer: toDataPointObservation(chartObservation.source, claim.newer),
+    unreadableItems: [...claim.unreadableItems],
+    confirmed: false,
+    source: chartObservation.source,
+  };
 }
 
 function formatNumber(value: number, maximumFractionDigits = 2): string {

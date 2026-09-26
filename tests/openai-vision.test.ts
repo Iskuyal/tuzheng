@@ -3,11 +3,13 @@ import { OpenAIResponsesVisionAdapter } from "../server/openai-vision.js";
 import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses.js";
 
 const validObservation = {
-  titleOriginal: "2025 年收入增长 40%",
-  claimedGrowthPercent: 40,
-  older: { period: "2024 年", value: 80, unit: "万元", evidenceText: "2024 年 80 万元" },
-  newer: { period: "2025 年", value: 100, unit: "万元", evidenceText: "2025 年 100 万元" },
-  unreadableItems: [],
+  claims: [{
+    claimText: "2025 年收入增长 40%",
+    claimedGrowthPercent: 40,
+    older: { period: "2024 年", value: 80, unit: "万元", evidenceText: "2024 年 80 万元" },
+    newer: { period: "2025 年", value: 100, unit: "万元", evidenceText: "2025 年 100 万元" },
+    unreadableItems: [],
+  }],
 };
 
 describe("OpenAI Responses 视觉适配器", () => {
@@ -17,7 +19,12 @@ describe("OpenAI Responses 视觉适配器", () => {
       { baseUrl: "https://proxy.example/v1", apiKey: "test-key", model: "gpt-4.1-mini" },
       async (payload) => {
         sent = payload;
-        return { output_text: JSON.stringify(validObservation) };
+        return {
+          output_text: JSON.stringify(validObservation),
+          model: "gpt-4.1-mini-2025-04-14",
+          id: "resp_abc123",
+          usage: { input_tokens: 1_500, output_tokens: 120 },
+        };
       },
     );
 
@@ -26,9 +33,20 @@ describe("OpenAI Responses 视觉适配器", () => {
       mimeType: "image/png",
     });
 
-    expect(result).toEqual(validObservation);
+    expect(result).toEqual({
+      observation: validObservation,
+      model: "gpt-4.1-mini-2025-04-14",
+      requestId: "resp_abc123",
+      usage: { inputTokens: 1_500, outputTokens: 120 },
+      rawText: JSON.stringify(validObservation),
+    });
     expect(sent?.store).toBe(false);
-    expect(sent?.text?.format).toMatchObject({ type: "json_schema", strict: true });
+    expect(sent?.text?.format).toMatchObject({
+      type: "json_schema",
+      name: "chart_claim_observations",
+      strict: true,
+      schema: { type: "object", properties: { claims: { type: "array" } } },
+    });
     const userMessage = Array.isArray(sent?.input) ? sent.input[0] : undefined;
     expect(userMessage).toMatchObject({
       role: "user",
