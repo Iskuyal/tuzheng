@@ -58,7 +58,7 @@ export interface ClaimWorkspaceEntry {
 export interface ClaimWorkspace {
   source: ObservationSource;
   claims: ClaimWorkspaceEntry[];
-  events: ClaimAuditEvent[];
+  events: ClaimAuditLog;
 }
 
 function copyValues(values: ClaimWorkspaceValues): ClaimWorkspaceValues {
@@ -90,20 +90,75 @@ function pendingEntry(source: ObservationSource, observation: GrowthClaimObserva
   };
 }
 
-function createEvent(
-  workspace: ClaimWorkspace,
-  entry: ClaimWorkspaceEntry,
-  fields: Pick<ClaimAuditEvent, "at" | "action" | "changes" | "result">,
-): ClaimAuditEvent {
+export interface ClaimEditResult {
+  values: ClaimWorkspaceValues;
+  change: ClaimAuditChange;
+  changed: boolean;
+}
+
+/**
+ * 把一次编辑作用到核对值上：返回新值与变化前后的值，数值没变时 changed 为 false
+ * （调用方据此既不记事件也不清结论）。两条路径共用这一份规则。
+ */
+export function applyClaimEdit(
+  values: ClaimWorkspaceValues,
+  edit: ClaimWorkspaceEdit,
+): ClaimEditResult {
+  const next = copyValues(values);
+
+  if (edit.kind === "growth-percent") {
+    const to = edit.value === null || !Number.isFinite(edit.value) ? null : edit.value;
+    next.claimedGrowthPercent = to;
+    return {
+      values: next,
+      change: { field: "claimedGrowthPercent", from: values.claimedGrowthPercent, to },
+      changed: values.claimedGrowthPercent !== to,
+    };
+  }
+
+  const point = next[edit.point];
+  const field: ClaimAuditField = `${edit.point}.${edit.kind}`;
+  if (edit.kind === "value") {
+    const to = edit.value === null || !Number.isFinite(edit.value) ? null : edit.value;
+    const from = values[edit.point].value;
+    const changed = from !== to;
+    if (changed) {
+      point.value = to;
+      point.valueSource = to === null ? "unreadable" : "user";
+    }
+    return { values: next, change: { field, from, to }, changed };
+  }
+
+  const to = edit.value || null;
+  point[edit.kind] = to;
   return {
-    id: workspace.events.length + 1,
-    claimId: entry.observation.id,
-    claimText: entry.observation.claimText,
-    ...fields,
+    values: next,
+    change: { field, from: values[edit.point][edit.kind], to },
+    changed: values[edit.point][edit.kind] !== to,
   };
 }
 
-function appendEvent(events: ClaimAuditEvent[], event: ClaimAuditEvent): ClaimAuditEvent[] {
+export function valuesFromObservation(observation: AuditObservation): ClaimWorkspaceValues {
+  return {
+    claimedGrowthPercent: observation.claimedGrowthPercent,
+    older: { ...observation.older },
+    newer: { ...observation.newer },
+  };
+}
+
+export type ClaimAuditLog = ClaimAuditEvent[];
+
+export interface ClaimAuditReview {
+  action: "confirm" | "recompute";
+  result: { status: AuditStatus; summary: string };
+}
+
+export interface ClaimAuditTarget {
+  claimId: string;
+  claimText: string | null;
+}
+
+function appendEvent(events: ClaimAuditLog, event: ClaimAuditEvent): ClaimAuditLog {
   const previous = events.at(-1);
   const mergeable = previous !== undefined
     && previous.action === "correct"
@@ -125,7 +180,51 @@ function appendEvent(events: ClaimAuditEvent[], event: ClaimAuditEvent): ClaimAu
   return [...events.slice(0, -1), merged];
 }
 
-export function previousResultStatus(events: ClaimAuditEvent[], index: number): AuditStatus | null {
+function newEvent(
+  events: ClaimAuditLog,
+  target: ClaimAuditTarget,
+  fields: Omit<ClaimAuditEvent, "id" | "claimId" | "claimText">,
+): ClaimAuditEvent {
+  return {
+    id: events.length + 1,
+    claimId: target.claimId,
+    claimText: target.claimText,
+    ...fields,
+  };
+}
+
+/** 记录一次读数更正；没有真正改变数值时返回原记录，不产生空事件。 */
+export function recordCorrection(
+  events: ClaimAuditLog,
+  target: ClaimAuditTarget,
+  change: ClaimAuditChange,
+  at: string = new Date().toISOString(),
+): ClaimAuditLog {
+  if (change.from === change.to) return events;
+  return appendEvent(events, newEvent(events, target, {
+    at,
+    action: "correct",
+    changes: [change],
+    result: null,
+  }));
+}
+
+/** 记录一次确认或重算及其结论。 */
+export function recordReview(
+  events: ClaimAuditLog,
+  target: ClaimAuditTarget,
+  review: ClaimAuditReview,
+  at: string = new Date().toISOString(),
+): ClaimAuditLog {
+  return appendEvent(events, newEvent(events, target, {
+    at,
+    action: review.action,
+    changes: [],
+    result: review.result,
+  }));
+}
+
+export function previousResultStatus(events: ClaimAuditLog, index: number): AuditStatus | null {
   const event = events[index];
   const status = event?.result?.status;
   if (!event || !status) return null;
@@ -151,58 +250,32 @@ export function updateClaimDraft(
   edit: ClaimWorkspaceEdit,
   at: string = new Date().toISOString(),
 ): ClaimWorkspace {
-  let changed = false;
-  let recorded: ClaimAuditEvent | null = null;
+  let recorded: { target: ClaimAuditTarget; change: ClaimAuditChange } | null = null;
 
   const claims = workspace.claims.map((entry) => {
     if (entry.observation.id !== claimId) return entry;
 
-    const draftValues = copyValues(entry.draftValues);
-    let change: ClaimAuditChange;
-    if (edit.kind === "growth-percent") {
-      change = {
-        field: "claimedGrowthPercent",
-        from: entry.draftValues.claimedGrowthPercent,
-        to: edit.value,
-      };
-      draftValues.claimedGrowthPercent = edit.value;
-    } else {
-      change = {
-        field: `${edit.point}.${edit.kind}`,
-        from: entry.draftValues[edit.point][edit.kind],
-        to: edit.value,
-      };
-      const point = draftValues[edit.point];
-      if (edit.kind === "value") {
-        point.value = edit.value;
-        point.valueSource = edit.value === null ? "unreadable" : "user";
-      } else {
-        point[edit.kind] = edit.value;
-      }
-    }
-
+    const applied = applyClaimEdit(entry.draftValues, edit);
     // 输入没有真正改变数值时不记事件，也不清掉已有结论。
-    if (change.from === change.to) return entry;
-    changed = true;
+    if (!applied.changed) return entry;
 
-    recorded = createEvent(workspace, entry, {
-      at,
-      action: "correct",
-      changes: [change],
-      result: null,
-    });
+    recorded = {
+      target: { claimId, claimText: entry.observation.claimText },
+      change: applied.change,
+    };
 
     return {
       ...entry,
-      draftValues,
+      draftValues: applied.values,
       confirmedValues: null,
       confirmationState: "pending" as const,
       result: null,
     };
   });
 
-  if (!changed || !recorded) return workspace;
-  return { ...workspace, claims, events: appendEvent(workspace.events, recorded) };
+  if (!recorded) return workspace;
+  const { target, change } = recorded;
+  return { ...workspace, claims, events: recordCorrection(workspace.events, target, change, at) };
 }
 
 export function toClaimAuditSubmission(
@@ -229,19 +302,18 @@ export function completeClaimReview(
   result: AuditResult,
   at: string = new Date().toISOString(),
 ): ClaimWorkspace {
-  let changed = false;
-  let recorded: ClaimAuditEvent | null = null;
+  let recorded: { target: ClaimAuditTarget; review: ClaimAuditReview } | null = null;
 
   const claims = workspace.claims.map((entry) => {
     if (entry.observation.id !== claimId) return entry;
-    changed = true;
 
-    recorded = createEvent(workspace, entry, {
-      at,
-      action: entry.confirmationState === "confirmed" ? "recompute" : "confirm",
-      changes: [],
-      result: { status: result.status, summary: result.summary },
-    });
+    recorded = {
+      target: { claimId, claimText: entry.observation.claimText },
+      review: {
+        action: entry.confirmationState === "confirmed" ? "recompute" : "confirm",
+        result: { status: result.status, summary: result.summary },
+      },
+    };
 
     return {
       ...entry,
@@ -251,8 +323,9 @@ export function completeClaimReview(
     };
   });
 
-  if (!changed || !recorded) return workspace;
-  return { ...workspace, claims, events: appendEvent(workspace.events, recorded) };
+  if (!recorded) return workspace;
+  const { target, review } = recorded;
+  return { ...workspace, claims, events: recordReview(workspace.events, target, review, at) };
 }
 
 export function resetClaimWorkspace(workspace: ClaimWorkspace): ClaimWorkspace {

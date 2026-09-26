@@ -2,18 +2,23 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
+import AuditRecordList from "../components/AuditRecordList.vue";
+import AuditSessionBar from "../components/AuditSessionBar.vue";
+import { auditStatusLabel, groupClaimAuditRows, buildClaimAuditRows, type ClaimAuditRow } from "../audit-record-rows.js";
 import { takeLandingUpload } from "../upload-transfer.js";
 import { initialValueSource, toAuditObservation, type AuditObservation, type AuditResult, type ChartObservation, type DataPointObservation, type GrowthClaimObservation, type ModelReadTrace, type ObservationSource } from "../../shared/audit.js";
 import {
+  applyClaimEdit,
   completeClaimReview,
   createClaimWorkspace,
-  previousResultStatus,
+  recordCorrection,
+  recordReview,
   resetClaimWorkspace,
   toClaimAuditSubmission,
   updateClaimDraft,
+  valuesFromObservation,
   type ClaimAuditChange,
-  type ClaimAuditEvent,
-  type ClaimAuditField,
+  type ClaimAuditLog,
   type ClaimWorkspace,
   type ClaimWorkspaceEdit,
   type ClaimWorkspaceEntry,
@@ -50,6 +55,12 @@ const errorMessage = ref("");
 const busyMessage = ref("");
 const modelRead = ref<ModelReadTrace | null>(null);
 const modelReadRegion = ref<"crop" | "full">("full");
+// 单主张路径（阶段一样例、或模型只读到一条主张）用自己的记录与会话快照，
+// 规则与多主张共用 shared 里的 recordCorrection / recordReview。
+const singleClaimLog = ref<ClaimAuditLog>([]);
+const singleClaimId = ref("");
+const singleClaimRevision = ref(0);
+const initialObservation = ref<AuditObservation | null>(null);
 const cropMode = ref(false);
 const cropSelection = ref<CropSelection | null>(null);
 const cropPreview = ref("");
@@ -75,42 +86,10 @@ const activeSample = computed(
 const hasMultipleClaims = computed(() => (chartObservation.value?.claims.length ?? 0) > 1);
 const hasNoClaims = computed(() => chartObservation.value?.claims.length === 0);
 const hasAnyAuditResult = computed(() => Boolean(result.value) || Boolean(claimWorkspace.value?.claims.some((claim) => claim.result)));
-interface ClaimAuditRow {
-  id: number;
-  time: string;
-  action: string;
-  detail: string;
-  status: AuditResult["status"] | null;
-  wasLabel: string | null;
-  clearedLabel: string | null;
-}
-const claimAuditRows = computed<Record<string, ClaimAuditRow[]>>(() => {
-  const rows: Record<string, ClaimAuditRow[]> = {};
-  const events = claimWorkspace.value?.events ?? [];
-
-  events.forEach((event, index) => {
-    const status = event.result?.status ?? null;
-    const previous = previousResultStatus(events, index);
-    const forClaim = rows[event.claimId] ?? (rows[event.claimId] = []);
-    forClaim.push({
-      id: event.id,
-      time: formatEventTime(event.at),
-      action: auditActionLabel(event.action),
-      detail: event.changes.length
-        ? event.changes.map(formatAuditChange).join("；")
-        : "按已确认的核对值计算",
-      status,
-      wasLabel: previous ? `此前为 ${auditStatusLabel(previous)}` : null,
-      clearedLabel: status
-        ? null
-        : forClaim.some((row) => row.status)
-          ? "原结论已清除，等待重新确认"
-          : "等待重新确认",
-    });
-  });
-
-  return rows;
-});
+const claimAuditRows = computed<Record<string, ClaimAuditRow[]>>(
+  () => groupClaimAuditRows(claimWorkspace.value?.events ?? []),
+);
+const singleClaimAuditRows = computed<ClaimAuditRow[]>(() => buildClaimAuditRows(singleClaimLog.value));
 const cropSelectionStyle = computed(() => {
   const selection = cropSelection.value;
   const image = previewImage.value;
@@ -275,10 +254,43 @@ function setChartObservation(value: ChartObservation): void {
   busyClaimId.value = null;
   resetNotice.value = "";
   const [claim] = value.claims;
-  observation.value = value.claims.length === 1 && claim
-    ? toAuditObservation(value, claim)
-    : null;
+  const single = value.claims.length === 1 && claim ? toAuditObservation(value, claim) : null;
+  observation.value = single;
+  initialObservation.value = single ? copyAuditObservation(single) : null;
+  singleClaimId.value = single ? claim.id : "";
+  singleClaimLog.value = [];
+  singleClaimRevision.value += 1;
   result.value = null;
+}
+
+function copyAuditObservation(value: AuditObservation): AuditObservation {
+  return {
+    ...value,
+    older: { ...value.older },
+    newer: { ...value.newer },
+    unreadableItems: [...value.unreadableItems],
+  };
+}
+
+function applySingleEdit(edit: ClaimWorkspaceEdit): void {
+  const current = observation.value;
+  if (!current) return;
+
+  const applied = applyClaimEdit(valuesFromObservation(current), edit);
+  // 与多主张路径同一规则：数值没变就不记事件、不清结论、不动来源标记。
+  if (!applied.changed) return;
+
+  current.claimedGrowthPercent = applied.values.claimedGrowthPercent;
+  current.older = { ...applied.values.older };
+  current.newer = { ...applied.values.newer };
+  singleClaimLog.value = recordCorrection(
+    singleClaimLog.value,
+    { claimId: singleClaimId.value, claimText: current.titleOriginal },
+    applied.change,
+  );
+  singleClaimRevision.value += 1;
+  resetNotice.value = "";
+  invalidateResult();
 }
 
 async function loadSample(id: string): Promise<void> {
@@ -369,6 +381,10 @@ function prepareUploadFile(file: File): void {
   claimErrors.value = {};
   busyClaimId.value = null;
   observation.value = null;
+  initialObservation.value = null;
+  singleClaimId.value = "";
+  singleClaimLog.value = [];
+  singleClaimRevision.value += 1;
   result.value = null;
   modelRead.value = null;
   errorMessage.value = "";
@@ -504,10 +520,8 @@ function invalidateResult(): void {
 }
 
 function editClaim(event: Event): void {
-  if (!observation.value) return;
-  const value = (event.target as HTMLInputElement).value;
-  observation.value.claimedGrowthPercent = value === "" ? null : Number(value);
-  invalidateResult();
+  const raw = (event.target as HTMLInputElement).value;
+  applySingleEdit({ kind: "growth-percent", value: raw === "" ? null : Number(raw) });
 }
 
 function editPoint(
@@ -515,22 +529,21 @@ function editPoint(
   field: "period" | "value" | "unit",
   event: Event,
 ): void {
-  if (!observation.value) return;
-  const point = observation.value[pointName];
   const input = event.target as HTMLInputElement | HTMLTextAreaElement;
   if (field === "value") {
-    const value = input.value;
-    point.value = value === "" ? null : Number(value);
-    point.valueSource = point.value === null ? "unreadable" : "user";
-  } else if (field === "period" || field === "unit") {
-    point[field] = input.value || null;
+    applySingleEdit({ kind: "value", point: pointName, value: input.value === "" ? null : Number(input.value) });
+    return;
   }
-  invalidateResult();
+  applySingleEdit({ kind: field, point: pointName, value: input.value || null });
 }
 
 async function confirmAndCalculate(): Promise<void> {
   if (!observation.value) return;
+  const wasConfirmed = observation.value.confirmed;
+  const recordedObservation = observation.value;
+  const revisionAtStart = singleClaimRevision.value;
   observation.value.confirmed = true;
+  resetNotice.value = "";
   busyMessage.value = "正在用已确认数字计算…";
   errorMessage.value = "";
   result.value = null;
@@ -547,9 +560,20 @@ async function confirmAndCalculate(): Promise<void> {
     if (!response.ok || !payload?.result) {
       throw new Error(updateErrorFrom(response, payload));
     }
+    // 计算期间换图、重置或继续编辑都算会话已换，迟到的响应不写回。
+    if (singleClaimRevision.value !== revisionAtStart || observation.value !== recordedObservation) return;
     result.value = payload.result;
+    singleClaimLog.value = recordReview(
+      singleClaimLog.value,
+      { claimId: singleClaimId.value, claimText: recordedObservation.titleOriginal },
+      {
+        action: wasConfirmed ? "recompute" : "confirm",
+        result: { status: payload.result.status, summary: payload.result.summary },
+      },
+    );
   } catch (error) {
-    observation.value.confirmed = false;
+    if (singleClaimRevision.value !== revisionAtStart || observation.value !== recordedObservation) return;
+    recordedObservation.confirmed = false;
     errorMessage.value = error instanceof Error ? error.message : "计算失败，请重试。";
   } finally {
     busyMessage.value = "";
@@ -569,10 +593,7 @@ function editWorkspaceClaim(claimId: string, edit: ClaimWorkspaceEdit): void {
 function editWorkspaceGrowth(event: Event, claimId: string): void {
   const input = event.target as HTMLInputElement;
   const value = input.value === "" ? null : Number(input.value);
-  editWorkspaceClaim(claimId, {
-    kind: "growth-percent",
-    value: value !== null && Number.isFinite(value) ? value : null,
-  });
+  editWorkspaceClaim(claimId, { kind: "growth-percent", value });
 }
 
 function editWorkspacePoint(
@@ -584,11 +605,7 @@ function editWorkspacePoint(
   const input = event.target as HTMLInputElement;
   if (field === "value") {
     const value = input.value === "" ? null : Number(input.value);
-    editWorkspaceClaim(claimId, {
-      kind: "value",
-      point,
-      value: value !== null && Number.isFinite(value) ? value : null,
-    });
+    editWorkspaceClaim(claimId, { kind: "value", point, value });
     return;
   }
   editWorkspaceClaim(claimId, {
@@ -634,6 +651,18 @@ async function confirmWorkspaceClaim(claimId: string): Promise<void> {
   } finally {
     if (busyClaimId.value === claimId) busyClaimId.value = null;
   }
+}
+
+function resetSingleClaim(): void {
+  const initial = initialObservation.value;
+  if (!initial || !observation.value || busyMessage.value) return;
+
+  observation.value = copyAuditObservation(initial);
+  result.value = null;
+  singleClaimLog.value = [];
+  singleClaimRevision.value += 1;
+  errorMessage.value = "";
+  resetNotice.value = "已重置本次会话：读数回到最初载入的值，确认状态、结果和审计记录已清空。";
 }
 
 function resetWorkspace(): void {
@@ -692,45 +721,6 @@ function valueSourceLabel(source: DataPointObservation["valueSource"]): string {
   if (source === "user") return "用户手动更正";
   if (source === "unreadable") return "图上暂不可读";
   return "预置示例值";
-}
-
-function auditStatusLabel(status: AuditResult["status"]): string {
-  if (status === "consistent") return "图内一致";
-  if (status === "contradictory") return "图内矛盾";
-  return "需要确认";
-}
-
-const auditFieldLabels: Record<ClaimAuditField, string> = {
-  claimedGrowthPercent: "标题声称增长",
-  "older.period": "较早时间",
-  "older.value": "较早数值",
-  "older.unit": "较早单位",
-  "newer.period": "较新时间",
-  "newer.value": "较新数值",
-  "newer.unit": "较新单位",
-};
-
-function formatAuditValue(field: ClaimAuditField, value: number | string | null): string {
-  if (value === null || value === "") return "未填写";
-  if (field === "claimedGrowthPercent") return formatValue(Number(value), "%");
-  return String(value);
-}
-
-function formatAuditChange(change: ClaimAuditChange): string {
-  return `${auditFieldLabels[change.field]} ${formatAuditValue(change.field, change.from)} → ${formatAuditValue(change.field, change.to)}`;
-}
-
-function auditActionLabel(action: ClaimAuditEvent["action"]): string {
-  if (action === "correct") return "更正读数";
-  if (action === "confirm") return "确认并计算";
-  return "重新计算";
-}
-
-function formatEventTime(at: string): string {
-  const date = new Date(at);
-  if (Number.isNaN(date.getTime())) return at;
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
 onMounted(() => {
@@ -966,19 +956,12 @@ onBeforeUnmount(() => {
             </details>
           </section>
 
-          <div v-if="hasMultipleClaims && chartObservation && claimWorkspace" class="claim-audit-bar">
-            <span>记录只保留在本次会话；刷新、切换图片或重置后清空。</span>
-            <button
-              class="reset-audit-button"
-              type="button"
-              :disabled="!claimWorkspace.events.length || busyClaimId !== null"
-              @click="resetWorkspace"
-            >
-              重置本次审计
-            </button>
-          </div>
-          <p v-if="resetNotice" class="reset-notice" role="status">{{ resetNotice }}</p>
-
+          <AuditSessionBar
+            v-if="hasMultipleClaims && chartObservation && claimWorkspace"
+            :disabled="!claimWorkspace.events.length || busyClaimId !== null"
+            :notice="resetNotice"
+            @reset="resetWorkspace"
+          />
           <div v-if="hasMultipleClaims && chartObservation && claimWorkspace" id="audit-claim-results" class="claim-observation-list" aria-label="图内主张和证据">
             <details v-for="(entry, index) in claimWorkspace.claims" :key="entry.observation.id" class="claim-observation-card" :open="index === 0">
               <summary class="claim-observation-summary">
@@ -1077,27 +1060,21 @@ onBeforeUnmount(() => {
                   </ul>
                   <p class="result-boundary">这只说明已确认的图内观察与主张是否一致，不代表现实数据已核实。</p>
                 </section>
-                <details v-if="claimAuditRows[entry.observation.id]?.length" class="claim-audit-log">
-                  <summary>
-                    <span>本次会话的审计记录</span>
-                    <span class="claim-audit-log-count">{{ claimAuditRows[entry.observation.id].length }} 条</span>
-                  </summary>
-                  <ol class="claim-audit-log-list">
-                    <li v-for="row in claimAuditRows[entry.observation.id]" :key="row.id">
-                      <time>{{ row.time }}</time>
-                      <span class="claim-audit-action">{{ row.action }}</span>
-                      <span class="claim-audit-change">{{ row.detail }}</span>
-                      <span v-if="row.status" class="result-status" :class="row.status">{{ auditStatusLabel(row.status) }}</span>
-                      <span v-else class="claim-audit-cleared">{{ row.clearedLabel }}</span>
-                      <span v-if="row.wasLabel" class="claim-audit-was">（{{ row.wasLabel }}）</span>
-                    </li>
-                  </ol>
-                </details>
+                <AuditRecordList
+                  v-if="claimAuditRows[entry.observation.id]?.length"
+                  :rows="claimAuditRows[entry.observation.id]"
+                />
               </div>
             </details>
           </div>
 
           <div v-else-if="observation" class="observation-form">
+            <AuditSessionBar
+              :disabled="!singleClaimAuditRows.length || Boolean(busyMessage)"
+              :notice="resetNotice"
+              @reset="resetSingleClaim"
+            />
+
             <label class="field-block title-field">
               <span class="field-label">图表标题 · 原图摘录 · 只读</span>
               <textarea
@@ -1270,6 +1247,8 @@ onBeforeUnmount(() => {
             <p class="result-boundary">这只说明标题与已确认的图中文字是否一致；没有原始数据来源，不能核实真实数据。</p>
             <a class="evidence-jump" href="#evidence-details">查看完整证据摘录</a>
           </section>
+
+          <AuditRecordList v-if="singleClaimAuditRows.length" :rows="singleClaimAuditRows" />
         </section>
       </div>
 

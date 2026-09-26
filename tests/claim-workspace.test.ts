@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import expectations from "../samples/expectations.json" with { type: "json" };
 import { evaluateGrowth } from "../shared/audit.js";
 import {
+  applyClaimEdit,
   completeClaimReview,
   createClaimWorkspace,
   previousResultStatus,
+  recordCorrection,
+  recordReview,
   resetClaimWorkspace,
   toClaimAuditSubmission,
   updateClaimDraft,
@@ -239,5 +242,72 @@ describe("会话审计记录与整份重置", () => {
       ["revenue-growth", "consistent"],
     ]);
     expect(previousResultStatus(workspace.events, 3)).toBeNull();
+  });
+});
+
+describe("共用的记录原语", () => {
+  const target = { claimId: "claim-1", claimText: "年营业收入增长 40%" };
+  const at = "2026-09-26T10:00:00.000Z";
+
+  it("记录各类字段的更正，未变化时不产生事件", () => {
+    let log = recordCorrection([], target, { field: "newer.value", from: 70, to: 100 }, at);
+    log = recordCorrection(log, target, { field: "older.period", from: "2024 年", to: "2023 年" }, at);
+    log = recordCorrection(log, target, { field: "newer.unit", from: "万元", to: "元" }, at);
+    log = recordCorrection(log, target, { field: "claimedGrowthPercent", from: 40, to: null }, at);
+    expect(log.map(({ changes }) => [changes[0].field, changes[0].from, changes[0].to])).toEqual([
+      ["newer.value", 70, 100],
+      ["older.period", "2024 年", "2023 年"],
+      ["newer.unit", "万元", "元"],
+      ["claimedGrowthPercent", 40, null],
+    ]);
+
+    const unchanged = recordCorrection(log, target, { field: "newer.value", from: 100, to: 100 }, at);
+    expect(unchanged).toBe(log);
+  });
+
+  it("连续输入同一字段合并，确认与重算各记一条", () => {
+    let log = recordCorrection([], target, { field: "newer.value", from: 70, to: 1 }, at);
+    log = recordCorrection(log, target, { field: "newer.value", from: 1, to: 100 }, at);
+    expect(log).toHaveLength(1);
+    expect(log[0].changes[0]).toEqual({ field: "newer.value", from: 70, to: 100 });
+
+    log = recordReview(log, target, { action: "confirm", result: { status: "contradictory", summary: "标题写 40%，已确认数字算得 100%。" } }, at);
+    log = recordReview(log, target, { action: "recompute", result: { status: "needs-confirmation", summary: "关键数值尚未读清。" } }, at);
+    expect(log.map(({ id, action, result, claimId, claimText }) => [id, action, result?.status ?? null, claimId, claimText])).toEqual([
+      [1, "correct", null, "claim-1", "年营业收入增长 40%"],
+      [2, "confirm", "contradictory", "claim-1", "年营业收入增长 40%"],
+      [3, "recompute", "needs-confirmation", "claim-1", "年营业收入增长 40%"],
+    ]);
+    expect(log[1].changes).toEqual([]);
+  });
+});
+
+describe("共用的编辑语义", () => {
+  const values = {
+    claimedGrowthPercent: 40,
+    older: { period: "2024 年", value: 80, unit: "万元", evidenceText: "2024 年 80 万元", valueSource: "preset" as const },
+    newer: { period: "2025 年", value: 100, unit: "万元", evidenceText: "2025 年 100 万元", valueSource: "preset" as const },
+  };
+
+  it("数值没变时 changed 为 false，也不改来源标记", () => {
+    const same = applyClaimEdit(values, { kind: "value", point: "older", value: 80 });
+    expect(same.changed).toBe(false);
+    expect(same.values.older).toEqual(values.older);
+
+    const sameText = applyClaimEdit(values, { kind: "unit", point: "newer", value: "万元" });
+    expect(sameText.changed).toBe(false);
+  });
+
+  it("改动数值会标为用户更正，清空则标为图上不可读", () => {
+    const corrected = applyClaimEdit(values, { kind: "value", point: "newer", value: 70 });
+    expect(corrected.changed).toBe(true);
+    expect(corrected.values.newer).toMatchObject({ value: 70, valueSource: "user" });
+    expect(corrected.change).toEqual({ field: "newer.value", from: 100, to: 70 });
+
+    const cleared = applyClaimEdit(values, { kind: "value", point: "newer", value: null });
+    expect(cleared.values.newer).toMatchObject({ value: null, valueSource: "unreadable" });
+
+    const notFinite = applyClaimEdit(values, { kind: "growth-percent", value: Number.POSITIVE_INFINITY });
+    expect(notFinite.values.claimedGrowthPercent).toBeNull();
   });
 });

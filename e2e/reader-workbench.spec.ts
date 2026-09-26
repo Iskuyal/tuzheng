@@ -140,6 +140,34 @@ test("阶段一单主张路径仍可核对，操作区不重叠", async ({ page 
   await expect(page.locator(".result-sheet .result-status")).toHaveText("图内矛盾");
   await expect(page.locator(".result-sheet .formula-line")).toContainText("(100 - 80) / 80 × 100 = 25%");
 
+  // 单主张路径同样提供会话记录与重置
+  const record = page.locator(".claim-audit-log");
+  await record.locator("summary").click();
+  await expect(record).toContainText("确认并计算");
+  await expect(record).toContainText("图内矛盾");
+
+  // 重新输入同一个值不算更正：不记事件，也不清掉已有结论
+  await form.locator(".point-editor").nth(0).getByLabel("数值 · 可核对").fill("80");
+  await expect(page.locator(".result-sheet .result-status")).toHaveText("图内矛盾");
+
+  await form.locator(".point-editor").nth(0).getByLabel("数值 · 可核对").fill("90");
+  await expect(record).toContainText("较早数值 80 → 90");
+  await expect(page.locator(".result-sheet")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "重置本次审计" }).click();
+  await expect(page.getByText("已重置本次会话：读数回到最初载入的值，确认状态、结果和审计记录已清空。")).toBeVisible();
+  await expect(form.locator(".title-field textarea")).toHaveValue("年营业收入增长 40%");
+  await expect(form.locator(".point-editor").nth(0).getByLabel("数值 · 可核对")).toHaveValue("80");
+  await expect(form.locator(".point-editor").nth(1).getByLabel("数值 · 可核对")).toHaveValue("100");
+  await expect(record).toHaveCount(0);
+  await expect(page.locator(".result-sheet")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "重置本次审计" })).toBeDisabled();
+
+  // 重置后仍可重新核对，结论回到最初
+  await form.getByRole("button", { name: "确认读数并计算" }).click();
+  await expect(page.locator(".result-sheet .result-status")).toHaveText("图内矛盾");
+  await expect(page.locator(".result-sheet .formula-line")).toContainText("(100 - 80) / 80 × 100 = 25%");
+
   const layout = await page.evaluate(() => {
     const button = document.querySelector(".observation-form .confirm-button");
     const hint = document.querySelector(".observation-form .confirm-hint");
