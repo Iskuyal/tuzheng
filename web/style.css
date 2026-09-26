@@ -692,3 +692,9 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .cross-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
 .cross-swap { flex: 1 1 210px; }
 .cross-actions .cross-remove { align-self: end; }
+.cross-result { margin-top: 0; }
+.cross-evidence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 11px; }
+.cross-evidence article { min-width: 0; padding: 9px 10px; border: 1px solid #e0e8e4; background: #fbfcfb; }
+.cross-evidence-label { display: block; margin-bottom: 6px; color: #435d68; font-size: 12px; font-weight: 700; }
+.cross-evidence blockquote { margin: 0 0 6px; color: #243e45; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+@media (max-width: 620px) { .cross-evidence { grid-template-columns: 1fr; } }

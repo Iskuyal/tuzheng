@@ -5,8 +5,10 @@ import SiteHeader from "../components/SiteHeader.vue";
 import AuditRecordList from "../components/AuditRecordList.vue";
 import AuditSessionBar from "../components/AuditSessionBar.vue";
 import {
+  auditObservationFrom,
   claimScopeView,
   compareClaimScopes,
+  compareCrossGrowth,
   pickReferenceClaimId,
   type ClaimScopeView,
   type CrossElementKey,
@@ -867,6 +869,50 @@ async function confirmReferenceClaim(): Promise<void> {
   }
 }
 
+function confirmedValuesOf(source: "current" | "reference", claimId: string | null) {
+  if (!claimId) return null;
+
+  if (source === "reference") {
+    return referenceEntry.value?.confirmedValues ?? null;
+  }
+
+  const entry = claimWorkspace.value?.claims.find((item) => item.observation.id === claimId);
+  if (entry) return entry.confirmedValues;
+  // 单主张路径：表单那份观察值本身就是用户确认过的值
+  return observation.value?.confirmed ? valuesFromObservation(observation.value) : null;
+}
+
+const crossVerdict = computed(() => {
+  const comparison = crossComparison.value;
+  if (!comparison?.ready) return null;
+
+  const currentChart = chartObservation.value;
+  const referenceChart = referenceObservation.value;
+  const currentValues = confirmedValuesOf("current", crossCurrentClaimId.value);
+  const referenceValues = confirmedValuesOf("reference", referenceClaimId.value);
+  if (!currentChart || !referenceChart || !currentValues || !referenceValues) return null;
+
+  const left = auditObservationFrom(currentChart, crossCurrentClaimId.value ?? "", currentValues);
+  const right = auditObservationFrom(referenceChart, referenceClaimId.value ?? "", referenceValues);
+  if (!left || !right) return null;
+
+  return compareCrossGrowth(left, right);
+});
+
+const crossStatusLabel = computed(() => {
+  const status = crossVerdict.value?.status;
+  if (status === "consistent") return "数值一致";
+  if (status === "contradictory") return "数值冲突";
+  return "待核对";
+});
+
+function evidenceExcerpt(chart: ChartObservation | null, claimId: string | null): string {
+  const claim = chart?.claims.find((item) => item.id === claimId);
+  if (!claim) return "缺少图中文字依据";
+  const parts = [claim.older.evidenceText, claim.newer.evidenceText].filter((text) => Boolean(text?.trim()));
+  return parts.length ? parts.join("；") : "缺少图中文字依据";
+}
+
 function selectCurrentClaim(event: Event): void {
   crossCurrentClaimId.value = (event.target as HTMLSelectElement).value;
   crossConfirmedElements.value = [];
@@ -1584,6 +1630,33 @@ onBeforeUnmount(() => {
               <p v-if="crossComparison" class="cross-gate" :class="{ ready: crossComparison.ready }">
                 {{ crossComparison.ready ? "口径四要素一致、两侧读数都已确认，可以比较。" : crossGateMessage }}
               </p>
+
+              <section v-if="crossVerdict" class="result-sheet cross-result" aria-live="polite">
+                <div class="result-sheet-top">
+                  <span class="result-kicker">跨图结论</span>
+                  <span class="result-status" :class="crossVerdict.status">
+                    <span class="result-status-mark" aria-hidden="true"></span>
+                    {{ crossStatusLabel }}
+                  </span>
+                </div>
+                <h4 class="result-title">{{ crossVerdict.summary }}</h4>
+                <ul v-if="crossVerdict.reasons.length" class="result-reasons">
+                  <li v-for="reason in crossVerdict.reasons" :key="reason">{{ reason }}</li>
+                </ul>
+                <div class="cross-evidence">
+                  <article>
+                    <span class="cross-evidence-label">当前图 · {{ activeSample?.name ?? (selectedFileName || "你的截图") }}</span>
+                    <blockquote>{{ evidenceExcerpt(chartObservation, crossCurrentClaimId) }}</blockquote>
+                    <span class="ledger-source">{{ chartObservation?.source === "vision-model" ? "来自模型读取" : "团队自制样例中的预置观察值" }}</span>
+                  </article>
+                  <article>
+                    <span class="cross-evidence-label">对照图 · {{ referenceLabel }}</span>
+                    <blockquote>{{ evidenceExcerpt(referenceObservation, referenceClaimId) }}</blockquote>
+                    <span class="ledger-source">{{ referenceObservation?.source === "vision-model" ? "来自模型读取" : "团队自制样例中的预置观察值" }}</span>
+                  </article>
+                </div>
+                <p class="result-boundary">这只比较两张图彼此是否自洽，不代表现实数据真伪，也不判断任何一方的动机。</p>
+              </section>
 
               <p v-if="referenceError" class="error-message" role="alert">{{ referenceError }}</p>
 

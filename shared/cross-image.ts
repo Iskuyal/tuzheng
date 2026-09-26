@@ -1,4 +1,5 @@
-import type { ChartObservation, GrowthClaimObservation } from "./audit.js";
+import { evaluateGrowth, type AuditObservation, type AxisObservation, type ChartObservation, type GrowthClaimObservation } from "./audit.js";
+import type { ClaimWorkspaceValues } from "./claim-workspace.js";
 
 export type CrossElementKey = "metric" | "period" | "unit" | "scope";
 
@@ -146,4 +147,91 @@ export function compareClaimScopes(
   const scopeReady = blockers.length === 0;
 
   return { elements, blockers, scopeReady, ready: scopeReady && left.confirmed && right.confirmed };
+}
+
+/** 用确认过的核对值组装一侧的审计观察值，供确定性增长率规则复用。 */
+export function auditObservationFrom(
+  chart: ChartObservation,
+  claimId: string,
+  values: ClaimWorkspaceValues,
+): AuditObservation | null {
+  const claim = chart.claims.find((item) => item.id === claimId);
+  if (!claim) return null;
+
+  return {
+    titleOriginal: claim.claimText,
+    claimedGrowthPercent: values.claimedGrowthPercent,
+    older: { ...values.older },
+    newer: { ...values.newer },
+    unreadableItems: [...claim.unreadableItems],
+    confirmed: true,
+    source: chart.source,
+  };
+}
+
+export interface CrossImageVerdict {
+  status: "consistent" | "contradictory" | "needs-confirmation";
+  leftGrowthPercent: number | null;
+  rightGrowthPercent: number | null;
+  differencePoints: number | null;
+  summary: string;
+  reasons: string[];
+}
+
+function formatPercent(value: number): string {
+  return `${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(value)}%`;
+}
+
+/**
+ * 比较两张图已确认读数算出的增长率。只比较两张图是否自洽，
+ * 不涉及两张图之外的现实数据，也不判断作者动机。
+ */
+export function compareCrossGrowth(
+  left: AuditObservation,
+  right: AuditObservation,
+): CrossImageVerdict {
+  const leftResult = evaluateGrowth(left);
+  const rightResult = evaluateGrowth(right);
+
+  if (leftResult.status === "needs-confirmation" || rightResult.status === "needs-confirmation") {
+    const reasons: string[] = [];
+    if (leftResult.status === "needs-confirmation") reasons.push(`当前图：${leftResult.summary}`);
+    if (rightResult.status === "needs-confirmation") reasons.push(`对照图：${rightResult.summary}`);
+    return {
+      status: "needs-confirmation",
+      leftGrowthPercent: leftResult.calculatedGrowthPercent,
+      rightGrowthPercent: rightResult.calculatedGrowthPercent,
+      differencePoints: null,
+      summary: "一侧的读数还不能计算增长率，跨图结论保持「待核对」。",
+      reasons,
+    };
+  }
+
+  const leftGrowth = leftResult.calculatedGrowthPercent as number;
+  const rightGrowth = rightResult.calculatedGrowthPercent as number;
+  const difference = Number(Math.abs(leftGrowth - rightGrowth).toFixed(2));
+
+  if (difference === 0) {
+    return {
+      status: "consistent",
+      leftGrowthPercent: leftGrowth,
+      rightGrowthPercent: rightGrowth,
+      differencePoints: 0,
+      summary: `两张图按各自已确认读数都算得 ${formatPercent(leftGrowth)}，数值一致。`,
+      reasons: [],
+    };
+  }
+
+  return {
+    status: "contradictory",
+    leftGrowthPercent: leftGrowth,
+    rightGrowthPercent: rightGrowth,
+    differencePoints: difference,
+    summary: `当前图算得 ${formatPercent(leftGrowth)}，对照图算得 ${formatPercent(rightGrowth)}，相差 ${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(difference)} 个百分点。`,
+    reasons: [],
+  };
+}
+
+export function axisOf(chart: ChartObservation): AxisObservation | null {
+  return chart.axis ?? null;
 }

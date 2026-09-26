@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { evaluateGrowth, toAuditObservation } from "../shared/audit.js";
 import {
+  auditObservationFrom,
   claimScopeView,
   compareClaimScopes,
+  compareCrossGrowth,
   normalizeLabel,
   pickReferenceClaimId,
 } from "../shared/cross-image.js";
+import { createClaimWorkspace } from "../shared/claim-workspace.js";
 import { sampleCases } from "../shared/samples.js";
 
 const samplesById = new Map(sampleCases.map((sample) => [sample.id, sample]));
@@ -95,5 +98,54 @@ describe("口径四要素比对", () => {
     expect(compareClaimScopes(left, { ...consistent, confirmed: false }, []).ready).toBe(false);
     expect(compareClaimScopes({ ...left, confirmed: false }, consistent, []).ready).toBe(false);
     expect(compareClaimScopes({ ...left, confirmed: true }, { ...consistent, confirmed: true }, []).ready).toBe(true);
+  });
+});
+
+describe("跨图数值判定", () => {
+  const confirmedValues = (id: string, claimId: string) => {
+    const workspace = createClaimWorkspace(observationOf(id));
+    const entry = workspace.claims.find((claim) => claim.observation.id === claimId);
+    if (!entry) throw new Error(`缺少主张 ${claimId}`);
+    return entry.draftValues;
+  };
+  const side = (id: string, claimId = "revenue-growth") =>
+    auditObservationFrom(observationOf(id), claimId, confirmedValues(id, claimId))!;
+
+  it("两侧算得相同时判数值一致", () => {
+    const verdict = compareCrossGrowth(side("cross-a-revenue"), side("cross-b-consistent"));
+    expect(verdict).toMatchObject({
+      status: "consistent",
+      leftGrowthPercent: 25,
+      rightGrowthPercent: 25,
+      differencePoints: 0,
+    });
+    expect(verdict.summary).toContain("25%");
+  });
+
+  it("两侧算得不同时判数值冲突并给出差值", () => {
+    const verdict = compareCrossGrowth(side("cross-a-revenue"), side("cross-b-conflict"));
+    expect(verdict).toMatchObject({
+      status: "contradictory",
+      leftGrowthPercent: 25,
+      rightGrowthPercent: 50,
+      differencePoints: 25,
+    });
+    expect(verdict.summary).toContain("25 个百分点");
+  });
+
+  it("一侧缺少可比较的读数时停在待核对", () => {
+    const missing = auditObservationFrom(observationOf("axis-unknown-start"), "revenue-growth", {
+      ...confirmedValues("axis-unknown-start", "revenue-growth"),
+      newer: { ...confirmedValues("axis-unknown-start", "revenue-growth").newer, value: null },
+    })!;
+    const verdict = compareCrossGrowth(side("cross-a-revenue"), missing);
+    expect(verdict.status).toBe("needs-confirmation");
+    expect(verdict.leftGrowthPercent).toBe(25);
+    expect(verdict.rightGrowthPercent).toBeNull();
+    expect(verdict.reasons.join(" ")).toContain("关键数值尚未读清");
+  });
+
+  it("取不到主张时返回 null，不编造观察值", () => {
+    expect(auditObservationFrom(observationOf("cross-a-revenue"), "不存在", confirmedValues("cross-a-revenue", "revenue-growth"))).toBeNull();
   });
 });
