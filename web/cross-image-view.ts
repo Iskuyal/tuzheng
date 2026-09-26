@@ -8,12 +8,13 @@ export function crossStateLabel(state: CrossElementState): string {
   return "不一致";
 }
 
-/** 柱形高度按各自范围归一化，用于「原图轴范围」与「从零起点」两版对照。 */
-export function axisBarPercent(heights: [number, number] | null, index: 0 | 1): number {
+/** 已知轴上限时按完整轴范围绘制；未知时才用较高柱作为顶端。 */
+export function axisBarPercent(heights: [number, number] | null, index: 0 | 1, scaleHeight?: number | null): number {
   if (!heights) return 0;
   const tallest = Math.max(heights[0], heights[1]);
-  if (tallest <= 0) return 0;
-  return Math.round((heights[index] / tallest) * 100);
+  const range = scaleHeight != null && scaleHeight > 0 ? Math.max(scaleHeight, tallest) : tallest;
+  if (range <= 0) return 0;
+  return Math.round((heights[index] / range) * 100);
 }
 
 export function axisRangeText(risk: AxisRiskAssessment): string {

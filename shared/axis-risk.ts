@@ -66,6 +66,36 @@ export function assessAxisRisk(
     };
   }
 
+  if (min > Math.min(first, second)) {
+    return {
+      level: "needs-confirmation",
+      axisMin: min,
+      axisMax: max,
+      unit,
+      heightsOnAxis: null,
+      heightsFromZero,
+      fromZeroRatio,
+      onAxisRatio: null,
+      summary: `纵轴起点 ${formatNumber(min)} 高于其中一根柱子的已确认数值，无法按原图范围重画。`,
+      reasons: ["请核对轴起点或柱子读数；两根柱子的数值都应位于纵轴范围内。"],
+    };
+  }
+
+  if (max !== null && (max <= min || max < Math.max(first, second))) {
+    return {
+      level: "needs-confirmation",
+      axisMin: min,
+      axisMax: max,
+      unit,
+      heightsOnAxis: null,
+      heightsFromZero,
+      fromZeroRatio,
+      onAxisRatio: null,
+      summary: `图上的纵轴上限是 ${formatNumber(max)}，没有覆盖已确认的柱子数值，无法按原图范围重画。`,
+      reasons: ["请核对纵轴上下限；上限应高于起点并覆盖两根柱子的数值。"],
+    };
+  }
+
   const heightsOnAxis: [number, number] = [Math.max(0, first - min), Math.max(0, second - min)];
   const onAxisRatio = heightsOnAxis[0] === 0
     ? null
@@ -106,10 +136,15 @@ export function assessAxisRisk(
   const amplification = onAxisRatio !== null && fromZeroRatio !== null && fromZeroRatio > 0
     ? Number((onAxisRatio / fromZeroRatio).toFixed(2))
     : null;
-  const heightNote = shorter === 0
-    ? `按原图轴范围，${formatNumber(first)} 那一根完全贴住基线、看不出高度，${formatNumber(second)} 那一根却占满画布`
-    : `按原图轴范围，两根柱子高度是 ${formatNumber(shorter)} 与 ${formatNumber(heightsOnAxis[1])}${amplification === null ? "" : `，高度差被放大约 ${formatNumber(amplification)} 倍`}`;
+  const heightNote = max === null
+    ? `以已知起点计算，两根柱子的相对高度是 ${formatNumber(shorter)} 与 ${formatNumber(heightsOnAxis[1])}；轴上限未读到，不能复原原图柱高`
+    : shorter === 0
+      ? `按原图轴范围，${formatNumber(first)} 那一根完全贴住基线、看不出高度，${formatNumber(second)} 那一根却占满画布`
+      : `按原图轴范围，两根柱子高度是 ${formatNumber(shorter)} 与 ${formatNumber(heightsOnAxis[1])}${amplification === null ? "" : `，高度差被放大约 ${formatNumber(amplification)} 倍`}`;
   const growthNote = growthPercent === null ? "" : `，而两根柱子的数值只相差 ${formatPercent(growthPercent)}`;
+  const startNote = overrideMin == null
+    ? `纵轴从 ${formatNumber(min)} 开始而不是从零开始`
+    : `按你填写的非零纵轴起点 ${formatNumber(min)} 判断`;
 
   return {
     level: "misleading-risk",
@@ -120,7 +155,7 @@ export function assessAxisRisk(
     heightsFromZero,
     fromZeroRatio,
     onAxisRatio,
-    summary: `纵轴从 ${formatNumber(min)} 开始而不是从零开始；${heightNote}${growthNote}。`,
+    summary: `${startNote}；${heightNote}${growthNote}。`,
     reasons: [
       "这是呈现方式的风险提示，不能据此认定作者造假。",
     ],

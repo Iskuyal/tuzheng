@@ -64,20 +64,23 @@ export function normalizeLabel(value: string | null | undefined): string | null 
 export function claimScopeView(
   observation: ChartObservation,
   claimId: string,
+  confirmedValues?: ClaimWorkspaceValues | null,
 ): ClaimScopeView | null {
   const claim: GrowthClaimObservation | undefined = observation.claims.find((item) => item.id === claimId);
   if (!claim) return null;
+  const older = confirmedValues?.older ?? claim.older;
+  const newer = confirmedValues?.newer ?? claim.newer;
 
   return {
     claimId: claim.id,
     claimText: claim.claimText,
     metric: claim.metric,
     scope: claim.scope,
-    olderPeriod: claim.older.period,
-    newerPeriod: claim.newer.period,
-    olderUnit: claim.older.unit,
-    newerUnit: claim.newer.unit,
-    confirmed: false,
+    olderPeriod: older.period,
+    newerPeriod: newer.period,
+    olderUnit: older.unit,
+    newerUnit: newer.unit,
+    confirmed: confirmedValues != null,
   };
 }
 
@@ -107,8 +110,9 @@ function comparePair(
   rightValues: (string | null)[],
 ): CrossElementState {
   const states = leftValues.map((value, index) => pairState(value, rightValues[index] ?? null));
+  if (states.includes("mismatch")) return "mismatch";
   if (states.includes("missing")) return "missing";
-  return states.every((state) => state === "aligned") ? "aligned" : "mismatch";
+  return "aligned";
 }
 
 /**
@@ -237,4 +241,3 @@ export function compareCrossGrowth(
     reasons: [],
   };
 }
-

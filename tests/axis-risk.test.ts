@@ -36,12 +36,26 @@ describe("柱状图纵轴风险", () => {
     expect(filled.level).toBe("misleading-risk");
     expect(filled.axisMin).toBe(80);
     expect(filled.heightsOnAxis).toEqual([0, 20]);
+    expect(filled.summary).toContain("轴上限未读到");
+    expect(filled.summary).not.toContain("原图轴范围");
   });
 
   it("填的起点不低于柱子数值时要求重新核对，不硬给结论", () => {
     const assessment = assessAxisRisk(axisOf("axis-unknown-start"), [80, 100], 120);
     expect(assessment.level).toBe("needs-confirmation");
     expect(assessment.summary).toContain("不低于两根柱子的数值");
+  });
+
+  it("轴上限低于已确认数值时要求重新核对", () => {
+    const assessment = assessAxisRisk({ label: "营业收入", min: 80, max: 90, unit: "万元" }, [80, 100]);
+    expect(assessment.level).toBe("needs-confirmation");
+    expect(assessment.heightsOnAxis).toBeNull();
+  });
+
+  it("轴起点高于较矮柱时要求重新核对", () => {
+    const assessment = assessAxisRisk({ label: "营业收入", min: 90, max: 120, unit: "万元" }, [80, 100]);
+    expect(assessment.level).toBe("needs-confirmation");
+    expect(assessment.heightsOnAxis).toBeNull();
   });
 
   it("轴低于零时如实说明差异被压缩，不当作放大", () => {

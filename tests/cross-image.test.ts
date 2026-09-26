@@ -101,6 +101,40 @@ describe("口径四要素比对", () => {
     expect(compareClaimScopes(left, noPeriod, []).elements.find(({ key }) => key === "period")?.state).toBe("missing");
   });
 
+  it("一处读到不一致、另一处缺失时不能用确认一致抹平已知冲突", () => {
+    if (!left || !consistent) throw new Error("缺少样例主张");
+    const mixed = {
+      ...consistent,
+      olderPeriod: "2023 年",
+      newerPeriod: null,
+      olderUnit: "元",
+      newerUnit: null,
+      confirmed: true,
+    };
+    const comparison = compareClaimScopes({ ...left, confirmed: true }, mixed, ["period", "unit"]);
+    expect(comparison.elements.find(({ key }) => key === "period")?.state).toBe("mismatch");
+    expect(comparison.elements.find(({ key }) => key === "unit")?.state).toBe("mismatch");
+    expect(comparison.ready).toBe(false);
+    expect(comparison.blockers).toEqual(["period", "unit"]);
+  });
+
+  it("口径表采用用户已确认的时间和单位，包括更正为空的字段", () => {
+    const chart = observationOf("cross-a-revenue");
+    const values = createClaimWorkspace(chart).claims[0].draftValues;
+    const reviewed = claimScopeView(chart, "revenue-growth", {
+      ...values,
+      older: { ...values.older, period: "2023 年", unit: "元" },
+      newer: { ...values.newer, period: null },
+    });
+    expect(reviewed).toMatchObject({
+      olderPeriod: "2023 年",
+      olderUnit: "元",
+      newerPeriod: null,
+      confirmed: true,
+    });
+    expect(claimScopeView(chart, "revenue-growth")?.olderPeriod).toBe("2024 年");
+  });
+
   it("已确认的读数才进入数值比较", () => {
     if (!left || !consistent) throw new Error("缺少样例主张");
     // 对照图未确认时，即使口径一致也不能给数值结论

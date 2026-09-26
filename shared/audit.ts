@@ -39,7 +39,7 @@ export interface GrowthClaimObservation {
 export interface ChartObservation {
   source: ObservationSource;
   claims: GrowthClaimObservation[];
-  /** 柱状图的纵轴范围；非柱状图或读不清时为 null。 */
+  /** 柱状图的纵轴范围；非柱状图为 null，柱状图刻度读不清时保留对象并将相应字段设为 null。 */
   axis?: AxisObservation | null;
 }
 

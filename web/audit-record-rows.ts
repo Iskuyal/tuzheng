@@ -51,7 +51,7 @@ function auditActionLabel(action: ClaimAuditEvent["action"]): string {
   return "重新计算";
 }
 
-function formatEventTime(at: string): string {
+export function formatEventTime(at: string): string {
   const date = new Date(at);
   if (Number.isNaN(date.getTime())) return at;
   const pad = (value: number) => String(value).padStart(2, "0");

@@ -251,7 +251,8 @@ test("跨图口径确认与纵轴对照在窄屏可完成", async ({ page }) => 
   await page.locator(".axis-input input").fill("80");
   await page.locator(".axis-input button").click();
   await expect(page.locator(".axis-section .result-status")).toHaveText("可能误读");
-  await expect(page.locator(".axis-section .axis-panel").nth(0)).toContainText("起点 80");
+  await expect(page.locator(".axis-section .axis-panel").nth(0)).toContainText("按已知起点示意（起点 80");
+  await expect(page.locator(".axis-section .axis-summary")).toContainText("轴上限未读到");
 
   // 手填的起点可以恢复成图上读数
   await page.locator(".axis-input button").nth(1).click();
@@ -280,4 +281,126 @@ test("跨图口径确认与纵轴对照在窄屏可完成", async ({ page }) => 
     };
   });
   expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 1);
+});
+
+test("多主张会话重置清除跨图状态，口径确认留下可复查记录", async ({ page }) => {
+  await page.goto("/audit?sample=multi-claims");
+  const cross = page.locator(".cross-section");
+  const reset = page.getByRole("button", { name: "重置本次审计" });
+
+  await cross.locator("select").first().selectOption("conflict");
+  await expect(cross.locator(".cross-element")).toHaveCount(4);
+  await expect(reset).toBeEnabled();
+  await reset.click();
+  await expect(cross.locator(".cross-empty")).toHaveCount(1);
+  await expect(reset).toBeDisabled();
+
+  await cross.locator("select").first().selectOption("conflict");
+  const missingScope = cross.locator(".cross-element").nth(3);
+  await expect(missingScope.locator(".cross-element-state")).toHaveText("图上没读到");
+  await missingScope.locator(".cross-confirm-button").click();
+  const history = cross.locator(".cross-history");
+  await expect(history.locator("li")).toHaveCount(1);
+  await expect(history).toContainText("范围／人群 · 已确认一致");
+  await expect(history).toContainText("营业收入增长 25%");
+  await expect(history.locator("time")).toHaveAttribute("datetime", /\d{4}-\d{2}-\d{2}T/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => document.documentElement.clientWidth + 1),
+  );
+
+  await cross.locator(".cross-swap select").selectOption("cross-b-scope-mismatch");
+  await expect(history.locator("li")).toHaveCount(1);
+  await page.locator(".claim-observation-card").first().locator(".confirm-button").click();
+  await expect(page.locator(".claim-observation-card").first().locator(".result-sheet")).toBeVisible();
+  await expect(page.locator(".axis-section")).toHaveCount(0);
+
+  await reset.click();
+  await expect(cross.locator(".cross-empty")).toHaveCount(1);
+  await expect(history).toHaveCount(0);
+  await expect(page.locator(".claim-observation-card").first().locator(".confirmation-state")).toHaveText("待核对");
+});
+
+test("已确认时间进入跨图口径，已读到的轴上限决定柱高", async ({ page }) => {
+  await page.goto("/audit?sample=cross-a-revenue");
+  const cross = page.locator(".cross-section");
+  const reset = page.getByRole("button", { name: "重置本次审计" });
+  await cross.locator("select").first().selectOption("cross-b-conflict");
+  await expect(cross.locator(".cross-element")).toHaveCount(4);
+  await expect(reset).toBeEnabled();
+  await reset.click();
+  await expect(cross.locator(".cross-empty")).toHaveCount(1);
+
+  const form = page.locator(".observation-form");
+  await form.locator(".point-editor").first().locator(".period-field input").fill("2023 年");
+  await form.locator(".confirm-button").click();
+  await expect(page.locator(".axis-section .axis-panel").first().locator(".axis-bar").nth(1))
+    .toHaveAttribute("style", /height: 83%/);
+
+  await cross.locator("select").first().selectOption("cross-b-conflict");
+  await expect(cross.locator(".cross-element")).toHaveCount(4);
+  await cross.locator(".cross-side-note .cross-confirm-button").click();
+  await expect(cross.locator(".cross-element").nth(1).locator(".cross-element-state")).toHaveText("不一致");
+  await expect(cross.locator(".cross-element").nth(1)).toContainText("2023 年");
+  await expect(cross.locator(".cross-result")).toHaveCount(0);
+});
+
+test("重置会取消仍在载入的对照图", async ({ page }) => {
+  await page.goto("/audit?sample=multi-claims");
+  let markStarted: () => void = () => {};
+  let releaseResponse: () => void = () => {};
+  const requestStarted = new Promise<void>((resolve) => { markStarted = resolve; });
+  const heldResponse = new Promise<void>((resolve) => { releaseResponse = resolve; });
+  await page.route("**/api/audit/sample", async (route) => {
+    if (route.request().postDataJSON()?.id !== "cross-b-conflict") {
+      await route.continue();
+      return;
+    }
+    markStarted();
+    await heldResponse;
+    try {
+      await route.continue();
+    } catch {
+      // 重置已取消这个请求。
+    }
+  });
+
+  const selectAction = page.locator(".cross-section select").first().selectOption("cross-b-conflict");
+  await requestStarted;
+  const reset = page.getByRole("button", { name: "重置本次审计" });
+  await expect(reset).toBeEnabled();
+  await reset.click();
+  releaseResponse();
+  await selectAction;
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator(".cross-section .cross-empty")).toHaveCount(1);
+  await expect(page.locator(".cross-element")).toHaveCount(0);
+});
+
+test("口径记录区分图上原始观察与用户更正后的比对值", async ({ page }) => {
+  await page.goto("/audit?sample=cross-a-revenue");
+  const form = page.locator(".observation-form");
+  await form.locator(".point-editor").first().locator(".period-field input").fill("2023 年");
+  await form.locator(".confirm-button").click();
+
+  await page.route("**/api/audit/sample", async (route) => {
+    if (route.request().postDataJSON()?.id !== "cross-b-conflict") {
+      await route.continue();
+      return;
+    }
+    const response = await route.fetch();
+    const payload = await response.json();
+    payload.observation.claims[0].older.period = "2023 年";
+    payload.observation.claims[0].newer.period = null;
+    await route.fulfill({ response, json: payload });
+  });
+
+  const cross = page.locator(".cross-section");
+  await cross.locator("select").first().selectOption("cross-b-conflict");
+  const period = cross.locator(".cross-element").nth(1);
+  await expect(period.locator(".cross-element-state")).toHaveText("图上没读到");
+  await period.locator(".cross-confirm-button").click();
+
+  const record = cross.locator(".cross-history li").first();
+  await expect(record).toContainText("图上原始观察：2024 年 → 2025 年 / 2023 年");
+  await expect(record).toContainText("确认时采用的口径：2023 年 → 2025 年 / 2023 年");
 });

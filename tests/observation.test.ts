@@ -93,6 +93,14 @@ describe("口径与坐标轴字段校验", () => {
     expect(parseVisionObservation(observation)).toEqual(observation);
   });
 
+  it("柱状图轴刻度读不清时保留轴对象与空字段", () => {
+    const observation = {
+      claims: [incomeClaim],
+      axis: { label: null, min: null, max: null, unit: null },
+    };
+    expect(parseVisionObservation(observation)).toEqual(observation);
+  });
+
   it("拒绝形状错误的轴与口径", () => {
     expect(() => parseVisionObservation({
       claims: [incomeClaim],

@@ -18,6 +18,11 @@ describe("跨图与纵轴的展示换算", () => {
     expect(axisBarPercent([0, 0], 1)).toBe(0);
   });
 
+  it("已读到轴上限时按轴的实际跨度绘制柱高", () => {
+    expect(axisBarPercent([0, 20], 1, 40)).toBe(50);
+    expect(axisBarPercent([80, 100], 1, 120)).toBe(83);
+  });
+
   it("轴范围文案区分读到上下界、只读到起点与未读到", () => {
     const full = assessAxisRisk({ label: "营业收入", min: 80, max: 100, unit: "万元" }, [80, 100]);
     expect(axisRangeText(full)).toBe("（80–100 万元）");
