@@ -1,0 +1,12 @@
+{
+  // 这个文件是编辑器与 tsc 找到的默认配置，它本身不拥有源文件，只指向两份真正检查代码的
+  // 配置：web 用 DOM 与 vite/client 类型，server 用 Node 类型。
+  // 不要在这里写 include 或把这份配置当成检查入口：一旦它认领了文件，IDE 就会用缺少
+  // DOM/Node 类型的设置去检查 web/ 的 .vue 导入和 server/ 的 Node 代码，报出并不存在的错误。
+  // 真正的检查入口是 npm run typecheck。
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.web.json" },
+    { "path": "./tsconfig.server.json" }
+  ]
+}
