@@ -100,11 +100,11 @@ export function toAuditObservation(
   };
 }
 
-function formatNumber(value: number, maximumFractionDigits = 2): string {
+export function formatNumber(value: number, maximumFractionDigits = 2): string {
   return new Intl.NumberFormat("zh-CN", { maximumFractionDigits }).format(value);
 }
 
-function formatPercent(value: number): string {
+export function formatPercent(value: number): string {
   return `${formatNumber(value)}%`;
 }
 

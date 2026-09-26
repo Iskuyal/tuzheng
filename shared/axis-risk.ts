@@ -1,4 +1,4 @@
-import type { AxisObservation } from "./audit.js";
+import { formatNumber, formatPercent, type AxisObservation } from "./audit.js";
 
 export type AxisRiskLevel = "ok" | "misleading-risk" | "needs-confirmation";
 
@@ -10,18 +10,12 @@ export interface AxisRiskAssessment {
   /** 按原图轴范围映射后两根柱子的高度；轴起点不是零时较矮的一根可能为 0。 */
   heightsOnAxis: [number, number] | null;
   heightsFromZero: [number, number];
-  /** 从零起点看两根柱子的比值（第二条 / 第一条），保留两位小数。 */
+  /** 从零起点看两根柱子的比值（第二条 / 第一条）。 */
   fromZeroRatio: number | null;
+  /** 原图轴范围下两根柱子的比值；较矮的一根贴住基线时为 null。 */
+  onAxisRatio: number | null;
   summary: string;
   reasons: string[];
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(value);
-}
-
-function formatPercent(value: number): string {
-  return `${formatNumber(value)}%`;
 }
 
 /**
@@ -51,13 +45,34 @@ export function assessAxisRisk(
       heightsOnAxis: null,
       heightsFromZero,
       fromZeroRatio,
+      onAxisRatio: null,
       summary: "纵轴刻度没有读清，无法判断柱高是否被放大。",
       reasons: ["请确认纵轴的最小值后再判断；只按柱高比较数值容易误判。"],
     };
   }
-  const heightsOnAxis: [number, number] = [Math.max(0, first - min), Math.max(0, second - min)];
 
-  if (min <= 0) {
+  if (min >= Math.max(first, second)) {
+    return {
+      level: "needs-confirmation",
+      axisMin: min,
+      axisMax: max,
+      unit,
+      heightsOnAxis: null,
+      heightsFromZero,
+      fromZeroRatio,
+      onAxisRatio: null,
+      summary: `填写的纵轴最小值是 ${formatNumber(min)}，不低于两根柱子的数值，无法判断柱高。`,
+      reasons: ["请核对纵轴最小值；它应当小于两根柱子的数值。"],
+    };
+  }
+
+  const heightsOnAxis: [number, number] = [Math.max(0, first - min), Math.max(0, second - min)];
+  const onAxisRatio = heightsOnAxis[0] === 0
+    ? null
+    : Number((heightsOnAxis[1] / heightsOnAxis[0]).toFixed(2));
+  const growthPercent = first === 0 ? null : ((second - first) / first) * 100;
+
+  if (min === 0) {
     return {
       level: "ok",
       axisMin: min,
@@ -66,16 +81,35 @@ export function assessAxisRisk(
       heightsOnAxis,
       heightsFromZero,
       fromZeroRatio,
-      summary: `纵轴从 ${formatNumber(min)} 开始，柱高与数值成比例，${formatNumber(first)} 到 ${formatNumber(second)} 的差异没有被放大。`,
+      onAxisRatio,
+      summary: `纵轴从零开始，柱高与数值成比例，${formatNumber(first)} 到 ${formatNumber(second)} 的差异没有被放大${growthPercent === null ? "" : `（实际 ${formatPercent(growthPercent)}）`}。`,
       reasons: [],
     };
   }
 
-  const taller = heightsOnAxis[1];
+  if (min < 0) {
+    return {
+      level: "ok",
+      axisMin: min,
+      axisMax: max,
+      unit,
+      heightsOnAxis,
+      heightsFromZero,
+      fromZeroRatio,
+      onAxisRatio,
+      summary: `纵轴从 ${formatNumber(min)} 开始（低于零），两根柱子的高度差比数值差更小，没有放大差异。`,
+      reasons: [],
+    };
+  }
+
   const shorter = heightsOnAxis[0];
+  const amplification = onAxisRatio !== null && fromZeroRatio !== null && fromZeroRatio > 0
+    ? Number((onAxisRatio / fromZeroRatio).toFixed(2))
+    : null;
   const heightNote = shorter === 0
     ? `按原图轴范围，${formatNumber(first)} 那一根完全贴住基线、看不出高度，${formatNumber(second)} 那一根却占满画布`
-    : `按原图轴范围，两根柱子高度是 ${formatNumber(shorter)} 与 ${formatNumber(taller)}`;
+    : `按原图轴范围，两根柱子高度是 ${formatNumber(shorter)} 与 ${formatNumber(heightsOnAxis[1])}${amplification === null ? "" : `，高度差被放大约 ${formatNumber(amplification)} 倍`}`;
+  const growthNote = growthPercent === null ? "" : `，而两根柱子的数值只相差 ${formatPercent(growthPercent)}`;
 
   return {
     level: "misleading-risk",
@@ -85,7 +119,8 @@ export function assessAxisRisk(
     heightsOnAxis,
     heightsFromZero,
     fromZeroRatio,
-    summary: `纵轴从 ${formatNumber(min)} 开始而不是从零开始；${heightNote}，容易让人以为差异远大于实际的 ${formatPercent(((second - first) / first) * 100)}。`,
+    onAxisRatio,
+    summary: `纵轴从 ${formatNumber(min)} 开始而不是从零开始；${heightNote}${growthNote}。`,
     reasons: [
       "这是呈现方式的风险提示，不能据此认定作者造假。",
     ],

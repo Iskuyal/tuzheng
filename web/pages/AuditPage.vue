@@ -5,15 +5,15 @@ import SiteHeader from "../components/SiteHeader.vue";
 import AuditRecordList from "../components/AuditRecordList.vue";
 import AuditSessionBar from "../components/AuditSessionBar.vue";
 import { assessAxisRisk } from "../../shared/axis-risk.js";
+import { axisBarPercent, axisRangeText as rangeTextOf, crossStateLabel } from "../cross-image-view.js";
 import {
-  auditObservationFrom,
+  confirmedAuditObservation,
   claimScopeView,
   compareClaimScopes,
   compareCrossGrowth,
   pickReferenceClaimId,
   type ClaimScopeView,
   type CrossElementKey,
-  type CrossElementState,
   type CrossImageComparison,
 } from "../../shared/cross-image.js";
 import { auditStatusLabel, groupClaimAuditRows, buildClaimAuditRows, type ClaimAuditRow } from "../audit-record-rows.js";
@@ -693,15 +693,10 @@ function resetSingleClaim(): void {
   result.value = null;
   singleClaimLog.value = [];
   singleClaimRevision.value += 1;
+  resetCrossImageSession();
   errorMessage.value = "";
   resetNotice.value = "已重置本次会话：读数回到最初载入的值，确认状态、结果和审计记录已清空。";
 }
-
-const crossSideClaims = computed(() => {
-  const chart = chartObservation.value;
-  if (!chart || chart.claims.length < 2) return chart?.claims ?? [];
-  return chart.claims;
-});
 
 function sideView(source: "current" | "reference", claimId: string | null): ClaimScopeView | null {
   if (!claimId) return null;
@@ -730,12 +725,6 @@ const crossComparison = computed<CrossImageComparison | null>(() => {
   const right = sideView("reference", referenceClaimId.value);
   if (!left || !right) return null;
   return compareClaimScopes(left, right, crossConfirmedElements.value);
-});
-
-const referenceClaim = computed(() => {
-  const chart = referenceObservation.value;
-  if (!chart || !referenceClaimId.value) return null;
-  return chart.claims.find((claim) => claim.id === referenceClaimId.value) ?? null;
 });
 
 const referenceEntry = computed(() => {
@@ -795,6 +784,7 @@ function prepareReferenceUpload(event: Event): void {
     return;
   }
 
+  releaseReferenceImageUrl();
   referenceError.value = "";
   referenceFile.value = file;
   referenceObservation.value = null;
@@ -815,7 +805,7 @@ async function readReferenceImage(): Promise<void> {
     const response = await fetch("/api/audit/image", { method: "POST", body: form });
     const payload = await response.json().catch(() => null) as { observation?: ChartObservation } | null;
     if (!response.ok || !payload?.observation) {
-      throw new Error(payload ? "对照图读取失败，请重试。" : "对照图读取失败，请重试。");
+      throw new Error("对照图读取失败，请重试。");
     }
     referenceObservation.value = payload.observation;
     referenceWorkspace.value = createClaimWorkspace(payload.observation);
@@ -837,8 +827,20 @@ function removeReference(): void {
   referenceFile.value = null;
   referenceError.value = "";
   crossConfirmedElements.value = [];
-  if (referenceImageUrl.value.startsWith("blob:")) URL.revokeObjectURL(referenceImageUrl.value);
+  releaseReferenceImageUrl();
   referenceImageUrl.value = "";
+}
+
+// 跨图层的状态同样只属于本次会话：重置时连同对照图一起清掉。
+function resetCrossImageSession(): void {
+  crossConfirmedElements.value = [];
+  axisMinOverride.value = null;
+  axisMinInput.value = "";
+  if (referenceObservation.value || referenceImageUrl.value) removeReference();
+}
+
+function releaseReferenceImageUrl(): void {
+  if (referenceImageUrl.value.startsWith("blob:")) URL.revokeObjectURL(referenceImageUrl.value);
 }
 
 function confirmCrossElement(key: CrossElementKey): void {
@@ -898,8 +900,8 @@ const crossVerdict = computed(() => {
   const referenceValues = confirmedValuesOf("reference", referenceClaimId.value);
   if (!currentChart || !referenceChart || !currentValues || !referenceValues) return null;
 
-  const left = auditObservationFrom(currentChart, crossCurrentClaimId.value ?? "", currentValues);
-  const right = auditObservationFrom(referenceChart, referenceClaimId.value ?? "", referenceValues);
+  const left = confirmedAuditObservation(currentChart, crossCurrentClaimId.value ?? "", currentValues);
+  const right = confirmedAuditObservation(referenceChart, referenceClaimId.value ?? "", referenceValues);
   if (!left || !right) return null;
 
   return compareCrossGrowth(left, right);
@@ -944,21 +946,12 @@ const axisRiskLabel = computed(() => {
   return "需要确认轴范围";
 });
 
-function axisBarPercent(heights: [number, number] | null, index: 0 | 1): number {
-  if (!heights) return 0;
-  const tallest = Math.max(heights[0], heights[1]);
-  if (tallest <= 0) return 0;
-  return Math.round((heights[index] / tallest) * 100);
-}
+const axisRangeText = computed(() => (axisRisk.value ? rangeTextOf(axisRisk.value) : ""));
 
-const axisRangeText = computed(() => {
-  const risk = axisRisk.value;
-  if (!risk || risk.axisMin === null) return "（未读到）";
-  const unit = risk.unit ? ` ${risk.unit}` : "";
-  return risk.axisMax === null
-    ? `（起点 ${risk.axisMin}${unit}）`
-    : `（${risk.axisMin}–${risk.axisMax}${unit}）`;
-});
+function clearAxisMin(): void {
+  axisMinOverride.value = null;
+  axisMinInput.value = "";
+}
 
 function applyAxisMin(): void {
   const value = axisMinInput.value === "" ? null : Number(axisMinInput.value);
@@ -986,13 +979,6 @@ const crossGateMessage = computed(() => {
   }
   return "两侧读数都确认后，才会给出跨图结论。";
 });
-
-function crossStateLabel(state: CrossElementState): string {
-  if (state === "aligned") return "一致";
-  if (state === "confirmed-by-user") return "你已确认一致";
-  if (state === "missing") return "图上没读到";
-  return "不一致";
-}
 
 function resetWorkspace(): void {
   const workspace = claimWorkspace.value;
@@ -1611,16 +1597,20 @@ onBeforeUnmount(() => {
                   <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsFromZero, 0)}%` }"></span>
                   <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsFromZero, 1)}%` }"></span>
                 </div>
-                <span class="axis-panel-note">{{ axisRisk.heightsFromZero.join(" / ") }}{{ axisRisk.unit ? ` ${axisRisk.unit}` : "" }}</span>
+                <span class="axis-panel-note">
+                  {{ axisRisk.heightsFromZero.join(" / ") }}{{ axisRisk.unit ? ` ${axisRisk.unit}` : "" }}
+                  <template v-if="axisRisk.fromZeroRatio !== null">· 高度比 1 : {{ axisRisk.fromZeroRatio }}</template>
+                </span>
               </figure>
             </div>
 
-            <div v-if="axisRisk.level === 'needs-confirmation'" class="axis-input">
+            <div class="axis-input">
               <label>
-                <span>纵轴最小值</span>
+                <span>纵轴最小值{{ axisRisk.axisMin === null ? "" : `（当前 ${axisRisk.axisMin}）` }}</span>
                 <input v-model="axisMinInput" type="number" step="any" placeholder="如：80" />
               </label>
               <button class="cross-confirm-button" type="button" @click="applyAxisMin">按这个起点重新判断</button>
+              <button v-if="axisMinOverride !== null" class="cross-confirm-button" type="button" @click="clearAxisMin">恢复图上读数</button>
             </div>
 
             <p class="result-boundary">「可能误读」说的是呈现方式，不是造假判断；这张图也可能只是排版选择。对照图按已确认的读数重画，不经过模型。</p>
@@ -1715,7 +1705,7 @@ onBeforeUnmount(() => {
                   <span class="cross-element-value">{{ element.right ?? "未读到" }}</span>
                   <span class="cross-element-state">{{ crossStateLabel(element.state) }}</span>
                   <button
-                    v-if="element.state === 'missing' || element.state === 'mismatch'"
+                    v-if="element.state === 'missing'"
                     class="cross-confirm-button"
                     type="button"
                     @click="confirmCrossElement(element.key)"

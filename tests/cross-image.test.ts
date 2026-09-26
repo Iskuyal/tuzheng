@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { evaluateGrowth, toAuditObservation } from "../shared/audit.js";
 import {
-  auditObservationFrom,
+  confirmedAuditObservation,
   claimScopeView,
   compareClaimScopes,
   compareCrossGrowth,
@@ -68,6 +68,15 @@ describe("口径四要素比对", () => {
     });
   });
 
+  it("用户确认只补「图上没读到」的信息，读到却不一致时不能抹平", () => {
+    if (!left || !mismatch) throw new Error("缺少样例主张");
+    // 范围不一致时即使点过「确认一致」也必须停在待核对
+    const forced = compareClaimScopes(left, mismatch, ["scope"]);
+    expect(forced.scopeReady).toBe(false);
+    expect(forced.blockers).toEqual(["scope"]);
+    expect(forced.elements.find(({ key }) => key === "scope")?.state).toBe("mismatch");
+  });
+
   it("要素缺失时同样停在待核对，用户确认一致后可比较", () => {
     const missing = { ...left!, scope: null };
     const blocked = compareClaimScopes(missing, consistent!, []);
@@ -109,7 +118,7 @@ describe("跨图数值判定", () => {
     return entry.draftValues;
   };
   const side = (id: string, claimId = "revenue-growth") =>
-    auditObservationFrom(observationOf(id), claimId, confirmedValues(id, claimId))!;
+    confirmedAuditObservation(observationOf(id), claimId, confirmedValues(id, claimId))!;
 
   it("两侧算得相同时判数值一致", () => {
     const verdict = compareCrossGrowth(side("cross-a-revenue"), side("cross-b-consistent"));
@@ -134,7 +143,7 @@ describe("跨图数值判定", () => {
   });
 
   it("一侧缺少可比较的读数时停在待核对", () => {
-    const missing = auditObservationFrom(observationOf("axis-unknown-start"), "revenue-growth", {
+    const missing = confirmedAuditObservation(observationOf("axis-unknown-start"), "revenue-growth", {
       ...confirmedValues("axis-unknown-start", "revenue-growth"),
       newer: { ...confirmedValues("axis-unknown-start", "revenue-growth").newer, value: null },
     })!;
@@ -146,6 +155,6 @@ describe("跨图数值判定", () => {
   });
 
   it("取不到主张时返回 null，不编造观察值", () => {
-    expect(auditObservationFrom(observationOf("cross-a-revenue"), "不存在", confirmedValues("cross-a-revenue", "revenue-growth"))).toBeNull();
+    expect(confirmedAuditObservation(observationOf("cross-a-revenue"), "不存在", confirmedValues("cross-a-revenue", "revenue-growth"))).toBeNull();
   });
 });

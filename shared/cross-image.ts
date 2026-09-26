@@ -1,4 +1,12 @@
-import { evaluateGrowth, type AuditObservation, type AxisObservation, type ChartObservation, type GrowthClaimObservation } from "./audit.js";
+import {
+  evaluateGrowth,
+  formatNumber,
+  formatPercent,
+  type AuditObservation,
+  type AuditStatus,
+  type ChartObservation,
+  type GrowthClaimObservation,
+} from "./audit.js";
 import type { ClaimWorkspaceValues } from "./claim-workspace.js";
 
 export type CrossElementKey = "metric" | "period" | "unit" | "scope";
@@ -134,7 +142,8 @@ export function compareClaimScopes(
     label: ELEMENT_LABELS[element.key],
     left: element.left,
     right: element.right,
-    state: userConfirmed.includes(element.key) && element.state !== "aligned"
+    // 「确认一致」只用于补上图上读不到的信息；读到却不一致时不得抹平。
+    state: userConfirmed.includes(element.key) && element.state === "missing"
       ? "confirmed-by-user"
       : element.state,
   }));
@@ -150,7 +159,8 @@ export function compareClaimScopes(
 }
 
 /** 用确认过的核对值组装一侧的审计观察值，供确定性增长率规则复用。 */
-export function auditObservationFrom(
+/** 只接受已经确认过的核对值；调用方必须先过口径与确认门禁。 */
+export function confirmedAuditObservation(
   chart: ChartObservation,
   claimId: string,
   values: ClaimWorkspaceValues,
@@ -170,16 +180,12 @@ export function auditObservationFrom(
 }
 
 export interface CrossImageVerdict {
-  status: "consistent" | "contradictory" | "needs-confirmation";
+  status: AuditStatus;
   leftGrowthPercent: number | null;
   rightGrowthPercent: number | null;
   differencePoints: number | null;
   summary: string;
   reasons: string[];
-}
-
-function formatPercent(value: number): string {
-  return `${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(value)}%`;
 }
 
 /**
@@ -232,6 +238,3 @@ export function compareCrossGrowth(
   };
 }
 
-export function axisOf(chart: ChartObservation): AxisObservation | null {
-  return chart.axis ?? null;
-}

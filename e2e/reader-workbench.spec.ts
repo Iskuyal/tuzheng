@@ -192,3 +192,92 @@ test("阶段一单主张路径仍可核对，操作区不重叠", async ({ page 
   expect(layout.buttonHintOverlap).toBe(0);
   expect(layout.buttonFieldOverlap).toBe(0);
 });
+
+test("跨图口径确认与纵轴对照在窄屏可完成", async ({ page }) => {
+  await page.goto("/audit?sample=cross-a-revenue");
+
+  // 放入对照图：口径四要素逐项显示
+  const cross = page.locator(".cross-section");
+  await cross.locator("select").first().selectOption("cross-b-conflict");
+  const elements = cross.locator(".cross-element");
+  await expect(elements).toHaveCount(4);
+  await expect(elements.nth(0)).toContainText("营业收入");
+  await expect(elements.nth(3)).toContainText("全国门店");
+  await expect(cross.locator(".cross-gate")).toContainText("两侧读数都确认后");
+
+  // 确认对照图读数后才允许比较
+  await cross.locator(".cross-side-note .cross-confirm-button").click();
+  await expect(cross.locator(".cross-side-note")).toContainText("对照图读数已确认");
+  await page.locator(".observation-form .confirm-button").click();
+
+  const crossResult = page.locator(".cross-result");
+  await expect(crossResult.locator(".result-status")).toHaveText("数值冲突");
+  await expect(crossResult.locator(".result-title")).toContainText("相差 25 个百分点");
+  await expect(crossResult.locator(".cross-evidence")).toContainText("2025 年营业收入 120 万元");
+  await expect(crossResult.locator(".result-boundary")).toContainText("不代表现实数据真伪");
+
+  // 换成范围不同的对照图：不给结论，指出差在范围
+  await cross.locator(".cross-swap select").selectOption("cross-b-scope-mismatch");
+  await expect(page.locator(".cross-result")).toHaveCount(0);
+  await expect(cross.locator(".cross-gate")).toContainText("还差 范围／人群");
+
+  // 读到却不一致的要素不给「确认一致」按钮：不能把范围不同抹平成一致
+  await expect(cross.locator(".cross-element").nth(3)).toContainText("不一致");
+  await expect(cross.locator(".cross-element").nth(3).locator(".cross-confirm-button")).toHaveCount(0);
+  await expect(cross.locator(".cross-gate")).toContainText("待核对");
+
+  // 换成图上没写范围的对照图：用户可对「图上没读到」的要素确认一致
+  await cross.locator(".cross-swap select").selectOption("conflict");
+  await expect(cross.locator(".cross-element").nth(3)).toContainText("图上没读到");
+  await cross.locator(".cross-element").nth(3).locator(".cross-confirm-button").click();
+  await expect(cross.locator(".cross-element").nth(3).locator(".cross-element-state")).toHaveText("你已确认一致");
+
+  // 纵轴：截断的样例给出可能误读与两版柱形
+  await page.goto("/audit?sample=axis-truncated");
+  await page.locator(".observation-form .confirm-button").click();
+  const axis = page.locator(".axis-section");
+  await expect(axis.locator(".result-status")).toHaveText("可能误读");
+  await expect(axis.locator(".axis-panel")).toHaveCount(2);
+  await expect(axis.locator(".axis-panel").nth(0)).toContainText("0 / 20");
+  await expect(axis.locator(".axis-panel").nth(1)).toContainText("80 / 100");
+  await expect(axis.locator(".axis-panel").nth(1)).toContainText("高度比 1 : 1.25");
+  await expect(axis.locator(".result-reasons")).toContainText("不能据此认定作者造假");
+  await expect(axis.locator(".result-boundary")).toContainText("不是造假判断");
+
+  // 刻度看不清：要求确认轴范围，手填起点后重新判断
+  await page.goto("/audit?sample=axis-unknown-start");
+  await page.locator(".observation-form .confirm-button").click();
+  await expect(page.locator(".axis-section .result-status")).toHaveText("需要确认轴范围");
+  await page.locator(".axis-input input").fill("80");
+  await page.locator(".axis-input button").click();
+  await expect(page.locator(".axis-section .result-status")).toHaveText("可能误读");
+  await expect(page.locator(".axis-section .axis-panel").nth(0)).toContainText("起点 80");
+
+  // 手填的起点可以恢复成图上读数
+  await page.locator(".axis-input button").nth(1).click();
+  await expect(page.locator(".axis-section .result-status")).toHaveText("需要确认轴范围");
+
+  // 重置审计连同跨图层一起清掉
+  await page.goto("/audit?sample=cross-a-revenue");
+  await cross.locator("select").first().selectOption("cross-b-conflict");
+  await expect(cross.locator(".cross-element")).toHaveCount(4);
+  await page.locator(".observation-form .confirm-button").click();
+  await page.getByRole("button", { name: "重置本次审计" }).click();
+  await expect(page.locator(".cross-section .cross-empty")).toHaveCount(1);
+  await expect(page.locator(".cross-element")).toHaveCount(0);
+
+  // 窄屏可触达且无横向溢出
+  const layout = await page.evaluate(() => {
+    const select = document.querySelector(".cross-picker select");
+    const confirm = document.querySelector(".cross-confirm-button");
+    const axisInput = document.querySelector(".axis-input input");
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+      selectHeight: select ? Math.round(select.getBoundingClientRect().height) : 0,
+      confirmHeight: confirm ? Math.round(confirm.getBoundingClientRect().height) : 0,
+      axisInputHeight: axisInput ? Math.round(axisInput.getBoundingClientRect().height) : 0,
+    };
+  });
+  expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 1);
+});

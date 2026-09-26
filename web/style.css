@@ -653,7 +653,6 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 }
 
 /* 跨图核对：两图口径比对与候选配对 */
-.cross-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e9e5; }
 .cross-heading { min-height: 0; margin-bottom: 11px; align-items: center; }
 .cross-title { margin: 0; color: var(--ink); font-size: 18px; line-height: 1.25; letter-spacing: -.02em; }
 .cross-reference-label { color: #52646b; font-size: 12px; }
@@ -698,7 +697,7 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .cross-evidence-label { display: block; margin-bottom: 6px; color: #435d68; font-size: 12px; font-weight: 700; }
 .cross-evidence blockquote { margin: 0 0 6px; color: #243e45; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 @media (max-width: 620px) { .cross-evidence { grid-template-columns: 1fr; } }
-.axis-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e9e5; }
+.cross-section, .axis-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e9e5; }
 .axis-summary { margin: 0 0 8px; color: #243e45; font-size: 13px; line-height: 1.55; }
 .axis-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; margin: 11px 0; }
 .axis-panel { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 9px 10px; border: 1px solid #e0e8e4; background: #fbfcfb; }

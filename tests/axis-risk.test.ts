@@ -38,6 +38,29 @@ describe("柱状图纵轴风险", () => {
     expect(filled.heightsOnAxis).toEqual([0, 20]);
   });
 
+  it("填的起点不低于柱子数值时要求重新核对，不硬给结论", () => {
+    const assessment = assessAxisRisk(axisOf("axis-unknown-start"), [80, 100], 120);
+    expect(assessment.level).toBe("needs-confirmation");
+    expect(assessment.summary).toContain("不低于两根柱子的数值");
+  });
+
+  it("轴低于零时如实说明差异被压缩，不当作放大", () => {
+    const assessment = assessAxisRisk({ label: "营业收入", min: -50, max: 120, unit: "万元" }, [80, 100]);
+    expect(assessment.level).toBe("ok");
+    expect(assessment.summary).toContain("低于零");
+    expect(assessment.summary).toContain("没有放大差异");
+  });
+
+  it("给出比值与放大倍数", () => {
+    const truncating = assessAxisRisk(axisOf("axis-truncated"), [80, 100]);
+    expect(truncating.fromZeroRatio).toBe(1.25);
+    expect(truncating.onAxisRatio).toBeNull();
+
+    const mild = assessAxisRisk({ label: "营业收入", min: 40, max: 120, unit: "万元" }, [80, 100]);
+    expect(mild.onAxisRatio).toBe(1.5);
+    expect(mild.summary).toContain("放大约 1.2 倍");
+  });
+
   it("没有轴信息时同样要求确认", () => {
     const assessment = assessAxisRisk(null, [80, 100]);
     expect(assessment.level).toBe("needs-confirmation");
