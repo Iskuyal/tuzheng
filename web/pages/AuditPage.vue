@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
 import { takeLandingUpload } from "../upload-transfer.js";
-import { toAuditObservation, type AuditObservation, type AuditResult, type ChartObservation, type DataPointObservation, type GrowthClaimObservation, type ModelReadTrace } from "../../shared/audit.js";
+import { initialValueSource, toAuditObservation, type AuditObservation, type AuditResult, type ChartObservation, type DataPointObservation, type GrowthClaimObservation, type ModelReadTrace, type ObservationSource } from "../../shared/audit.js";
 import {
   completeClaimReview,
   createClaimWorkspace,
@@ -16,6 +16,7 @@ import {
   type ClaimAuditField,
   type ClaimWorkspace,
   type ClaimWorkspaceEdit,
+  type ClaimWorkspaceEntry,
 } from "../../shared/claim-workspace.js";
 
 interface SampleSummary {
@@ -670,6 +671,22 @@ function formatClaimPointValue(point: GrowthClaimObservation["older"]): string {
   return formatValue(point.value, point.unit);
 }
 
+function isPointCorrected(entry: ClaimWorkspaceEntry, point: "older" | "newer"): boolean {
+  const draft = entry.draftValues[point];
+  const observed = entry.observation[point];
+  return draft.value !== observed.value || draft.period !== observed.period || draft.unit !== observed.unit;
+}
+
+// 标签与原始读数行的「（已更正）」用同一判据，避免出现「标签说已更正、读数行说没改」这类矛盾。
+function pointSourceLabel(
+  entry: ClaimWorkspaceEntry,
+  point: "older" | "newer",
+  source: ObservationSource,
+): string {
+  if (isPointCorrected(entry, point)) return valueSourceLabel("user");
+  return valueSourceLabel(initialValueSource(source, entry.observation[point]));
+}
+
 function valueSourceLabel(source: DataPointObservation["valueSource"]): string {
   if (source === "model") return "模型读取 · 待确认";
   if (source === "user") return "用户手动更正";
@@ -820,7 +837,7 @@ onBeforeUnmount(() => {
           <figure ref="imageStage" class="image-stage">
             <div class="image-stage-head">
               <span class="image-label"><span class="image-label-dot"></span>原图预览</span>
-              <span v-if="activeSample" class="image-filename">团队自制样例</span>
+              <span v-if="activeSample" class="image-filename">来源：团队自制样例</span>
               <span v-else-if="selectedFileName" class="image-filename">{{ selectedFileName }}</span>
               <span v-else class="image-filename">PNG · JPG · WebP，最大 5 MB</span>
               <button
@@ -922,7 +939,7 @@ onBeforeUnmount(() => {
           <div v-if="chartObservation" class="observation-meta">
               <span class="source-badge" :class="chartObservation.source">{{ sourceLabel }}</span>
               <span v-if="observation" class="confirmation-state" :class="{ confirmed: observation.confirmed }">{{ confirmationLabel }}</span>
-              <span v-else-if="hasMultipleClaims" class="confirmation-state">各项主张可独立核对</span>
+              <span v-else-if="hasMultipleClaims" class="confirmation-state informational">各项主张可独立核对</span>
               <span v-else-if="hasNoClaims" class="confirmation-state">未发现可核对主张</span>
             </div>
           </div>
@@ -987,8 +1004,14 @@ onBeforeUnmount(() => {
                 </label>
                 <div class="claim-observation-points">
                   <section class="claim-observation-point">
-                    <span class="field-label">较早观察</span>
-                    <p class="claim-raw-observation">图上原始读数：{{ entry.observation.older.period || "时间未读取" }} · {{ formatClaimPointValue(entry.observation.older) }}</p>
+                    <div class="claim-point-head">
+                      <span class="field-label">较早观察</span>
+                      <span class="value-source">{{ pointSourceLabel(entry, 'older', claimWorkspace.source) }}</span>
+                    </div>
+                    <p class="claim-raw-observation">
+                      图上原始读数：{{ entry.observation.older.period || "时间未读取" }} · {{ formatClaimPointValue(entry.observation.older) }}
+                      <span v-if="isPointCorrected(entry, 'older')" class="claim-raw-corrected">（已更正）</span>
+                    </p>
                     <div class="claim-workspace-point-fields">
                       <label class="field-block">
                         <span class="field-label">核对时间</span>
@@ -1006,8 +1029,14 @@ onBeforeUnmount(() => {
                     <blockquote><span class="claim-evidence-label">图内证据</span>{{ entry.observation.older.evidenceText || "缺少图中文字依据" }}</blockquote>
                   </section>
                   <section class="claim-observation-point">
-                    <span class="field-label">较新观察</span>
-                    <p class="claim-raw-observation">图上原始读数：{{ entry.observation.newer.period || "时间未读取" }} · {{ formatClaimPointValue(entry.observation.newer) }}</p>
+                    <div class="claim-point-head">
+                      <span class="field-label">较新观察</span>
+                      <span class="value-source">{{ pointSourceLabel(entry, 'newer', claimWorkspace.source) }}</span>
+                    </div>
+                    <p class="claim-raw-observation">
+                      图上原始读数：{{ entry.observation.newer.period || "时间未读取" }} · {{ formatClaimPointValue(entry.observation.newer) }}
+                      <span v-if="isPointCorrected(entry, 'newer')" class="claim-raw-corrected">（已更正）</span>
+                    </p>
                     <div class="claim-workspace-point-fields">
                       <label class="field-block">
                         <span class="field-label">核对时间</span>

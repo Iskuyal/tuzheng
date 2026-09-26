@@ -24,13 +24,26 @@ test("逐条核对、更正、重算，查看审计记录并重置", async ({ pa
   await expect(cards.nth(2)).toContainText("图上原始读数：2025 年 · 缺少图内依据");
   await expect(cards.nth(2)).toContainText("缺少图中文字依据");
 
+  // 每个观察点标明读数来源：未更正时是预置示例值，缺失证据标为图上不可读
+  const points = (cardIndex: number, pointIndex: number) =>
+    cards.nth(cardIndex).locator(".claim-observation-point").nth(pointIndex);
+  await expect(points(0, 0).locator(".value-source")).toHaveText("预置示例值");
+  await expect(points(0, 1).locator(".value-source")).toHaveText("预置示例值");
+  await expect(points(1, 1).locator(".value-source")).toHaveText("预置示例值");
+  await expect(points(2, 1).locator(".value-source")).toHaveText("图上暂不可读");
+
   // 确认收入主张：图内一致
   await cards.nth(0).getByRole("button", { name: "确认并计算此主张" }).click();
   await expect(cards.nth(0).locator(".claim-result-sheet .result-status")).toHaveText("图内一致");
   await expect(cards.nth(0).locator("summary .confirmation-state")).toHaveText("输入已确认");
+  await expect(points(0, 0).locator(".value-source")).toHaveText("预置示例值");
 
-  // 更正利润主张的 2025 年读数：图内矛盾，且原始观察仍可复查
-  await cards.nth(1).locator(".claim-observation-point").nth(1).getByLabel("核对数值").fill("100");
+  // 更正利润主张的 2025 年读数：来源变为用户手动更正，原始读数标出已更正，图内矛盾
+  await points(1, 1).getByLabel("核对数值").fill("100");
+  await expect(points(1, 1).locator(".value-source")).toHaveText("用户手动更正");
+  await expect(points(1, 0).locator(".value-source")).toHaveText("预置示例值");
+  await expect(points(1, 1).locator(".claim-raw-observation")).toContainText("（已更正）");
+  await expect(points(1, 0).locator(".claim-raw-observation")).not.toContainText("（已更正）");
   await cards.nth(1).getByRole("button", { name: "确认并计算此主张" }).click();
   await expect(cards.nth(1).locator(".claim-result-sheet .result-status")).toHaveText("图内矛盾");
   await expect(cards.nth(1).locator(".claim-result-sheet")).toContainText("新数值由用户手动更正");
@@ -54,6 +67,16 @@ test("逐条核对、更正、重算，查看审计记录并重置", async ({ pa
   await cards.nth(0).locator(".claim-audit-log summary").click();
   await expect(cards.nth(0).locator(".claim-audit-log")).toContainText("图内一致");
   await expect(cards.nth(0).locator(".claim-audit-log")).not.toContainText("更正读数");
+
+  // 标签与「已更正」标记同一判据：只改时间也算更正，改回原值两者一起回到预置示例值
+  await points(1, 0).getByLabel("核对时间").fill("2023 年");
+  await expect(points(1, 0).locator(".value-source")).toHaveText("用户手动更正");
+  await expect(points(1, 0).locator(".claim-raw-observation")).toContainText("（已更正）");
+  await points(1, 0).getByLabel("核对时间").fill("2024 年");
+  await points(1, 1).getByLabel("核对数值").fill("70");
+  await expect(points(1, 0).locator(".value-source")).toHaveText("预置示例值");
+  await expect(points(1, 1).locator(".value-source")).toHaveText("预置示例值");
+  await expect(points(1, 1).locator(".claim-raw-observation")).not.toContainText("（已更正）");
 
   // 窄屏可读、可点、无横向溢出，且确认按钮不被提示文字压住（阶段二修复过的缺陷）
   const layout = await page.evaluate(() => {
@@ -95,6 +118,8 @@ test("逐条核对、更正、重算，查看审计记录并重置", async ({ pa
   await expect(cards.nth(0).locator("summary .confirmation-state")).toHaveText("待核对");
   await expect(cards.nth(1).locator(".claim-observation-point").nth(1).getByLabel("核对数值")).toHaveValue("70");
   await expect(cards.nth(1)).toContainText("2025 年利润 100 万元");
+  await expect(points(0, 0).locator(".value-source")).toHaveText("预置示例值");
+  await expect(points(1, 1).locator(".value-source")).toHaveText("预置示例值");
   await expect(page.getByRole("button", { name: "重置本次审计" })).toBeDisabled();
 
   // 重置后仍可从零核对

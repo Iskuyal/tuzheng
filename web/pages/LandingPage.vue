@@ -17,10 +17,10 @@ const loadError = ref("");
 const uploadError = ref("");
 
 const samplePresentation: Record<string, { tone: string; kind: string }> = {
-  conflict: { tone: "coral", kind: "图内矛盾" },
-  consistent: { tone: "blue", kind: "图内一致" },
-  unclear: { tone: "amber", kind: "需要确认" },
-  "multi-claims": { tone: "blue", kind: "多主张" },
+  conflict: { tone: "contradictory", kind: "图内矛盾" },
+  consistent: { tone: "consistent", kind: "图内一致" },
+  unclear: { tone: "needs-confirmation", kind: "需要确认" },
+  "multi-claims": { tone: "grouped", kind: "多条主张" },
 };
 
 async function loadSamples(): Promise<void> {
@@ -59,7 +59,7 @@ function uploadScreenshot(event: Event): void {
 }
 
 function sampleTone(id: string): string {
-  return samplePresentation[id]?.tone ?? "amber";
+  return samplePresentation[id]?.tone ?? "grouped";
 }
 
 function sampleKind(id: string): string {
