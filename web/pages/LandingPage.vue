@@ -21,6 +21,13 @@ const samplePresentation: Record<string, { tone: string; kind: string }> = {
   consistent: { tone: "consistent", kind: "图内一致" },
   unclear: { tone: "needs-confirmation", kind: "需要确认" },
   "multi-claims": { tone: "grouped", kind: "多条主张" },
+  "cross-a-revenue": { tone: "grouped", kind: "跨图基准" },
+  "cross-b-consistent": { tone: "grouped", kind: "跨图对照" },
+  "cross-b-conflict": { tone: "grouped", kind: "跨图对照" },
+  "cross-b-scope-mismatch": { tone: "grouped", kind: "跨图对照" },
+  "axis-zero-based": { tone: "grouped", kind: "纵轴对照" },
+  "axis-truncated": { tone: "grouped", kind: "纵轴对照" },
+  "axis-unknown-start": { tone: "grouped", kind: "纵轴对照" },
 };
 
 async function loadSamples(): Promise<void> {

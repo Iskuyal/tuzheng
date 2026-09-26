@@ -209,6 +209,7 @@ export function createApp(options: AppOptions = {}): Express {
           id: `claim-${index + 1}`,
           ...claim,
         })),
+        axis: parsed.axis ?? null,
       };
       const modelRead: ModelReadTrace = {
         model: read.model,
