@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
 import AuditRecordList from "../components/AuditRecordList.vue";
 import AuditSessionBar from "../components/AuditSessionBar.vue";
+import { assessAxisRisk } from "../../shared/axis-risk.js";
 import {
   auditObservationFrom,
   claimScopeView,
@@ -82,6 +83,9 @@ const referenceError = ref("");
 const referenceBusy = ref(false);
 const crossCurrentClaimId = ref<string | null>(null);
 const crossConfirmedElements = ref<CrossElementKey[]>([]);
+// 纵轴核对：轴起点可以由图上手填；覆盖值只在本次会话有效。
+const axisMinOverride = ref<number | null>(null);
+const axisMinInput = ref("");
 const singleClaimRevision = ref(0);
 const initialObservation = ref<AuditObservation | null>(null);
 const cropMode = ref(false);
@@ -285,6 +289,8 @@ function setChartObservation(value: ChartObservation): void {
   singleClaimRevision.value += 1;
   result.value = null;
   crossConfirmedElements.value = [];
+  axisMinOverride.value = null;
+  axisMinInput.value = "";
   crossCurrentClaimId.value = value.claims[0]?.id ?? null;
   if (referenceObservation.value) resetPairing();
 }
@@ -913,6 +919,52 @@ function evidenceExcerpt(chart: ChartObservation | null, claimId: string | null)
   return parts.length ? parts.join("；") : "缺少图中文字依据";
 }
 
+const axisRiskValues = computed<[number, number] | null>(() => {
+  const chart = chartObservation.value;
+  if (!chart) return null;
+  for (const claim of chart.claims) {
+    const values = confirmedValuesOf("current", claim.id);
+    if (values && values.older.value !== null && values.newer.value !== null) {
+      return [values.older.value, values.newer.value];
+    }
+  }
+  return null;
+});
+
+const axisRisk = computed(() => {
+  const values = axisRiskValues.value;
+  if (!values) return null;
+  return assessAxisRisk(chartObservation.value?.axis ?? null, values, axisMinOverride.value);
+});
+
+const axisRiskLabel = computed(() => {
+  const level = axisRisk.value?.level;
+  if (level === "misleading-risk") return "可能误读";
+  if (level === "ok") return "从零起点差异不大";
+  return "需要确认轴范围";
+});
+
+function axisBarPercent(heights: [number, number] | null, index: 0 | 1): number {
+  if (!heights) return 0;
+  const tallest = Math.max(heights[0], heights[1]);
+  if (tallest <= 0) return 0;
+  return Math.round((heights[index] / tallest) * 100);
+}
+
+const axisRangeText = computed(() => {
+  const risk = axisRisk.value;
+  if (!risk || risk.axisMin === null) return "（未读到）";
+  const unit = risk.unit ? ` ${risk.unit}` : "";
+  return risk.axisMax === null
+    ? `（起点 ${risk.axisMin}${unit}）`
+    : `（${risk.axisMin}–${risk.axisMax}${unit}）`;
+});
+
+function applyAxisMin(): void {
+  const value = axisMinInput.value === "" ? null : Number(axisMinInput.value);
+  axisMinOverride.value = value !== null && Number.isFinite(value) ? value : null;
+}
+
 function selectCurrentClaim(event: Event): void {
   crossCurrentClaimId.value = (event.target as HTMLSelectElement).value;
   crossConfirmedElements.value = [];
@@ -1526,6 +1578,53 @@ onBeforeUnmount(() => {
           </section>
 
           <AuditRecordList v-if="singleClaimAuditRows.length" :rows="singleClaimAuditRows" />
+
+          <section v-if="axisRisk" class="axis-section" aria-labelledby="axis-title">
+            <div class="section-heading cross-heading">
+              <div>
+                <p class="eyebrow">柱状图呈现方式</p>
+                <h3 id="axis-title" class="cross-title">纵轴核对</h3>
+              </div>
+              <span class="result-status" :class="axisRisk.level === 'misleading-risk' ? 'contradictory' : axisRisk.level === 'ok' ? 'consistent' : 'needs-confirmation'">
+                <span class="result-status-mark" aria-hidden="true"></span>
+                {{ axisRiskLabel }}
+              </span>
+            </div>
+
+            <p class="axis-summary">{{ axisRisk.summary }}</p>
+            <ul v-if="axisRisk.reasons.length" class="result-reasons">
+              <li v-for="reason in axisRisk.reasons" :key="reason">{{ reason }}</li>
+            </ul>
+
+            <div class="axis-compare">
+              <figure class="axis-panel">
+                <figcaption>原图轴范围{{ axisRangeText }}</figcaption>
+                <div class="axis-bars" :aria-label="`原图轴范围下的柱高：${axisRisk.heightsOnAxis?.join('、') ?? '未读到'}`">
+                  <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsOnAxis, 0)}%` }"></span>
+                  <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsOnAxis, 1)}%` }"></span>
+                </div>
+                <span class="axis-panel-note">{{ axisRisk.heightsOnAxis ? axisRisk.heightsOnAxis.join(" / ") : "未读到" }}</span>
+              </figure>
+              <figure class="axis-panel">
+                <figcaption>从零起点</figcaption>
+                <div class="axis-bars" :aria-label="`从零起点重画的柱高：${axisRisk.heightsFromZero.join('、')}`">
+                  <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsFromZero, 0)}%` }"></span>
+                  <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsFromZero, 1)}%` }"></span>
+                </div>
+                <span class="axis-panel-note">{{ axisRisk.heightsFromZero.join(" / ") }}{{ axisRisk.unit ? ` ${axisRisk.unit}` : "" }}</span>
+              </figure>
+            </div>
+
+            <div v-if="axisRisk.level === 'needs-confirmation'" class="axis-input">
+              <label>
+                <span>纵轴最小值</span>
+                <input v-model="axisMinInput" type="number" step="any" placeholder="如：80" />
+              </label>
+              <button class="cross-confirm-button" type="button" @click="applyAxisMin">按这个起点重新判断</button>
+            </div>
+
+            <p class="result-boundary">「可能误读」说的是呈现方式，不是造假判断；这张图也可能只是排版选择。对照图按已确认的读数重画，不经过模型。</p>
+          </section>
 
           <section id="audit-cross" class="cross-section" aria-labelledby="cross-title">
             <div class="section-heading cross-heading">

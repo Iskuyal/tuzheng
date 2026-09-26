@@ -698,3 +698,17 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .cross-evidence-label { display: block; margin-bottom: 6px; color: #435d68; font-size: 12px; font-weight: 700; }
 .cross-evidence blockquote { margin: 0 0 6px; color: #243e45; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 @media (max-width: 620px) { .cross-evidence { grid-template-columns: 1fr; } }
+.axis-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e9e5; }
+.axis-summary { margin: 0 0 8px; color: #243e45; font-size: 13px; line-height: 1.55; }
+.axis-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; margin: 11px 0; }
+.axis-panel { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 9px 10px; border: 1px solid #e0e8e4; background: #fbfcfb; }
+.axis-panel figcaption { color: #435d68; font-size: 12px; font-weight: 700; }
+.axis-bars { display: flex; align-items: end; justify-content: space-around; gap: 14px; height: 96px; padding: 0 6px; border-bottom: 1px solid #aebdb8; }
+.axis-bar { display: block; width: 38px; min-height: 2px; background: #1c7471; }
+.axis-bars .axis-bar:first-child { background: #82aaa4; }
+.axis-panel-note { color: var(--quiet); font-family: var(--mono); font-size: 11px; }
+.axis-input { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; margin-bottom: 10px; }
+.axis-input label { display: flex; flex-direction: column; gap: 5px; }
+.axis-input span { color: #435d68; font-size: 12px; font-weight: 700; }
+.axis-input input { width: 110px; height: 36px; padding: 0 8px; border: 1px solid #d7e0dc; border-radius: 3px; font-size: 13px; }
+@media (max-width: 620px) { .axis-compare { grid-template-columns: 1fr; } }
