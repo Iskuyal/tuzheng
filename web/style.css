@@ -175,6 +175,25 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .claim-workspace-point-fields { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(64px, .8fr) minmax(60px, .65fr); gap: 7px; margin-top: 8px; }
 .claim-workspace-point-fields input { height: 36px; padding-inline: 7px; font-size: 12px; }
 .claim-evidence-label { display: block; margin-bottom: 3px; color: #435d68; font-size: 11px; font-weight: 700; }
+.claim-observation-body .confirm-button { width: 100%; margin-top: 12px; }
+.claim-observation-body .confirm-hint { margin-top: 7px; }
+.claim-audit-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 10px; margin-bottom: 10px; padding: 8px 10px; border: 1px solid #d5e0db; background: #f7faf8; }
+.claim-audit-bar > span { flex: 1 1 190px; color: #52646b; font-size: 12px; line-height: 1.45; }
+.reset-audit-button { flex: 0 0 auto; min-height: 40px; padding: 0 12px; border: 1px solid #9fb6bb; border-radius: 0; color: #294d59; background: #fbfcf8; font-size: 12px; font-weight: 700; cursor: pointer; }
+.reset-audit-button:hover:not(:disabled) { border-color: #78a89b; background: #edf5f1; }
+.reset-audit-button:disabled { color: #aab5b1; cursor: not-allowed; }
+.reset-notice { margin: 0 0 10px; padding: 8px 10px; border-left: 3px solid #448a7c; background: #eef5f2; color: #294d59; font-size: 12px; line-height: 1.45; }
+.claim-audit-log { margin-top: 10px; padding-top: 2px; border-top: 1px dashed #d5e0db; }
+.claim-audit-log > summary { display: flex; align-items: center; gap: 8px; min-height: 40px; list-style: none; color: #435d68; font-size: 12px; font-weight: 700; cursor: pointer; }
+.claim-audit-log > summary::-webkit-details-marker { display: none; }
+.claim-audit-log-count { color: var(--quiet); font-weight: 600; }
+.claim-audit-log-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.claim-audit-log-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 8px; padding: 7px 8px; border: 1px solid #e4ebe7; background: #f8faf9; font-size: 12px; line-height: 1.45; }
+.claim-audit-log-list time { color: var(--quiet); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.claim-audit-action { color: var(--ink); font-weight: 700; }
+.claim-audit-change { color: #52646b; overflow-wrap: anywhere; }
+.claim-audit-cleared { color: #805313; }
+.claim-audit-was { color: var(--quiet); }
 .claim-result-sheet { margin-top: 10px; padding: 11px; }
 .claim-result-sheet .result-title { margin-block: 9px; }
 .claim-observation-point strong { display: block; margin-top: 5px; color: var(--ink); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
@@ -209,7 +228,7 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .evidence-field input:read-only { color: #52646b; background: #edf3f0; cursor: default; }
 .unreadable-list { display: flex; flex-direction: column; gap: 4px; margin: -2px 0 0; padding: 0; list-style: none; color: #805313; font-size: 13px; line-height: 1.45; }
 .unreadable-list li { padding-left: 12px; position: relative; }.unreadable-list li::before { position: absolute; left: 0; content: "!"; font-weight: 800; }
-.confirm-button { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 45px; margin-top: 2px; border: 1px solid var(--pixel-ink); border-radius: 0; background: var(--pixel-citron); box-shadow: none; color: var(--pixel-ink); font-size: 14px; font-weight: 800; cursor: pointer; transition: background-color .15s ease, transform .15s ease; }
+.confirm-button { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 45px; margin-top: 2px; border: 1px solid var(--pixel-ink); border-radius: 0; background: var(--pixel-citron); box-shadow: none; color: var(--pixel-ink); font-size: 14px; font-weight: 800; cursor: pointer; transition: background-color .15s ease, transform .15s ease; }
 .confirm-button:hover:not(:disabled) { background: #d8f18e; transform: translate(1px, 1px); }
 .confirm-button:disabled { cursor: wait; opacity: .62; }
 .confirm-hint { margin: -6px 0 0; color: var(--quiet); font-size: 13px; line-height: 1.45; text-align: center; }

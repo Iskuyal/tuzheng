@@ -49,20 +49,30 @@ export interface AuditResult {
   reasons: string[];
 }
 
+export function initialValueSource(
+  source: ObservationSource,
+  point: RawDataPointObservation,
+): ValueSource {
+  if (point.value === null) return "unreadable";
+  return source === "preset-example" ? "preset" : "model";
+}
+
+export function toDataPointObservation(
+  source: ObservationSource,
+  point: RawDataPointObservation,
+): DataPointObservation {
+  return { ...point, valueSource: initialValueSource(source, point) };
+}
+
 export function toAuditObservation(
   chartObservation: ChartObservation,
   claim: GrowthClaimObservation,
 ): AuditObservation {
-  const valueSource = (point: RawDataPointObservation): ValueSource => {
-    if (point.value === null) return "unreadable";
-    return chartObservation.source === "preset-example" ? "preset" : "model";
-  };
-
   return {
     titleOriginal: claim.claimText,
     claimedGrowthPercent: claim.claimedGrowthPercent,
-    older: { ...claim.older, valueSource: valueSource(claim.older) },
-    newer: { ...claim.newer, valueSource: valueSource(claim.newer) },
+    older: toDataPointObservation(chartObservation.source, claim.older),
+    newer: toDataPointObservation(chartObservation.source, claim.newer),
     unreadableItems: [...claim.unreadableItems],
     confirmed: false,
     source: chartObservation.source,
