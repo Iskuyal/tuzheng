@@ -17,3 +17,5 @@
 ## Comments
 
 **2026-09-26 本地验收：**以 `fff4f13` 为修复前对照，`npm test` 86/86、`npm run test:e2e` 21/21（320／390／1280px）、`npm run build` 通过。预置样例与本地替身验证程序行为；本次没有重新执行真实 Responses API 的两图读取。
+
+**2026-09-27 在线复验：**四张团队自制 PNG 的真实 Responses 读取均返回有效 `claims[]`；页面上传两张跨图图片、逐侧确认后显示 25% 对 50% 的“数值冲突”。初次因 Base URL 误填为 `/chat/completions` 收到 HTTP 502，改为 Provider API 根路径后通过。原始观察、耗时、用量及边界见 [复验记录](../../../docs/evidence/stage-3-live-vision-2026-09-27.md)。
