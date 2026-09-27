@@ -230,6 +230,36 @@ describe("单图审计 API", () => {
       .expect(({ body }) => expect(body.settings.baseUrl).toBe("http://localhost:8080/v1"));
   });
 
+  it("拒绝完整接口地址，并保留之前保存的模型和密钥", async () => {
+    const app = createApp({ settingsStore: memorySettingsStore({
+      baseUrl: "https://proxy.example/v1",
+      model: "reader-x",
+      apiKey: "saved-private-key",
+    }) });
+
+    for (const baseUrl of [
+      "https://api.commandcode.ai/provider/v1/chat/completions",
+      "https://api.commandcode.ai/provider/v1/responses/",
+      "https://api.commandcode.ai/provider/v1/respon%73es",
+      "https://api.commandcode.ai/provider/v1/chat%2Fcompletions",
+    ]) {
+      const response = await request(app)
+        .put("/api/settings")
+        .send({ baseUrl, model: "reader-y", apiKey: "replacement-key" })
+        .expect(400);
+      expect(response.body.error.code).toBe("INVALID_SETTINGS");
+      expect(response.body.error.message).toContain("Base URL");
+      expect(response.body.error.message).toContain("/responses");
+    }
+
+    const unchanged = await request(app).get("/api/settings").expect(200);
+    expect(unchanged.body.settings).toEqual({
+      baseUrl: "https://proxy.example/v1",
+      model: "reader-x",
+      hasApiKey: true,
+    });
+  });
+
   it("保存自定义 Responses 端点、模型和密钥，并允许清除密钥", async () => {
     const settingsStore = memorySettingsStore({
       baseUrl: "https://api.openai.com/v1",

@@ -35,6 +35,16 @@ export interface AppOptions {
   settingsStore?: ModelSettingsStore;
 }
 
+function isCompletedModelEndpoint(value: string): boolean {
+  try {
+    const path = decodeURIComponent(new URL(value).pathname).replace(/\/+$/, "").toLowerCase();
+    return ["/responses", "/chat/completions", "/completions", "/messages"]
+      .some((suffix) => path.endsWith(suffix));
+  } catch {
+    return false;
+  }
+}
+
 const settingsUpdateSchema = z.object({
   baseUrl: z.string().url().max(500).refine((value) => {
     const url = new URL(value);
@@ -47,7 +57,8 @@ const settingsUpdateSchema = z.object({
       && !url.username
       && !url.password
       && !url.search
-      && !url.hash;
+      && !url.hash
+      && !isCompletedModelEndpoint(value);
   }),
   model: z.string().trim().min(1).max(120),
   apiKey: z.string().max(1000).optional(),
@@ -104,8 +115,14 @@ export function createApp(options: AppOptions = {}): Express {
   app.put("/api/settings", async (request, response) => {
     const parsed = settingsUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
+      const baseUrl = typeof request.body?.baseUrl === "string" ? request.body.baseUrl : "";
       response.status(400).json({
-        error: { code: "INVALID_SETTINGS", message: "远程服务请使用 HTTPS；HTTP 仅支持 localhost 回环地址。请同时检查模型名。" },
+        error: {
+          code: "INVALID_SETTINGS",
+          message: isCompletedModelEndpoint(baseUrl)
+            ? "请填写 Responses API 的 Base URL（如 https://api.openai.com/v1），不要填 /chat/completions 或 /responses 的完整接口地址；服务端会自行追加 /responses。"
+            : "远程服务请使用 HTTPS；HTTP 仅支持 localhost 回环地址。请同时检查模型名。",
+        },
       });
       return;
     }

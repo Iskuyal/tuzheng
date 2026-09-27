@@ -138,7 +138,7 @@ onMounted(loadSettings);
                 placeholder="https://api.openai.com/v1"
                 required
               />
-              <small>填写服务根地址；服务端会在后面调用 `/responses`。远程服务需用 HTTPS，本机回环地址可用 HTTP。</small>
+              <small>只填服务根地址（如 https://api.openai.com/v1），不要粘贴 `/chat/completions` 或 `/responses` 的完整接口地址；服务端会自行调用 `/responses`。远程服务需用 HTTPS，本机回环地址可用 HTTP。</small>
             </label>
 
             <label class="settings-field">

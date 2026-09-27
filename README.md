@@ -17,7 +17,7 @@ npm run dev
 
 打开 <http://127.0.0.1:5173>。根目录脚本会同时启动 Vue/Vite 页面和 Express API；API 默认使用 `127.0.0.1:3001`。
 
-要启用新图片的视觉读取，打开页面右上角的「模型设置」，填写 Responses API 兼容 Base URL、模型名和 API Key。Base URL 应填接口根路径（例如以 `/v1` 结尾），应用会自行调用 `/responses`；不要填入 `/chat/completions` 或 `/responses` 的完整接口地址。默认填入的 `https://api.openai.com/v1` 与 `gpt-4.1-mini` 是示例值，可替换；团队已用第三方 Responses 兼容端点完成真实读取验收（见 [阶段一验收记录](docs/STAGE-1.md)和[阶段三复验记录](docs/evidence/stage-3-live-vision-2026-09-27.md)），该默认端点本身未做过调用。远程服务地址必须使用 HTTPS；本机回环服务可用 HTTP。设置只经本机 Node 服务端保存到 `%LOCALAPPDATA%\TuZheng\settings.json`；读取接口只返回 URL、模型名和密钥是否已配置，不回传密钥。`.env.example` 仅保留可选 API 端口。设置文件使用当前 Windows 账户的本机文件权限；同一账户下运行的其他程序也有权读取。上传的新图会发送到设置页中指定的服务；预置样例不调用云端模型。
+要启用新图片的视觉读取，打开页面右上角的「模型设置」，填写 Responses API 兼容 Base URL、模型名和 API Key。Base URL 应填接口根路径（例如以 `/v1` 结尾），应用会自行调用 `/responses`；不要填入 `/chat/completions` 或 `/responses` 的完整接口地址，服务端会在保存时拒绝这类误填并保留原设置。默认填入的 `https://api.openai.com/v1` 与 `gpt-4.1-mini` 是示例值，可替换；团队已用第三方 Responses 兼容端点完成真实读取验收（见 [阶段一验收记录](docs/STAGE-1.md)和[阶段三复验记录](docs/evidence/stage-3-live-vision-2026-09-27.md)），该默认端点本身未做过调用。远程服务地址必须使用 HTTPS；本机回环服务可用 HTTP。设置只经本机 Node 服务端保存到 `%LOCALAPPDATA%\TuZheng\settings.json`；读取接口只返回 URL、模型名和密钥是否已配置，不回传密钥。`.env.example` 仅保留可选 API 端口。设置文件使用当前 Windows 账户的本机文件权限；同一账户下运行的其他程序也有权读取。上传的新图会发送到设置页中指定的服务；预置样例不调用云端模型。
 
 ### 在 WebStorm 里构建与运行
 
