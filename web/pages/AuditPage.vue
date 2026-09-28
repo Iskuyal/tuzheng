@@ -67,6 +67,7 @@ interface CrossScopeConfirmationEvent {
 }
 
 const samples = ref<SampleSummary[]>([]);
+const evaluationSample = ref<SampleSummary | null>(null);
 const activeSampleId = ref<string | null>(null);
 const chartObservation = ref<ChartObservation | null>(null);
 const claimWorkspace = ref<ClaimWorkspace | null>(null);
@@ -126,7 +127,8 @@ let referenceRequest: AbortController | null = null;
 const route = useRoute();
 
 const activeSample = computed(
-  () => samples.value.find(({ id }) => id === activeSampleId.value) ?? null,
+  () => samples.value.find(({ id }) => id === activeSampleId.value)
+    ?? (evaluationSample.value?.id === activeSampleId.value ? evaluationSample.value : null),
 );
 const hasMultipleClaims = computed(() => (chartObservation.value?.claims.length ?? 0) > 1);
 const hasNoClaims = computed(() => chartObservation.value?.claims.length === 0);
@@ -346,7 +348,7 @@ function applySingleEdit(edit: ClaimWorkspaceEdit): void {
   invalidateResult();
 }
 
-async function loadSample(id: string): Promise<void> {
+async function loadSample(id: string): Promise<boolean> {
   busyMessage.value = "正在载入预置示例…";
   errorMessage.value = "";
   result.value = null;
@@ -358,14 +360,16 @@ async function loadSample(id: string): Promise<void> {
     });
     const payload = await response.json().catch(() => null) as {
       observation?: ChartObservation;
+      sample?: SampleSummary;
       error?: { message?: string };
     } | null;
     if (!response.ok || !payload?.observation) {
       throw new Error(updateErrorFrom(response, payload));
     }
 
-    const sample = samples.value.find((candidate) => candidate.id === id);
+    const sample = samples.value.find((candidate) => candidate.id === id) ?? payload.sample;
     if (!sample) throw new Error("找不到这个样例。");
+    evaluationSample.value = samples.value.some((candidate) => candidate.id === id) ? null : sample;
     forgetObjectUrl();
     clearCrop();
     pendingUpload.value = null;
@@ -375,8 +379,10 @@ async function loadSample(id: string): Promise<void> {
     activeSampleId.value = id;
     modelRead.value = null;
     setChartObservation(payload.observation);
+    return true;
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "样例载入失败，请重试。";
+    return false;
   } finally {
     busyMessage.value = "";
   }
@@ -391,8 +397,9 @@ async function loadSamples(): Promise<void> {
     }
     samples.value = payload.samples;
     const requestedId = typeof route.query.sample === "string" ? route.query.sample : null;
-    const requestedSample = payload.samples.find(({ id }) => id === requestedId);
-    await loadSample(requestedSample?.id ?? payload.samples[0].id);
+    if (!requestedId || !(await loadSample(requestedId))) {
+      await loadSample(payload.samples[0].id);
+    }
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "服务暂时不可用。";
   }
@@ -429,6 +436,7 @@ function prepareUploadFile(file: File): void {
   selectedFileName.value = file.name;
   pendingUpload.value = file;
   activeSampleId.value = null;
+  evaluationSample.value = null;
   chartObservation.value = null;
   claimWorkspace.value = null;
   claimErrors.value = {};

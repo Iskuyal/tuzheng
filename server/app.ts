@@ -194,7 +194,7 @@ export function createApp(options: AppOptions = {}): Express {
 
   app.get("/api/samples", (_request, response) => {
     response.json({
-      samples: sampleCases.map(({ id, name, description, imageUrl }) => ({
+      samples: sampleCases.filter((sample) => !sample.evaluationOnly).map(({ id, name, description, imageUrl }) => ({
         id,
         name,
         description,
@@ -216,7 +216,10 @@ export function createApp(options: AppOptions = {}): Express {
       return;
     }
 
-    response.json({ observation: sample.observation });
+    response.json({
+      observation: sample.observation,
+      sample: { id: sample.id, name: sample.name, description: sample.description, imageUrl: sample.imageUrl },
+    });
   });
 
   app.post("/api/audit/check", (request, response) => {

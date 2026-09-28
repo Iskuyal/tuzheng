@@ -91,7 +91,7 @@ onMounted(loadSamples);
               上传我的截图 <span aria-hidden="true">↑</span>
               <input id="landing-upload" type="file" accept="image/png,image/jpeg,image/webp" @change="uploadScreenshot" />
             </label>
-            <a class="pixel-button secondary-sample-action" href="#sample-dock">浏览四个自制样例 <span aria-hidden="true">↓</span></a>
+            <a class="pixel-button secondary-sample-action" href="#sample-dock">浏览自制样例 <span aria-hidden="true">↓</span></a>
           </div>
           <p class="upload-support-note">支持 PNG、JPG、WebP；单张不超过 5 MB。</p>
           <p v-if="uploadError" class="landing-error" role="alert">{{ uploadError }}</p>

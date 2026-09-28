@@ -404,3 +404,31 @@ test("口径记录区分图上原始观察与用户更正后的比对值", async
   await expect(record).toContainText("图上原始观察：2024 年 → 2025 年 / 2023 年");
   await expect(record).toContainText("确认时采用的口径：2023 年 → 2025 年 / 2023 年");
 });
+
+test("固定评测样例可按链接查看，舍入与零旧值各自给出正确状态", async ({ page }) => {
+  await page.goto("/audit?sample=eval-rounding");
+  await expect(page.locator(".source-badge")).toHaveText("预置示例");
+  await expect(page.locator(".image-stage img").first()).toHaveAttribute("src", "/samples/eval-rounding.svg");
+  await page.locator(".observation-form .confirm-button").click();
+  await expect(page.locator(".result-sheet .result-status").first()).toContainText("图内一致");
+  await expect(page.locator(".result-sheet .formula-line").first()).toContainText("33.33%");
+
+  await page.goto("/audit?sample=eval-zero-base");
+  await page.locator(".observation-form .confirm-button").click();
+  await expect(page.locator(".result-sheet .result-status").first()).toContainText("需要确认");
+  await expect(page.locator(".result-sheet .result-reasons").first()).toContainText("旧值为 0");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => document.documentElement.clientWidth + 1),
+  );
+
+  await page.goto("/audit?sample=missing-example-id");
+  await expect(page.locator(".image-stage img").first()).toHaveAttribute("src", "/samples/conflict.svg");
+  await expect(page.locator(".source-badge")).toHaveText("预置示例");
+
+  await page.goto("/audit?sample=eval-cross-period-mismatch");
+  const cross = page.locator(".cross-section");
+  await cross.locator("select").first().selectOption("cross-a-revenue");
+  await expect(cross.locator(".cross-element").nth(1).locator(".cross-element-state")).toHaveText("不一致");
+  await expect(cross.locator(".cross-gate")).toContainText("还差 时间");
+  await expect(cross.locator(".cross-result")).toHaveCount(0);
+});

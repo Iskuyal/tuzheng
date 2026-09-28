@@ -52,6 +52,17 @@ describe("单图审计 API", () => {
 
     expect(response.body.samples).toHaveLength(11);
     expect(response.body.samples.map(({ id }: { id: string }) => id)).toContain("multi-claims");
+    expect(response.body.samples.map(({ id }: { id: string }) => id)).not.toContain("eval-rounding");
+    const evaluationSample = await request(createApp())
+      .post("/api/audit/sample")
+      .send({ id: "eval-rounding" })
+      .expect(200);
+    expect(evaluationSample.body.observation.source).toBe("preset-example");
+    expect(evaluationSample.body.sample).toMatchObject({
+      id: "eval-rounding",
+      name: "固定评测：增长率舍入",
+      imageUrl: "/samples/eval-rounding.svg",
+    });
   });
 
   it("把模糊样例作为预置示例返回，不伪装成模型输出", async () => {
