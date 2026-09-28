@@ -1,6 +1,7 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp, type VisionAdapter, type VisionReadResult } from "../server/app.js";
+import { ModelConnectionError } from "../server/model-connection.js";
 import type { ModelSettings, ModelSettingsStore } from "../server/model-settings.js";
 import type { AuditObservation } from "../shared/audit.js";
 
@@ -258,6 +259,92 @@ describe("单图审计 API", () => {
       model: "reader-x",
       hasApiKey: true,
     });
+  });
+
+  it("用未保存的表单参数测试连接，不覆盖本机设置或回传密钥", async () => {
+    const settingsStore = memorySettingsStore({
+      baseUrl: "https://saved.example/v1",
+      model: "saved-model",
+      apiKey: "saved-secret",
+    });
+    let tested: ModelSettings | undefined;
+    const app = createApp({
+      settingsStore,
+      connectionTester: async (settings) => {
+        tested = settings;
+        return { model: settings.model, latencyMs: 12 };
+      },
+    });
+
+    const testedResponse = await request(app)
+      .post("/api/settings/test-connection")
+      .send({ baseUrl: "https://new.example/v1", model: "new-model", apiKey: "unsaved-secret" })
+      .expect(200);
+    expect(tested).toEqual({
+      baseUrl: "https://new.example/v1",
+      model: "new-model",
+      apiKey: "unsaved-secret",
+    });
+    expect(testedResponse.body.connection).toEqual({ model: "new-model", latencyMs: 12 });
+    expect(JSON.stringify(testedResponse.body)).not.toContain("unsaved-secret");
+
+    const unchanged = await request(app).get("/api/settings").expect(200);
+    expect(unchanged.body.settings).toEqual({
+      baseUrl: "https://saved.example/v1",
+      model: "saved-model",
+      hasApiKey: true,
+    });
+  });
+
+  it("测试连接可沿用已保存密钥，但拒绝无密钥与无效地址", async () => {
+    let tested: ModelSettings | undefined;
+    const app = createApp({
+      settingsStore: memorySettingsStore({
+        baseUrl: "https://saved.example/v1",
+        model: "saved-model",
+        apiKey: "saved-secret",
+      }),
+      connectionTester: async (settings) => {
+        tested = settings;
+        return { model: settings.model, latencyMs: 1 };
+      },
+    });
+
+    await request(app)
+      .post("/api/settings/test-connection")
+      .send({ baseUrl: "https://new.example/v1", model: "new-model", apiKey: "" })
+      .expect(200);
+    expect(tested?.apiKey).toBe("saved-secret");
+
+    const badUrl = await request(app)
+      .post("/api/settings/test-connection")
+      .send({ baseUrl: "https://new.example/v1/chat/completions", model: "new-model" })
+      .expect(400);
+    expect(badUrl.body.error.code).toBe("INVALID_SETTINGS");
+
+    const missingKey = await request(createApp({
+      settingsStore: memorySettingsStore({ baseUrl: "https://saved.example/v1", model: "saved-model", apiKey: "" }),
+      connectionTester: async () => { throw new Error("should not run"); },
+    }))
+      .post("/api/settings/test-connection")
+      .send({ baseUrl: "https://new.example/v1", model: "new-model" })
+      .expect(400);
+    expect(missingKey.body.error.code).toBe("MODEL_NOT_CONFIGURED");
+  });
+
+  it("连接失败只返回清楚的分类，不泄露上游错误或密钥", async () => {
+    const app = createApp({
+      settingsStore: memorySettingsStore({ baseUrl: "https://saved.example/v1", model: "reader-x", apiKey: "saved-secret" }),
+      connectionTester: async () => { throw new ModelConnectionError("auth", { cause: new Error("upstream secret") }); },
+    });
+    const response = await request(app)
+      .post("/api/settings/test-connection")
+      .send({ baseUrl: "https://saved.example/v1", model: "reader-x" })
+      .expect(502);
+    expect(response.body.error.code).toBe("MODEL_AUTH_FAILED");
+    expect(response.body.error.message).toContain("API Key");
+    expect(JSON.stringify(response.body)).not.toContain("upstream secret");
+    expect(JSON.stringify(response.body)).not.toContain("saved-secret");
   });
 
   it("保存自定义 Responses 端点、模型和密钥，并允许清除密钥", async () => {

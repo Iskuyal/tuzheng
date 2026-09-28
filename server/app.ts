@@ -4,6 +4,12 @@ import { z } from "zod";
 import { evaluateGrowth, type ChartObservation, type ModelReadTrace } from "../shared/audit.js";
 import { OpenAIResponsesVisionAdapter, VisionModelError } from "./openai-vision.js";
 import {
+  ModelConnectionError,
+  testModelConnection,
+  type ModelConnectionFailureKind,
+  type ModelConnectionResult,
+} from "./model-connection.js";
+import {
   FileModelSettingsStore,
   type ModelSettings,
   type ModelSettingsStore,
@@ -32,6 +38,7 @@ export interface VisionAdapter {
 export interface AppOptions {
   visionAdapter?: VisionAdapter | null;
   visionAdapterFactory?: (settings: ModelSettings) => VisionAdapter;
+  connectionTester?: (settings: ModelSettings) => Promise<ModelConnectionResult>;
   settingsStore?: ModelSettingsStore;
 }
 
@@ -64,6 +71,30 @@ const settingsUpdateSchema = z.object({
   apiKey: z.string().max(1000).optional(),
   clearApiKey: z.boolean().optional(),
 }).strict();
+
+function resolvedModelSettings(current: ModelSettings, update: z.infer<typeof settingsUpdateSchema>): ModelSettings {
+  return {
+    baseUrl: update.baseUrl.replace(/\/$/, ""),
+    model: update.model,
+    apiKey: update.clearApiKey ? "" : update.apiKey?.trim() || current.apiKey,
+  };
+}
+
+function settingsValidationMessage(baseUrl: unknown): string {
+  return typeof baseUrl === "string" && isCompletedModelEndpoint(baseUrl)
+    ? "请填写 Responses API 的 Base URL（如 https://api.openai.com/v1），不要填 /chat/completions 或 /responses 的完整接口地址；服务端会自行追加 /responses。"
+    : "远程服务请使用 HTTPS；HTTP 仅支持 localhost 回环地址。请同时检查模型名。";
+}
+
+const connectionErrorCodes: Record<ModelConnectionFailureKind, string> = {
+  auth: "MODEL_AUTH_FAILED",
+  endpoint: "MODEL_ENDPOINT_NOT_FOUND",
+  "rate-limit": "MODEL_RATE_LIMITED",
+  timeout: "MODEL_CONNECTION_TIMEOUT",
+  "request-rejected": "MODEL_REQUEST_REJECTED",
+  "invalid-output": "MODEL_RESPONSE_INVALID",
+  upstream: "MODEL_CONNECTION_FAILED",
+};
 
 const auditPointSchema = z.object({
   period: z.string().trim().max(80).nullable(),
@@ -101,6 +132,7 @@ export function createApp(options: AppOptions = {}): Express {
   const settingsStore = options.settingsStore ?? new FileModelSettingsStore();
   const createVisionAdapter = options.visionAdapterFactory ?? ((settings: ModelSettings) =>
     new OpenAIResponsesVisionAdapter(settings));
+  const connectionTester = options.connectionTester ?? testModelConnection;
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024, files: 1 },
@@ -115,29 +147,49 @@ export function createApp(options: AppOptions = {}): Express {
   app.put("/api/settings", async (request, response) => {
     const parsed = settingsUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
-      const baseUrl = typeof request.body?.baseUrl === "string" ? request.body.baseUrl : "";
       response.status(400).json({
         error: {
           code: "INVALID_SETTINGS",
-          message: isCompletedModelEndpoint(baseUrl)
-            ? "请填写 Responses API 的 Base URL（如 https://api.openai.com/v1），不要填 /chat/completions 或 /responses 的完整接口地址；服务端会自行追加 /responses。"
-            : "远程服务请使用 HTTPS；HTTP 仅支持 localhost 回环地址。请同时检查模型名。",
+          message: settingsValidationMessage(request.body?.baseUrl),
         },
       });
       return;
     }
 
-    const current = await settingsStore.read();
-    const apiKey = parsed.data.clearApiKey
-      ? ""
-      : parsed.data.apiKey?.trim() || current.apiKey;
-    const settings: ModelSettings = {
-      baseUrl: parsed.data.baseUrl.replace(/\/$/, ""),
-      model: parsed.data.model,
-      apiKey,
-    };
+    const settings = resolvedModelSettings(await settingsStore.read(), parsed.data);
     await settingsStore.write(settings);
     response.json({ settings: toPublicModelSettings(settings) });
+  });
+
+  app.post("/api/settings/test-connection", async (request, response) => {
+    const parsed = settingsUpdateSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({
+        error: { code: "INVALID_SETTINGS", message: settingsValidationMessage(request.body?.baseUrl) },
+      });
+      return;
+    }
+
+    const settings = resolvedModelSettings(await settingsStore.read(), parsed.data);
+    if (!settings.apiKey) {
+      response.status(400).json({
+        error: { code: "MODEL_NOT_CONFIGURED", message: "请填写 API Key，或先保存密钥后再测试连接。" },
+      });
+      return;
+    }
+
+    try {
+      const connection = await connectionTester(settings);
+      response.json({ connection });
+    } catch (error) {
+      const failure = error instanceof ModelConnectionError
+        ? error
+        : new ModelConnectionError("upstream", { cause: error });
+      const status = failure.kind === "timeout" ? 504 : failure.kind === "rate-limit" ? 429 : 502;
+      response.status(status).json({
+        error: { code: connectionErrorCodes[failure.kind], message: failure.message },
+      });
+    }
   });
 
   app.get("/api/samples", (_request, response) => {

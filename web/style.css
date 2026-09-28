@@ -478,6 +478,9 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .settings-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 4px; }
 .save-settings { min-width: 148px; background: var(--pixel-citron); box-shadow: none; }
 .save-settings:disabled { opacity: .55; cursor: wait; }
+.test-connection { min-width: 134px; border-color: var(--pixel-blue); color: var(--pixel-blue); background: #f0f4ff; box-shadow: none; }
+.test-connection:disabled { opacity: .55; cursor: wait; }
+.settings-test-note { margin: -5px 0 0; color: #52646b; font-size: 12px; line-height: 1.5; }
 .clear-key-button { padding: 9px 11px; border: 1px solid #d6aaa0; color: #9c4538; background: #fff7f3; font-size: 12px; font-weight: 700; cursor: pointer; }
 .clear-key-button:disabled { opacity: .6; cursor: wait; }
 .clear-key-pending { color: #9c4538; font-size: 12px; font-weight: 700; }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import SiteHeader from "../components/SiteHeader.vue";
 
 interface PublicModelSettings {
@@ -17,10 +17,32 @@ const apiKey = ref("");
 const clearApiKey = ref(false);
 const loading = ref(false);
 const saving = ref(false);
+const testingConnection = ref(false);
 const errorMessage = ref("");
 const successMessage = ref("");
+const connectionStatus = ref<"success" | "error" | null>(null);
+const connectionMessage = ref("");
 
 const credentialState = computed(() => settings.value.hasApiKey ? "已保存到本机" : "尚未配置");
+
+function currentFormSettings() {
+  return {
+    baseUrl: settings.value.baseUrl,
+    model: settings.value.model,
+    apiKey: apiKey.value,
+    clearApiKey: clearApiKey.value,
+  };
+}
+
+watch([
+  () => settings.value.baseUrl,
+  () => settings.value.model,
+  apiKey,
+  clearApiKey,
+], () => {
+  connectionStatus.value = null;
+  connectionMessage.value = "";
+});
 
 async function loadSettings(): Promise<void> {
   loading.value = true;
@@ -46,16 +68,13 @@ async function saveSettings(): Promise<void> {
   saving.value = true;
   errorMessage.value = "";
   successMessage.value = "";
+  connectionStatus.value = null;
+  connectionMessage.value = "";
   try {
     const response = await fetch("/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        baseUrl: settings.value.baseUrl,
-        model: settings.value.model,
-        apiKey: apiKey.value,
-        clearApiKey: clearApiKey.value,
-      }),
+      body: JSON.stringify(currentFormSettings()),
     });
     const payload = await response.json().catch(() => null) as {
       settings?: PublicModelSettings;
@@ -77,6 +96,36 @@ async function saveSettings(): Promise<void> {
   }
 }
 
+async function testConnection(): Promise<void> {
+  if (testingConnection.value || saving.value || loading.value) return;
+  testingConnection.value = true;
+  errorMessage.value = "";
+  successMessage.value = "";
+  connectionStatus.value = null;
+  connectionMessage.value = "";
+  try {
+    const response = await fetch("/api/settings/test-connection", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentFormSettings()),
+    });
+    const payload = await response.json().catch(() => null) as {
+      connection?: { model: string; latencyMs: number };
+      error?: { message?: string };
+    } | null;
+    if (!response.ok || !payload?.connection) {
+      throw new Error(payload?.error?.message ?? `连接测试失败（${response.status}）。`);
+    }
+    connectionStatus.value = "success";
+    connectionMessage.value = `连接成功：${payload.connection.model}，耗时 ${Math.round(payload.connection.latencyMs)} 毫秒。已验证 Responses API 与结构化输出；图片识别仍需上传样例核验。`;
+  } catch (error) {
+    connectionStatus.value = "error";
+    connectionMessage.value = error instanceof Error ? error.message : "连接测试失败，请重试。";
+  } finally {
+    testingConnection.value = false;
+  }
+}
+
 function requestKeyRemoval(): void {
   apiKey.value = "";
   clearApiKey.value = true;
@@ -95,7 +144,7 @@ onMounted(loadSettings);
         <div>
           <p class="section-kicker">本机连接 / 仅服务端读取</p>
           <h1>模型设置</h1>
-          <p class="settings-lede">可填写任意 Responses API 兼容服务。默认填入的是示例地址与模型名，均可替换；填错时读取会给出失败提示。</p>
+          <p class="settings-lede">可填写任意 Responses API 兼容服务。默认填入的是示例地址与模型名，均可替换；可先测试连接，再决定是否保存。</p>
         </div>
       </section>
 
@@ -137,13 +186,14 @@ onMounted(loadSettings);
                 autocomplete="url"
                 placeholder="https://api.openai.com/v1"
                 required
+                :disabled="testingConnection"
               />
               <small>只填服务根地址（如 https://api.openai.com/v1），不要粘贴 `/chat/completions` 或 `/responses` 的完整接口地址；服务端会自行调用 `/responses`。远程服务需用 HTTPS，本机回环地址可用 HTTP。</small>
             </label>
 
             <label class="settings-field">
               <span>模型名称</span>
-              <input v-model="settings.model" type="text" autocomplete="off" placeholder="gpt-4.1-mini" required />
+              <input v-model="settings.model" type="text" autocomplete="off" placeholder="gpt-4.1-mini" required :disabled="testingConnection" />
               <small>需支持图片输入与 JSON Schema 输出；当前模型名只是可替换的候选示例。</small>
             </label>
 
@@ -155,25 +205,30 @@ onMounted(loadSettings);
                 autocomplete="new-password"
                 :placeholder="settings.hasApiKey ? '输入新密钥以替换当前密钥' : '粘贴服务商 API 密钥'"
                 @input="clearApiKey = false"
+                :disabled="testingConnection"
               />
               <small>保存时密钥仅发给本机服务；点击读取后图片才发送到所配服务。</small>
             </label>
 
             <div class="settings-actions">
-              <button class="pixel-button primary-action save-settings" type="submit" :disabled="saving || loading">
+              <button class="pixel-button primary-action save-settings" type="submit" :disabled="saving || loading || testingConnection">
                 {{ saving ? "正在保存…" : "保存设置" }}
+              </button>
+              <button class="pixel-button test-connection" type="button" :disabled="saving || loading || testingConnection" @click="testConnection">
+                {{ testingConnection ? "正在测试…" : "测试连接" }}
               </button>
               <button
                 v-if="settings.hasApiKey && !clearApiKey"
                 class="clear-key-button"
                 type="button"
-                :disabled="saving"
+                :disabled="saving || testingConnection"
                 @click="requestKeyRemoval"
               >
                 清除已保存 Key
               </button>
               <span v-else-if="clearApiKey" class="clear-key-pending">保存后清除 Key</span>
             </div>
+            <p class="settings-test-note">测试时向所填服务发送一条短文本请求和当前密钥，以检查 Responses 结构化输出；不发送图片，也不保存表单改动。</p>
           </form>
 
           <details class="settings-mobile-details settings-form-details">
@@ -190,6 +245,7 @@ onMounted(loadSettings);
           <p v-if="loading" class="settings-feedback" role="status">正在读取本机设置…</p>
           <p v-if="successMessage" class="settings-feedback success-feedback" role="status">{{ successMessage }}</p>
           <p v-if="errorMessage" class="settings-feedback error-feedback" role="alert">{{ errorMessage }}</p>
+          <p v-if="connectionMessage" class="settings-feedback" :class="connectionStatus === 'success' ? 'success-feedback' : 'error-feedback'" :role="connectionStatus === 'success' ? 'status' : 'alert'">{{ connectionMessage }}</p>
         </section>
       </div>
 
