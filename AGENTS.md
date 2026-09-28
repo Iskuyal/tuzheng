@@ -6,7 +6,7 @@
 - **阶段选择与进度**：读 [docs/PHASES.md](docs/PHASES.md)。计划、实现、验收是三种不同状态；不要把计划写成已交付。
 - **阶段一开发**：读 [docs/STAGE-1.md](docs/STAGE-1.md) 的交付范围与验收清单。阶段一只建立单图闭环，保持 Windows + Node + npm 可运行。
 - **阶段二开发**：读 [阶段二规格](.scratch/stage-2-reader-workbench/spec.md) 和其 `issues/` 中首个无阻塞任务。一次只实现一条端到端路径，按实测结果更新任务与路线图。
-- **密钥与示例**：视觉模型 API Key 由设置页提交给仅监听 `127.0.0.1` 的本机服务端，并保存在当前 Windows 用户的 LocalAppData 配置文件；不从环境变量读取、不回传给页面或提交到仓库。远程 Responses API 地址须使用 HTTPS；HTTP 只允许本机回环服务。示例图片与资料使用团队自制或允许公开使用的内容。
+- **密钥与示例**：视觉模型 API Key 由设置页提交给仅监听 `127.0.0.1` 的本机服务端，并保存在当前 Windows 用户的 LocalAppData 配置文件；不从环境变量读取、不回传给页面或提交到仓库。远程模型 API 地址（Responses 或 Messages 协议）须使用 HTTPS；HTTP 只允许本机回环服务。示例图片与资料使用团队自制或允许公开使用的内容。
 - **提交**：GitHub 提交说明和提交报告使用中文。
 
 ## Agent skills

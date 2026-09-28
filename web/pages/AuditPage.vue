@@ -1436,7 +1436,7 @@ onBeforeUnmount(() => {
           </div>
           <p v-if="cropError" class="crop-error" role="alert">{{ cropError }}</p>
           <p class="privacy-note">
-            预置示例使用本地观察值。上传图片仅在点击读取时发送给你配置的 Responses API 服务；可先框选需要检查的区域。
+            预置示例使用本地观察值。上传图片仅在点击读取时发送给你在设置页配置的模型服务；可先框选需要检查的区域。
           </p>
         </section>
 

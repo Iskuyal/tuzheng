@@ -475,6 +475,8 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .settings-field input { width: 100%; height: 41px; padding: 0 11px; border: 1px solid #b9cbcf; border-radius: 0; color: var(--pixel-ink); background: #fbfcf8; font-size: 14px; }
 .settings-field input:focus-visible { outline: 3px solid var(--pixel-blue); outline-offset: 1px; }
 .settings-field input::placeholder { color: #65777e; }
+.settings-field select { width: 100%; height: 41px; padding: 0 8px; border: 1px solid #b9cbcf; border-radius: 0; color: var(--pixel-ink); background: #fbfcf8; font-size: 14px; }
+.settings-field select:focus-visible { outline: 3px solid var(--pixel-blue); outline-offset: 1px; }
 .settings-field small { color: #52646b; font-size: 14px; font-weight: 450; line-height: 1.5; }
 .settings-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 4px; }
 .save-settings { min-width: 148px; background: var(--pixel-citron); box-shadow: none; }
@@ -568,6 +570,7 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
   .settings-lede { font-size: 14px; }
   .settings-field { font-size: 14px; }
   .settings-field input { font-size: 16px; }
+  .settings-field select { font-size: 16px; }
   .settings-field small { font-size: 14px; }
   .settings-mobile-summary, .settings-mobile-details summary { font-size: 14px; }
   .field-label { font-size: 14px; }

@@ -47,6 +47,8 @@ describe("OpenAI Responses 视觉适配器", () => {
       strict: true,
       schema: { type: "object", properties: { claims: { type: "array" } } },
     });
+    // 2026-09-28 实测：当前网关对未知字段 verbosity 返回 400，请求里不能带它。
+    expect(sent?.text).not.toHaveProperty("verbosity");
     const userMessage = Array.isArray(sent?.input) ? sent.input[0] : undefined;
     expect(userMessage).toMatchObject({
       role: "user",

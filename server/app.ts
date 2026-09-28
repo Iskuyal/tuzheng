@@ -2,7 +2,9 @@ import express, { type Express } from "express";
 import multer, { MulterError } from "multer";
 import { z } from "zod";
 import { evaluateGrowth, type ChartObservation, type ModelReadTrace } from "../shared/audit.js";
-import { OpenAIResponsesVisionAdapter, VisionModelError } from "./openai-vision.js";
+import { AnthropicMessagesVisionAdapter } from "./anthropic-vision.js";
+import { OpenAIResponsesVisionAdapter } from "./openai-vision.js";
+import { VisionModelError } from "./vision-error.js";
 import {
   ModelConnectionError,
   testModelConnection,
@@ -11,9 +13,13 @@ import {
 } from "./model-connection.js";
 import {
   FileModelSettingsStore,
+  MODEL_PROVIDERS,
+  activeProviderConfig,
+  toPublicModelSettings,
+  type ModelProvider,
   type ModelSettings,
   type ModelSettingsStore,
-  toPublicModelSettings,
+  type ProviderConfig,
 } from "./model-settings.js";
 import { parseVisionObservation } from "./observation.js";
 import { sampleCases } from "../shared/samples.js";
@@ -53,6 +59,7 @@ function isCompletedModelEndpoint(value: string): boolean {
 }
 
 const settingsUpdateSchema = z.object({
+  provider: z.enum(MODEL_PROVIDERS).optional(),
   baseUrl: z.string().url().max(500).refine((value) => {
     const url = new URL(value);
     const localHost = url.hostname === "localhost"
@@ -73,17 +80,29 @@ const settingsUpdateSchema = z.object({
 }).strict();
 
 function resolvedModelSettings(current: ModelSettings, update: z.infer<typeof settingsUpdateSchema>): ModelSettings {
-  return {
+  const provider: ModelProvider = update.provider ?? "openai-responses";
+  const providers: Record<ModelProvider, ProviderConfig> = {
+    "openai-responses": current.providers["openai-responses"],
+    anthropic: current.providers.anthropic,
+  };
+  providers[provider] = {
     baseUrl: update.baseUrl.replace(/\/$/, ""),
     model: update.model,
-    apiKey: update.clearApiKey ? "" : update.apiKey?.trim() || current.apiKey,
+    apiKey: update.clearApiKey ? "" : update.apiKey?.trim() || current.providers[provider].apiKey,
   };
+  return { activeProvider: provider, providers };
 }
 
-function settingsValidationMessage(baseUrl: unknown): string {
-  return typeof baseUrl === "string" && isCompletedModelEndpoint(baseUrl)
-    ? "请填写 Responses API 的 Base URL（如 https://api.openai.com/v1），不要填 /chat/completions 或 /responses 的完整接口地址；服务端会自行追加 /responses。"
-    : "远程服务请使用 HTTPS；HTTP 仅支持 localhost 回环地址。请同时检查模型名。";
+function settingsValidationMessage(body: unknown): string {
+  const record = body && typeof body === "object" ? body as Record<string, unknown> : {};
+  const provider: ModelProvider = record.provider === "anthropic" ? "anthropic" : "openai-responses";
+  const baseUrl = record.baseUrl;
+  if (typeof baseUrl !== "string" || !isCompletedModelEndpoint(baseUrl)) {
+    return "远程服务请使用 HTTPS；HTTP 仅支持 localhost 回环地址。请同时检查模型名。";
+  }
+  return provider === "anthropic"
+    ? "请填写 Anthropic Messages 的 Base URL（如 https://api.anthropic.com/v1），不要填 /messages 的完整接口地址；服务端会自行追加 /messages。"
+    : "请填写 Responses API 的 Base URL（如 https://api.openai.com/v1），不要填 /chat/completions 或 /responses 的完整接口地址；服务端会自行追加 /responses。";
 }
 
 const connectionErrorCodes: Record<ModelConnectionFailureKind, string> = {
@@ -130,8 +149,12 @@ function detectImageMime(buffer: Buffer): UploadedChartImage["mimeType"] | null 
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
   const settingsStore = options.settingsStore ?? new FileModelSettingsStore();
-  const createVisionAdapter = options.visionAdapterFactory ?? ((settings: ModelSettings) =>
-    new OpenAIResponsesVisionAdapter(settings));
+  const createVisionAdapter = options.visionAdapterFactory ?? ((settings: ModelSettings) => {
+    const { provider, config } = activeProviderConfig(settings);
+    return provider === "anthropic"
+      ? new AnthropicMessagesVisionAdapter(config)
+      : new OpenAIResponsesVisionAdapter(config);
+  });
   const connectionTester = options.connectionTester ?? testModelConnection;
   const upload = multer({
     storage: multer.memoryStorage(),
@@ -150,7 +173,7 @@ export function createApp(options: AppOptions = {}): Express {
       response.status(400).json({
         error: {
           code: "INVALID_SETTINGS",
-          message: settingsValidationMessage(request.body?.baseUrl),
+          message: settingsValidationMessage(request.body),
         },
       });
       return;
@@ -165,13 +188,13 @@ export function createApp(options: AppOptions = {}): Express {
     const parsed = settingsUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({
-        error: { code: "INVALID_SETTINGS", message: settingsValidationMessage(request.body?.baseUrl) },
+        error: { code: "INVALID_SETTINGS", message: settingsValidationMessage(request.body) },
       });
       return;
     }
 
     const settings = resolvedModelSettings(await settingsStore.read(), parsed.data);
-    if (!settings.apiKey) {
+    if (!settings.providers[settings.activeProvider].apiKey) {
       response.status(400).json({
         error: { code: "MODEL_NOT_CONFIGURED", message: "请填写 API Key，或先保存密钥后再测试连接。" },
       });
@@ -255,7 +278,8 @@ export function createApp(options: AppOptions = {}): Express {
       visionAdapter = options.visionAdapter;
     } else {
       const storedSettings = await settingsStore.read();
-      visionAdapter = storedSettings.apiKey.trim()
+      const { config } = activeProviderConfig(storedSettings);
+      visionAdapter = config.apiKey.trim()
         ? createVisionAdapter(storedSettings)
         : null;
     }
@@ -264,7 +288,7 @@ export function createApp(options: AppOptions = {}): Express {
       response.status(503).json({
         error: {
           code: "MODEL_NOT_CONFIGURED",
-          message: "实时视觉读取尚未配置。请前往模型设置页填写 Responses API 地址、模型名和 API Key。",
+          message: "实时视觉读取尚未配置。请前往模型设置页填写模型服务地址、模型名和 API Key。",
         },
       });
       return;

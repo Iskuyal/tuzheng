@@ -2,8 +2,14 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp, type VisionAdapter, type VisionReadResult } from "../server/app.js";
 import { ModelConnectionError } from "../server/model-connection.js";
-import { VisionModelError } from "../server/openai-vision.js";
-import type { ModelSettings, ModelSettingsStore } from "../server/model-settings.js";
+import { VisionModelError } from "../server/vision-error.js";
+import {
+  DEFAULT_PROVIDER_CONFIGS,
+  type ModelProvider,
+  type ModelSettings,
+  type ModelSettingsStore,
+  type ProviderConfig,
+} from "../server/model-settings.js";
 import type { AuditObservation } from "../shared/audit.js";
 
 const visionClaim = {
@@ -39,11 +45,21 @@ const visionRead: VisionReadResult = {
   rawText: JSON.stringify(visionObservation),
 };
 
-function memorySettingsStore(initial: ModelSettings): ModelSettingsStore {
-  let current = { ...initial };
+function memorySettingsStore(
+  provider: ModelProvider,
+  config: Partial<ProviderConfig> = {},
+): ModelSettingsStore {
+  let current: ModelSettings = {
+    activeProvider: provider,
+    providers: {
+      "openai-responses": { ...DEFAULT_PROVIDER_CONFIGS["openai-responses"] },
+      anthropic: { ...DEFAULT_PROVIDER_CONFIGS.anthropic },
+    },
+  };
+  current.providers[provider] = { ...current.providers[provider], ...config };
   return {
-    read: async () => ({ ...current }),
-    write: async (settings) => { current = { ...settings }; },
+    read: async () => current,
+    write: async (settings) => { current = settings; },
   };
 }
 
@@ -240,8 +256,8 @@ describe("单图审计 API", () => {
     expect(response.body.result.status).toBe("contradictory");
   });
 
-  it("读取设置时只返回密钥配置状态，不返回密钥本身", async () => {
-    const settingsStore = memorySettingsStore({
+  it("读取设置时返回两种协议的公开配置，不返回密钥本身", async () => {
+    const settingsStore = memorySettingsStore("openai-responses", {
       baseUrl: "https://vision.example/v1",
       model: "chart-reader-v2",
       apiKey: "local-private-key",
@@ -249,34 +265,32 @@ describe("单图审计 API", () => {
     const response = await request(createApp({ settingsStore })).get("/api/settings").expect(200);
 
     expect(response.body.settings).toEqual({
-      baseUrl: "https://vision.example/v1",
-      model: "chart-reader-v2",
-      hasApiKey: true,
+      activeProvider: "openai-responses",
+      providers: {
+        "openai-responses": { baseUrl: "https://vision.example/v1", model: "chart-reader-v2", hasApiKey: true },
+        anthropic: { baseUrl: "https://api.anthropic.com/v1", model: "claude-sonnet-4-6", hasApiKey: false },
+      },
     });
     expect(JSON.stringify(response.body)).not.toContain("local-private-key");
   });
 
-  it("远程 Responses 服务 URL 要求 HTTPS，本机回环服务允许 HTTP", async () => {
-    const app = createApp({ settingsStore: memorySettingsStore({
-      baseUrl: "https://api.openai.com/v1",
-      model: "gpt-4.1-mini",
-      apiKey: "",
-    }) });
+  it("远程模型服务 URL 要求 HTTPS，本机回环服务允许 HTTP", async () => {
+    const app = createApp({ settingsStore: memorySettingsStore("openai-responses") });
     await request(app)
       .put("/api/settings")
-      .send({ baseUrl: "http://model.example/v1", model: "reader-x", apiKey: "test-key" })
+      .send({ provider: "openai-responses", baseUrl: "http://model.example/v1", model: "reader-x", apiKey: "test-key" })
       .expect(400)
       .expect(({ body }) => expect(body.error.code).toBe("INVALID_SETTINGS"));
 
     await request(app)
       .put("/api/settings")
-      .send({ baseUrl: "http://localhost:8080/v1", model: "reader-x", apiKey: "test-key" })
+      .send({ provider: "openai-responses", baseUrl: "http://localhost:8080/v1", model: "reader-x", apiKey: "test-key" })
       .expect(200)
-      .expect(({ body }) => expect(body.settings.baseUrl).toBe("http://localhost:8080/v1"));
+      .expect(({ body }) => expect(body.settings.providers["openai-responses"].baseUrl).toBe("http://localhost:8080/v1"));
   });
 
-  it("拒绝完整接口地址，并保留之前保存的模型和密钥", async () => {
-    const app = createApp({ settingsStore: memorySettingsStore({
+  it("拒绝完整接口地址，提示指向所选协议，并保留原配置", async () => {
+    const app = createApp({ settingsStore: memorySettingsStore("openai-responses", {
       baseUrl: "https://proxy.example/v1",
       model: "reader-x",
       apiKey: "saved-private-key",
@@ -290,15 +304,29 @@ describe("单图审计 API", () => {
     ]) {
       const response = await request(app)
         .put("/api/settings")
-        .send({ baseUrl, model: "reader-y", apiKey: "replacement-key" })
+        .send({ provider: "openai-responses", baseUrl, model: "reader-y", apiKey: "replacement-key" })
         .expect(400);
       expect(response.body.error.code).toBe("INVALID_SETTINGS");
       expect(response.body.error.message).toContain("Base URL");
       expect(response.body.error.message).toContain("/responses");
     }
 
+    const anthropicMessage = await request(app)
+      .put("/api/settings")
+      .send({
+        provider: "anthropic",
+        baseUrl: "https://api.anthropic.com/v1/messages",
+        model: "claude-x",
+        apiKey: "replacement-key",
+      })
+      .expect(400);
+    expect(anthropicMessage.body.error.code).toBe("INVALID_SETTINGS");
+    expect(anthropicMessage.body.error.message).toContain("Anthropic Messages");
+    expect(anthropicMessage.body.error.message).toContain("/messages");
+
     const unchanged = await request(app).get("/api/settings").expect(200);
-    expect(unchanged.body.settings).toEqual({
+    expect(unchanged.body.settings.activeProvider).toBe("openai-responses");
+    expect(unchanged.body.settings.providers["openai-responses"]).toEqual({
       baseUrl: "https://proxy.example/v1",
       model: "reader-x",
       hasApiKey: true,
@@ -306,7 +334,7 @@ describe("单图审计 API", () => {
   });
 
   it("用未保存的表单参数测试连接，不覆盖本机设置或回传密钥", async () => {
-    const settingsStore = memorySettingsStore({
+    const settingsStore = memorySettingsStore("openai-responses", {
       baseUrl: "https://saved.example/v1",
       model: "saved-model",
       apiKey: "saved-secret",
@@ -316,69 +344,85 @@ describe("单图审计 API", () => {
       settingsStore,
       connectionTester: async (settings) => {
         tested = settings;
-        return { model: settings.model, latencyMs: 12 };
+        return { model: settings.providers[settings.activeProvider].model, latencyMs: 12 };
       },
     });
 
     const testedResponse = await request(app)
       .post("/api/settings/test-connection")
-      .send({ baseUrl: "https://new.example/v1", model: "new-model", apiKey: "unsaved-secret" })
+      .send({ provider: "openai-responses", baseUrl: "https://new.example/v1", model: "new-model", apiKey: "unsaved-secret" })
       .expect(200);
-    expect(tested).toEqual({
-      baseUrl: "https://new.example/v1",
-      model: "new-model",
-      apiKey: "unsaved-secret",
+    expect(tested).toMatchObject({
+      activeProvider: "openai-responses",
+      providers: {
+        "openai-responses": { baseUrl: "https://new.example/v1", model: "new-model", apiKey: "unsaved-secret" },
+      },
     });
     expect(testedResponse.body.connection).toEqual({ model: "new-model", latencyMs: 12 });
     expect(JSON.stringify(testedResponse.body)).not.toContain("unsaved-secret");
 
     const unchanged = await request(app).get("/api/settings").expect(200);
-    expect(unchanged.body.settings).toEqual({
+    expect(unchanged.body.settings.providers["openai-responses"]).toEqual({
       baseUrl: "https://saved.example/v1",
       model: "saved-model",
       hasApiKey: true,
     });
   });
 
-  it("测试连接可沿用已保存密钥，但拒绝无密钥与无效地址", async () => {
+  it("测试连接按所选协议沿用该协议已存密钥，并拒绝无密钥与无效地址", async () => {
     let tested: ModelSettings | undefined;
     const app = createApp({
-      settingsStore: memorySettingsStore({
+      settingsStore: memorySettingsStore("openai-responses", {
         baseUrl: "https://saved.example/v1",
         model: "saved-model",
         apiKey: "saved-secret",
       }),
       connectionTester: async (settings) => {
         tested = settings;
-        return { model: settings.model, latencyMs: 1 };
+        return { model: settings.providers[settings.activeProvider].model, latencyMs: 1 };
       },
     });
 
     await request(app)
       .post("/api/settings/test-connection")
-      .send({ baseUrl: "https://new.example/v1", model: "new-model", apiKey: "" })
+      .send({ provider: "openai-responses", baseUrl: "https://new.example/v1", model: "new-model", apiKey: "" })
       .expect(200);
-    expect(tested?.apiKey).toBe("saved-secret");
+    expect(tested?.activeProvider).toBe("openai-responses");
+    expect(tested?.providers["openai-responses"].apiKey).toBe("saved-secret");
+
+    await request(app)
+      .post("/api/settings/test-connection")
+      .send({ provider: "anthropic", baseUrl: "https://api.anthropic.com/v1", model: "claude-x", apiKey: "anthropic-secret" })
+      .expect(200);
+    expect(tested?.activeProvider).toBe("anthropic");
+    expect(tested?.providers.anthropic.apiKey).toBe("anthropic-secret");
+    expect(tested?.providers["openai-responses"].apiKey).toBe("saved-secret");
+
+    const anthropicWithoutKey = await request(app)
+      .post("/api/settings/test-connection")
+      .send({ provider: "anthropic", baseUrl: "https://api.anthropic.com/v1", model: "claude-x" })
+      .expect(400);
+    expect(anthropicWithoutKey.body.error.code).toBe("MODEL_NOT_CONFIGURED");
 
     const badUrl = await request(app)
       .post("/api/settings/test-connection")
-      .send({ baseUrl: "https://new.example/v1/chat/completions", model: "new-model" })
+      .send({ provider: "openai-responses", baseUrl: "https://new.example/v1/chat/completions", model: "new-model" })
       .expect(400);
     expect(badUrl.body.error.code).toBe("INVALID_SETTINGS");
 
     const missingKey = await request(createApp({
-      settingsStore: memorySettingsStore({ baseUrl: "https://saved.example/v1", model: "saved-model", apiKey: "" }),
+      settingsStore: memorySettingsStore("openai-responses", { baseUrl: "https://saved.example/v1", model: "saved-model", apiKey: "" }),
       connectionTester: async () => { throw new Error("should not run"); },
     }))
       .post("/api/settings/test-connection")
-      .send({ baseUrl: "https://new.example/v1", model: "new-model" })
+      .send({ provider: "openai-responses", baseUrl: "https://new.example/v1", model: "new-model" })
       .expect(400);
     expect(missingKey.body.error.code).toBe("MODEL_NOT_CONFIGURED");
   });
 
   it("连接失败只返回清楚的分类，不泄露上游错误或密钥", async () => {
     const app = createApp({
-      settingsStore: memorySettingsStore({ baseUrl: "https://saved.example/v1", model: "reader-x", apiKey: "saved-secret" }),
+      settingsStore: memorySettingsStore("openai-responses", { baseUrl: "https://saved.example/v1", model: "reader-x", apiKey: "saved-secret" }),
       connectionTester: async () => { throw new ModelConnectionError("auth", { cause: new Error("upstream secret") }); },
     });
     const response = await request(app)
@@ -391,45 +435,53 @@ describe("单图审计 API", () => {
     expect(JSON.stringify(response.body)).not.toContain("saved-secret");
   });
 
-  it("保存自定义 Responses 端点、模型和密钥，并允许清除密钥", async () => {
-    const settingsStore = memorySettingsStore({
-      baseUrl: "https://api.openai.com/v1",
-      model: "gpt-4.1-mini",
-      apiKey: "",
+  it("按协议分别保存地址、模型与密钥，切换协议不覆盖另一协议配置", async () => {
+    const settingsStore = memorySettingsStore("openai-responses", {
+      baseUrl: "https://openai.example/v1",
+      model: "gpt-reader",
+      apiKey: "openai-secret",
     });
     const app = createApp({ settingsStore });
 
     const saved = await request(app)
       .put("/api/settings")
-      .send({ baseUrl: "https://proxy.example/v1", model: "reader-x", apiKey: "test-key" })
+      .send({ provider: "anthropic", baseUrl: "https://anthropic.example/v1", model: "claude-reader", apiKey: "anthropic-secret" })
       .expect(200);
-    expect(saved.body.settings).toEqual({
-      baseUrl: "https://proxy.example/v1",
-      model: "reader-x",
+    expect(saved.body.settings.activeProvider).toBe("anthropic");
+    expect(saved.body.settings.providers.anthropic).toEqual({
+      baseUrl: "https://anthropic.example/v1",
+      model: "claude-reader",
       hasApiKey: true,
     });
-    expect(JSON.stringify(saved.body)).not.toContain("test-key");
+    expect(saved.body.settings.providers["openai-responses"]).toEqual({
+      baseUrl: "https://openai.example/v1",
+      model: "gpt-reader",
+      hasApiKey: true,
+    });
+    expect(JSON.stringify(saved.body)).not.toContain("anthropic-secret");
+    expect(JSON.stringify(saved.body)).not.toContain("openai-secret");
 
     const retained = await request(app)
       .put("/api/settings")
-      .send({ baseUrl: "https://proxy.example/v2", model: "reader-y", apiKey: "" })
+      .send({ provider: "anthropic", baseUrl: "https://anthropic.example/v2", model: "claude-reader-2", apiKey: "" })
       .expect(200);
-    expect(retained.body.settings).toMatchObject({
-      baseUrl: "https://proxy.example/v2",
-      model: "reader-y",
+    expect(retained.body.settings.providers.anthropic).toMatchObject({
+      baseUrl: "https://anthropic.example/v2",
+      model: "claude-reader-2",
       hasApiKey: true,
     });
 
     await request(app)
       .put("/api/settings")
-      .send({ baseUrl: "https://proxy.example/v2", model: "reader-y", clearApiKey: true })
+      .send({ provider: "anthropic", baseUrl: "https://anthropic.example/v2", model: "claude-reader-2", clearApiKey: true })
       .expect(200);
     const afterClear = await request(app).get("/api/settings").expect(200);
-    expect(afterClear.body.settings.hasApiKey).toBe(false);
+    expect(afterClear.body.settings.providers.anthropic.hasApiKey).toBe(false);
+    expect(afterClear.body.settings.providers["openai-responses"].hasApiKey).toBe(true);
   });
 
-  it("根据服务端设置创建视觉适配器并读取用户配置的 Base URL/模型", async () => {
-    const settingsStore = memorySettingsStore({
+  it("按启用协议创建视觉适配器并读取用户配置的 Base URL/模型", async () => {
+    const settingsStore = memorySettingsStore("openai-responses", {
       baseUrl: "https://proxy.example/custom/v1",
       model: "vision-test-model",
       apiKey: "private-test-key",
@@ -448,11 +500,39 @@ describe("单图审计 API", () => {
       })
       .expect(200);
 
-    expect(received).toEqual({
+    expect(received?.activeProvider).toBe("openai-responses");
+    expect(received?.providers["openai-responses"]).toEqual({
       baseUrl: "https://proxy.example/custom/v1",
       model: "vision-test-model",
       apiKey: "private-test-key",
     });
     expect(response.body.observation.source).toBe("vision-model");
+  });
+
+  it("启用 Anthropic 协议且没有该协议密钥时按未配置处理，不构造适配器", async () => {
+    const settingsStore = memorySettingsStore("anthropic", {
+      baseUrl: "https://api.anthropic.com/v1",
+      model: "claude-x",
+      apiKey: "",
+    });
+    let factoryCalls = 0;
+    const app = createApp({
+      settingsStore,
+      visionAdapterFactory: () => {
+        factoryCalls += 1;
+        return { extract: async () => visionRead };
+      },
+    });
+
+    const response = await request(app)
+      .post("/api/audit/image")
+      .attach("image", Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), {
+        filename: "chart.png",
+        contentType: "image/png",
+      })
+      .expect(503);
+
+    expect(response.body.error.code).toBe("MODEL_NOT_CONFIGURED");
+    expect(factoryCalls).toBe(0);
   });
 });
