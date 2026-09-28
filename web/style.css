@@ -123,8 +123,9 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .pending-crop-preview { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 9px 11px; border: 1px solid #d7e1dc; background: #f8faf9; }
 .pending-crop-preview img { display: block; width: 150px; max-height: 72px; object-fit: contain; background: #fff; }
 .pending-crop-preview span { color: #536c69; font-size: 12px; line-height: 1.4; }
-.upload-read-action { display: flex; align-items: center; gap: 11px; margin-top: 10px; }
+.upload-read-action { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; margin-top: 10px; }
 .read-image-button { min-height: 39px; padding: 0 14px; border: 1px solid var(--pixel-ink); border-radius: 0; color: var(--pixel-ink); background: var(--pixel-citron); box-shadow: none; font-size: 13px; font-weight: 800; cursor: pointer; }
+.read-cancel-button { min-height: 39px; padding: 0 12px; border: 1px solid #a4b4ae; color: var(--pixel-ink); background: #fff; cursor: pointer; }
 .read-image-button:hover:not(:disabled) { background: #d8f18e; transform: translate(1px, 1px); }
 .read-image-button:disabled { opacity: .6; cursor: wait; }
 .upload-read-action > span { color: var(--muted); font-size: 12px; line-height: 1.45; }

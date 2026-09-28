@@ -2,6 +2,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp, type VisionAdapter, type VisionReadResult } from "../server/app.js";
 import { ModelConnectionError } from "../server/model-connection.js";
+import { VisionModelError } from "../server/openai-vision.js";
 import type { ModelSettings, ModelSettingsStore } from "../server/model-settings.js";
 import type { AuditObservation } from "../shared/audit.js";
 
@@ -108,6 +109,38 @@ describe("单图审计 API", () => {
       .expect(503);
 
     expect(response.body.error.code).toBe("MODEL_NOT_CONFIGURED");
+  });
+
+  it.each([
+    ["timeout", 504, "VISION_TIMEOUT"],
+    ["upstream", 502, "VISION_REQUEST_FAILED"],
+    ["invalid-output", 502, "INVALID_MODEL_OUTPUT"],
+  ] as const)("视觉读取 %s 失败时返回可区分的错误，不附带观察或结论", async (kind, status, code) => {
+    const visionAdapter: VisionAdapter = { extract: async () => { throw new VisionModelError(kind); } };
+    const response = await request(createApp({ visionAdapter }))
+      .post("/api/audit/image")
+      .attach("image", Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), {
+        filename: "chart.png", contentType: "image/png",
+      })
+      .expect(status);
+    expect(response.body.error.code).toBe(code);
+    expect(response.body).not.toHaveProperty("observation");
+    expect(response.body).not.toHaveProperty("result");
+  });
+
+  it("图片格式和体积不符合要求时在适配器前拒绝", async () => {
+    let calls = 0;
+    const visionAdapter: VisionAdapter = { extract: async () => { calls += 1; return visionRead; } };
+    const app = createApp({ visionAdapter });
+    const unsupported = await request(app).post("/api/audit/image")
+      .attach("image", Buffer.from("not-an-image"), { filename: "fake.png", contentType: "image/png" })
+      .expect(415);
+    expect(unsupported.body.error.code).toBe("UNSUPPORTED_IMAGE");
+    const oversized = await request(app).post("/api/audit/image")
+      .attach("image", Buffer.alloc(5 * 1024 * 1024 + 1), { filename: "large.png", contentType: "image/png" })
+      .expect(413);
+    expect(oversized.body.error.code).toBe("IMAGE_TOO_LARGE");
+    expect(calls).toBe(0);
   });
 
   it("把上传图片交给适配器并返回只含原始观察的 claims[]", async () => {
