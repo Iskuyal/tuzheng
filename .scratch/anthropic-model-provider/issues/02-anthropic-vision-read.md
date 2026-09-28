@@ -17,4 +17,4 @@
 
 **2026-09-28 本地验收：**`npm test` 116/116（新增 `anthropic-messages.test.ts` 3 例、`anthropic-vision.test.ts` 4 例、路由层「启用 Anthropic 且无该协议密钥时不构造适配器」1 例）、`npm run test:e2e` 48/48、`npm run build` 通过。
 
-**2026-09-28 在线实测（未通过，原因在网关账户侧）：**该网关的 `/messages` 路由存在且鉴权头被接受；但当前账户密钥没有 Claude 模型权限——`/models` 列出 `claude-sonnet-4-6`、`claude-sonnet-5` 等，带这些模型 id 的请求返回 403，被正确归类为 auth；不受支持的模型 id 返回 400 并被归类 request-rejected。因此「真实成功的连接测试与图片读取」仍待具备 Claude 权限的密钥（或官方 Anthropic 密钥）完成，本任务保持待人工验证。详见 `docs/evidence/anthropic-provider-2026-09-28.md`。
+**2026-09-28 在线实测（未通过，原因在网关套餐侧）：**该网关的 `/messages` 路由存在且鉴权头被接受，但只服务 Claude 模型：非 Claude 模型（deepseek／gpt／glm／kimi 等）被网关以 `400 … is not supported on this endpoint. Use /provider/v1/chat/completions` 拒绝——该网关的 Anthropic 接口不承载其他模型；Claude 模型受套餐限制（`403 MODEL_NOT_IN_PLAN`，需 Pro 及以上或按量付费）。因此「真实成功的连接测试与图片读取」仍待具备 Claude 权限的端点/密钥（或官方 Anthropic 端点）完成，本任务保持待人工验证。详见 `docs/evidence/anthropic-provider-2026-09-28.md`。
