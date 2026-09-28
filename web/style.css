@@ -651,3 +651,70 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
   .crop-toggle, .zoom-image-button { font-size: 13px; }
   .settings-field > span b { font-size: 13px; }
 }
+
+/* 跨图核对：两图口径比对与候选配对 */
+.cross-heading { min-height: 0; margin-bottom: 11px; align-items: center; }
+.cross-title { margin: 0; color: var(--ink); font-size: 18px; line-height: 1.25; letter-spacing: -.02em; }
+.cross-reference-label { color: #52646b; font-size: 12px; }
+.cross-empty p { margin: 0 0 11px; color: #52646b; font-size: 13px; line-height: 1.55; }
+.cross-picker-row { display: flex; flex-wrap: wrap; gap: 9px 12px; }
+.cross-picker { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1 1 190px; }
+.cross-picker > span { color: #435d68; font-size: 12px; font-weight: 700; }
+.cross-picker select { min-height: 40px; padding: 0 8px; border: 1px solid #9fb6bb; border-radius: 0; color: #142b41; background: #fbfcf8; font-size: 13px; }
+.cross-upload input { padding: 8px 0; color: #52646b; font-size: 12px; }
+.cross-read-action { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.cross-read-action span { color: #52646b; font-size: 12px; overflow-wrap: anywhere; }
+.cross-body { display: flex; flex-direction: column; gap: 11px; }
+.cross-thumb { margin: 0; }
+.cross-thumb img { display: block; width: 100%; max-height: 180px; object-fit: contain; border: 1px solid #e0e8e4; background: #fff; }
+.cross-thumb figcaption { margin-top: 5px; color: var(--quiet); font-size: 12px; }
+.cross-side-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 9px; margin: 0; color: #52646b; font-size: 12px; line-height: 1.5; }
+.cross-side-note strong { color: var(--ink); }
+.cross-elements { border: 1px solid #d5e0db; background: #fbfcfb; }
+.cross-elements-head, .cross-element { display: grid; grid-template-columns: minmax(58px, .7fr) minmax(0, 1fr) minmax(0, 1fr) auto auto; align-items: center; gap: 6px 8px; padding: 7px 9px; }
+.cross-elements-head { border-bottom: 1px solid #e2e9e5; color: #52646b; font-size: 11px; font-weight: 700; }
+.cross-element { border-bottom: 1px solid #eef2f0; font-size: 12px; }
+.cross-element:last-child { border-bottom: 0; }
+.cross-element-label { color: #435d68; font-weight: 700; }
+.cross-element-value { color: #243e45; overflow-wrap: anywhere; }
+.cross-element-state { color: #52646b; white-space: nowrap; }
+.cross-element.aligned .cross-element-state { color: #21675e; }
+.cross-element.mismatch .cross-element-state { color: #993f37; }
+.cross-element.missing .cross-element-state { color: #926119; }
+.cross-element.confirmed-by-user .cross-element-state { color: #2947bc; }
+.cross-confirm-button { flex: 0 0 auto; min-height: 32px; padding: 0 9px; border: 1px solid #9fb6bb; border-radius: 0; color: #294d59; background: #fbfcf8; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.cross-confirm-button:hover:not(:disabled) { border-color: #78a89b; background: #edf5f1; }
+.cross-confirm-button:disabled { opacity: .6; cursor: wait; }
+.cross-gate { margin: 0; padding: 8px 10px; border-left: 3px solid #d0a248; background: #fff8e8; color: #6b5320; font-size: 12px; line-height: 1.5; }
+.cross-gate.ready { border-left-color: #448a7c; background: #eef5f2; color: #294d59; }
+.cross-remove { align-self: flex-start; min-height: 36px; padding: 0 11px; border: 1px solid #d6aaa0; color: #9c4538; background: #fff7f3; font-size: 12px; font-weight: 700; cursor: pointer; }
+.cross-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.cross-swap { flex: 1 1 210px; }
+.cross-actions .cross-remove { align-self: end; }
+.cross-result { margin-top: 0; }
+.cross-history { margin-top: 14px; padding: 11px 12px; border: 1px solid #d5e0db; background: #f7faf8; }
+.cross-history h4 { margin: 0 0 8px; color: #294d59; font-size: 13px; }
+.cross-history ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.cross-history li { display: flex; flex-wrap: wrap; gap: 3px 9px; padding-top: 8px; border-top: 1px solid #e0e8e4; font-size: 12px; line-height: 1.5; }
+.cross-history time { color: #52646b; font-family: var(--mono); }
+.cross-history strong { color: #2947bc; }
+.cross-history span, .cross-history small { flex-basis: 100%; color: #435d68; overflow-wrap: anywhere; }
+.cross-evidence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 11px; }
+.cross-evidence article { min-width: 0; padding: 9px 10px; border: 1px solid #e0e8e4; background: #fbfcfb; }
+.cross-evidence-label { display: block; margin-bottom: 6px; color: #435d68; font-size: 12px; font-weight: 700; }
+.cross-evidence blockquote { margin: 0 0 6px; color: #243e45; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+@media (max-width: 620px) { .cross-evidence { grid-template-columns: 1fr; } }
+.cross-section, .axis-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e9e5; }
+.axis-summary { margin: 0 0 8px; color: #243e45; font-size: 13px; line-height: 1.55; }
+.axis-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; margin: 11px 0; }
+.axis-panel { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 9px 10px; border: 1px solid #e0e8e4; background: #fbfcfb; }
+.axis-panel figcaption { color: #435d68; font-size: 12px; font-weight: 700; }
+.axis-bars { display: flex; align-items: end; justify-content: space-around; gap: 14px; height: 96px; padding: 0 6px; border-bottom: 1px solid #aebdb8; }
+.axis-bar { display: block; width: 38px; min-height: 2px; background: #1c7471; }
+.axis-bars .axis-bar:first-child { background: #82aaa4; }
+.axis-panel-note { color: var(--quiet); font-family: var(--mono); font-size: 11px; }
+.axis-input { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; margin-bottom: 10px; }
+.axis-input label { display: flex; flex-direction: column; gap: 5px; }
+.axis-input span { color: #435d68; font-size: 12px; font-weight: 700; }
+.axis-input input { width: 110px; height: 36px; padding: 0 8px; border: 1px solid #d7e0dc; border-radius: 3px; font-size: 13px; }
+@media (max-width: 620px) { .axis-compare { grid-template-columns: 1fr; } }

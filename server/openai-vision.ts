@@ -12,6 +12,8 @@ const claimSchema = {
   additionalProperties: false,
   properties: {
     claimText: { type: ["string", "null"] },
+    metric: { type: ["string", "null"] },
+    scope: { type: ["string", "null"] },
     claimedGrowthPercent: { type: ["number", "null"] },
     older: {
       type: "object",
@@ -37,16 +39,29 @@ const claimSchema = {
     },
     unreadableItems: { type: "array", items: { type: "string" } },
   },
-  required: ["claimText", "claimedGrowthPercent", "older", "newer", "unreadableItems"],
+  required: ["claimText", "metric", "scope", "claimedGrowthPercent", "older", "newer", "unreadableItems"],
 } satisfies ResponseFormatTextJSONSchemaConfig["schema"];
+
+const axisSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    label: { type: ["string", "null"] },
+    min: { type: ["number", "null"] },
+    max: { type: ["number", "null"] },
+    unit: { type: ["string", "null"] },
+  },
+  required: ["label", "min", "max", "unit"],
+};
 
 const observationSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
     claims: { type: "array", items: claimSchema },
+    axis: { anyOf: [axisSchema, { type: "null" }] },
   },
-  required: ["claims"],
+  required: ["claims", "axis"],
 } satisfies ResponseFormatTextJSONSchemaConfig["schema"];
 
 const responseFormat: ResponseFormatTextJSONSchemaConfig = {
@@ -131,6 +146,8 @@ export class OpenAIResponsesVisionAdapter implements VisionAdapter {
                   "每条主张只记录与其对应的较早和较新观察值；不得根据柱高、折线位置或常识推测数字。",
                   "按清楚可见的年份先后填写 older 和 newer。顺序、数值、单位或图内证据看不清或不存在时填 null，并在 unreadableItems 说明无法辨认的内容。",
                   "evidenceText 只引用图片上确实可见、且对应这条主张的文字；不要补写缺失证据。",
+                  "metric 抄录这条主张对应的指标名（如「营业收入」「利润」），scope 抄录图上写出的范围或人群（如「全国门店」「直营门店」）；图上没写就读不清，填 null，不要从常识补。",
+                  "只有柱状图才填写 axis：把图上可见的轴最小值、最大值、轴标题和单位放入对象；柱状图刻度看不清时仍返回 axis 对象，将读不清的字段填 null；非柱状图或没有可辨认柱状图坐标轴时整个 axis 填 null。",
                   "只返回原始观察与证据，不要给出用户确认值、增长率计算、结果状态或现实数据判断。若没有可核对的增长率主张，返回空 claims 数组。",
                 ].join(" "),
               },

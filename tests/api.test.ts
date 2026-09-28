@@ -6,6 +6,8 @@ import type { AuditObservation } from "../shared/audit.js";
 
 const visionClaim = {
   claimText: "2025 年收入增长 40%",
+  metric: "营业收入",
+  scope: "全国门店",
   claimedGrowthPercent: 40,
   older: {
     period: "2024 年",
@@ -22,7 +24,10 @@ const visionClaim = {
   unreadableItems: [],
 };
 
-const visionObservation = { claims: [visionClaim] };
+const visionObservation = {
+  claims: [visionClaim],
+  axis: { label: "营业收入", min: 80, max: 120, unit: "万元" },
+};
 
 const visionRead: VisionReadResult = {
   observation: visionObservation,
@@ -41,10 +46,10 @@ function memorySettingsStore(initial: ModelSettings): ModelSettingsStore {
 }
 
 describe("单图审计 API", () => {
-  it("列出四个团队自制样例", async () => {
+  it("列出团队自制样例", async () => {
     const response = await request(createApp()).get("/api/samples").expect(200);
 
-    expect(response.body.samples).toHaveLength(4);
+    expect(response.body.samples).toHaveLength(11);
     expect(response.body.samples.map(({ id }: { id: string }) => id)).toContain("multi-claims");
   });
 
@@ -111,6 +116,9 @@ describe("单图审计 API", () => {
     expect(response.body.observation.claims[0].id).toBe("claim-1");
     expect(response.body.observation.claims[0].claimText).toBe(visionClaim.claimText);
     expect(response.body.observation.claims[0].older.value).toBe(80);
+    expect(response.body.observation.claims[0].metric).toBe("营业收入");
+    expect(response.body.observation.claims[0].scope).toBe("全国门店");
+    expect(response.body.observation.axis).toEqual({ label: "营业收入", min: 80, max: 120, unit: "万元" });
     expect(response.body.observation.claims[0]).not.toHaveProperty("confirmed");
     expect(response.body.observation.claims[0]).not.toHaveProperty("result");
   });
@@ -150,7 +158,11 @@ describe("单图审计 API", () => {
 
   it("接受没有发现主张的有效空 claims[]", async () => {
     const visionAdapter: VisionAdapter = {
-      extract: async () => ({ ...visionRead, observation: { claims: [] }, rawText: '{"claims":[]}' }),
+      extract: async () => ({
+        ...visionRead,
+        observation: { claims: [], axis: null },
+        rawText: '{"claims":[],"axis":null}',
+      }),
     };
     const response = await request(createApp({ visionAdapter }))
       .post("/api/audit/image")
@@ -160,7 +172,7 @@ describe("单图审计 API", () => {
       })
       .expect(200);
 
-    expect(response.body.observation).toEqual({ source: "vision-model", claims: [] });
+    expect(response.body.observation).toEqual({ source: "vision-model", claims: [], axis: null });
   });
 
   it("对用户确认的数据在服务端返回确定性图内结论", async () => {

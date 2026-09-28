@@ -4,7 +4,19 @@ import { useRoute } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
 import AuditRecordList from "../components/AuditRecordList.vue";
 import AuditSessionBar from "../components/AuditSessionBar.vue";
-import { auditStatusLabel, groupClaimAuditRows, buildClaimAuditRows, type ClaimAuditRow } from "../audit-record-rows.js";
+import { assessAxisRisk } from "../../shared/axis-risk.js";
+import { axisBarPercent, axisRangeText as rangeTextOf, crossStateLabel } from "../cross-image-view.js";
+import {
+  confirmedAuditObservation,
+  claimScopeView,
+  compareClaimScopes,
+  compareCrossGrowth,
+  pickReferenceClaimId,
+  type ClaimScopeView,
+  type CrossElementKey,
+  type CrossImageComparison,
+} from "../../shared/cross-image.js";
+import { auditStatusLabel, formatEventTime, groupClaimAuditRows, buildClaimAuditRows, type ClaimAuditRow } from "../audit-record-rows.js";
 import { takeLandingUpload } from "../upload-transfer.js";
 import { initialValueSource, toAuditObservation, type AuditObservation, type AuditResult, type ChartObservation, type DataPointObservation, type GrowthClaimObservation, type ModelReadTrace, type ObservationSource } from "../../shared/audit.js";
 import {
@@ -38,6 +50,22 @@ interface CropSelection {
   height: number;
 }
 
+interface CrossScopeConfirmationEvent {
+  id: number;
+  at: string;
+  elementLabel: string;
+  currentImageLabel: string;
+  referenceImageLabel: string;
+  currentClaimId: string;
+  referenceClaimId: string;
+  currentClaimText: string;
+  referenceClaimText: string;
+  leftValue: string | null;
+  rightValue: string | null;
+  originalLeftValue: string | null;
+  originalRightValue: string | null;
+}
+
 const samples = ref<SampleSummary[]>([]);
 const activeSampleId = ref<string | null>(null);
 const chartObservation = ref<ChartObservation | null>(null);
@@ -59,6 +87,22 @@ const modelReadRegion = ref<"crop" | "full">("full");
 // 规则与多主张共用 shared 里的 recordCorrection / recordReview。
 const singleClaimLog = ref<ClaimAuditLog>([]);
 const singleClaimId = ref("");
+// 对照图：独立于当前图的观察值、确认状态与记录，移除或替换它都不影响当前图。
+const referenceObservation = ref<ChartObservation | null>(null);
+const referenceImageUrl = ref("");
+const referenceLabel = ref("");
+const referenceSampleId = ref<string | null>(null);
+const referenceWorkspace = ref<ClaimWorkspace | null>(null);
+const referenceClaimId = ref<string | null>(null);
+const referenceFile = ref<File | null>(null);
+const referenceError = ref("");
+const referenceBusy = ref(false);
+const crossCurrentClaimId = ref<string | null>(null);
+const crossConfirmedElements = ref<CrossElementKey[]>([]);
+const crossScopeEvents = ref<CrossScopeConfirmationEvent[]>([]);
+// 纵轴核对：轴起点可以由图上手填；覆盖值只在本次会话有效。
+const axisMinOverride = ref<number | null>(null);
+const axisMinInput = ref("");
 const singleClaimRevision = ref(0);
 const initialObservation = ref<AuditObservation | null>(null);
 const cropMode = ref(false);
@@ -78,6 +122,7 @@ const activeAuditStep = ref<"image" | "review" | "result">("image");
 let dragOrigin: { x: number; y: number } | null = null;
 let objectUrl: string | null = null;
 let auditStepFrame: number | undefined;
+let referenceRequest: AbortController | null = null;
 const route = useRoute();
 
 const activeSample = computed(
@@ -90,6 +135,12 @@ const claimAuditRows = computed<Record<string, ClaimAuditRow[]>>(
   () => groupClaimAuditRows(claimWorkspace.value?.events ?? []),
 );
 const singleClaimAuditRows = computed<ClaimAuditRow[]>(() => buildClaimAuditRows(singleClaimLog.value));
+const hasCrossSessionChanges = computed(() => Boolean(
+  referenceObservation.value || referenceFile.value || referenceImageUrl.value ||
+  referenceBusy.value ||
+  crossConfirmedElements.value.length || crossScopeEvents.value.length ||
+  axisMinOverride.value !== null || axisMinInput.value.trim(),
+));
 const cropSelectionStyle = computed(() => {
   const selection = cropSelection.value;
   const image = previewImage.value;
@@ -248,6 +299,7 @@ function updateErrorFrom(response: Response, payload: { error?: { message?: stri
 }
 
 function setChartObservation(value: ChartObservation): void {
+  resetCrossImageSession();
   chartObservation.value = value;
   claimWorkspace.value = value.claims.length > 1 ? createClaimWorkspace(value) : null;
   claimErrors.value = {};
@@ -261,6 +313,7 @@ function setChartObservation(value: ChartObservation): void {
   singleClaimLog.value = [];
   singleClaimRevision.value += 1;
   result.value = null;
+  crossCurrentClaimId.value = value.claims[0]?.id ?? null;
 }
 
 function copyAuditObservation(value: AuditObservation): AuditObservation {
@@ -661,16 +714,380 @@ function resetSingleClaim(): void {
   result.value = null;
   singleClaimLog.value = [];
   singleClaimRevision.value += 1;
+  resetCrossImageSession();
   errorMessage.value = "";
   resetNotice.value = "已重置本次会话：读数回到最初载入的值，确认状态、结果和审计记录已清空。";
 }
 
+function sideView(source: "current" | "reference", claimId: string | null): ClaimScopeView | null {
+  if (!claimId) return null;
+
+  if (source === "reference") {
+    const chart = referenceObservation.value;
+    if (!chart) return null;
+    const entry = referenceWorkspace.value?.claims.find((item) => item.observation.id === claimId);
+    return claimScopeView(chart, claimId, entry?.confirmedValues);
+  }
+
+  const chart = chartObservation.value;
+  if (!chart) return null;
+  const entry = claimWorkspace.value?.claims.find((item) => item.observation.id === claimId);
+  if (entry) return claimScopeView(chart, claimId, entry.confirmedValues);
+  // 单主张路径的确认状态在表单那份观察值上
+  const single = observation.value;
+  return claimScopeView(chart, claimId, single?.confirmed ? valuesFromObservation(single) : null);
+}
+
+const crossComparison = computed<CrossImageComparison | null>(() => {
+  const left = sideView("current", crossCurrentClaimId.value);
+  const right = sideView("reference", referenceClaimId.value);
+  if (!left || !right) return null;
+  return compareClaimScopes(left, right, crossConfirmedElements.value);
+});
+
+const referenceEntry = computed(() => {
+  if (!referenceClaimId.value) return null;
+  return referenceWorkspace.value?.claims.find((item) => item.observation.id === referenceClaimId.value) ?? null;
+});
+
+const referenceConfirmed = computed(() => referenceEntry.value?.confirmationState === "confirmed");
+
+function resetPairing(): void {
+  crossConfirmedElements.value = [];
+  crossCurrentClaimId.value = chartObservation.value?.claims[0]?.id ?? null;
+  const currentClaim = chartObservation.value?.claims.find((claim) => claim.id === crossCurrentClaimId.value);
+  const reference = referenceObservation.value;
+  referenceClaimId.value = reference && currentClaim
+    ? pickReferenceClaimId(currentClaim, reference)
+    : null;
+}
+
+function beginReferenceRequest(): AbortController {
+  referenceRequest?.abort();
+  const request = new AbortController();
+  referenceRequest = request;
+  referenceBusy.value = true;
+  return request;
+}
+
+function finishReferenceRequest(request: AbortController): void {
+  if (referenceRequest !== request) return;
+  referenceRequest = null;
+  referenceBusy.value = false;
+}
+
+function cancelReferenceRequest(): void {
+  referenceRequest?.abort();
+  referenceRequest = null;
+  referenceBusy.value = false;
+}
+
+async function selectReferenceSample(event: Event): Promise<void> {
+  const id = (event.target as HTMLSelectElement).value;
+  if (!id) return;
+  const request = beginReferenceRequest();
+  referenceError.value = "";
+  referenceFile.value = null;
+  try {
+    const response = await fetch("/api/audit/sample", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+      signal: request.signal,
+    });
+    const payload = await response.json().catch(() => null) as { observation?: ChartObservation } | null;
+    if (referenceRequest !== request) return;
+    if (!response.ok || !payload?.observation) throw new Error("对照图样例无法载入。");
+
+    const sample = samples.value.find((candidate) => candidate.id === id);
+    releaseReferenceImageUrl();
+    referenceObservation.value = payload.observation;
+    referenceWorkspace.value = createClaimWorkspace(payload.observation);
+    referenceImageUrl.value = sample?.imageUrl ?? "";
+    referenceLabel.value = sample?.name ?? id;
+    referenceSampleId.value = id;
+    resetPairing();
+  } catch (error) {
+    if (referenceRequest === request && !request.signal.aborted) {
+      referenceError.value = error instanceof Error ? error.message : "对照图载入失败。";
+    }
+  } finally {
+    finishReferenceRequest(request);
+  }
+}
+
+function prepareReferenceUpload(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (!file) return;
+  cancelReferenceRequest();
+  if (file.size > 5 * 1024 * 1024) {
+    referenceError.value = "图片不能超过 5 MB。";
+    return;
+  }
+  if (!new Set(["image/png", "image/jpeg", "image/webp"]).has(file.type)) {
+    referenceError.value = "请上传 PNG、JPG 或 WebP 图片。";
+    return;
+  }
+
+  releaseReferenceImageUrl();
+  referenceError.value = "";
+  referenceFile.value = file;
+  referenceObservation.value = null;
+  referenceWorkspace.value = null;
+  referenceClaimId.value = null;
+  referenceSampleId.value = null;
+  referenceLabel.value = file.name;
+  referenceImageUrl.value = URL.createObjectURL(file);
+}
+
+async function readReferenceImage(): Promise<void> {
+  if (!referenceFile.value || referenceBusy.value) return;
+  const file = referenceFile.value;
+  const request = beginReferenceRequest();
+  referenceError.value = "";
+  try {
+    const form = new FormData();
+    form.append("image", file);
+    const response = await fetch("/api/audit/image", { method: "POST", body: form, signal: request.signal });
+    const payload = await response.json().catch(() => null) as { observation?: ChartObservation } | null;
+    if (referenceRequest !== request) return;
+    if (!response.ok || !payload?.observation) {
+      throw new Error("对照图读取失败，请重试。");
+    }
+    referenceObservation.value = payload.observation;
+    referenceWorkspace.value = createClaimWorkspace(payload.observation);
+    referenceFile.value = null;
+    resetPairing();
+  } catch (error) {
+    if (referenceRequest === request && !request.signal.aborted) {
+      referenceError.value = error instanceof Error ? error.message : "对照图读取失败，请重试。";
+    }
+  } finally {
+    finishReferenceRequest(request);
+  }
+}
+
+function removeReference(): void {
+  cancelReferenceRequest();
+  referenceObservation.value = null;
+  referenceWorkspace.value = null;
+  referenceClaimId.value = null;
+  referenceSampleId.value = null;
+  referenceLabel.value = "";
+  referenceFile.value = null;
+  referenceError.value = "";
+  crossConfirmedElements.value = [];
+  releaseReferenceImageUrl();
+  referenceImageUrl.value = "";
+}
+
+// 跨图层的状态同样只属于本次会话：重置时连同对照图一起清掉。
+function resetCrossImageSession(): void {
+  crossConfirmedElements.value = [];
+  crossScopeEvents.value = [];
+  axisMinOverride.value = null;
+  axisMinInput.value = "";
+  removeReference();
+}
+
+function releaseReferenceImageUrl(): void {
+  if (referenceImageUrl.value.startsWith("blob:")) URL.revokeObjectURL(referenceImageUrl.value);
+}
+
+function confirmCrossElement(key: CrossElementKey): void {
+  const element = crossComparison.value?.elements.find((candidate) => candidate.key === key);
+  const currentClaimId = crossCurrentClaimId.value;
+  const selectedReferenceClaimId = referenceClaimId.value;
+  const currentChart = chartObservation.value;
+  const selectedReferenceChart = referenceObservation.value;
+  const currentClaim = currentChart?.claims.find((claim) => claim.id === currentClaimId);
+  const selectedReferenceClaim = selectedReferenceChart?.claims.find((claim) => claim.id === selectedReferenceClaimId);
+  if (element?.state !== "missing" || !currentClaimId || !selectedReferenceClaimId || !currentChart || !selectedReferenceChart || !currentClaim || !selectedReferenceClaim) return;
+  const originalCurrent = claimScopeView(currentChart, currentClaimId);
+  const originalReference = claimScopeView(selectedReferenceChart, selectedReferenceClaimId);
+  if (!originalCurrent || !originalReference) return;
+  const originalElement = compareClaimScopes(originalCurrent, originalReference, []).elements.find((candidate) => candidate.key === key);
+  if (!originalElement) return;
+
+  crossConfirmedElements.value = [...crossConfirmedElements.value, key];
+  crossScopeEvents.value = [...crossScopeEvents.value, {
+    id: crossScopeEvents.value.length + 1,
+    at: new Date().toISOString(),
+    elementLabel: element.label,
+    currentImageLabel: activeSample.value?.name || selectedFileName.value || "你的截图",
+    referenceImageLabel: referenceLabel.value,
+    currentClaimId,
+    referenceClaimId: selectedReferenceClaimId,
+    currentClaimText: currentClaim.claimText || currentClaimId,
+    referenceClaimText: selectedReferenceClaim.claimText || selectedReferenceClaimId,
+    leftValue: element.left,
+    rightValue: element.right,
+    originalLeftValue: originalElement.left,
+    originalRightValue: originalElement.right,
+  }];
+}
+
+async function confirmReferenceClaim(): Promise<void> {
+  const workspace = referenceWorkspace.value;
+  const claimId = referenceClaimId.value;
+  if (!workspace || !claimId || referenceBusy.value) return;
+
+  const submission = toClaimAuditSubmission(workspace, claimId);
+  if (!submission) return;
+
+  const request = beginReferenceRequest();
+  referenceError.value = "";
+  try {
+    const response = await fetch("/api/audit/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(submission),
+      signal: request.signal,
+    });
+    const payload = await response.json().catch(() => null) as { result?: AuditResult } | null;
+    if (referenceRequest !== request) return;
+    if (!response.ok || !payload?.result) throw new Error("对照图计算失败，请重试。");
+    if (referenceWorkspace.value === workspace) {
+      referenceWorkspace.value = completeClaimReview(workspace, claimId, payload.result);
+    }
+  } catch (error) {
+    if (referenceRequest === request && !request.signal.aborted) {
+      referenceError.value = error instanceof Error ? error.message : "对照图计算失败，请重试。";
+    }
+  } finally {
+    finishReferenceRequest(request);
+  }
+}
+
+function confirmedValuesOf(source: "current" | "reference", claimId: string | null) {
+  if (!claimId) return null;
+
+  if (source === "reference") {
+    return referenceEntry.value?.confirmedValues ?? null;
+  }
+
+  const entry = claimWorkspace.value?.claims.find((item) => item.observation.id === claimId);
+  if (entry) return entry.confirmedValues;
+  // 单主张路径：表单那份观察值本身就是用户确认过的值
+  return observation.value?.confirmed ? valuesFromObservation(observation.value) : null;
+}
+
+const crossVerdict = computed(() => {
+  const comparison = crossComparison.value;
+  if (!comparison?.ready) return null;
+
+  const currentChart = chartObservation.value;
+  const referenceChart = referenceObservation.value;
+  const currentValues = confirmedValuesOf("current", crossCurrentClaimId.value);
+  const referenceValues = confirmedValuesOf("reference", referenceClaimId.value);
+  if (!currentChart || !referenceChart || !currentValues || !referenceValues) return null;
+
+  const left = confirmedAuditObservation(currentChart, crossCurrentClaimId.value ?? "", currentValues);
+  const right = confirmedAuditObservation(referenceChart, referenceClaimId.value ?? "", referenceValues);
+  if (!left || !right) return null;
+
+  return compareCrossGrowth(left, right);
+});
+
+const crossStatusLabel = computed(() => {
+  const status = crossVerdict.value?.status;
+  if (status === "consistent") return "数值一致";
+  if (status === "contradictory") return "数值冲突";
+  return "待核对";
+});
+
+function evidenceExcerpt(chart: ChartObservation | null, claimId: string | null): string {
+  const claim = chart?.claims.find((item) => item.id === claimId);
+  if (!claim) return "缺少图中文字依据";
+  const parts = [claim.older.evidenceText, claim.newer.evidenceText].filter((text) => Boolean(text?.trim()));
+  return parts.length ? parts.join("；") : "缺少图中文字依据";
+}
+
+const axisRiskValues = computed<[number, number] | null>(() => {
+  const chart = chartObservation.value;
+  if (!chart) return null;
+  for (const claim of chart.claims) {
+    const values = confirmedValuesOf("current", claim.id);
+    if (values && values.older.value !== null && values.newer.value !== null) {
+      return [values.older.value, values.newer.value];
+    }
+  }
+  return null;
+});
+
+const axisRisk = computed(() => {
+  const axis = chartObservation.value?.axis;
+  // 有柱状图轴对象才显示纵轴核对；对象内部的 null 表示该柱状图轴刻度没读清。
+  if (!axis) return null;
+  const values = axisRiskValues.value;
+  if (!values) return null;
+  return assessAxisRisk(axis, values, axisMinOverride.value);
+});
+
+const originalAxisScaleHeight = computed(() => {
+  const risk = axisRisk.value;
+  return risk && risk.axisMin !== null && risk.axisMax !== null
+    ? risk.axisMax - risk.axisMin
+    : null;
+});
+const zeroAxisScaleHeight = computed(() => axisRisk.value?.axisMax ?? null);
+const originalAxisCaption = computed(() => {
+  const risk = axisRisk.value;
+  return risk && risk.axisMin !== null && risk.axisMax === null && risk.heightsOnAxis
+    ? "按已知起点示意"
+    : "原图轴范围";
+});
+
+const axisRiskLabel = computed(() => {
+  const level = axisRisk.value?.level;
+  if (level === "misleading-risk") return "可能误读";
+  if (level === "ok") return "从零起点差异不大";
+  return "需要确认轴范围";
+});
+
+const axisRangeText = computed(() => (axisRisk.value ? rangeTextOf(axisRisk.value) : ""));
+
+function clearAxisMin(): void {
+  axisMinOverride.value = null;
+  axisMinInput.value = "";
+}
+
+function applyAxisMin(): void {
+  const value = axisMinInput.value === "" ? null : Number(axisMinInput.value);
+  axisMinOverride.value = value !== null && Number.isFinite(value) ? value : null;
+}
+
+function selectCurrentClaim(event: Event): void {
+  crossCurrentClaimId.value = (event.target as HTMLSelectElement).value;
+  crossConfirmedElements.value = [];
+}
+
+function selectReferenceClaim(event: Event): void {
+  referenceClaimId.value = (event.target as HTMLSelectElement).value;
+  crossConfirmedElements.value = [];
+}
+
+const crossGateMessage = computed(() => {
+  const comparison = crossComparison.value;
+  if (!comparison) return "";
+  if (comparison.blockers.length) {
+    const names = comparison.blockers.map(
+      (key) => comparison.elements.find((element) => element.key === key)?.label ?? key,
+    );
+    return `还差 ${names.join("、")}：不一致或图上没读到，跨图结论保持「待核对」。`;
+  }
+  return "两侧读数都确认后，才会给出跨图结论。";
+});
+
 function resetWorkspace(): void {
   const workspace = claimWorkspace.value;
-  if (!workspace || !workspace.events.length || busyClaimId.value) return;
+  if (!workspace || (!workspace.events.length && !hasCrossSessionChanges.value) || busyClaimId.value) return;
 
   claimWorkspace.value = resetClaimWorkspace(workspace);
   claimErrors.value = {};
+  resetCrossImageSession();
   resetNotice.value = "已重置本次会话：读数回到最初载入的值，确认状态、结果和审计记录已清空。";
 }
 
@@ -735,6 +1152,8 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   forgetObjectUrl();
+  cancelReferenceRequest();
+  releaseReferenceImageUrl();
   window.removeEventListener("resize", updateViewportMode);
   window.removeEventListener("scroll", scheduleActiveAuditStep);
   if (auditStepFrame !== undefined) window.cancelAnimationFrame(auditStepFrame);
@@ -958,7 +1377,7 @@ onBeforeUnmount(() => {
 
           <AuditSessionBar
             v-if="hasMultipleClaims && chartObservation && claimWorkspace"
-            :disabled="!claimWorkspace.events.length || busyClaimId !== null"
+            :disabled="(!claimWorkspace.events.length && !hasCrossSessionChanges) || busyClaimId !== null"
             :notice="resetNotice"
             @reset="resetWorkspace"
           />
@@ -1070,7 +1489,7 @@ onBeforeUnmount(() => {
 
           <div v-else-if="observation" class="observation-form">
             <AuditSessionBar
-              :disabled="!singleClaimAuditRows.length || Boolean(busyMessage)"
+              :disabled="(!singleClaimAuditRows.length && !hasCrossSessionChanges) || Boolean(busyMessage)"
               :notice="resetNotice"
               @reset="resetSingleClaim"
             />
@@ -1249,6 +1668,216 @@ onBeforeUnmount(() => {
           </section>
 
           <AuditRecordList v-if="singleClaimAuditRows.length" :rows="singleClaimAuditRows" />
+
+          <section v-if="axisRisk" class="axis-section" aria-labelledby="axis-title">
+            <div class="section-heading cross-heading">
+              <div>
+                <p class="eyebrow">柱状图呈现方式</p>
+                <h3 id="axis-title" class="cross-title">纵轴核对</h3>
+              </div>
+              <span class="result-status" :class="axisRisk.level === 'misleading-risk' ? 'contradictory' : axisRisk.level === 'ok' ? 'consistent' : 'needs-confirmation'">
+                <span class="result-status-mark" aria-hidden="true"></span>
+                {{ axisRiskLabel }}
+              </span>
+            </div>
+
+            <p class="axis-summary">{{ axisRisk.summary }}</p>
+            <ul v-if="axisRisk.reasons.length" class="result-reasons">
+              <li v-for="reason in axisRisk.reasons" :key="reason">{{ reason }}</li>
+            </ul>
+
+            <div class="axis-compare">
+              <figure class="axis-panel">
+                <figcaption>{{ originalAxisCaption }}{{ axisRangeText }}</figcaption>
+                <div class="axis-bars" :aria-label="`${originalAxisCaption}下的柱高：${axisRisk.heightsOnAxis?.join('、') ?? '未读到'}`">
+                  <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsOnAxis, 0, originalAxisScaleHeight)}%` }"></span>
+                  <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsOnAxis, 1, originalAxisScaleHeight)}%` }"></span>
+                </div>
+                <span class="axis-panel-note">{{ axisRisk.heightsOnAxis ? axisRisk.heightsOnAxis.join(" / ") : "未读到" }}</span>
+                <small v-if="axisRisk.axisMin !== null && axisRisk.axisMax === null && axisRisk.heightsOnAxis" class="axis-panel-note">轴上限未读到；柱高以较高的已确认数值为顶端，仅供示意。</small>
+              </figure>
+              <figure class="axis-panel">
+                <figcaption>从零起点</figcaption>
+                <div class="axis-bars" :aria-label="`从零起点重画的柱高：${axisRisk.heightsFromZero.join('、')}`">
+                  <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsFromZero, 0, zeroAxisScaleHeight)}%` }"></span>
+                  <span class="axis-bar" :style="{ height: `${axisBarPercent(axisRisk.heightsFromZero, 1, zeroAxisScaleHeight)}%` }"></span>
+                </div>
+                <span class="axis-panel-note">
+                  {{ axisRisk.heightsFromZero.join(" / ") }}{{ axisRisk.unit ? ` ${axisRisk.unit}` : "" }}
+                  <template v-if="axisRisk.fromZeroRatio !== null">· 高度比 1 : {{ axisRisk.fromZeroRatio }}</template>
+                </span>
+              </figure>
+            </div>
+
+            <div class="axis-input">
+              <label>
+                <span>纵轴最小值{{ axisRisk.axisMin === null ? "" : `（当前 ${axisRisk.axisMin}）` }}</span>
+                <input v-model="axisMinInput" type="number" step="any" placeholder="如：80" />
+              </label>
+              <button class="cross-confirm-button" type="button" @click="applyAxisMin">按这个起点重新判断</button>
+              <button v-if="axisMinOverride !== null" class="cross-confirm-button" type="button" @click="clearAxisMin">恢复图上读数</button>
+            </div>
+
+            <p class="result-boundary">「可能误读」说的是呈现方式，不是造假判断；这张图也可能只是排版选择。对照图按已确认的读数重画，不经过模型。</p>
+          </section>
+
+          <section id="audit-cross" class="cross-section" aria-labelledby="cross-title">
+            <div class="section-heading cross-heading">
+              <div>
+                <p class="eyebrow">两张图对照</p>
+                <h3 id="cross-title" class="cross-title">跨图核对</h3>
+              </div>
+              <span v-if="referenceLabel" class="cross-reference-label">对照图：{{ referenceLabel }}</span>
+            </div>
+
+            <div v-if="!referenceObservation" class="cross-empty">
+              <p>放一张对照图，核对两张图对同一指标的说法是否一致。只有指标、时间、单位和范围都对齐的主张才会进入比较。</p>
+              <div class="cross-picker-row">
+                <label class="cross-picker">
+                  <span>选择对照图</span>
+                  <select :value="referenceSampleId ?? ''" @change="selectReferenceSample">
+                    <option value="" disabled>选一张样例</option>
+                    <option v-for="sample in samples" :key="sample.id" :value="sample.id">{{ sample.name }}</option>
+                  </select>
+                </label>
+                <label class="cross-picker cross-upload">
+                  <span>或上传一张</span>
+                  <input type="file" accept="image/png,image/jpeg,image/webp" @change="prepareReferenceUpload" />
+                </label>
+              </div>
+              <div v-if="referenceFile" class="cross-read-action">
+                <span>{{ referenceFile.name }}</span>
+                <button class="read-image-button" :disabled="referenceBusy" @click="readReferenceImage">
+                  {{ referenceBusy ? "正在读取…" : "读取这张对照图" }}
+                </button>
+              </div>
+            </div>
+
+            <div v-else class="cross-body">
+              <figure v-if="referenceImageUrl" class="cross-thumb">
+                <img :src="referenceImageUrl" :alt="`对照图：${referenceLabel}`" />
+                <figcaption>{{ referenceLabel }}</figcaption>
+              </figure>
+
+              <div class="cross-picker-row">
+                <label class="cross-picker">
+                  <span>当前图主张</span>
+                  <select :value="crossCurrentClaimId ?? ''" @change="selectCurrentClaim">
+                    <option v-for="claim in chartObservation?.claims ?? []" :key="claim.id" :value="claim.id">
+                      {{ claim.claimText || claim.id }}
+                    </option>
+                  </select>
+                </label>
+                <label class="cross-picker">
+                  <span>对照图主张</span>
+                  <select :value="referenceClaimId ?? ''" @change="selectReferenceClaim">
+                    <option value="" disabled>选择要比较的主张</option>
+                    <option v-for="claim in referenceObservation.claims" :key="claim.id" :value="claim.id">
+                      {{ claim.claimText || claim.id }}
+                    </option>
+                  </select>
+                </label>
+              </div>
+
+              <p v-if="!referenceClaimId" class="cross-side-note">
+                两张图里没有指标名相同的主张。请手动选一条对照主张，或先确认两张图的指标是不是同一口径。
+              </p>
+
+              <p v-else class="cross-side-note">
+                <template v-if="!referenceConfirmed">
+                  对照图的读数还没确认；未确认的读数不参与比较。
+                  <button class="cross-confirm-button" type="button" :disabled="referenceBusy" @click="confirmReferenceClaim">
+                    {{ referenceBusy ? "正在计算…" : "确认对照图读数" }}
+                  </button>
+                </template>
+                <template v-else-if="referenceEntry?.result">
+                  对照图读数已确认，其图内结论为 <strong>{{ auditStatusLabel(referenceEntry.result.status) }}</strong>。
+                </template>
+              </p>
+
+              <div v-if="crossComparison" class="cross-elements" aria-label="口径四要素">
+                <div class="cross-elements-head">
+                  <span>要素</span><span>当前图</span><span>对照图</span><span>比对</span><span></span>
+                </div>
+                <div
+                  v-for="element in crossComparison.elements"
+                  :key="element.key"
+                  class="cross-element"
+                  :class="element.state"
+                >
+                  <span class="cross-element-label">{{ element.label }}</span>
+                  <span class="cross-element-value">{{ element.left ?? "未读到" }}</span>
+                  <span class="cross-element-value">{{ element.right ?? "未读到" }}</span>
+                  <span class="cross-element-state">{{ crossStateLabel(element.state) }}</span>
+                  <button
+                    v-if="element.state === 'missing'"
+                    class="cross-confirm-button"
+                    type="button"
+                    @click="confirmCrossElement(element.key)"
+                  >
+                    确认一致
+                  </button>
+                  <span v-else></span>
+                </div>
+              </div>
+
+              <p v-if="crossComparison" class="cross-gate" :class="{ ready: crossComparison.ready }">
+                {{ crossComparison.ready ? "口径四要素一致、两侧读数都已确认，可以比较。" : crossGateMessage }}
+              </p>
+
+              <section v-if="crossVerdict" class="result-sheet cross-result" aria-live="polite">
+                <div class="result-sheet-top">
+                  <span class="result-kicker">跨图结论</span>
+                  <span class="result-status" :class="crossVerdict.status">
+                    <span class="result-status-mark" aria-hidden="true"></span>
+                    {{ crossStatusLabel }}
+                  </span>
+                </div>
+                <h4 class="result-title">{{ crossVerdict.summary }}</h4>
+                <ul v-if="crossVerdict.reasons.length" class="result-reasons">
+                  <li v-for="reason in crossVerdict.reasons" :key="reason">{{ reason }}</li>
+                </ul>
+                <div class="cross-evidence">
+                  <article>
+                    <span class="cross-evidence-label">当前图 · {{ activeSample?.name ?? (selectedFileName || "你的截图") }}</span>
+                    <blockquote>{{ evidenceExcerpt(chartObservation, crossCurrentClaimId) }}</blockquote>
+                    <span class="ledger-source">{{ chartObservation?.source === "vision-model" ? "来自模型读取" : "团队自制样例中的预置观察值" }}</span>
+                  </article>
+                  <article>
+                    <span class="cross-evidence-label">对照图 · {{ referenceLabel }}</span>
+                    <blockquote>{{ evidenceExcerpt(referenceObservation, referenceClaimId) }}</blockquote>
+                    <span class="ledger-source">{{ referenceObservation?.source === "vision-model" ? "来自模型读取" : "团队自制样例中的预置观察值" }}</span>
+                  </article>
+                </div>
+                <p class="result-boundary">这只比较两张图彼此是否自洽，不代表现实数据真伪，也不判断任何一方的动机。</p>
+              </section>
+
+              <p v-if="referenceError" class="error-message" role="alert">{{ referenceError }}</p>
+
+              <div class="cross-actions">
+                <label class="cross-picker cross-swap">
+                  <span>更换对照图</span>
+                  <select :value="referenceSampleId ?? ''" @change="selectReferenceSample">
+                    <option value="" disabled>选一张样例</option>
+                    <option v-for="sample in samples" :key="sample.id" :value="sample.id">{{ sample.name }}</option>
+                  </select>
+                </label>
+                <button class="cross-remove" type="button" @click="removeReference">移除对照图</button>
+              </div>
+            </div>
+            <section v-if="crossScopeEvents.length" class="cross-history" aria-label="本次会话的口径确认记录">
+              <h4>本次会话的口径确认记录</h4>
+              <ol>
+                <li v-for="event in crossScopeEvents" :key="event.id">
+                  <time :datetime="event.at">{{ formatEventTime(event.at) }}</time>
+                  <strong>{{ event.elementLabel }} · 已确认一致</strong>
+                  <span>{{ event.currentImageLabel }}「{{ event.currentClaimText }}」与 {{ event.referenceImageLabel }}「{{ event.referenceClaimText }}」</span>
+                  <small>图上原始观察：{{ event.originalLeftValue ?? "未读到" }} / {{ event.originalRightValue ?? "未读到" }}</small>
+                  <small>确认时采用的口径：{{ event.leftValue ?? "未填写" }} / {{ event.rightValue ?? "未填写" }}</small>
+                </li>
+              </ol>
+            </section>
+          </section>
         </section>
       </div>
 

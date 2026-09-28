@@ -3,6 +3,8 @@ import { parseVisionObservation } from "../server/observation.js";
 
 const incomeClaim = {
   claimText: "2025 年营业收入增长 25%",
+  metric: "营业收入",
+  scope: "全国门店",
   claimedGrowthPercent: 25,
   older: {
     period: "2024 年",
@@ -19,7 +21,7 @@ const incomeClaim = {
   unreadableItems: [],
 };
 
-const validObservation = { claims: [incomeClaim] };
+const validObservation = { claims: [incomeClaim], axis: { label: "营业收入", min: 0, max: 160, unit: "万元" } };
 
 describe("视觉模型 claims[] 结构化观察值校验", () => {
   it("接受单条与多条主张的图上观察", () => {
@@ -74,5 +76,38 @@ describe("视觉模型 claims[] 结构化观察值校验", () => {
     const { unreadableItems: _omitted, ...incompleteClaim } = incomeClaim;
 
     expect(() => parseVisionObservation({ claims: [incompleteClaim] })).toThrow();
+  });
+});
+
+describe("口径与坐标轴字段校验", () => {
+  it("接受读不清的口径与没有坐标轴的图", () => {
+    const observation = {
+      claims: [{ ...incomeClaim, metric: null, scope: null }],
+      axis: null,
+    };
+    expect(parseVisionObservation(observation)).toEqual(observation);
+  });
+
+  it("轴字段可以整体缺省", () => {
+    const observation = { claims: [incomeClaim] };
+    expect(parseVisionObservation(observation)).toEqual(observation);
+  });
+
+  it("柱状图轴刻度读不清时保留轴对象与空字段", () => {
+    const observation = {
+      claims: [incomeClaim],
+      axis: { label: null, min: null, max: null, unit: null },
+    };
+    expect(parseVisionObservation(observation)).toEqual(observation);
+  });
+
+  it("拒绝形状错误的轴与口径", () => {
+    expect(() => parseVisionObservation({
+      claims: [incomeClaim],
+      axis: { label: "营业收入", min: 0, unit: "万元" },
+    })).toThrow();
+    expect(() => parseVisionObservation({
+      claims: [{ ...incomeClaim, scope: 2024 }],
+    })).toThrow();
   });
 });

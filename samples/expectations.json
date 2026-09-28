@@ -23,9 +23,75 @@
   },
   "multiClaims": {
     "resultsAfterReview": [
-      { "id": "revenue-growth", "olderValue": 80, "observedNewer": 100, "correctedNewer": null, "newerEvidenceText": "2025 年营业收入 100 万元", "status": "consistent", "growthPercent": 25 },
-      { "id": "profit-growth", "olderValue": 50, "observedNewer": 70, "correctedNewer": 100, "newerEvidenceText": "2025 年利润 100 万元", "status": "contradictory", "growthPercent": 100 },
-      { "id": "user-count-growth", "olderValue": 50, "observedNewer": null, "correctedNewer": null, "newerEvidenceText": null, "status": "needs-confirmation", "growthPercent": null }
+      {
+        "id": "revenue-growth",
+        "olderValue": 80,
+        "observedNewer": 100,
+        "correctedNewer": null,
+        "newerEvidenceText": "2025 年营业收入 100 万元",
+        "status": "consistent",
+        "growthPercent": 25
+      },
+      {
+        "id": "profit-growth",
+        "olderValue": 50,
+        "observedNewer": 70,
+        "correctedNewer": 100,
+        "newerEvidenceText": "2025 年利润 100 万元",
+        "status": "contradictory",
+        "growthPercent": 100
+      },
+      {
+        "id": "user-count-growth",
+        "olderValue": 50,
+        "observedNewer": null,
+        "correctedNewer": null,
+        "newerEvidenceText": null,
+        "status": "needs-confirmation",
+        "growthPercent": null
+      }
     ]
-  }
+  },
+  "crossImage": {
+    "pairs": [
+      {
+        "id": "cross-consistent",
+        "current": "cross-a-revenue",
+        "reference": "cross-b-consistent",
+        "expectation": "consistent",
+        "note": "指标、时间、单位、范围一致，两侧算得都是 25%"
+      },
+      {
+        "id": "cross-conflict",
+        "current": "cross-a-revenue",
+        "reference": "cross-b-conflict",
+        "expectation": "contradictory",
+        "note": "口径一致，一侧 25%、另一侧 50%"
+      },
+      {
+        "id": "cross-scope-mismatch",
+        "current": "cross-a-revenue",
+        "reference": "cross-b-scope-mismatch",
+        "expectation": "needs-confirmation",
+        "note": "范围不同（全国门店 / 直营门店），必须停在待核对，不得判定冲突"
+      }
+    ]
+  },
+  "axis": [
+    {
+      "id": "axis-zero-based",
+      "expectation": "ok",
+      "note": "纵轴从 0 开始，柱高与数值成比例"
+    },
+    {
+      "id": "axis-truncated",
+      "expectation": "misleading-risk",
+      "note": "纵轴自 80 起，柱高差被放大"
+    },
+    {
+      "id": "axis-unknown-start",
+      "expectation": "needs-confirmation",
+      "note": "刻度不可辨认，需用户确认轴范围"
+    }
+  ]
 }

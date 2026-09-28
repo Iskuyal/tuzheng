@@ -104,3 +104,70 @@ describe("团队自制样例与独立期望结果", () => {
     expect(userCountResult.calculatedGrowthPercent).toBe(expectedClaims[2].growthPercent);
   });
 });
+
+describe("阶段三样例的口径与坐标轴", () => {
+  const claimOf = (id: string) => {
+    const sample = samplesById.get(id as never);
+    if (!sample) throw new Error(`Missing sample ${id}`);
+    const [claim] = sample.observation.claims;
+    if (!claim) throw new Error(`Sample ${id} has no claim`);
+    return claim;
+  };
+
+  it("跨图样例的口径四要素与预期一致", () => {
+    const pairs = expectations.crossImage.pairs;
+    const base = claimOf("cross-a-revenue");
+    expect(base.metric).toBe("营业收入");
+    expect(base.scope).toBe("全国门店");
+    expect(base.older.period).toBe("2024 年");
+    expect(base.older.unit).toBe("万元");
+
+    const sameScope = ["cross-b-consistent", "cross-b-conflict"];
+    for (const id of sameScope) {
+      const claim = claimOf(id);
+      expect([claim.metric, claim.scope, claim.older.period, claim.older.unit]).toEqual([
+        base.metric,
+        base.scope,
+        base.older.period,
+        base.older.unit,
+      ]);
+    }
+
+    // 范围不同的那张：其余三要素一致，只有 scope 不同
+    const mismatch = claimOf("cross-b-scope-mismatch");
+    expect([mismatch.metric, mismatch.older.period, mismatch.older.unit]).toEqual([
+      base.metric,
+      base.older.period,
+      base.older.unit,
+    ]);
+    expect(mismatch.scope).toBe("直营门店");
+
+    expect(pairs.map((pair: { current: string; reference: string; expectation: string }) => [
+      pair.current,
+      pair.reference,
+      pair.expectation,
+    ])).toEqual([
+      ["cross-a-revenue", "cross-b-consistent", "consistent"],
+      ["cross-a-revenue", "cross-b-conflict", "contradictory"],
+      ["cross-a-revenue", "cross-b-scope-mismatch", "needs-confirmation"],
+    ]);
+  });
+
+  it("纵轴样例的轴读数与预期一致", () => {
+    expect(samplesById.get("axis-zero-based")?.observation.axis).toEqual({
+      label: "营业收入", min: 0, max: 120, unit: "万元",
+    });
+    expect(samplesById.get("axis-truncated")?.observation.axis).toEqual({
+      label: "营业收入", min: 80, max: 100, unit: "万元",
+    });
+    // 刻度看不清：只保留能读到的轴标题与单位，起点与终点为空
+    expect(samplesById.get("axis-unknown-start")?.observation.axis).toEqual({
+      label: "营业收入", min: null, max: null, unit: "万元",
+    });
+    expect(expectations.axis.map((entry: { id: string; expectation: string }) => [entry.id, entry.expectation])).toEqual([
+      ["axis-zero-based", "ok"],
+      ["axis-truncated", "misleading-risk"],
+      ["axis-unknown-start", "needs-confirmation"],
+    ]);
+  });
+});

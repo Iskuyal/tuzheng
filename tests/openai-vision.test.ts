@@ -55,6 +55,7 @@ describe("OpenAI Responses 视觉适配器", () => {
         { type: "input_image", detail: "high" },
       ],
     });
+    expect(JSON.stringify(userMessage)).toContain("柱状图刻度看不清时仍返回 axis 对象");
   });
 
   it("没有 API Key 时拒绝构造适配器", () => {

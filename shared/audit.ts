@@ -17,9 +17,19 @@ export interface RawDataPointObservation {
   evidenceText: string | null;
 }
 
+export interface AxisObservation {
+  label: string | null;
+  min: number | null;
+  max: number | null;
+  unit: string | null;
+}
+
 export interface GrowthClaimObservation {
   id: string;
   claimText: string | null;
+  /** 口径：指标名与范围／人群。读不清或图上没写时为 null，不推断。 */
+  metric: string | null;
+  scope: string | null;
   claimedGrowthPercent: number | null;
   older: RawDataPointObservation;
   newer: RawDataPointObservation;
@@ -29,6 +39,8 @@ export interface GrowthClaimObservation {
 export interface ChartObservation {
   source: ObservationSource;
   claims: GrowthClaimObservation[];
+  /** 柱状图的纵轴范围；非柱状图为 null，柱状图刻度读不清时保留对象并将相应字段设为 null。 */
+  axis?: AxisObservation | null;
 }
 
 export interface ModelReadTrace {
@@ -88,11 +100,11 @@ export function toAuditObservation(
   };
 }
 
-function formatNumber(value: number, maximumFractionDigits = 2): string {
+export function formatNumber(value: number, maximumFractionDigits = 2): string {
   return new Intl.NumberFormat("zh-CN", { maximumFractionDigits }).format(value);
 }
 
-function formatPercent(value: number): string {
+export function formatPercent(value: number): string {
   return `${formatNumber(value)}%`;
 }
 
