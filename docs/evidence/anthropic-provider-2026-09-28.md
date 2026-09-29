@@ -8,4 +8,8 @@
 
 **协议 vs 端点的边界补充（2026-09-28 查证）：**Anthropic Messages 是线格式而非模型绑定——多个厂商提供 Anthropic 兼容端点供 harness 使用非 Claude 模型（如 DeepSeek 官方 `https://api.deepseek.com/anthropic`、Kimi `https://api.kimi.com/coding/`、DeepInfra `https://api.deepinfra.com/anthropic`，以及自建 LiteLLM 代理在 `/v1/messages` 上做格式转换）。本项目 Anthropic 卡片同样不绑定 Claude：把这类端点填到版本段（如 `https://api.deepseek.com/anthropic/v1`）即可，模型名按其支持填写。commandcode 不支持这种用法——其 `/messages` 只服务自家 Claude 模型，探测过的其他 Anthropic 路径（`/v1/messages`、`/anthropic/v1/messages` 等）均 404，这是该网关的路由策略而非协议限制。
 
-**边界说明：**本记录中的本地测试（116 条行为测试、48 条浏览器用例、构建）使用替身与预置数据，不代表真实模型调用；在线部分只覆盖上述具体端点、模型与样例，不代表 Anthropic 协议本身在官方端点的可用性，也不能外推识别准确率。建议具备 Claude 权限的密钥或官方 Anthropic 端点后再补做成功路径的在线验收。
+**DeepSeek 官方 Anthropic 端点在线验收（2026-09-28，团队提供的真实密钥）：**配置 `https://api.deepseek.com/anthropic/v1` + `deepseek-flash`（V4.1-Flash，`/models` 标注 `input_modalities: ["text","image"]`）后，应用自身的「测试连接」返回成功（644 毫秒）；经 `/api/audit/image` 真实读取自制样例：`conflict.png` 1.2 秒返回「年营业收入增长 40%」、80/100；`consistent.png` 首次因模型返回不符合结构被应用拒绝（`INVALID_MODEL_OUTPUT`），重试 1.3 秒成功返回「年营业收入增长 25%」、80/100。模型偶尔输出结构不符属已知波动，应用按设计不猜测、按重试路径恢复。**关键兼容发现：**DeepSeek 默认开启思考，思考模式与强制工具调用互斥（`400 Thinking mode does not support this tool_choice`）；应用在 Anthropic 请求中显式 `thinking: {"type":"disabled"}`（本次修复）后，连接测试与图片读取都通过。另：`deepseek-v4-flash` 是纯文本型号，传图片会被 400 拒绝，预设因此只收录多模态型号。
+
+**各家 Anthropic 兼容端点检索结果（2026-09-28）：**DeepSeek 官方 `https://api.deepseek.com/anthropic`（客户端追加 `/v1/messages`，本应用填到 `/anthropic/v1`）；阿里云百炼 `https://dashscope.aliyuncs.com/apps/anthropic`（官方要求填到 `/apps/anthropic`，模型列表含 `qwen3-vl-flash` 等 VL 型号，支持 `image` 内容块）；Anthropic 官方 `https://api.anthropic.com/v1`；commandcode 网关 `/messages` 仅 Claude 且受套餐限制；Kimi 的视觉支持只在 OpenAI 兼容端点（`api.moonshot.cn/v1`）有文档，其 Anthropic 兼容端点（`api.kimi.com/coding`）未注明视觉，暂不收录。
+
+**边界说明：**本记录中的本地测试（119 条行为测试、51 条浏览器用例、构建）使用替身与预置数据，不代表真实模型调用；在线部分只覆盖上述具体端点、模型与样例，不代表 Anthropic 协议本身在官方端点的可用性，也不能外推识别准确率。
