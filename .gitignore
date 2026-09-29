@@ -1,5 +1,6 @@
 .firecrawl/
 .idea/
+.zcode/
 node_modules/
 dist/
 dist-server/

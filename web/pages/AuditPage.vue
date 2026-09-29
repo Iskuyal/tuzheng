@@ -67,6 +67,7 @@ interface CrossScopeConfirmationEvent {
 }
 
 const samples = ref<SampleSummary[]>([]);
+const evaluationSample = ref<SampleSummary | null>(null);
 const activeSampleId = ref<string | null>(null);
 const chartObservation = ref<ChartObservation | null>(null);
 const claimWorkspace = ref<ClaimWorkspace | null>(null);
@@ -80,6 +81,7 @@ const imageAlt = ref("图表预览");
 const selectedFileName = ref("");
 const pendingUpload = ref<File | null>(null);
 const errorMessage = ref("");
+const uploadErrorCode = ref("");
 const busyMessage = ref("");
 const modelRead = ref<ModelReadTrace | null>(null);
 const modelReadRegion = ref<"crop" | "full">("full");
@@ -96,6 +98,7 @@ const referenceWorkspace = ref<ClaimWorkspace | null>(null);
 const referenceClaimId = ref<string | null>(null);
 const referenceFile = ref<File | null>(null);
 const referenceError = ref("");
+const referenceErrorCode = ref("");
 const referenceBusy = ref(false);
 const crossCurrentClaimId = ref<string | null>(null);
 const crossConfirmedElements = ref<CrossElementKey[]>([]);
@@ -126,7 +129,8 @@ let referenceRequest: AbortController | null = null;
 const route = useRoute();
 
 const activeSample = computed(
-  () => samples.value.find(({ id }) => id === activeSampleId.value) ?? null,
+  () => samples.value.find(({ id }) => id === activeSampleId.value)
+    ?? (evaluationSample.value?.id === activeSampleId.value ? evaluationSample.value : null),
 );
 const hasMultipleClaims = computed(() => (chartObservation.value?.claims.length ?? 0) > 1);
 const hasNoClaims = computed(() => chartObservation.value?.claims.length === 0);
@@ -298,6 +302,46 @@ function updateErrorFrom(response: Response, payload: { error?: { message?: stri
   return `请求失败（${response.status}）。请重试。`;
 }
 
+let imageRequest: AbortController | null = null;
+let imageRevision = 0;
+
+function cancelImageRequest(): void {
+  imageRevision += 1;
+  imageRequest?.abort();
+  imageRequest = null;
+  busyMessage.value = "";
+}
+
+function beginImageRequest(): AbortController {
+  cancelImageRequest();
+  const request = new AbortController();
+  imageRequest = request;
+  return request;
+}
+
+function cancelUploadRead(): void {
+  if (!imageRequest || !pendingUpload.value) return;
+  cancelImageRequest();
+  uploadErrorCode.value = "READ_CANCELLED";
+  errorMessage.value = "已取消这次读取。可以重新读取当前图片，或选择自制样例。";
+}
+
+function clearCurrentAudit(): void {
+  resetCrossImageSession();
+  chartObservation.value = null;
+  claimWorkspace.value = null;
+  claimErrors.value = {};
+  busyClaimId.value = null;
+  observation.value = null;
+  initialObservation.value = null;
+  singleClaimId.value = "";
+  singleClaimLog.value = [];
+  singleClaimRevision.value += 1;
+  result.value = null;
+  modelRead.value = null;
+  resetNotice.value = "";
+}
+
 function setChartObservation(value: ChartObservation): void {
   resetCrossImageSession();
   chartObservation.value = value;
@@ -346,26 +390,32 @@ function applySingleEdit(edit: ClaimWorkspaceEdit): void {
   invalidateResult();
 }
 
-async function loadSample(id: string): Promise<void> {
+async function loadSample(id: string): Promise<boolean> {
+  const request = beginImageRequest();
   busyMessage.value = "正在载入预置示例…";
   errorMessage.value = "";
+  uploadErrorCode.value = "";
   result.value = null;
   try {
     const response = await fetch("/api/audit/sample", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
+      signal: request.signal,
     });
     const payload = await response.json().catch(() => null) as {
       observation?: ChartObservation;
+      sample?: SampleSummary;
       error?: { message?: string };
     } | null;
     if (!response.ok || !payload?.observation) {
       throw new Error(updateErrorFrom(response, payload));
     }
+    if (imageRequest !== request) return false;
 
-    const sample = samples.value.find((candidate) => candidate.id === id);
+    const sample = samples.value.find((candidate) => candidate.id === id) ?? payload.sample;
     if (!sample) throw new Error("找不到这个样例。");
+    evaluationSample.value = samples.value.some((candidate) => candidate.id === id) ? null : sample;
     forgetObjectUrl();
     clearCrop();
     pendingUpload.value = null;
@@ -375,14 +425,22 @@ async function loadSample(id: string): Promise<void> {
     activeSampleId.value = id;
     modelRead.value = null;
     setChartObservation(payload.observation);
+    return true;
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "样例载入失败，请重试。";
+    if (imageRequest === request && !request.signal.aborted) {
+      errorMessage.value = error instanceof Error ? error.message : "样例载入失败，请重试。";
+    }
+    return false;
   } finally {
-    busyMessage.value = "";
+    if (imageRequest === request) {
+      imageRequest = null;
+      busyMessage.value = "";
+    }
   }
 }
 
 async function loadSamples(): Promise<void> {
+  const initialRevision = imageRevision;
   try {
     const response = await fetch("/api/samples");
     const payload = await response.json().catch(() => null) as { samples?: SampleSummary[] } | null;
@@ -390,11 +448,16 @@ async function loadSamples(): Promise<void> {
       throw new Error("样例清单无法载入。请确认前后端服务已启动。");
     }
     samples.value = payload.samples;
+    if (imageRevision !== initialRevision || pendingUpload.value || activeSampleId.value) return;
     const requestedId = typeof route.query.sample === "string" ? route.query.sample : null;
-    const requestedSample = payload.samples.find(({ id }) => id === requestedId);
-    await loadSample(requestedSample?.id ?? payload.samples[0].id);
+    if (!requestedId || !(await loadSample(requestedId))) {
+      if (requestedId && imageRevision !== initialRevision + 1) return;
+      await loadSample(payload.samples[0].id);
+    }
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "服务暂时不可用。";
+    if (imageRevision === initialRevision) {
+      errorMessage.value = error instanceof Error ? error.message : "服务暂时不可用。";
+    }
   }
 }
 
@@ -412,11 +475,14 @@ function prepareUpload(event: Event): void {
 }
 
 function prepareUploadFile(file: File): void {
+  cancelImageRequest();
   if (file.size > 5 * 1024 * 1024) {
+    uploadErrorCode.value = "IMAGE_TOO_LARGE";
     errorMessage.value = "图片不能超过 5 MB。";
     return;
   }
   if (!new Set(["image/png", "image/jpeg", "image/webp"]).has(file.type)) {
+    uploadErrorCode.value = "UNSUPPORTED_IMAGE";
     errorMessage.value = "请上传 PNG、JPG 或 WebP 图片。";
     return;
   }
@@ -429,51 +495,58 @@ function prepareUploadFile(file: File): void {
   selectedFileName.value = file.name;
   pendingUpload.value = file;
   activeSampleId.value = null;
-  chartObservation.value = null;
-  claimWorkspace.value = null;
-  claimErrors.value = {};
-  busyClaimId.value = null;
-  observation.value = null;
-  initialObservation.value = null;
-  singleClaimId.value = "";
-  singleClaimLog.value = [];
-  singleClaimRevision.value += 1;
-  result.value = null;
-  modelRead.value = null;
+  evaluationSample.value = null;
+  clearCurrentAudit();
   errorMessage.value = "";
+  uploadErrorCode.value = "";
   busyMessage.value = "";
 }
 
 async function analyzePendingUpload(): Promise<void> {
   if (!pendingUpload.value) return;
-  const sentRegion: "crop" | "full" = cropPreview.value ? "crop" : "full";
+  const file = pendingUpload.value;
+  const crop = cropPreview.value;
+  const request = beginImageRequest();
+  const sentRegion: "crop" | "full" = crop ? "crop" : "full";
+  clearCurrentAudit();
+  errorMessage.value = "";
+  uploadErrorCode.value = "";
   busyMessage.value = "正在请求模型读取图表文字…";
   try {
     const form = new FormData();
-    if (cropPreview.value) {
-      const cropBlob = await (await fetch(cropPreview.value)).blob();
+    if (crop) {
+      const cropBlob = await (await fetch(crop)).blob();
+      if (imageRequest !== request) return;
       form.append("image", cropBlob, "chart-crop.png");
     } else {
-      form.append("image", pendingUpload.value);
+      form.append("image", file);
     }
 
-    const response = await fetch("/api/audit/image", { method: "POST", body: form });
+    const response = await fetch("/api/audit/image", { method: "POST", body: form, signal: request.signal });
     const payload = await response.json().catch(() => null) as {
       observation?: ChartObservation;
       modelRead?: ModelReadTrace;
-      error?: { message?: string };
+      error?: { code?: string; message?: string };
     } | null;
+    if (imageRequest !== request) return;
     if (!response.ok || !payload?.observation) {
+      uploadErrorCode.value = payload?.error?.code ?? "VISION_REQUEST_FAILED";
       throw new Error(updateErrorFrom(response, payload));
     }
     modelRead.value = payload.modelRead ?? null;
     modelReadRegion.value = sentRegion;
     setChartObservation(payload.observation);
   } catch (error) {
-    modelRead.value = null;
-    errorMessage.value = error instanceof Error ? error.message : "图片读取失败，请重试。";
+    if (imageRequest === request && !request.signal.aborted) {
+      modelRead.value = null;
+      uploadErrorCode.value ||= "VISION_REQUEST_FAILED";
+      errorMessage.value = error instanceof Error ? error.message : "图片读取失败，请重试。";
+    }
   } finally {
-    busyMessage.value = "";
+    if (imageRequest === request) {
+      imageRequest = null;
+      busyMessage.value = "";
+    }
   }
 }
 
@@ -483,6 +556,13 @@ function toggleCropMode(): void {
     cropMode.value = false;
     dragOrigin = null;
     return;
+  }
+  if (pendingUpload.value) {
+    // 选区改变后，先前整图或旧选区的模型结果不再属于当前审计。
+    cancelImageRequest();
+    clearCurrentAudit();
+    errorMessage.value = "";
+    uploadErrorCode.value = "";
   }
   cropSelection.value = null;
   cropPreview.value = "";
@@ -787,7 +867,16 @@ async function selectReferenceSample(event: Event): Promise<void> {
   if (!id) return;
   const request = beginReferenceRequest();
   referenceError.value = "";
+  referenceErrorCode.value = "";
   referenceFile.value = null;
+  referenceObservation.value = null;
+  referenceWorkspace.value = null;
+  referenceClaimId.value = null;
+  referenceSampleId.value = null;
+  referenceLabel.value = "";
+  crossConfirmedElements.value = [];
+  releaseReferenceImageUrl();
+  referenceImageUrl.value = "";
   try {
     const response = await fetch("/api/audit/sample", {
       method: "POST",
@@ -823,16 +912,19 @@ function prepareReferenceUpload(event: Event): void {
   if (!file) return;
   cancelReferenceRequest();
   if (file.size > 5 * 1024 * 1024) {
+    referenceErrorCode.value = "IMAGE_TOO_LARGE";
     referenceError.value = "图片不能超过 5 MB。";
     return;
   }
   if (!new Set(["image/png", "image/jpeg", "image/webp"]).has(file.type)) {
+    referenceErrorCode.value = "UNSUPPORTED_IMAGE";
     referenceError.value = "请上传 PNG、JPG 或 WebP 图片。";
     return;
   }
 
   releaseReferenceImageUrl();
   referenceError.value = "";
+  referenceErrorCode.value = "";
   referenceFile.value = file;
   referenceObservation.value = null;
   referenceWorkspace.value = null;
@@ -847,14 +939,19 @@ async function readReferenceImage(): Promise<void> {
   const file = referenceFile.value;
   const request = beginReferenceRequest();
   referenceError.value = "";
+  referenceErrorCode.value = "";
   try {
     const form = new FormData();
     form.append("image", file);
     const response = await fetch("/api/audit/image", { method: "POST", body: form, signal: request.signal });
-    const payload = await response.json().catch(() => null) as { observation?: ChartObservation } | null;
+    const payload = await response.json().catch(() => null) as {
+      observation?: ChartObservation;
+      error?: { code?: string; message?: string };
+    } | null;
     if (referenceRequest !== request) return;
     if (!response.ok || !payload?.observation) {
-      throw new Error("对照图读取失败，请重试。");
+      referenceErrorCode.value = payload?.error?.code ?? "VISION_REQUEST_FAILED";
+      throw new Error(updateErrorFrom(response, payload));
     }
     referenceObservation.value = payload.observation;
     referenceWorkspace.value = createClaimWorkspace(payload.observation);
@@ -862,6 +959,7 @@ async function readReferenceImage(): Promise<void> {
     resetPairing();
   } catch (error) {
     if (referenceRequest === request && !request.signal.aborted) {
+      referenceErrorCode.value ||= "VISION_REQUEST_FAILED";
       referenceError.value = error instanceof Error ? error.message : "对照图读取失败，请重试。";
     }
   } finally {
@@ -878,6 +976,7 @@ function removeReference(): void {
   referenceLabel.value = "";
   referenceFile.value = null;
   referenceError.value = "";
+  referenceErrorCode.value = "";
   crossConfirmedElements.value = [];
   releaseReferenceImageUrl();
   referenceImageUrl.value = "";
@@ -1144,13 +1243,14 @@ onMounted(() => {
   const landingFile = takeLandingUpload();
   updateViewportMode();
   window.addEventListener("scroll", scheduleActiveAuditStep, { passive: true });
+  if (landingFile) prepareUploadFile(landingFile);
   void loadSamples().then(() => {
-    if (landingFile) prepareUploadFile(landingFile);
     scheduleActiveAuditStep();
   });
   window.addEventListener("resize", updateViewportMode);
 });
 onBeforeUnmount(() => {
+  cancelImageRequest();
   forgetObjectUrl();
   cancelReferenceRequest();
   releaseReferenceImageUrl();
@@ -1329,13 +1429,14 @@ onBeforeUnmount(() => {
           </div>
           <div v-if="pendingUpload" class="upload-read-action">
             <button class="read-image-button" :disabled="Boolean(busyMessage)" @click="analyzePendingUpload">
-              读取{{ cropPreview ? "选中区域" : "整张图片" }}
+              {{ uploadErrorCode ? "重试读取" : "读取" }}{{ cropPreview ? "选中区域" : "整张图片" }}
             </button>
+            <button v-if="busyMessage === '正在请求模型读取图表文字…'" type="button" class="read-cancel-button" @click="cancelUploadRead">取消读取</button>
             <span>{{ cropPreview ? "只会把框选区域发送给已配置的模型服务。" : "点击后把图片发送给已配置的模型服务读取。" }}</span>
           </div>
           <p v-if="cropError" class="crop-error" role="alert">{{ cropError }}</p>
           <p class="privacy-note">
-            预置示例使用本地观察值。上传图片仅在点击读取时发送给你配置的 Responses API 服务；可先框选需要检查的区域。
+            预置示例使用本地观察值。上传图片仅在点击读取时发送给你在设置页配置的模型服务；可先框选需要检查的区域。
           </p>
         </section>
 
@@ -1642,7 +1743,14 @@ onBeforeUnmount(() => {
           <div v-if="busyMessage" class="busy-message" role="status" aria-live="polite">
             <span class="spinner" aria-hidden="true"></span>{{ busyMessage }}
           </div>
-          <div v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</div>
+          <div v-if="errorMessage" class="error-message" role="alert">
+            {{ errorMessage }}
+            <span v-if="uploadErrorCode === 'MODEL_NOT_CONFIGURED'"> <RouterLink to="/settings">前往模型设置并测试连接</RouterLink>，保存后返回重试。</span>
+            <span v-else-if="uploadErrorCode === 'VISION_TIMEOUT'">可缩小图片或框选图表区域，再点击重试读取。</span>
+            <span v-else-if="uploadErrorCode === 'INVALID_MODEL_OUTPUT'">这次输出未用于计算；请重试读取或选用明确标记的预置示例。</span>
+            <span v-else-if="uploadErrorCode === 'VISION_REQUEST_FAILED'">请检查服务连接后重试，或选用预置示例。</span>
+            <span v-else-if="uploadErrorCode === 'UNSUPPORTED_IMAGE' || uploadErrorCode === 'IMAGE_TOO_LARGE'">请选择符合要求的另一张图片。</span>
+          </div>
 
           <section v-if="result && observation" id="audit-result" class="result-sheet" tabindex="-1" aria-live="polite" aria-labelledby="result-title">
             <div class="result-sheet-top">
@@ -1748,7 +1856,7 @@ onBeforeUnmount(() => {
               <div v-if="referenceFile" class="cross-read-action">
                 <span>{{ referenceFile.name }}</span>
                 <button class="read-image-button" :disabled="referenceBusy" @click="readReferenceImage">
-                  {{ referenceBusy ? "正在读取…" : "读取这张对照图" }}
+                  {{ referenceBusy ? "正在读取…" : referenceErrorCode ? "重试读取这张对照图" : "读取这张对照图" }}
                 </button>
               </div>
             </div>
@@ -1852,8 +1960,6 @@ onBeforeUnmount(() => {
                 <p class="result-boundary">这只比较两张图彼此是否自洽，不代表现实数据真伪，也不判断任何一方的动机。</p>
               </section>
 
-              <p v-if="referenceError" class="error-message" role="alert">{{ referenceError }}</p>
-
               <div class="cross-actions">
                 <label class="cross-picker cross-swap">
                   <span>更换对照图</span>
@@ -1865,6 +1971,14 @@ onBeforeUnmount(() => {
                 <button class="cross-remove" type="button" @click="removeReference">移除对照图</button>
               </div>
             </div>
+            <p v-if="referenceError" class="error-message" role="alert">
+              {{ referenceError }}
+              <span v-if="referenceErrorCode === 'MODEL_NOT_CONFIGURED'"> <RouterLink to="/settings">前往模型设置并测试连接</RouterLink>，保存后返回重试。</span>
+              <span v-else-if="referenceErrorCode === 'VISION_TIMEOUT'">可换用更小的图片后重试。</span>
+              <span v-else-if="referenceErrorCode === 'INVALID_MODEL_OUTPUT'">这次输出未用于比较；请重试或选择预置示例。</span>
+              <span v-else-if="referenceErrorCode === 'VISION_REQUEST_FAILED'">请检查服务连接后重试，或选择预置示例。</span>
+              <span v-else-if="referenceErrorCode === 'UNSUPPORTED_IMAGE' || referenceErrorCode === 'IMAGE_TOO_LARGE'">请选择符合要求的另一张图片。</span>
+            </p>
             <section v-if="crossScopeEvents.length" class="cross-history" aria-label="本次会话的口径确认记录">
               <h4>本次会话的口径确认记录</h4>
               <ol>

@@ -2,12 +2,24 @@ import express, { type Express } from "express";
 import multer, { MulterError } from "multer";
 import { z } from "zod";
 import { evaluateGrowth, type ChartObservation, type ModelReadTrace } from "../shared/audit.js";
-import { OpenAIResponsesVisionAdapter, VisionModelError } from "./openai-vision.js";
+import { AnthropicMessagesVisionAdapter } from "./anthropic-vision.js";
+import { OpenAIResponsesVisionAdapter } from "./openai-vision.js";
+import { VisionModelError } from "./vision-error.js";
+import {
+  ModelConnectionError,
+  testModelConnection,
+  type ModelConnectionFailureKind,
+  type ModelConnectionResult,
+} from "./model-connection.js";
 import {
   FileModelSettingsStore,
+  MODEL_PROVIDERS,
+  activeProviderConfig,
+  toPublicModelSettings,
+  type ModelProvider,
   type ModelSettings,
   type ModelSettingsStore,
-  toPublicModelSettings,
+  type ProviderConfig,
 } from "./model-settings.js";
 import { parseVisionObservation } from "./observation.js";
 import { sampleCases } from "../shared/samples.js";
@@ -32,10 +44,22 @@ export interface VisionAdapter {
 export interface AppOptions {
   visionAdapter?: VisionAdapter | null;
   visionAdapterFactory?: (settings: ModelSettings) => VisionAdapter;
+  connectionTester?: (settings: ModelSettings) => Promise<ModelConnectionResult>;
   settingsStore?: ModelSettingsStore;
 }
 
+function isCompletedModelEndpoint(value: string): boolean {
+  try {
+    const path = decodeURIComponent(new URL(value).pathname).replace(/\/+$/, "").toLowerCase();
+    return ["/responses", "/chat/completions", "/completions", "/messages"]
+      .some((suffix) => path.endsWith(suffix));
+  } catch {
+    return false;
+  }
+}
+
 const settingsUpdateSchema = z.object({
+  provider: z.enum(MODEL_PROVIDERS).optional(),
   baseUrl: z.string().url().max(500).refine((value) => {
     const url = new URL(value);
     const localHost = url.hostname === "localhost"
@@ -47,12 +71,49 @@ const settingsUpdateSchema = z.object({
       && !url.username
       && !url.password
       && !url.search
-      && !url.hash;
+      && !url.hash
+      && !isCompletedModelEndpoint(value);
   }),
   model: z.string().trim().min(1).max(120),
   apiKey: z.string().max(1000).optional(),
   clearApiKey: z.boolean().optional(),
 }).strict();
+
+function resolvedModelSettings(current: ModelSettings, update: z.infer<typeof settingsUpdateSchema>): ModelSettings {
+  const provider: ModelProvider = update.provider ?? "openai-responses";
+  const providers: Record<ModelProvider, ProviderConfig> = {
+    "openai-responses": current.providers["openai-responses"],
+    anthropic: current.providers.anthropic,
+  };
+  providers[provider] = {
+    baseUrl: update.baseUrl.replace(/\/$/, ""),
+    model: update.model,
+    apiKey: update.clearApiKey ? "" : update.apiKey?.trim() || current.providers[provider].apiKey,
+  };
+  return { activeProvider: provider, providers };
+}
+
+function settingsValidationMessage(body: unknown): string {
+  const record = body && typeof body === "object" ? body as Record<string, unknown> : {};
+  const provider: ModelProvider = record.provider === "anthropic" ? "anthropic" : "openai-responses";
+  const baseUrl = record.baseUrl;
+  if (typeof baseUrl !== "string" || !isCompletedModelEndpoint(baseUrl)) {
+    return "远程服务请使用 HTTPS；HTTP 仅支持 localhost 回环地址。请同时检查模型名。";
+  }
+  return provider === "anthropic"
+    ? "请填写 Anthropic Messages 的 Base URL（如 https://api.anthropic.com/v1），不要填 /messages 的完整接口地址；服务端会自行追加 /messages。"
+    : "请填写 Responses API 的 Base URL（如 https://api.openai.com/v1），不要填 /chat/completions 或 /responses 的完整接口地址；服务端会自行追加 /responses。";
+}
+
+const connectionErrorCodes: Record<ModelConnectionFailureKind, string> = {
+  auth: "MODEL_AUTH_FAILED",
+  endpoint: "MODEL_ENDPOINT_NOT_FOUND",
+  "rate-limit": "MODEL_RATE_LIMITED",
+  timeout: "MODEL_CONNECTION_TIMEOUT",
+  "request-rejected": "MODEL_REQUEST_REJECTED",
+  "invalid-output": "MODEL_RESPONSE_INVALID",
+  upstream: "MODEL_CONNECTION_FAILED",
+};
 
 const auditPointSchema = z.object({
   period: z.string().trim().max(80).nullable(),
@@ -88,8 +149,13 @@ function detectImageMime(buffer: Buffer): UploadedChartImage["mimeType"] | null 
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
   const settingsStore = options.settingsStore ?? new FileModelSettingsStore();
-  const createVisionAdapter = options.visionAdapterFactory ?? ((settings: ModelSettings) =>
-    new OpenAIResponsesVisionAdapter(settings));
+  const createVisionAdapter = options.visionAdapterFactory ?? ((settings: ModelSettings) => {
+    const { provider, config } = activeProviderConfig(settings);
+    return provider === "anthropic"
+      ? new AnthropicMessagesVisionAdapter(config)
+      : new OpenAIResponsesVisionAdapter(config);
+  });
+  const connectionTester = options.connectionTester ?? testModelConnection;
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024, files: 1 },
@@ -105,27 +171,53 @@ export function createApp(options: AppOptions = {}): Express {
     const parsed = settingsUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({
-        error: { code: "INVALID_SETTINGS", message: "远程服务请使用 HTTPS；HTTP 仅支持 localhost 回环地址。请同时检查模型名。" },
+        error: {
+          code: "INVALID_SETTINGS",
+          message: settingsValidationMessage(request.body),
+        },
       });
       return;
     }
 
-    const current = await settingsStore.read();
-    const apiKey = parsed.data.clearApiKey
-      ? ""
-      : parsed.data.apiKey?.trim() || current.apiKey;
-    const settings: ModelSettings = {
-      baseUrl: parsed.data.baseUrl.replace(/\/$/, ""),
-      model: parsed.data.model,
-      apiKey,
-    };
+    const settings = resolvedModelSettings(await settingsStore.read(), parsed.data);
     await settingsStore.write(settings);
     response.json({ settings: toPublicModelSettings(settings) });
   });
 
+  app.post("/api/settings/test-connection", async (request, response) => {
+    const parsed = settingsUpdateSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({
+        error: { code: "INVALID_SETTINGS", message: settingsValidationMessage(request.body) },
+      });
+      return;
+    }
+
+    const settings = resolvedModelSettings(await settingsStore.read(), parsed.data);
+    if (!settings.providers[settings.activeProvider].apiKey) {
+      response.status(400).json({
+        error: { code: "MODEL_NOT_CONFIGURED", message: "请填写 API Key，或先保存密钥后再测试连接。" },
+      });
+      return;
+    }
+
+    try {
+      const connection = await connectionTester(settings);
+      response.json({ connection });
+    } catch (error) {
+      const failure = error instanceof ModelConnectionError
+        ? error
+        : new ModelConnectionError("upstream", { cause: error });
+      const status = failure.kind === "timeout" ? 504 : failure.kind === "rate-limit" ? 429 : 502;
+      response.status(status).json({
+        error: { code: connectionErrorCodes[failure.kind], message: failure.message },
+      });
+    }
+  });
+
   app.get("/api/samples", (_request, response) => {
     response.json({
-      samples: sampleCases.map(({ id, name, description, imageUrl }) => ({
+      samples: sampleCases.filter((sample) => !sample.evaluationOnly).map(({ id, name, description, imageUrl }) => ({
         id,
         name,
         description,
@@ -147,7 +239,10 @@ export function createApp(options: AppOptions = {}): Express {
       return;
     }
 
-    response.json({ observation: sample.observation });
+    response.json({
+      observation: sample.observation,
+      sample: { id: sample.id, name: sample.name, description: sample.description, imageUrl: sample.imageUrl },
+    });
   });
 
   app.post("/api/audit/check", (request, response) => {
@@ -183,7 +278,8 @@ export function createApp(options: AppOptions = {}): Express {
       visionAdapter = options.visionAdapter;
     } else {
       const storedSettings = await settingsStore.read();
-      visionAdapter = storedSettings.apiKey.trim()
+      const { config } = activeProviderConfig(storedSettings);
+      visionAdapter = config.apiKey.trim()
         ? createVisionAdapter(storedSettings)
         : null;
     }
@@ -192,7 +288,7 @@ export function createApp(options: AppOptions = {}): Express {
       response.status(503).json({
         error: {
           code: "MODEL_NOT_CONFIGURED",
-          message: "实时视觉读取尚未配置。请前往模型设置页填写 Responses API 地址、模型名和 API Key。",
+          message: "实时视觉读取尚未配置。请前往模型设置页填写模型服务地址、模型名和 API Key。",
         },
       });
       return;

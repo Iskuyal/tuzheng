@@ -1,0 +1,90 @@
+{
+  "licenseDefinitions": {
+    "team-created": "图片和图内文字均由项目团队自制；允许用于本项目代码仓库、竞赛演示、评审与测试，不含第三方图表或现实来源数据。"
+  },
+  "cases": [
+    {
+      "id": "conflict", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 160, "万元"], "imageLabels": ["年营业收入增长 40%", "2024 年", "2025 年", "80", "100", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "年营业收入增长 40%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "contradictory", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "consistent", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 160, "万元"], "imageLabels": ["年营业收入增长 25%", "2024 年", "2025 年", "80", "100", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "年营业收入增长 25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "unclear", "license": "team-created", "axisRisk": null, "axisRange": [0, 160, "万元"], "imageLabels": ["年营业收入增长 25%", "2024 年", "2025 年", "80", "关键标签已模糊"],
+      "claims": [{ "id": "revenue-growth", "title": "年营业收入增长 25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", null, "万元"], "status": "needs-confirmation", "growthPercent": null, "formula": null, "evidence": "both", "reasonIncludes": "关键数值" }]
+    },
+    {
+      "id": "multi-claims", "license": "team-created", "axisRisk": null, "axisRange": null, "imageLabels": ["营业收入增长 25%", "利润增长 40%", "用户数增长 20%", "80 万元", "100 万元", "50 万人", "图中未标数值"],
+      "claims": [
+        { "id": "revenue-growth", "title": "营业收入增长 25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" },
+        { "id": "profit-growth", "title": "利润增长 40%", "older": ["2024 年", 50, "万元"], "newer": ["2025 年", 70, "万元"], "status": "contradictory", "growthPercent": 100, "formula": "(100 - 50) / 50 × 100 = 100%", "evidence": "both", "correctedNewerValue": 100, "reasonIncludes": "用户手动更正" },
+        { "id": "user-count-growth", "title": "用户数增长 20%", "older": ["2024 年", 50, "万人"], "newer": ["2025 年", null, "万人"], "status": "needs-confirmation", "growthPercent": null, "formula": null, "evidence": "older-only", "reasonIncludes": "关键数值" }
+      ]
+    },
+    {
+      "id": "cross-a-revenue", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 120, "万元"], "imageLabels": ["年营业收入增长 25%", "2024 年", "2025 年", "80", "100", "全国门店", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "年营业收入增长 25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "cross-b-consistent", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 120, "万元"], "imageLabels": ["营业收入同比 +25%", "2024 年", "2025 年", "80", "100", "全国门店", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "营业收入同比 +25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "cross-b-conflict", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 160, "万元"], "imageLabels": ["营业收入增长 50%", "2024 年", "2025 年", "80", "120", "全国门店", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "营业收入增长 50%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 120, "万元"], "status": "consistent", "growthPercent": 50, "formula": "(120 - 80) / 80 × 100 = 50%", "evidence": "both" }]
+    },
+    {
+      "id": "cross-b-scope-mismatch", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 120, "万元"], "imageLabels": ["营业收入增长 25%", "2024 年", "2025 年", "80", "100", "直营门店", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "营业收入增长 25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "axis-zero-based", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 120, "万元"], "imageLabels": ["年营业收入增长 25%", "0", "120", "80", "100", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "年营业收入增长 25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "axis-truncated", "license": "team-created", "axisRisk": "misleading-risk", "axisRange": [80, 100, "万元"], "imageLabels": ["年营业收入增长 25%", "80", "100", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "年营业收入增长 25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "axis-unknown-start", "license": "team-created", "axisRisk": "needs-confirmation", "axisRange": [null, null, "万元"], "imageLabels": ["年营业收入增长 25%", "80", "100", "刻度已模糊"],
+      "claims": [{ "id": "revenue-growth", "title": "年营业收入增长 25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "eval-rounding", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 5, "万元"], "imageLabels": ["营业收入增长 33.33%", "2024 年", "2025 年", "3", "4", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "营业收入增长 33.33%", "older": ["2024 年", 3, "万元"], "newer": ["2025 年", 4, "万元"], "status": "consistent", "growthPercent": 33.33, "formula": "(4 - 3) / 3 × 100 = 33.33%", "evidence": "both" }]
+    },
+    {
+      "id": "eval-zero-base", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 60, "万元"], "imageLabels": ["营业收入增长 50%", "2024 年", "2025 年", "0", "50", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "营业收入增长 50%", "older": ["2024 年", 0, "万元"], "newer": ["2025 年", 50, "万元"], "status": "needs-confirmation", "growthPercent": null, "formula": null, "evidence": "both", "reasonIncludes": "旧值为 0" }]
+    },
+    {
+      "id": "eval-reversed-period", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 120, "万元"], "imageLabels": ["营业收入增长 25%", "2025 年", "2024 年", "80", "100", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "营业收入增长 25%", "older": ["2025 年", 80, "万元"], "newer": ["2024 年", 100, "万元"], "status": "needs-confirmation", "growthPercent": null, "formula": null, "evidence": "both", "reasonIncludes": "时间顺序" }]
+    },
+    {
+      "id": "eval-cross-period-mismatch", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 160, "万元"], "imageLabels": ["营业收入增长 50%", "2023 年", "2025 年", "80", "120", "全国门店", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "营业收入增长 50%", "older": ["2023 年", 80, "万元"], "newer": ["2025 年", 120, "万元"], "status": "consistent", "growthPercent": 50, "formula": "(120 - 80) / 80 × 100 = 50%", "evidence": "both" }]
+    },
+    {
+      "id": "eval-cross-unit-mismatch", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 120, "亿元"], "imageLabels": ["营业收入增长 25%", "2024 年", "2025 年", "80", "100", "全国门店", "亿元"],
+      "claims": [{ "id": "revenue-growth", "title": "营业收入增长 25%", "older": ["2024 年", 80, "亿元"], "newer": ["2025 年", 100, "亿元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "eval-axis-below-zero", "license": "team-created", "axisRisk": "ok", "axisRange": [-20, 120, "万元"], "axisSummaryIncludes": "低于零", "imageLabels": ["年营业收入增长 25%", "-20", "120", "80", "100", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "年营业收入增长 25%", "older": ["2024 年", 80, "万元"], "newer": ["2025 年", 100, "万元"], "status": "consistent", "growthPercent": 25, "formula": "(100 - 80) / 80 × 100 = 25%", "evidence": "both" }]
+    },
+    {
+      "id": "eval-decline", "license": "team-created", "axisRisk": "ok", "axisRange": [0, 120, "万元"], "imageLabels": ["营业收入同比 -20%", "2024 年", "2025 年", "100", "80", "万元"],
+      "claims": [{ "id": "revenue-growth", "title": "营业收入同比 -20%", "older": ["2024 年", 100, "万元"], "newer": ["2025 年", 80, "万元"], "status": "consistent", "growthPercent": -20, "formula": "(80 - 100) / 100 × 100 = -20%", "evidence": "both" }]
+    }
+  ],
+  "crossPairs": [
+    { "id": "cross-consistent", "current": "cross-a-revenue", "reference": "cross-b-consistent", "status": "consistent", "differencePoints": 0, "blockers": [] },
+    { "id": "cross-conflict", "current": "cross-a-revenue", "reference": "cross-b-conflict", "status": "contradictory", "differencePoints": 25, "blockers": [] },
+    { "id": "cross-scope-mismatch", "current": "cross-a-revenue", "reference": "cross-b-scope-mismatch", "status": "needs-confirmation", "differencePoints": null, "blockers": ["scope"], "reasonIncludes": "范围／人群" },
+    { "id": "cross-period-mismatch", "current": "cross-a-revenue", "reference": "eval-cross-period-mismatch", "status": "needs-confirmation", "differencePoints": null, "blockers": ["period"], "reasonIncludes": "时间" },
+    { "id": "cross-unit-mismatch", "current": "cross-a-revenue", "reference": "eval-cross-unit-mismatch", "status": "needs-confirmation", "differencePoints": null, "blockers": ["unit"], "reasonIncludes": "单位" }
+  ]
+}

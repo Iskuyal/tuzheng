@@ -1,4 +1,13 @@
-import type { ChartObservation } from "./audit.js";
+import type { AxisObservation, ChartObservation, RawDataPointObservation } from "./audit.js";
+
+type EvaluationSampleId =
+  | "eval-rounding"
+  | "eval-zero-base"
+  | "eval-reversed-period"
+  | "eval-cross-period-mismatch"
+  | "eval-cross-unit-mismatch"
+  | "eval-axis-below-zero"
+  | "eval-decline";
 
 export interface SampleCase {
   id:
@@ -12,11 +21,48 @@ export interface SampleCase {
     | "cross-b-scope-mismatch"
     | "axis-zero-based"
     | "axis-truncated"
-    | "axis-unknown-start";
+    | "axis-unknown-start"
+    | EvaluationSampleId;
   name: string;
   description: string;
   imageUrl: string;
   observation: ChartObservation;
+  /** 固定评测可直接按 id 载入，但不占用首页演示样例列表。 */
+  evaluationOnly?: boolean;
+}
+
+function evaluationBarSample(options: {
+  id: EvaluationSampleId;
+  name: string;
+  description: string;
+  title: string;
+  claimedGrowthPercent: number;
+  axis: AxisObservation;
+  older: RawDataPointObservation;
+  newer: RawDataPointObservation;
+  scope?: string | null;
+}): SampleCase {
+  return {
+    id: options.id,
+    name: options.name,
+    description: options.description,
+    imageUrl: `/samples/${options.id}.svg`,
+    evaluationOnly: true,
+    observation: {
+      source: "preset-example",
+      axis: options.axis,
+      claims: [{
+        id: "revenue-growth",
+        metric: "营业收入",
+        scope: options.scope ?? null,
+        claimText: options.title,
+        claimedGrowthPercent: options.claimedGrowthPercent,
+        older: options.older,
+        newer: options.newer,
+        unreadableItems: [],
+      }],
+    },
+  };
 }
 
 export const sampleCases: readonly SampleCase[] = [
@@ -397,4 +443,53 @@ export const sampleCases: readonly SampleCase[] = [
       }],
     },
   },
+  evaluationBarSample({
+    id: "eval-rounding", name: "固定评测：增长率舍入", description: "3 到 4，标题写增长 33.33%。",
+    title: "营业收入增长 33.33%", claimedGrowthPercent: 33.33,
+    axis: { label: "营业收入", min: 0, max: 5, unit: "万元" },
+    older: { period: "2024 年", value: 3, unit: "万元", evidenceText: "2024 年营业收入 3 万元" },
+    newer: { period: "2025 年", value: 4, unit: "万元", evidenceText: "2025 年营业收入 4 万元" },
+  }),
+  evaluationBarSample({
+    id: "eval-zero-base", name: "固定评测：旧值为零", description: "旧值为 0，不给增长率定论。",
+    title: "营业收入增长 50%", claimedGrowthPercent: 50,
+    axis: { label: "营业收入", min: 0, max: 60, unit: "万元" },
+    older: { period: "2024 年", value: 0, unit: "万元", evidenceText: "2024 年营业收入 0 万元" },
+    newer: { period: "2025 年", value: 50, unit: "万元", evidenceText: "2025 年营业收入 50 万元" },
+  }),
+  evaluationBarSample({
+    id: "eval-reversed-period", name: "固定评测：时间倒序", description: "标签从 2025 倒回 2024，保持待核对。",
+    title: "营业收入增长 25%", claimedGrowthPercent: 25,
+    axis: { label: "营业收入", min: 0, max: 120, unit: "万元" },
+    older: { period: "2025 年", value: 80, unit: "万元", evidenceText: "2025 年营业收入 80 万元" },
+    newer: { period: "2024 年", value: 100, unit: "万元", evidenceText: "2024 年营业收入 100 万元" },
+  }),
+  evaluationBarSample({
+    id: "eval-cross-period-mismatch", name: "固定评测：跨图时间不同", description: "同指标同范围，起始年份与基准图不同。",
+    title: "营业收入增长 50%", claimedGrowthPercent: 50, scope: "全国门店",
+    axis: { label: "营业收入", min: 0, max: 160, unit: "万元" },
+    older: { period: "2023 年", value: 80, unit: "万元", evidenceText: "2023 年营业收入 80 万元" },
+    newer: { period: "2025 年", value: 120, unit: "万元", evidenceText: "2025 年营业收入 120 万元" },
+  }),
+  evaluationBarSample({
+    id: "eval-cross-unit-mismatch", name: "固定评测：跨图单位不同", description: "同指标同时间，单位与基准图不同。",
+    title: "营业收入增长 25%", claimedGrowthPercent: 25, scope: "全国门店",
+    axis: { label: "营业收入", min: 0, max: 120, unit: "亿元" },
+    older: { period: "2024 年", value: 80, unit: "亿元", evidenceText: "2024 年营业收入 80 亿元" },
+    newer: { period: "2025 年", value: 100, unit: "亿元", evidenceText: "2025 年营业收入 100 亿元" },
+  }),
+  evaluationBarSample({
+    id: "eval-axis-below-zero", name: "固定评测：纵轴低于零", description: "纵轴从 -20 开始，数值差异没有放大。",
+    title: "年营业收入增长 25%", claimedGrowthPercent: 25, scope: "全国门店",
+    axis: { label: "营业收入", min: -20, max: 120, unit: "万元" },
+    older: { period: "2024 年", value: 80, unit: "万元", evidenceText: "2024 年营业收入 80 万元" },
+    newer: { period: "2025 年", value: 100, unit: "万元", evidenceText: "2025 年营业收入 100 万元" },
+  }),
+  evaluationBarSample({
+    id: "eval-decline", name: "固定评测：负增长", description: "100 到 80，标题写同比 -20%。",
+    title: "营业收入同比 -20%", claimedGrowthPercent: -20,
+    axis: { label: "营业收入", min: 0, max: 120, unit: "万元" },
+    older: { period: "2024 年", value: 100, unit: "万元", evidenceText: "2024 年营业收入 100 万元" },
+    newer: { period: "2025 年", value: 80, unit: "万元", evidenceText: "2025 年营业收入 80 万元" },
+  }),
 ];

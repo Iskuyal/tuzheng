@@ -8,6 +8,195 @@ test.beforeAll(async ({ request }) => {
     .toBe(200);
 });
 
+test("上传读取失败能辨认原因、重试，且不沿用旧结论", async ({ page, request }) => {
+  const preset = (await (await request.post("/api/audit/sample", { data: { id: "consistent" } })).json()).observation;
+  const failures = [
+    { status: 503, code: "MODEL_NOT_CONFIGURED", message: "实时视觉读取尚未配置。" },
+    { status: 504, code: "VISION_TIMEOUT", message: "图片读取超时。" },
+    { status: 502, code: "INVALID_MODEL_OUTPUT", message: "模型返回内容无法安全使用。" },
+    { status: 502, code: "VISION_REQUEST_FAILED", message: "暂时无法读取图片。" },
+  ];
+  let attempts = 0;
+  await page.route("**/api/audit/image", async (route) => {
+    const failure = failures[attempts++];
+    await route.fulfill(failure
+      ? { status: failure.status, json: { error: { code: failure.code, message: failure.message } } }
+      : { status: 200, json: { observation: { ...preset, source: "vision-model" } } });
+  });
+  await page.goto("/audit?sample=conflict");
+  await page.locator(".observation-form .confirm-button").click();
+  await expect(page.locator(".result-sheet .result-status")).toHaveText("图内矛盾");
+  await page.locator("#chart-upload").setInputFiles("web/public/samples/consistent.png");
+  await expect(page.locator(".result-sheet")).toHaveCount(0);
+  for (const failure of failures) {
+    await page.getByRole("button", { name: /读取整张图片/ }).click();
+    await expect(page.locator(".review-column .error-message")).toContainText(failure.message);
+    await expect(page.locator(".result-sheet, .claim-result-sheet")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "重试读取整张图片" })).toBeVisible();
+    if (failure.code === "MODEL_NOT_CONFIGURED") {
+      await expect(page.getByRole("link", { name: "前往模型设置并测试连接" })).toHaveAttribute("href", "/settings");
+    }
+  }
+  await page.getByRole("button", { name: "重试读取整张图片" }).click();
+  await expect(page.locator(".source-badge")).toHaveText("模型读取");
+  await expect(page.locator(".review-column .error-message")).toHaveCount(0);
+  await expect(page.locator(".result-sheet")).toHaveCount(0);
+  await page.locator("#chart-upload").setInputFiles({ name: "wrong.txt", mimeType: "text/plain", buffer: Buffer.from("x") });
+  await expect(page.locator(".review-column .error-message")).toContainText("请上传 PNG、JPG 或 WebP 图片");
+  await page.locator("#chart-upload").setInputFiles({ name: "large.png", mimeType: "image/png", buffer: Buffer.alloc(5 * 1024 * 1024 + 1) });
+  await expect(page.locator(".review-column .error-message")).toContainText("图片不能超过 5 MB");
+});
+
+test("取消、换图与重试使迟到的模型响应失效", async ({ page, request }) => {
+  const preset = (await (await request.post("/api/audit/sample", { data: { id: "consistent" } })).json()).observation;
+  const outdated = (await (await request.post("/api/audit/sample", { data: { id: "conflict" } })).json()).observation;
+  const modelObservation = { ...preset, source: "vision-model" };
+  const releases: Array<() => void> = [];
+  let started = 0;
+  let settled = 0;
+  let responseNumber = 0;
+  await page.route("**/api/audit/image", async (route) => {
+    const number = ++responseNumber;
+    started += 1;
+    if (number === 1 || number === 3) {
+      await new Promise<void>((resolve) => { releases.push(resolve); });
+    }
+    try {
+      await route.fulfill({ status: 200, json: { observation: number === 2 ? modelObservation : { ...outdated, source: "vision-model" } } });
+    } catch {
+      // 客户端主动取消后，浏览器可能已关闭这次请求。
+    } finally {
+      settled += 1;
+    }
+  });
+  await page.goto("/audit?sample=conflict");
+  await page.locator("#chart-upload").setInputFiles("web/public/samples/consistent.png");
+  await page.getByRole("button", { name: "读取整张图片" }).click();
+  await expect.poll(() => started).toBe(1);
+  await page.getByRole("button", { name: "取消读取" }).click();
+  await expect(page.locator(".review-column .error-message")).toContainText("已取消这次读取");
+  await page.getByRole("button", { name: "重试读取整张图片" }).click();
+  await expect(page.locator(".source-badge")).toHaveText("模型读取");
+  await expect(page.locator(".observation-form .claim-field input")).toHaveValue("25");
+  releases.shift()?.();
+  await expect.poll(() => settled).toBe(2);
+  await expect(page.locator(".source-badge")).toHaveText("模型读取");
+  await expect(page.locator(".observation-form .claim-field input")).toHaveValue("25");
+  await expect(page.locator(".review-column .error-message")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "读取整张图片" }).click();
+  await expect.poll(() => started).toBe(3);
+  if (await page.locator("#mobile-sample-select").isVisible()) {
+    await page.locator("#mobile-sample-select").selectOption("conflict");
+  } else {
+    await page.locator(".sample-button").filter({ hasText: "增长说法对不上" }).first().click();
+  }
+  await expect(page.locator(".source-badge")).toHaveText("预置示例");
+  releases.shift()?.();
+  await expect.poll(() => settled).toBe(3);
+  await expect(page.locator(".source-badge")).toHaveText("预置示例");
+  await expect(page.locator(".observation-form .claim-field input")).toHaveValue("40");
+});
+
+test("重新框选使旧区域的在途结果失效", async ({ page, request }) => {
+  const oldObservation = (await (await request.post("/api/audit/sample", { data: { id: "conflict" } })).json()).observation;
+  const newObservation = (await (await request.post("/api/audit/sample", { data: { id: "consistent" } })).json()).observation;
+  let releaseOld!: () => void;
+  let started = 0;
+  let settled = 0;
+  await page.route("**/api/audit/image", async (route) => {
+    const number = ++started;
+    if (number === 1) await new Promise<void>((resolve) => { releaseOld = resolve; });
+    try {
+      await route.fulfill({ status: 200, json: { observation: { ...(number === 1 ? oldObservation : newObservation), source: "vision-model" } } });
+    } catch {
+      // 旧选区请求取消后，浏览器可关闭连接。
+    } finally {
+      settled += 1;
+    }
+  });
+  await page.goto("/audit?sample=conflict");
+  await page.locator("#chart-upload").setInputFiles("web/public/samples/consistent.png");
+  const drawCrop = async (left: number) => {
+    const bounds = await page.locator(".crop-overlay").boundingBox();
+    expect(bounds).not.toBeNull();
+    if (!bounds) return;
+    await page.mouse.move(bounds.x + bounds.width * left, bounds.y + bounds.height * 0.25);
+    await page.mouse.down();
+    await page.mouse.move(bounds.x + bounds.width * (left + 0.25), bounds.y + bounds.height * 0.65);
+    await page.mouse.up();
+    await expect(page.locator(".pending-crop-preview")).toBeVisible();
+  };
+  await page.getByRole("button", { name: "框选证据区域" }).click();
+  await drawCrop(0.15);
+  await page.getByRole("button", { name: "读取选中区域" }).click();
+  await expect.poll(() => started).toBe(1);
+  await page.getByRole("button", { name: "重新框选" }).click();
+  await drawCrop(0.55);
+  releaseOld();
+  await expect.poll(() => settled).toBe(1);
+  await expect(page.locator(".source-badge")).toHaveCount(0);
+  await page.getByRole("button", { name: "读取选中区域" }).click();
+  await expect(page.locator(".observation-form .claim-field input")).toHaveValue("25");
+});
+
+test("更换对照样例失败时清除旧配对结论", async ({ page }) => {
+  await page.route("**/api/audit/sample", async (route) => {
+    if (route.request().postDataJSON()?.id === "cross-b-consistent") {
+      await route.fulfill({ status: 503, json: { error: { message: "对照样例暂时无法载入" } } });
+    } else {
+      await route.continue();
+    }
+  });
+  await page.goto("/audit?sample=cross-a-revenue");
+  const cross = page.locator(".cross-section");
+  await cross.locator("select").first().selectOption("cross-b-conflict");
+  await cross.locator(".cross-side-note .cross-confirm-button").click();
+  await page.locator(".observation-form .confirm-button").click();
+  await expect(cross.locator(".cross-result")).toBeVisible();
+  await cross.locator(".cross-swap select").selectOption("cross-b-consistent");
+  await expect(cross.locator(".cross-result")).toHaveCount(0);
+  await expect(cross.locator(".cross-body")).toHaveCount(0);
+  await expect(cross.locator(".error-message")).toContainText("对照图样例无法载入");
+});
+
+test("对照图读取失败在空状态可见并能重试", async ({ page, request }) => {
+  const preset = (await (await request.post("/api/audit/sample", { data: { id: "cross-b-consistent" } })).json()).observation;
+  let attempts = 0;
+  await page.route("**/api/audit/image", async (route) => {
+    attempts += 1;
+    await route.fulfill(attempts === 1
+      ? { status: 503, json: { error: { code: "MODEL_NOT_CONFIGURED", message: "实时视觉读取尚未配置。" } } }
+      : { status: 200, json: { observation: { ...preset, source: "vision-model" } } });
+  });
+  await page.goto("/audit?sample=cross-a-revenue");
+  await page.locator(".cross-empty input[type=file]").setInputFiles("web/public/samples/cross-b-consistent.png");
+  await page.getByRole("button", { name: "读取这张对照图" }).click();
+  await expect(page.locator(".cross-section .error-message")).toContainText("实时视觉读取尚未配置");
+  await expect(page.locator(".cross-section .error-message a")).toHaveAttribute("href", "/settings");
+  await expect(page.locator(".cross-result")).toHaveCount(0);
+  await page.getByRole("button", { name: "重试读取这张对照图" }).click();
+  await expect(page.locator(".cross-body")).toBeVisible();
+  await expect(page.locator(".cross-section .error-message")).toHaveCount(0);
+});
+
+test("样例清单迟到时不覆盖刚选择的上传图", async ({ page }) => {
+  let releaseSamples!: () => void;
+  let started = false;
+  await page.route("**/api/samples", async (route) => {
+    started = true;
+    await new Promise<void>((resolve) => { releaseSamples = resolve; });
+    await route.continue();
+  });
+  await page.goto("/audit");
+  await expect.poll(() => started).toBe(true);
+  await page.locator("#chart-upload").setInputFiles("web/public/samples/consistent.png");
+  releaseSamples();
+  await expect(page.locator(".image-stage img").first()).toHaveAttribute("alt", /上传图片预览/);
+  await expect(page.locator(".source-badge")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "读取整张图片" })).toBeVisible();
+});
+
 test("逐条核对、更正、重算，查看审计记录并重置", async ({ page }) => {
   await page.goto("/audit?sample=multi-claims");
 
@@ -403,4 +592,32 @@ test("口径记录区分图上原始观察与用户更正后的比对值", async
   const record = cross.locator(".cross-history li").first();
   await expect(record).toContainText("图上原始观察：2024 年 → 2025 年 / 2023 年");
   await expect(record).toContainText("确认时采用的口径：2023 年 → 2025 年 / 2023 年");
+});
+
+test("固定评测样例可按链接查看，舍入与零旧值各自给出正确状态", async ({ page }) => {
+  await page.goto("/audit?sample=eval-rounding");
+  await expect(page.locator(".source-badge")).toHaveText("预置示例");
+  await expect(page.locator(".image-stage img").first()).toHaveAttribute("src", "/samples/eval-rounding.svg");
+  await page.locator(".observation-form .confirm-button").click();
+  await expect(page.locator(".result-sheet .result-status").first()).toContainText("图内一致");
+  await expect(page.locator(".result-sheet .formula-line").first()).toContainText("33.33%");
+
+  await page.goto("/audit?sample=eval-zero-base");
+  await page.locator(".observation-form .confirm-button").click();
+  await expect(page.locator(".result-sheet .result-status").first()).toContainText("需要确认");
+  await expect(page.locator(".result-sheet .result-reasons").first()).toContainText("旧值为 0");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => document.documentElement.clientWidth + 1),
+  );
+
+  await page.goto("/audit?sample=missing-example-id");
+  await expect(page.locator(".image-stage img").first()).toHaveAttribute("src", "/samples/conflict.svg");
+  await expect(page.locator(".source-badge")).toHaveText("预置示例");
+
+  await page.goto("/audit?sample=eval-cross-period-mismatch");
+  const cross = page.locator(".cross-section");
+  await cross.locator("select").first().selectOption("cross-a-revenue");
+  await expect(cross.locator(".cross-element").nth(1).locator(".cross-element-state")).toHaveText("不一致");
+  await expect(cross.locator(".cross-gate")).toContainText("还差 时间");
+  await expect(cross.locator(".cross-result")).toHaveCount(0);
 });
