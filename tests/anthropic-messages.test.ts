@@ -56,6 +56,19 @@ describe("Anthropic Messages 发送器", () => {
     await expect(send(pingBody)).rejects.toMatchObject({ status: 429 });
   });
 
+  it("把上游错误正文带进错误信息，余额不足一类的问题可直接定位", async () => {
+    const send = createAnthropicMessagesRequester(config, {
+      timeoutMs: 1_000,
+      fetchImpl: async () => new Response(JSON.stringify({ error: { message: "Insufficient Balance" } }), { status: 402 }),
+    });
+
+    await expect(send(pingBody)).rejects.toMatchObject({
+      status: 402,
+      detail: expect.stringContaining("Insufficient Balance"),
+    });
+    await expect(send(pingBody)).rejects.toThrow(/HTTP 402/);
+  });
+
   it("响应不是有效 JSON 时抛出错误，不当成正常回复", async () => {
     const send = createAnthropicMessagesRequester(config, {
       timeoutMs: 1_000,
@@ -69,7 +82,7 @@ describe("Anthropic Messages 发送器", () => {
     const seen: AnthropicMessageRequestBody[] = [];
     const reply = await requestAnthropicToolCall(async (body) => {
       seen.push(body);
-      if (seen.length === 1) throw new AnthropicRequestError(400);
+      if (seen.length === 1) throw new AnthropicRequestError(400, "bad request");
       return { content: [{ type: "tool_use", name: "connection_check", input: { ok: true } }] };
     }, "connection_check", (variant) => ({
       model: "claude-x",
@@ -93,7 +106,7 @@ describe("Anthropic Messages 发送器", () => {
     let calls = 0;
     await expect(requestAnthropicToolCall(async () => {
       calls += 1;
-      throw new AnthropicRequestError(500);
+      throw new AnthropicRequestError(500, "server error");
     }, "connection_check", (variant) => ({
       model: "claude-x",
       max_tokens: 8,

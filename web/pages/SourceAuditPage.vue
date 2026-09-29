@@ -1,15 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import SiteHeader from "../components/SiteHeader.vue";
+import SourceClaimCard from "../components/SourceClaimCard.vue";
 import {
-  BASIS_LABELS,
-  CLAIM_STATUS_LABELS,
   TOOL_LABELS,
-  type ClaimSourceConclusion,
-  type ClaimSourceStatus,
   type PublicSourceLibraryEntry,
   type SourceClaim,
-  type SourceHit,
   type SourceInvestigationResult,
   type ToolTraceEvent,
 } from "../../shared/source-audit.js";
@@ -25,7 +21,7 @@ interface SourceAuditSample {
 
 interface ClaimRow {
   claim: SourceClaim;
-  conclusion: ClaimSourceConclusion | null;
+  conclusion: SourceInvestigationResult["conclusions"][number] | null;
   index: number;
 }
 
@@ -100,22 +96,6 @@ const citedSourceIds = computed(() => new Set(
   (result.value?.acceptedCitations ?? []).map((citation) => citation.sourceId),
 ));
 
-const hitById = computed(() => new Map((result.value?.hits ?? []).map((hit) => [hit.document.id, hit])));
-
-function statusLabel(status: ClaimSourceStatus): string {
-  return CLAIM_STATUS_LABELS[status];
-}
-
-function statusClass(status: ClaimSourceStatus): string {
-  return status === "source-match" ? "source-state-ok"
-    : status === "source-mismatch" ? "source-state-conflict"
-      : "source-state-pending";
-}
-
-function basisText(basis: "year-on-year" | "month-on-month" | null): string {
-  return basis ? BASIS_LABELS[basis] : "图上未写比较方式";
-}
-
 function toolLabel(tool: string): string {
   return TOOL_LABELS[tool] ?? tool;
 }
@@ -126,10 +106,6 @@ function traceStatusLabel(status: ToolTraceEvent["status"]): string {
 
 function formatDuration(ms: number): string {
   return ms >= 1000 ? `${(ms / 1000).toFixed(1)} 秒` : `${ms} 毫秒`;
-}
-
-function citationNote(sourceId: string): string {
-  return result.value?.acceptedCitations.find((citation) => citation.sourceId === sourceId)?.note ?? "";
 }
 
 /** 引用角色决定这份材料能支持哪一类判断，复查时要看得到。 */
@@ -383,27 +359,14 @@ async function runInvestigation(): Promise<void> {
             </div>
           </div>
           <p class="source-section-note">只列模型从图上读到的文字，不代表已确认。</p>
-          <article v-for="row in imageClaims" :key="`img-${row.index}`" class="source-claim-card">
-            <p class="source-claim-text">「{{ row.claim.claimText }}」</p>
-            <dl class="source-claim-meta">
-              <div><dt>指标</dt><dd>{{ row.claim.metric ?? "图上没写" }}</dd></div>
-              <div><dt>范围</dt><dd>{{ row.claim.scope ?? "图上没写" }}</dd></div>
-              <div><dt>月份</dt><dd>{{ row.claim.period ?? "图上没写" }}</dd></div>
-              <div><dt>数值</dt><dd>{{ row.claim.value ?? "图上没读清" }}</dd></div>
-              <div><dt>比较方式</dt><dd>{{ basisText(row.claim.basis) }}</dd></div>
-              <div v-if="row.claim.imageExcerpt"><dt>图上抄录</dt><dd>「{{ row.claim.imageExcerpt }}」</dd></div>
-            </dl>
-            <div v-if="row.conclusion" class="source-conclusion" :class="statusClass(row.conclusion.status)">
-              <span class="source-state-pill">{{ statusLabel(row.conclusion.status) }}</span>
-              <p class="source-conclusion-summary">{{ row.conclusion.summary }}</p>
-              <ul v-if="row.conclusion.reasons.length" class="source-reason-list">
-                <li v-for="reason in row.conclusion.reasons" :key="reason">{{ reason }}</li>
-              </ul>
-              <ul v-if="row.conclusion.unresolved.length" class="source-unresolved-list">
-                <li v-for="item in row.conclusion.unresolved" :key="item">未解决：{{ item }}</li>
-              </ul>
-            </div>
-          </article>
+          <SourceClaimCard
+            v-for="row in imageClaims"
+            :key="`img-${row.index}`"
+            :claim="row.claim"
+            :conclusion="row.conclusion"
+            :hits="result.hits"
+            :accepted-citations="result.acceptedCitations"
+          />
         </div>
 
         <div class="source-section">
@@ -414,35 +377,43 @@ async function runInvestigation(): Promise<void> {
             </div>
           </div>
           <p v-if="!captionClaims.length" class="source-section-note">模型没有从配文中拆出可核查主张。</p>
-          <article v-for="row in captionClaims" :key="`cap-${row.index}`" class="source-claim-card">
-            <p class="source-claim-text">「{{ row.claim.claimText }}」</p>
-            <dl class="source-claim-meta">
-              <div><dt>指标</dt><dd>{{ row.claim.metric ?? "未说明" }}</dd></div>
-              <div><dt>范围</dt><dd>{{ row.claim.scope ?? "未说明" }}</dd></div>
-              <div><dt>月份</dt><dd>{{ row.claim.period ?? "未说明" }}</dd></div>
-              <div><dt>数值</dt><dd>{{ row.claim.value ?? "未说明" }}</dd></div>
-              <div><dt>比较方式</dt><dd>{{ basisText(row.claim.basis) }}</dd></div>
-              <div><dt>类型</dt><dd>{{ row.claim.kind === "direct" ? "直接陈述" : "推断" }}</dd></div>
-            </dl>
-            <div v-if="row.conclusion" class="source-conclusion" :class="statusClass(row.conclusion.status)">
-              <span class="source-state-pill" data-testid="claim-source-status">
-                {{ statusLabel(row.conclusion.status) }}
-              </span>
-              <p class="source-conclusion-summary">{{ row.conclusion.summary }}</p>
-              <ul v-if="row.conclusion.reasons.length" class="source-reason-list">
-                <li v-for="reason in row.conclusion.reasons" :key="reason">{{ reason }}</li>
-              </ul>
-              <ul v-if="row.conclusion.citedSourceIds.length" class="source-cited-list">
-                <li v-for="sourceId in row.conclusion.citedSourceIds" :key="sourceId">
-                  引用：{{ hitById.get(sourceId)?.document.title ?? sourceId }}
-                  <span v-if="citationNote(sourceId)" class="source-cited-note">（{{ citationNote(sourceId) }}）</span>
-                </li>
-              </ul>
-              <ul v-if="row.conclusion.unresolved.length" class="source-unresolved-list">
-                <li v-for="item in row.conclusion.unresolved" :key="item">未解决：{{ item }}</li>
-              </ul>
+          <SourceClaimCard
+            v-for="row in captionClaims"
+            :key="`cap-${row.index}`"
+            :claim="row.claim"
+            :conclusion="row.conclusion"
+            :hits="result.hits"
+            :accepted-citations="result.acceptedCitations"
+          />
+        </div>
+
+        <div
+          v-if="result.omittedClaims.length || result.captionCoverageNote"
+          class="source-section source-omitted"
+          data-testid="omitted-claims"
+        >
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">边界</p>
+              <h2>本次没有核验的内容</h2>
             </div>
-          </article>
+          </div>
+          <p class="source-section-note">
+            单次最多核验三条主张。没有展开的内容在这里逐条保留原文，避免缩小范围前被默认成「已经查过」。
+          </p>
+          <ul class="source-omitted-list">
+            <li v-for="omitted in result.omittedClaims" :key="omitted.claimText">
+              <strong>「{{ omitted.claimText }}」</strong>
+              <span class="source-omitted-source">
+                {{ omitted.source === "caption" ? "配文未展开" : "图上说明／其他声明" }}
+              </span>
+              ：{{ omitted.reason }}
+            </li>
+          </ul>
+          <p v-if="result.captionCoverageNote" class="source-omitted-note">{{ result.captionCoverageNote }}</p>
+          <p v-if="result.captionCoverage !== null" class="source-section-note">
+            已展开主张覆盖配文约 {{ Math.round((result.captionCoverage ?? 0) * 100) }}%。
+          </p>
         </div>
 
         <div class="source-section">

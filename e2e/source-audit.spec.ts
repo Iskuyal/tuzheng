@@ -88,6 +88,7 @@ const IMAGE_CLAIM = {
   value: 0.8,
   basis: null,
   kind: "direct",
+  direction: null,
   fromImage: true,
   imageExcerpt: "2025 年 12 月全国 CPI 上涨 0.8%",
 };
@@ -100,9 +101,22 @@ const CAPTION_CLAIM = {
   value: 0.8,
   basis: "month-on-month",
   kind: "direct",
+  direction: null,
   fromImage: false,
   imageExcerpt: null,
 };
+
+/** 原文核对：配文主张与图上抄录各自记录出处与文字重合度。 */
+function originTrace(claim: typeof IMAGE_CLAIM | typeof CAPTION_CLAIM) {
+  return {
+    fromImage: claim.fromImage,
+    originText: claim.fromImage ? claim.imageExcerpt : "比上月上涨 0.8%。",
+    traceable: true,
+    coverage: 1,
+    matchedRun: claim.claimText,
+    note: null,
+  };
+}
 
 const FULL_INVESTIGATION = {
   model: "stub-source-model",
@@ -147,6 +161,9 @@ const FULL_INVESTIGATION = {
       citedSourceIds: ["stats-cpi-2025-12"],
       reasons: ["主张未说明同比或环比；所引《2025年12月份居民消费价格同比上涨0.8%》分别记载了不同比较方式，不能确定对应哪一个。"],
       unresolved: ["需要补充比较方式（同比／环比）才能继续核对。"],
+      parts: [],
+      origin: originTrace(IMAGE_CLAIM),
+      periodNote: null,
     },
     {
       claimText: CAPTION_CLAIM.claimText,
@@ -161,6 +178,9 @@ const FULL_INVESTIGATION = {
       citedSourceIds: ["stats-cpi-2025-12"],
       reasons: ["依据原句：12月份，全国居民消费价格环比上涨0.2%。"],
       unresolved: [],
+      parts: [],
+      origin: originTrace(CAPTION_CLAIM),
+      periodNote: null,
     },
   ],
   citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
@@ -180,6 +200,9 @@ const FULL_INVESTIGATION = {
   clarification: null,
   toolCallsUsed: 2,
   usage: { inputTokens: 157, outputTokens: 584 },
+  omittedClaims: [],
+  captionCoverage: 1,
+  captionCoverageNote: null,
 };
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
@@ -262,6 +285,144 @@ test("从自制图与配文走到带引用与工具轨迹的来源结论", async
   await expect(trace.nth(2)).toContainText("本轮超过 3 次工具调用上限");
 
   await expect(page.getByTestId("unresolved-items")).toContainText("未标注比较基准");
+  await expectNoHorizontalOverflow(page);
+});
+
+test("推断依据不足、观点与未展开内容逐条展示，主张卡可展开复查", async ({ page }) => {
+  const inferenceClaim = {
+    claimText: "8 月 CPI 比上月便宜",
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period: "2026-08",
+    value: null,
+    basis: "month-on-month",
+    kind: "inference",
+    direction: "down",
+    fromImage: false,
+    imageExcerpt: null,
+  };
+  const opinionClaim = {
+    claimText: "物价压力缓解说明政策效果显现",
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period: null,
+    value: null,
+    basis: null,
+    kind: "opinion",
+    direction: null,
+    fromImage: false,
+    imageExcerpt: null,
+  };
+  const pendingClaim = {
+    ...inferenceClaim,
+    claimText: "7 月 CPI 比上月便宜",
+    period: "2026-07",
+  };
+
+  const investigation = {
+    ...FULL_INVESTIGATION,
+    claims: [inferenceClaim, opinionClaim, pendingClaim],
+    conclusions: [
+      {
+        ...FULL_INVESTIGATION.conclusions[1],
+        claimText: inferenceClaim.claimText,
+        claimKind: "inference",
+        status: "source-mismatch",
+        summary: "与所引国家统计局发布《2026年8月份居民消费价格同比上涨0.8%》（2026-09-09）不一致：该发布记载环比 0.4%，方向为上涨，与这条推断断言的「下降」相反。",
+        basisLabel: "环比",
+        claimValue: null,
+        officialValue: 0.4,
+        difference: null,
+        citedSourceIds: ["stats-cpi-2026-08"],
+        reasons: ["依据原句：8月份，全国居民消费价格环比上涨0.4%。"],
+        unresolved: ["这条推断与所引发布的方向或数字不一致，需要复核配文使用的口径（同比／环比）与数值。"],
+        parts: [{ label: "推断结论", status: "contradicted", detail: "该发布记载环比 0.4%，方向为上涨，与这条推断断言的「下降」相反", sourceId: "stats-cpi-2026-08" }],
+        origin: originTrace({ ...CAPTION_CLAIM, claimText: inferenceClaim.claimText }),
+        periodNote: null,
+      },
+      {
+        ...FULL_INVESTIGATION.conclusions[0],
+        claimText: opinionClaim.claimText,
+        claimKind: "opinion",
+        status: "not-verifiable",
+        summary: "不支持核验：这条是观点或超出数据范围的判断，来源核验不对它做真假定论。",
+        basisLabel: null,
+        claimValue: null,
+        citedSourceIds: [],
+        reasons: [],
+        unresolved: [],
+        parts: [{ label: "可核验性", status: "insufficient", detail: "观点、原因、动机与超出数据的判断不在来源核验范围内，系统只核对可追溯的数据主张。", sourceId: null }],
+        origin: originTrace({ ...CAPTION_CLAIM, claimText: opinionClaim.claimText }),
+        periodNote: null,
+      },
+      {
+        ...FULL_INVESTIGATION.conclusions[0],
+        claimText: pendingClaim.claimText,
+        claimKind: "inference",
+        status: "inference-unsupported",
+        summary: "推断依据不足：本次没有可用于这条推断的适用来源（资料库没有 2026 年 7 月的发布）；这不代表结论为假，只是现有证据还不能推出它。",
+        basisLabel: "环比",
+        claimValue: null,
+        citedSourceIds: [],
+        reasons: ["资料库没有 2026 年 7 月的发布。"],
+        unresolved: ["需要 2026-07 的环比数据才能继续核对这条推断。"],
+        parts: [{ label: "推断结论", status: "insufficient", detail: "本次没有可用于这条推断的适用来源", sourceId: null }],
+        origin: originTrace({ ...CAPTION_CLAIM, claimText: pendingClaim.claimText }),
+        periodNote: "只写了「7 月」，年份按图上标注的 2026-07 补全。",
+      },
+    ],
+    omittedClaims: [
+      { claimText: "7 月 CPI 同比涨幅高于 8 月。", reason: "单次最多核验 3 条主张，这条配文主张没有展开，也没有参与结论。", source: "caption" },
+      { claimText: "同比涨幅连续两个月回落", reason: "模型声明这段内容没有展开；它不在配文里（可能是图上说明），本次没有核验。", source: "other" },
+    ],
+    captionCoverage: 0.62,
+    captionCoverageNote: "配文还有 1 处内容没有核验：「7 月 CPI 同比涨幅高于 8 月。」。缩小配文范围后可以重新核验。",
+  };
+
+  await page.route("**/api/source-audit/investigate", async (route) => {
+    await route.fulfill({ status: 200, json: { investigation } });
+  });
+
+  await page.goto("/source-audit");
+  await page.getByTestId("load-source-sample").click();
+  await expect(page.locator(".source-image-stage img")).toBeVisible();
+  await page.getByTestId("run-source-audit").click();
+
+  // 推断被适用来源改判：逐部位给出「来源矛盾」。
+  const inferenceCard = page.locator(".source-claim-card").filter({ hasText: inferenceClaim.claimText });
+  await expect(inferenceCard.locator(".source-kind-chip")).toHaveText("可检查推断");
+  await expect(inferenceCard.locator(".source-state-pill")).toHaveText("与来源不一致");
+  await expect(inferenceCard.getByTestId("claim-parts")).toContainText("推断结论 · 来源矛盾");
+  // 主张卡默认收起，点开后依据、缺口与未解决项可见。
+  await expect(inferenceCard.getByTestId("claim-parts")).toBeHidden();
+  await inferenceCard.locator("summary").click();
+  await expect(inferenceCard.getByTestId("claim-parts")).toBeVisible();
+  await expect(inferenceCard).toContainText("依据原句");
+
+  // 缺依据的推断给「推断依据不足」，明确不等于结论为假，并说明缺哪一项。
+  const pendingCard = page.locator(".source-claim-card").filter({ hasText: pendingClaim.claimText });
+  await expect(pendingCard.locator(".source-state-pill")).toHaveText("推断依据不足");
+  await expect(pendingCard).toContainText("不代表结论为假");
+  await expect(pendingCard).toContainText("需要 2026-07 的环比数据");
+  await expect(pendingCard).toContainText("年份按图上标注的 2026-07 补全");
+
+  // 观点不做真假判定。
+  const opinionCard = page.locator(".source-claim-card").filter({ hasText: opinionClaim.claimText });
+  await expect(opinionCard.locator(".source-kind-chip")).toHaveText("观点（不支持核验）");
+  await expect(opinionCard.locator(".source-state-pill")).toHaveText("不支持核验");
+  await expect(opinionCard).toContainText("不对它做真假定论");
+  await expect(opinionCard).not.toContainText("造假");
+
+  // 没有核验的内容逐条保留原文。
+  const omitted = page.getByTestId("omitted-claims");
+  await expect(omitted).toContainText("本次没有核验的内容");
+  await expect(omitted).toContainText("7 月 CPI 同比涨幅高于 8 月。");
+  await expect(omitted).toContainText("配文未展开");
+  // 模型声明的图上说明另列，不计入配文内容。
+  await expect(omitted).toContainText("同比涨幅连续两个月回落");
+  await expect(omitted).toContainText("图上说明／其他声明");
+  await expect(omitted).toContainText("配文还有 1 处内容没有核验");
+
   await expectNoHorizontalOverflow(page);
 });
 

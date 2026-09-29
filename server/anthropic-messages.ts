@@ -78,8 +78,8 @@ export interface AnthropicReply {
 export type AnthropicMessagesRequester = (body: AnthropicMessageRequestBody) => Promise<AnthropicReply>;
 
 export class AnthropicRequestError extends Error {
-  constructor(readonly status: number, options?: ErrorOptions) {
-    super(`Anthropic Messages 请求失败（HTTP ${status}）。`, options);
+  constructor(readonly status: number, readonly detail: string, options?: ErrorOptions) {
+    super(`Anthropic Messages 请求失败（HTTP ${status}）${detail ? `：${detail}` : ""}。`, options);
     this.name = "AnthropicRequestError";
   }
 }
@@ -176,7 +176,9 @@ export function createAnthropicMessagesRequester(
     });
 
     if (!response.ok) {
-      throw new AnthropicRequestError(response.status);
+      // 保留上游的错误正文：400 一类的问题只有靠它才能定位，排障时不用再猜。
+      const detail = await response.text().catch(() => "");
+      throw new AnthropicRequestError(response.status, detail.replace(/\s+/g, " ").slice(0, 400));
     }
     return await response.json() as AnthropicReply;
   };

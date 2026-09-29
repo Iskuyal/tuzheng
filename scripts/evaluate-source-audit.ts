@@ -27,8 +27,15 @@ import {
 import { SOURCE_LIBRARY, findSourceDocument, verifySourceLibrary } from "../shared/source-library.js";
 
 const armSchema = z.enum(["retrieval", "no-retrieval"]);
-const statusSchema = z.enum(["source-match", "source-mismatch", "source-pending"]);
+const statusSchema = z.enum([
+  "source-match",
+  "source-mismatch",
+  "source-pending",
+  "inference-unsupported",
+  "not-verifiable",
+]);
 const basisSchema = z.enum(["year-on-year", "month-on-month"]);
+const claimKindSchema = z.enum(["direct", "inference", "opinion"]);
 
 export type Arm = z.infer<typeof armSchema>;
 
@@ -58,6 +65,7 @@ export const questionsCatalogSchema = z.object({
 
 const claimSelectSchema = z.object({
   fromImage: z.boolean(),
+  kind: claimKindSchema.optional(),
   basis: basisSchema.nullable().optional(),
   value: z.number().optional(),
   period: z.string().regex(/^\d{4}-\d{2}$/).optional(),
@@ -76,6 +84,8 @@ const expectationSchema = z.object({
   requiredAcceptedCitations: z.array(z.string().min(1)).optional(),
   forbiddenValueBasisCitations: z.array(z.string().min(1)).optional(),
   noApplicableSource: z.boolean().optional(),
+  /** 配文超过三条或存在未覆盖内容时，本次运行必须给出明确提示。 */
+  incompleteNotice: z.boolean().optional(),
   expectationNote: z.string().optional(),
 }).strict();
 
@@ -122,6 +132,12 @@ export const REQUIRED_CATEGORIES = [
   "图上比较方式不明",
   "资料库无适用来源",
   "干扰来源命中",
+  "推断缺口",
+  "正确推断",
+  "错误推断",
+  "证据不足",
+  "观点不支持核验",
+  "主张拆解与覆盖",
 ] as const;
 
 export interface JudgmentProblem {
@@ -131,12 +147,17 @@ export interface JudgmentProblem {
 
 export interface JudgedConclusion {
   claimText: string;
+  kind: string;
+  direction: string | null;
   fromImage: boolean;
   basis: string | null;
   period: string | null;
   scope: string | null;
   value: number | null;
   status: ClaimSourceStatus;
+  parts: Array<{ label: string; status: string }>;
+  /** 程序按图上标注补全配文月份时的说明；没有补全时为 null。 */
+  periodNote: string | null;
   citedSourceIds: string[];
   summary: string;
 }
@@ -164,22 +185,33 @@ export interface RunRecord {
   recalledCitations: string[];
   hitIds: string[];
   excludedIds: string[];
+  omittedClaims: Array<{ claimText: string; source: string }>;
+  captionCoverage: number | null;
+  captionCoverageNote: string | null;
   judgment: { ok: boolean; problems: JudgmentProblem[] };
 }
 
 export function selectMatches(
-  claim: Pick<SourceClaim, "fromImage" | "basis" | "value" | "period">,
+  claim: Pick<SourceClaim, "fromImage" | "kind" | "basis" | "value" | "period">,
   select: ClaimSelect,
 ): boolean {
   if (claim.fromImage !== select.fromImage) return false;
+  if (select.kind !== undefined && claim.kind !== select.kind) return false;
   if ("basis" in select && (claim.basis ?? null) !== (select.basis ?? null)) return false;
   if (select.value !== undefined && (claim.value === null || Math.abs(claim.value - select.value) > 0.001)) return false;
   if (select.period !== undefined && normalizeSourcePeriod(claim.period) !== select.period) return false;
   return true;
 }
 
+const KIND_LABELS: Record<string, string> = {
+  direct: "直接陈述",
+  inference: "可检查推断",
+  opinion: "观点",
+};
+
 function selectLabel(select: ClaimSelect): string {
   const parts = [select.fromImage ? "图内主张" : "配文主张"];
+  if (select.kind !== undefined) parts.push(KIND_LABELS[select.kind] ?? select.kind);
   if ("basis" in select) parts.push(select.basis === null ? "无比较方式" : select.basis === "year-on-year" ? "同比" : "环比");
   if (select.value !== undefined) parts.push(`数值 ${select.value}`);
   if (select.period !== undefined) parts.push(`月份 ${select.period}`);
@@ -199,12 +231,16 @@ export function judgeRun(
     const claim = result.claims[index];
     return {
       claimText: conclusion.claimText,
+      kind: claim?.kind ?? "direct",
+      direction: claim?.direction ?? null,
       fromImage: conclusion.fromImage,
       basis: claim?.basis ?? null,
       period: claim?.period ?? null,
       scope: claim?.scope ?? null,
       value: conclusion.claimValue,
       status: conclusion.status,
+      parts: conclusion.parts.map((part) => ({ label: part.label, status: part.status })),
+      periodNote: conclusion.periodNote,
       citedSourceIds: conclusion.citedSourceIds,
       summary: conclusion.summary,
     };
@@ -270,8 +306,23 @@ export function judgeRun(
     }
   }
 
+  if (expectation.incompleteNotice) {
+    // 单次最多核验三条：模型声明的配文漏项、程序按覆盖度发现的漏项都算明确提示。
+    // 模型声明的图上说明文字另计，不当作配文内容。
+    const noticed = result.omittedClaims.some((claim) => claim.source === "caption")
+      || (result.captionCoverageNote ?? "").includes("配文里");
+    if (!noticed) {
+      problems.push({
+        kind: "missing-incomplete-notice",
+        detail: "配文还有内容没有核验，但本次既没有未展开的配文主张，也没有配文覆盖不足的提示。",
+      });
+    }
+  }
+
   if (expectation.noApplicableSource) {
-    for (const conclusion of conclusions.filter((entry) => entry.status !== "source-pending")) {
+    // 没有适用来源时允许的克制状态：待核对、推断依据不足、不支持核验都算没有下确定结论。
+    const restrained: ClaimSourceStatus[] = ["source-pending", "inference-unsupported", "not-verifiable"];
+    for (const conclusion of conclusions.filter((entry) => !restrained.includes(entry.status))) {
       problems.push({
         kind: "no-applicable-source-overclaim",
         detail: `没有适用来源的题却给出确定来源结论「${conclusion.claimText}」：${conclusion.status}。`,
@@ -282,8 +333,22 @@ export function judgeRun(
   return { ok: problems.length === 0, problems, conclusions };
 }
 
+/** 上游失败的原因文本一并留档：只记分类无法解释失败率，也无法复现。 */
+function failureCause(error: unknown): string {
+  const cause = (error as { cause?: unknown }).cause;
+  if (!cause) return "";
+  if (cause instanceof Error) {
+    const status = (cause as { status?: unknown }).status;
+    return `${cause.name}${typeof status === "number" ? ` ${status}` : ""}: ${cause.message}`.slice(0, 240);
+  }
+  return String(cause).slice(0, 240);
+}
+
 function classifyFailure(error: unknown): { kind: string; message: string } {
-  if (error instanceof SourceInvestigationError) return { kind: error.kind, message: error.message };
+  if (error instanceof SourceInvestigationError) {
+    const cause = failureCause(error);
+    return { kind: error.kind, message: cause ? `${error.message}（上游：${cause}）` : error.message };
+  }
   return { kind: "harness", message: error instanceof Error ? error.message : String(error) };
 }
 
@@ -319,6 +384,10 @@ export interface ArmSummary {
   /** 真实运行里模型主动提出的追问原文，逐条保留。 */
   clarificationQuestions: string[];
   noApplicableSourceOverclaims: number;
+  inferenceUnsupported: number;
+  notVerifiable: number;
+  omittedClaims: number;
+  otherOmittedText: number;
   averageLatencyMs: number | null;
   averageToolCalls: number | null;
 }
@@ -327,7 +396,7 @@ export interface QuestionPairSummary {
   questionId: string;
   categories: string[];
   perArm: Record<string, { attempts: number; validRuns: number; correctRuns: number; outcomes: string[] }>;
-  verdict: "仅检索臂正确" | "仅无检索臂正确" | "两臂相同" | "两臂均未通过";
+  verdict: "仅检索臂正确" | "仅无检索臂正确" | "两臂相同" | "两臂均未通过" | "无有效运行";
 }
 
 export interface GateResult {
@@ -349,6 +418,8 @@ const SHORT_STATUS: Record<ClaimSourceStatus, string> = {
   "source-match": "一致",
   "source-mismatch": "不一致",
   "source-pending": "待核对",
+  "inference-unsupported": "依据不足",
+  "not-verifiable": "不核验",
 };
 
 function describeRun(record: RunRecord): string {
@@ -391,6 +462,22 @@ export function summarizeEvaluation(records: RunRecord[], expectations: SourceAu
         (total, record) => total + record.judgment.problems.filter((problem) => problem.kind === "no-applicable-source-overclaim").length,
         0,
       ),
+      inferenceUnsupported: valid.reduce(
+        (total, record) => total + record.conclusions.filter((entry) => entry.status === "inference-unsupported").length,
+        0,
+      ),
+      notVerifiable: valid.reduce(
+        (total, record) => total + record.conclusions.filter((entry) => entry.status === "not-verifiable").length,
+        0,
+      ),
+      omittedClaims: valid.reduce(
+        (total, record) => total + record.omittedClaims.filter((claim) => claim.source === "caption").length,
+        0,
+      ),
+      otherOmittedText: valid.reduce(
+        (total, record) => total + record.omittedClaims.filter((claim) => claim.source !== "caption").length,
+        0,
+      ),
       averageLatencyMs: latencies.length > 0 ? Math.round(latencies.reduce((total, value) => total + value, 0) / latencies.length) : null,
       averageToolCalls: toolCalls.length > 0
         ? Number((toolCalls.reduce((total, value) => total + value, 0) / toolCalls.length).toFixed(2))
@@ -416,7 +503,9 @@ export function summarizeEvaluation(records: RunRecord[], expectations: SourceAu
     const noRetrieval = perArm["no-retrieval"];
     let verdict: QuestionPairSummary["verdict"] = "两臂相同";
     if (retrieval && noRetrieval) {
-      if (retrieval.correctRuns === 0 && noRetrieval.correctRuns > 0) verdict = "仅无检索臂正确";
+      // 两臂都没有有效运行时单列，避免把「上游全失败」读成「模型全答错」。
+      if (retrieval.validRuns === 0 && noRetrieval.validRuns === 0) verdict = "无有效运行";
+      else if (retrieval.correctRuns === 0 && noRetrieval.correctRuns > 0) verdict = "仅无检索臂正确";
       else if (retrieval.correctRuns > 0 && noRetrieval.correctRuns === 0) verdict = "仅检索臂正确";
       else if (retrieval.correctRuns === 0 && noRetrieval.correctRuns === 0) verdict = "两臂均未通过";
     }
@@ -479,7 +568,10 @@ export async function runPairedEvaluation(
         let result: SourceInvestigationResult | null = null;
         let failure: { kind: string; message: string } | null = null;
         try {
-          result = await runSourceInvestigation(driver, { allowSearch: arm === "retrieval" });
+          result = await runSourceInvestigation(driver, {
+            allowSearch: arm === "retrieval",
+            caption: question.caption,
+          });
         } catch (error) {
           failure = classifyFailure(error);
         }
@@ -508,6 +600,9 @@ export async function runPairedEvaluation(
             recalledCitations: [],
             hitIds: [],
             excludedIds: [],
+            omittedClaims: [],
+            captionCoverage: null,
+            captionCoverageNote: null,
             judgment: { ok: false, problems: [{ kind: "run-failed", detail: failure?.message ?? "运行失败。" }] },
           });
           log(`  ${question.id} [${arm}] #${run} 失败（${failure?.kind}）：${failure?.message ?? ""}`);
@@ -543,6 +638,9 @@ export async function runPairedEvaluation(
             .map((rejected) => rejected.sourceId),
           hitIds: [...hitIds],
           excludedIds: result.excludedSources.map((entry) => entry.sourceId),
+          omittedClaims: result.omittedClaims.map((entry) => ({ claimText: entry.claimText, source: entry.source })),
+          captionCoverage: result.captionCoverage,
+          captionCoverageNote: result.captionCoverageNote,
           judgment: { ok: judgment.ok, problems: judgment.problems },
         };
         records.push(record);
@@ -700,6 +798,7 @@ export function printReport(
       + `（${Object.entries(arm.failureKinds).map(([kind, count]) => `${kind}×${count}`).join("、") || "无"}）；`
       + `状态正确 ${arm.correctRuns}/${arm.validRuns}（${arm.accuracy === null ? "—" : `${(arm.accuracy * 100).toFixed(1)}%`}）；`
       + `接受引用 ${arm.acceptedCitations} 条，被拒绝引用 ${arm.rejectedCitations} 条，虚构 ${arm.fabricatedCitations} 条，凭记忆复用 ${arm.recalledCitations} 条；`
+      + `推断依据不足 ${arm.inferenceUnsupported} 条，不支持核验 ${arm.notVerifiable} 条，未展开配文内容 ${arm.omittedClaims} 条，模型声明的图上说明文字 ${arm.otherOmittedText} 条；`
       + `平均 ${arm.averageLatencyMs ?? "—"} ms，平均调用 ${arm.averageToolCalls ?? "—"} 次；`
       + `追问 ${arm.clarifications} 次；无来源说明 ${arm.noApplicableSourceReasons} 次；越界结论 ${arm.noApplicableSourceOverclaims} 次`,
     );

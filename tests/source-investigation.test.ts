@@ -16,7 +16,7 @@ import {
   SEARCH_TOOL_NAME,
 } from "../server/source-tools.js";
 import { SOURCE_INVESTIGATION_PROMPT, SOURCE_NO_RETRIEVAL_NOTE, sourceInvestigationPrompt } from "../server/source-prompt.js";
-import { TOOL_CALLS_PER_INVESTIGATION } from "../shared/source-audit.js";
+import { CAPTION_COVERAGE_MIN, TOOL_CALLS_PER_INVESTIGATION, searchSourceLibrary, type SourceClaim } from "../shared/source-audit.js";
 
 /** 替身驱动器：按脚本依次返回模型回复，并记录实际回传的工具结果。 */
 function scriptedDriver(replies: ToolLoopReply[], finalizeReply?: ToolLoopReply): SourceInvestigationDriver & {
@@ -412,6 +412,231 @@ describe("来源调查编排", () => {
       "source-pending",
     ]);
     expect(result.citationsRejected[0].reason).toContain("不在本次检索命中内");
+  });
+});
+
+describe("主张分类、推断缺口与未展开内容", () => {
+  function claimOf(overrides: Partial<SourceClaim> = {}): SourceClaim {
+    return {
+      claimText: "比上月上涨 0.8%",
+      metric: "全国居民消费价格",
+      scope: "全国",
+      period: "2025-12",
+      value: 0.8,
+      basis: "month-on-month",
+      kind: "direct",
+      direction: null,
+      fromImage: false,
+      imageExcerpt: null,
+      ...overrides,
+    };
+  }
+
+  function reportOf(options: {
+    claims: SourceClaim[];
+    citations?: unknown[];
+    omittedClaims?: string[];
+    unresolvedItems?: string[];
+    noApplicableSourceReason?: string | null;
+  }): ToolLoopCall {
+    return call(REPORT_TOOL_NAME, {
+      claims: options.claims,
+      citations: options.citations ?? [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+      noApplicableSourceReason: options.noApplicableSourceReason ?? null,
+      unresolvedItems: options.unresolvedItems ?? [],
+      omittedClaims: options.omittedClaims ?? [],
+    });
+  }
+
+  it("观点类主张标为不支持核验，不因为与来源不同或缺依据而判假", async () => {
+    const opinion = claimOf({
+      claimText: "CPI 涨幅回落说明政策效果显现",
+      value: null,
+      basis: null,
+      kind: "opinion",
+    });
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH] }),
+      reply({ calls: [reportOf({ claims: [opinion] })] }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, { caption: "CPI 涨幅回落说明政策效果显现" });
+
+    expect(result.conclusions[0].status).toBe("not-verifiable");
+    expect(result.conclusions[0].summary).toContain("不对它做真假定论");
+    expect(result.conclusions[0].summary).not.toMatch(/造假|错误|虚假/);
+  });
+
+  it("推断缺少适用环比来源时给「推断依据不足」，并说明缺哪一项依据", async () => {
+    const inference = claimOf({
+      claimText: "7 月 CPI 比上月便宜",
+      period: "2026-07",
+      value: null,
+      kind: "inference",
+      direction: "down",
+    });
+    const driver = scriptedDriver([
+      reply({ calls: [call(SEARCH_TOOL_NAME, { metric: "全国居民消费价格", period: "2026-07", scope: "全国" }, "s1")] }),
+      reply({ calls: [reportOf({
+        claims: [inference],
+        citations: [],
+        noApplicableSourceReason: "资料库没有 2026 年 7 月的发布。",
+      })] }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, { caption: "7 月 CPI 比上月便宜" });
+
+    expect(result.conclusions[0].status).toBe("inference-unsupported");
+    expect(result.conclusions[0].parts).toEqual([
+      expect.objectContaining({ label: "推断结论", status: "insufficient" }),
+    ]);
+    expect(result.conclusions[0].unresolved.join("")).toContain("2026-07");
+    expect(result.conclusions[0].summary).toContain("不代表结论为假");
+  });
+
+  it("有适用环比来源时按方向改判为与来源不一致", async () => {
+    const inference = claimOf({
+      claimText: "12 月 CPI 比上月便宜",
+      value: null,
+      kind: "inference",
+      direction: "down",
+    });
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH] }),
+      reply({ calls: [reportOf({ claims: [inference] })] }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, { caption: "12 月 CPI 比上月便宜" });
+
+    expect(result.conclusions[0].status).toBe("source-mismatch");
+    expect(result.conclusions[0].officialValue).toBe(0.2);
+    expect(result.conclusions[0].parts.map((part) => part.status)).toEqual(["contradicted"]);
+  });
+
+  it("模型汇报超过三条时不静默丢弃，多出的主张保留原文列进未展开项", async () => {
+    const caption = "12 月 CPI 同比上涨 0.8%。12 月 CPI 环比上涨 0.2%。比上月上涨 0.2%。比上月便宜。";
+    const claims = [
+      claimOf({ claimText: "12 月 CPI 同比上涨 0.8%", basis: "year-on-year", value: 0.8 }),
+      claimOf({ claimText: "12 月 CPI 环比上涨 0.2%", value: 0.2 }),
+      claimOf({ claimText: "比上月上涨 0.2%", value: 0.2 }),
+      claimOf({ claimText: "比上月便宜", value: null, kind: "inference", direction: "down" }),
+    ];
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH] }),
+      reply({ calls: [reportOf({ claims })] }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, { caption });
+
+    expect(result.claims).toHaveLength(3);
+    expect(result.conclusions).toHaveLength(3);
+    expect(result.omittedClaims).toEqual([
+      {
+        claimText: "比上月便宜",
+        reason: expect.stringContaining("单次最多核验 3 条"),
+        source: "caption",
+      },
+    ]);
+    expect(result.captionCoverageNote).toContain("没有核验");
+    expect(result.captionCoverageNote).toContain("比上月便宜");
+  });
+
+  it("配文里有主张没被展开时给出明确提示，并指名未覆盖的一段", async () => {
+    const caption = "12 月 CPI 同比上涨 0.8%。比上月上涨 0.2%。涨幅比 11 月回落。";
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH] }),
+      reply({ calls: [reportOf({
+        claims: [
+          claimOf({ claimText: "12 月 CPI 同比上涨 0.8%", basis: "year-on-year", value: 0.8 }),
+          claimOf({ claimText: "比上月上涨 0.2%", value: 0.2 }),
+        ],
+      })] }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, { caption });
+
+    expect(result.omittedClaims).toEqual([]);
+    expect(result.captionCoverage).toBeLessThan(CAPTION_COVERAGE_MIN);
+    expect(result.captionCoverageNote).toContain("没有被已核验主张覆盖");
+    expect(result.captionCoverageNote).toContain("涨幅比 11 月回落");
+  });
+
+  it("模型声明的未展开内容保留原文进入未展开项", async () => {
+    const caption = "12 月 CPI 同比上涨 0.8%。涨幅比 11 月回落，物价压力有所缓解。";
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH] }),
+      reply({ calls: [reportOf({
+        claims: [claimOf({ claimText: "12 月 CPI 同比上涨 0.8%", basis: "year-on-year", value: 0.8 })],
+        omittedClaims: ["涨幅比 11 月回落，物价压力有所缓解"],
+      })] }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, { caption });
+
+    expect(result.omittedClaims).toEqual([
+      { claimText: "涨幅比 11 月回落，物价压力有所缓解", reason: expect.stringContaining("模型说明"), source: "caption" },
+    ]);
+    // 模型自己声明了未展开内容，覆盖度提示仍然点名这段文字。
+    expect(result.captionCoverageNote).toContain("涨幅比 11 月回落");
+  });
+
+  it("模型把图上说明写进声明时不算配文漏项，也不计入配文未核验提示", async () => {
+    const caption = "8 月 CPI 比上月便宜。";
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH] }),
+      reply({ calls: [reportOf({
+        claims: [claimOf({ claimText: "8 月 CPI 比上月便宜", value: null, kind: "inference", direction: "down" })],
+        omittedClaims: ["同比涨幅连续两个月回落", "全国 · 2026 年 7—8 月 · 同比"],
+      })] }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, { caption });
+
+    expect(result.omittedClaims.map((claim) => claim.source)).toEqual(["other", "other"]);
+    expect(result.omittedClaims[0].reason).toContain("不在配文里");
+    expect(result.captionCoverage).toBe(1);
+    expect(result.captionCoverageNote).toContain("图上说明");
+    expect(result.captionCoverageNote).not.toContain("配文还有");
+  });
+
+  it("配文只写月份时按图上标注补全年份，结论落到具体发布", async () => {
+    const imageClaim = claimOf({
+      claimText: "2025 年 12 月全国 CPI 同比上涨 0.8%",
+      value: 0.8,
+      basis: "year-on-year",
+      fromImage: true,
+      imageExcerpt: "2025 年 12 月全国 CPI 同比上涨 0.8%",
+    });
+    const captionClaim = claimOf({ claimText: "12 月 CPI 比上月便宜", period: "12 月", value: null, kind: "inference", direction: "down" });
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH] }),
+      reply({ calls: [reportOf({ claims: [imageClaim, captionClaim] })] }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, { caption: "12 月 CPI 比上月便宜" });
+
+    expect(result.claims[1].period).toBe("2025-12");
+    expect(result.conclusions[1].periodNote).toContain("年份按图上标注的 2025-12 补全");
+    expect(result.conclusions[1].status).toBe("source-mismatch");
+  });
+
+  it("一条主张的引用问题不会套到另一条主张上", async () => {
+    const first = claimOf({ claimText: "12 月 CPI 比上月上涨 0.8%" });
+    const second = claimOf({ claimText: "2026 年 8 月 CPI 比上月上涨 0.4%", period: "2026-08", value: 0.4 });
+    const driver = scriptedDriver([
+      reply({ calls: [call(SEARCH_TOOL_NAME, { metric: "全国居民消费价格", period: "2025-12", scope: "全国" }, "s1")] }),
+      reply({ calls: [reportOf({ claims: [first, second], citations: [{ sourceId: "stats-cpi-2026-08", role: "value-basis", note: null }] })] }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, {
+      caption: "12 月 CPI 比上月上涨 0.8%。2026 年 8 月 CPI 比上月上涨 0.4%。",
+    });
+
+    expect(searchSourceLibrary({ metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: [] })
+      .map((hit) => hit.document.id)).toContain("stats-cpi-2025-12");
+    // 第一条与所引发布月份不符 → 待核对；第二条口径匹配 → 一致。互不套用。
+    expect(result.conclusions.map((conclusion) => conclusion.status)).toEqual(["source-pending", "source-match"]);
+    expect(result.conclusions[1].officialValue).toBe(0.4);
   });
 });
 

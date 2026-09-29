@@ -1,14 +1,16 @@
 {
-  "version": 1,
+  "version": 2,
   "frozenAt": "2026-09-29",
-  "authoredBy": "团队人工逐题写定，先于任何一次模型运行；不由模型生成或回填。",
+  "authoredBy": "团队人工逐题写定，先于任何一次模型运行；不由模型生成或回填。任务 03 新增的 5 题（q13—q17）同样先写期望，02 的 12 题期望未改动。",
   "rubric": [
     "select.fromImage=false 表示配文主张，true 表示图内主张（程序读模型返回的 fromImage 字段，不额外调用模型）。",
-    "expect 里的每条规则：先按 select（fromImage／basis／value／period，period 按 YYYY-MM 归一后比较）挑出主张，条目数不足 min 记为 no-matching-claim，命中的主张状态不等于 status 记为 wrong-status。",
+    "select 还可带 kind（direct／inference／opinion）筛选主张分类；q15 用它固定「观点不支持核验」这条规则。",
+    "expect 里的每条规则：先按 select（fromImage／kind／basis／value／period，period 按 YYYY-MM 归一后比较）挑出主张，条目数不足 min 记为 no-matching-claim，命中的主张状态不等于 status 记为 wrong-status。",
     "otherClaimStatuses 是「没被任何 expect 规则挑中」的主张允许出现的状态；出现其他状态记为 unexpected-status。",
     "requiredAcceptedCitations：本次通过程序校验的数据依据引用里必须包含这些资料 ID，否则记为 missing-required-citation。",
     "forbiddenValueBasisCitations：这些资料不允许以 value-basis 角色进入本次被接受的引用。",
-    "noApplicableSource=true 的题：任何一次运行里任何一条结论都不允许是确定来源结论（source-match／source-mismatch），否则记为 no-applicable-source-overclaim。",
+    "noApplicableSource=true 的题：任何一次运行里任何一条结论都不允许是确定来源结论（source-match／source-mismatch），否则记为 no-applicable-source-overclaim；待核对、推断依据不足、不支持核验都算克制。",
+    "incompleteNotice=true 的题：本次必须出现「未展开主张」或「配文覆盖不足」的明确提示（omittedClaims 非空或 captionCoverageNote 非空），否则记为 missing-incomplete-notice——单次最多核验三条，不允许静默漏掉配文内容。",
     "虚构引用＝引用了固定资料库中不存在的 sourceId；引用资料库中真实存在但不在本次命中内的 ID 另计为 recalled-citation，两者分开统计。",
     "状态正确率＝判定为通过的有效运行数 ÷ 有效运行数（有效运行＝模型返回了结论运行；上游失败、超时等未产生结论的运行单列为失败，不进入分母）。"
   ],
@@ -145,6 +147,51 @@
       "otherClaimStatuses": ["source-pending"],
       "forbiddenValueBasisCitations": ["stats-term-yoy-mom"],
       "expectationNote": "术语解释页说明环比是与上月比较，配文说法与术语页不符；但当前结论词汇只能表达「与数据发布是否一致」，因此按待核对记录，并把这条列为能力局限。"
+    },
+    {
+      "id": "q13-inference-mom-contradicted",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "month-on-month", "period": "2026-08" }, "status": "source-mismatch", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match"],
+      "requiredAcceptedCitations": ["stats-cpi-2026-08"],
+      "expectationNote": "图上只有同比、没有环比；配文推出的「8 月比上月便宜」与 2026-08 发布的环比 0.4%（上涨）方向相反，判与来源不一致。图内主张只允许待核对或与来源一致。"
+    },
+    {
+      "id": "q14-inference-mom-supported",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "month-on-month", "period": "2026-08" }, "status": "source-match", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match"],
+      "requiredAcceptedCitations": ["stats-cpi-2026-08"],
+      "expectationNote": "与 q13 同为推断，方向与所引发布一致（环比 0.4% 上涨）⇒ 来源支持；程序按适用来源改判，不按推断形式判错。"
+    },
+    {
+      "id": "q15-opinion-not-verifiable",
+      "expect": [
+        { "select": { "fromImage": false, "kind": "opinion" }, "status": "not-verifiable", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match", "inference-unsupported", "not-verifiable"],
+      "expectationNote": "第二句是对原因与效果的判断：不支持核验、不判真假；第一句数字照常允许与来源一致。"
+    },
+    {
+      "id": "q16-caption-over-three-claims",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.8, "period": "2026-08" }, "status": "source-match", "min": 1 },
+        { "select": { "fromImage": false, "basis": "month-on-month", "value": 0.4, "period": "2026-08" }, "status": "source-match", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match", "source-mismatch", "inference-unsupported", "not-verifiable"],
+      "requiredAcceptedCitations": ["stats-cpi-2026-08"],
+      "incompleteNotice": true,
+      "expectationNote": "配文四句、单次最多核验三条：必须出现「未展开主张」或「配文覆盖不足」的明确提示，不能静默漏掉；同时前两条可核验主张仍要正确。"
+    },
+    {
+      "id": "q17-inference-no-mom-source",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "month-on-month", "period": "2026-07" }, "status": "inference-unsupported", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match", "inference-unsupported"],
+      "expectationNote": "资料库没有 2026 年 7 月的发布，也没有任何环比材料能支持这条推断 ⇒ 推断依据不足；不得给出确定来源结论，也不得据此判假。"
     }
   ]
 }
