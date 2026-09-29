@@ -1,0 +1,60 @@
+name: CI
+
+# 只跑离线路径：不配置模型密钥，也不执行 `npm run eval:source-audit`（该脚本会调用真实模型并产生费用）。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    # 必须是 Windows：playwright.config.ts 与 scripts/verify-sample-renders.mjs 都用 channel: "msedge"，
+    # 依赖系统自带 Edge（Linux runner 上没有）。
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      # 这一步与下面 `npm run build` 内置的类型检查有意重复：单独成步便于快速定位是哪一层失败。
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: 构建
+        run: npm run build
+
+      - name: 单元与 API 行为测试
+        run: npm test
+
+      - name: 固定样例评测（不调用模型）
+        run: npm run eval:samples
+
+      - name: SVG→PNG 同源核对
+        # 该脚本逐字节比对 SHA-256，结果依赖本机 Edge 版本的字体栅格化；
+        # CI 的 Edge 版本与开发机不同，可能报与环境有关的假失败，因此只作为信号、不拦截合并。
+        continue-on-error: true
+        run: npm run verify:sample-renders
+
+      - name: 浏览器端到端测试（320／390／1280）
+        run: npm run test:e2e
+
+      - name: 上传 Playwright trace
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-trace
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
