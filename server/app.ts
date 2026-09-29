@@ -23,6 +23,23 @@ import {
 } from "./model-settings.js";
 import { parseVisionObservation } from "./observation.js";
 import { sampleCases } from "../shared/samples.js";
+import {
+  SOURCE_CPI_SAMPLE,
+  sourceAuditSamplePayload,
+} from "../shared/cpi-sample.js";
+import {
+  SOURCE_LIBRARY,
+  type SourceDocument,
+} from "../shared/source-library.js";
+import {
+  AnthropicSourceInvestigationDriver,
+  ResponsesSourceInvestigationDriver,
+  SourceInvestigationError,
+  runSourceInvestigation,
+  type SourceInvestigationDriver,
+} from "./source-investigation.js";
+import { SOURCE_INVESTIGATION_PROMPT } from "./source-prompt.js";
+import type { SourceInvestigationResult } from "../shared/source-audit.js";
 
 export interface UploadedChartImage {
   buffer: Buffer;
@@ -46,6 +63,12 @@ export interface AppOptions {
   visionAdapterFactory?: (settings: ModelSettings) => VisionAdapter;
   connectionTester?: (settings: ModelSettings) => Promise<ModelConnectionResult>;
   settingsStore?: ModelSettingsStore;
+  /** 来源调查的驱动器工厂；替身测试用它注入脚本化的模型回复。 */
+  investigationDriverFactory?: (
+    settings: ModelSettings,
+    image: UploadedChartImage,
+    caption: string,
+  ) => SourceInvestigationDriver;
 }
 
 function isCompletedModelEndpoint(value: string): boolean {
@@ -335,6 +358,92 @@ export function createApp(options: AppOptions = {}): Express {
       console.warn("视觉模型请求失败。");
       response.status(502).json({
         error: { code: "VISION_REQUEST_FAILED", message: "暂时无法读取图片，请稍后重试。" },
+      });
+    }
+  });
+
+  app.get("/api/source-audit/library", (_request, response) => {
+    response.json({
+      library: SOURCE_LIBRARY.map(({ measures, aliases, ...document }: SourceDocument) => ({
+        ...document,
+        measureCount: measures.length,
+        aliasCount: aliases.length,
+      })),
+    });
+  });
+
+  app.get("/api/source-audit/sample", (_request, response) => {
+    response.json({ sample: sourceAuditSamplePayload() });
+  });
+
+  app.post("/api/source-audit/investigate", upload.single("image"), async (request, response) => {
+    const caption = typeof request.body?.caption === "string" ? request.body.caption.trim() : "";
+    if (!caption) {
+      response.status(400).json({
+        error: { code: "CAPTION_REQUIRED", message: "请填写要核对的配文，至少一句话。" },
+      });
+      return;
+    }
+    if (caption.length > 400) {
+      response.status(400).json({
+        error: { code: "CAPTION_TOO_LONG", message: "配文请控制在 400 字以内。" },
+      });
+      return;
+    }
+    if (!request.file) {
+      response.status(400).json({
+        error: { code: "IMAGE_REQUIRED", message: "请选择一张 PNG、JPG 或 WebP 图片。" },
+      });
+      return;
+    }
+
+    const mimeType = detectImageMime(request.file.buffer);
+    if (!mimeType) {
+      response.status(415).json({
+        error: { code: "UNSUPPORTED_IMAGE", message: "图片内容无法识别，请使用 PNG、JPG 或 WebP。" },
+      });
+      return;
+    }
+
+    const image: UploadedChartImage = { buffer: request.file.buffer, mimeType };
+    const settings = await settingsStore.read();
+    const { provider, config } = activeProviderConfig(settings);
+    if (!config.apiKey.trim()) {
+      response.status(503).json({
+        error: {
+          code: "MODEL_NOT_CONFIGURED",
+          message: "来源核验需要调用模型选择工具。请前往模型设置页填写地址、模型名和 API Key。",
+        },
+      });
+      return;
+    }
+
+    const driver: SourceInvestigationDriver = options.investigationDriverFactory
+      ? options.investigationDriverFactory(settings, image, caption)
+      : provider === "anthropic"
+        ? new AnthropicSourceInvestigationDriver(config, image, caption, SOURCE_INVESTIGATION_PROMPT)
+        : new ResponsesSourceInvestigationDriver(config, image, caption, SOURCE_INVESTIGATION_PROMPT);
+
+    try {
+      const investigation: SourceInvestigationResult = await runSourceInvestigation(driver);
+      response.json({ investigation });
+    } catch (error) {
+      if (error instanceof SourceInvestigationError && error.kind === "timeout") {
+        response.status(504).json({
+          error: { code: "SOURCE_INVESTIGATION_TIMEOUT", message: "来源调查超时。请稍后重试或换用更小的图片。" },
+        });
+        return;
+      }
+      if (error instanceof SourceInvestigationError && error.kind === "invalid-output") {
+        console.warn("来源调查返回内容不符合要求。");
+        response.status(502).json({
+          error: { code: "SOURCE_INVESTIGATION_INVALID", message: "模型返回的调查结果无法安全使用。请重试。" },
+        });
+        return;
+      }
+      console.warn("来源调查请求失败。");
+      response.status(502).json({
+        error: { code: "SOURCE_INVESTIGATION_FAILED", message: "暂时无法完成来源调查，请稍后重试。" },
       });
     }
   });
