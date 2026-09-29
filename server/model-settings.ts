@@ -2,9 +2,10 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { z } from "zod";
+import { MODEL_PROVIDERS, type ModelProvider } from "../shared/model-providers.js";
 
-export const MODEL_PROVIDERS = ["openai-responses", "anthropic"] as const;
-export type ModelProvider = (typeof MODEL_PROVIDERS)[number];
+export { MODEL_PROVIDERS };
+export type { ModelProvider };
 
 export interface ProviderConfig {
   baseUrl: string;

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import SiteHeader from "../components/SiteHeader.vue";
-
-type ModelProvider = "openai-responses" | "anthropic";
+import type { ModelProvider } from "../../shared/model-providers.js";
+import { presetsFor, type ModelPreset } from "../../shared/model-presets.js";
 
 interface PublicProviderConfig {
   baseUrl: string;
@@ -80,6 +80,18 @@ const connectionMessage = ref("");
 const providerMeta = computed(() => PROVIDER_META[selectedProvider.value]);
 const activeDraft = computed(() => settings.value.providers[selectedProvider.value]);
 const credentialState = computed(() => activeDraft.value.hasApiKey ? "已保存到本机" : "尚未配置");
+const providerPresets = computed(() => presetsFor(selectedProvider.value));
+const presetHint = ref("");
+
+function applyPreset(event: Event): void {
+  const select = event.target as HTMLSelectElement;
+  const preset: ModelPreset | undefined = providerPresets.value.find((item) => item.id === select.value);
+  select.value = "";
+  if (!preset) return;
+  activeDraft.value.baseUrl = preset.baseUrl;
+  activeDraft.value.model = preset.model;
+  presetHint.value = `已填入${preset.label}（${preset.verification === "live" ? "已实测" : "按文档"}）：${preset.note}`;
+}
 
 function currentFormSettings() {
   return {
@@ -94,6 +106,7 @@ function currentFormSettings() {
 function resetKeyDraft(): void {
   apiKey.value = "";
   clearApiKey.value = false;
+  presetHint.value = "";
 }
 
 watch([
@@ -249,6 +262,17 @@ onMounted(loadSettings);
                 <option value="anthropic">Anthropic Messages</option>
               </select>
               <small>保存后用于图片读取；切换协议会带出该协议已保存的地址与模型，密钥留空会保留该协议已存密钥。</small>
+            </label>
+
+            <label class="settings-field">
+              <span>常用模型预设 <b>只收录支持图片输入的型号</b></span>
+              <select :value="''" :disabled="testingConnection" @change="applyPreset">
+                <option value="">选择预设以填入地址与模型…</option>
+                <option v-for="preset in providerPresets" :key="preset.id" :value="preset.id">
+                  {{ preset.label }}{{ preset.verification === "live" ? "（本项目已实测）" : "（官方文档）" }}
+                </option>
+              </select>
+              <small>{{ presetHint || "选取后覆盖当前协议的地址与模型，密钥不受影响；也可继续手动填写。" }}</small>
             </label>
 
             <label class="settings-field">

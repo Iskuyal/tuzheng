@@ -67,7 +67,7 @@ test("切换协议带出该协议已存配置，并按所选协议测试连接",
   await page.goto("/settings");
   const baseUrl = page.locator(".settings-field input[type=url]");
   const model = page.locator(".settings-field input[type=text]");
-  const providerSelect = page.locator(".settings-field select");
+  const providerSelect = page.locator(".settings-field select").first();
   await expect(baseUrl).toHaveValue("https://saved.example/v1");
   await expect(model).toHaveValue("saved-model");
 
@@ -88,6 +88,35 @@ test("切换协议带出该协议已存配置，并按所选协议测试连接",
   await providerSelect.selectOption("openai-responses");
   await expect(baseUrl).toHaveValue("https://saved.example/v1");
   await expect(page.locator(".settings-feedback.success-feedback")).toHaveCount(0);
+
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => document.documentElement.clientWidth + 1),
+  );
+});
+
+test("模型预设按协议过滤，选取后填入地址与型号", async ({ page }) => {
+  await page.route("**/api/settings", async (route) => {
+    await route.fulfill({ status: 200, json: { settings: storedSettings } });
+  });
+
+  await page.goto("/settings");
+  const baseUrl = page.locator(".settings-field input[type=url]");
+  const model = page.locator(".settings-field input[type=text]");
+  const providerSelect = page.locator(".settings-field select").first();
+  const presetSelect = page.locator(".settings-field select").nth(1);
+
+  await expect(presetSelect.locator("option")).toContainText(["OpenAI 官方 · GPT-4.1 mini"]);
+
+  await providerSelect.selectOption("anthropic");
+  await expect(presetSelect.locator("option")).toContainText([
+    "DeepSeek 官方 · V4.1 Flash 多模态",
+    "阿里云百炼 · 通义千问 VL Flash 多模态",
+  ]);
+
+  await presetSelect.selectOption("deepseek-anthropic-flash");
+  await expect(baseUrl).toHaveValue("https://api.deepseek.com/anthropic/v1");
+  await expect(model).toHaveValue("deepseek-flash");
+  await expect(page.getByText("已填入DeepSeek 官方 · V4.1 Flash 多模态", { exact: false })).toBeVisible();
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     await page.evaluate(() => document.documentElement.clientWidth + 1),

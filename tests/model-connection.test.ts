@@ -87,6 +87,7 @@ describe("Anthropic Messages 模型连接测试", () => {
       tool_choice: { type: "tool", name: "connection_check" },
     });
     expect(sent?.tools?.[0]?.input_schema).toMatchObject({ required: ["ok"] });
+    expect(sent?.thinking).toEqual({ type: "disabled" });
     expect(result).toMatchObject({ model: "claude-x" });
     expect(JSON.stringify(result)).not.toContain("test-secret");
   });

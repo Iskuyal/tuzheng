@@ -181,6 +181,8 @@ export async function testAnthropicConnection(
         },
       ],
       tool_choice: { type: "tool", name: CONNECTION_TOOL_NAME },
+      // DeepSeek 等提供方默认开启思考，思考模式会拒绝强制工具调用；连接测试关闭思考。
+      thinking: { type: "disabled" },
     });
   } catch (error) {
     throw classifyRequestError(error, provider);

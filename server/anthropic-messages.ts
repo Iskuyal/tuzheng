@@ -27,6 +27,8 @@ export interface AnthropicMessageRequestBody {
   messages: Array<{ role: "user"; content: AnthropicRequestContentBlock[] }>;
   tools?: AnthropicToolDefinition[];
   tool_choice?: { type: "tool"; name: string } | { type: "auto" } | { type: "any" };
+  /** 部分提供方（如 DeepSeek）默认开启思考，思考模式会拒绝强制工具调用；结构化提取显式关闭。 */
+  thinking?: { type: "disabled" } | { type: "enabled"; budget_tokens?: number };
 }
 
 export interface AnthropicToolUseBlock {
