@@ -149,6 +149,9 @@ test("更换对照样例失败时清除旧配对结论", async ({ page }) => {
     }
   });
   await page.goto("/audit?sample=cross-a-revenue");
+  // 主图载入完成后再动跨图区：载入结束会重置跨图会话，并把在途的对照图请求一并取消，
+  // 抢在载入途中选对照图会静默失效（CI 机器较慢时稳定复现，见阶段五任务 08）。
+  await expect(page.locator(".observation-form .title-field textarea")).toHaveValue("年营业收入增长 25%");
   const cross = page.locator(".cross-section");
   await cross.locator("select").first().selectOption("cross-b-conflict");
   await cross.locator(".cross-side-note .cross-confirm-button").click();
@@ -170,6 +173,7 @@ test("对照图读取失败在空状态可见并能重试", async ({ page, reque
       : { status: 200, json: { observation: { ...preset, source: "vision-model" } } });
   });
   await page.goto("/audit?sample=cross-a-revenue");
+  await expect(page.locator(".observation-form .title-field textarea")).toHaveValue("年营业收入增长 25%");
   await page.locator(".cross-empty input[type=file]").setInputFiles("web/public/samples/cross-b-consistent.png");
   await page.getByRole("button", { name: "读取这张对照图" }).click();
   await expect(page.locator(".cross-section .error-message")).toContainText("实时视觉读取尚未配置");
@@ -384,6 +388,7 @@ test("阶段一单主张路径仍可核对，操作区不重叠", async ({ page 
 
 test("跨图口径确认与纵轴对照在窄屏可完成", async ({ page }) => {
   await page.goto("/audit?sample=cross-a-revenue");
+  await expect(page.locator(".observation-form .title-field textarea")).toHaveValue("年营业收入增长 25%");
 
   // 放入对照图：口径四要素逐项显示
   const cross = page.locator(".cross-section");
@@ -449,6 +454,7 @@ test("跨图口径确认与纵轴对照在窄屏可完成", async ({ page }) => 
 
   // 重置审计连同跨图层一起清掉
   await page.goto("/audit?sample=cross-a-revenue");
+  await expect(page.locator(".observation-form .title-field textarea")).toHaveValue("年营业收入增长 25%");
   await cross.locator("select").first().selectOption("cross-b-conflict");
   await expect(cross.locator(".cross-element")).toHaveCount(4);
   await page.locator(".observation-form .confirm-button").click();
@@ -474,6 +480,7 @@ test("跨图口径确认与纵轴对照在窄屏可完成", async ({ page }) => 
 
 test("多主张会话重置清除跨图状态，口径确认留下可复查记录", async ({ page }) => {
   await page.goto("/audit?sample=multi-claims");
+  await expect(page.locator(".claim-observation-card")).toHaveCount(3);
   const cross = page.locator(".cross-section");
   const reset = page.getByRole("button", { name: "重置本次审计" });
 
@@ -511,6 +518,7 @@ test("多主张会话重置清除跨图状态，口径确认留下可复查记�
 
 test("已确认时间进入跨图口径，已读到的轴上限决定柱高", async ({ page }) => {
   await page.goto("/audit?sample=cross-a-revenue");
+  await expect(page.locator(".observation-form .title-field textarea")).toHaveValue("年营业收入增长 25%");
   const cross = page.locator(".cross-section");
   const reset = page.getByRole("button", { name: "重置本次审计" });
   await cross.locator("select").first().selectOption("cross-b-conflict");
@@ -535,6 +543,7 @@ test("已确认时间进入跨图口径，已读到的轴上限决定柱高", as
 
 test("重置会取消仍在载入的对照图", async ({ page }) => {
   await page.goto("/audit?sample=multi-claims");
+  await expect(page.locator(".claim-observation-card")).toHaveCount(3);
   let markStarted: () => void = () => {};
   let releaseResponse: () => void = () => {};
   const requestStarted = new Promise<void>((resolve) => { markStarted = resolve; });
@@ -615,6 +624,7 @@ test("固定评测样例可按链接查看，舍入与零旧值各自给出正�
   await expect(page.locator(".source-badge")).toHaveText("预置示例");
 
   await page.goto("/audit?sample=eval-cross-period-mismatch");
+  await expect(page.locator(".observation-form .title-field textarea")).toHaveValue("营业收入增长 50%");
   const cross = page.locator(".cross-section");
   await cross.locator("select").first().selectOption("cross-a-revenue");
   await expect(cross.locator(".cross-element").nth(1).locator(".cross-element-state")).toHaveText("不一致");
