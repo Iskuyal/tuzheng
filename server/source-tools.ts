@@ -1,7 +1,13 @@
 import { z } from "zod";
 import type { AnthropicToolDefinition } from "./anthropic-messages.js";
 import type { ComparisonBasis, SourceDocument } from "../shared/source-library.js";
-import type { CitationRole, SourceClaim, SourceClaimKind } from "../shared/source-audit.js";
+import {
+  AUDITED_CLAIMS_LIMIT,
+  MAX_CLAIMS_PER_REPORT,
+  type CitationRole,
+  type SourceClaim,
+  type SourceClaimKind,
+} from "../shared/source-audit.js";
 
 /** 模型可以选择的受限工具；服务端逐个校验工具名与参数，不执行模型生成的代码。 */
 export const SEARCH_TOOL_NAME = "search_source_library";
@@ -43,13 +49,15 @@ const claimSchema = z.object({
   period: z.string().trim().max(40).nullable().optional().default(null),
   value: z.number().finite().nullable().optional().default(null),
   basis: basisSchema.nullable().optional().default(null),
-  kind: z.enum(["direct", "inference"]).optional().default("direct"),
+  kind: z.enum(["direct", "inference", "opinion"]).optional().default("direct"),
+  direction: z.enum(["up", "down"]).nullable().optional().default(null),
   fromImage: z.boolean().optional().default(false),
   imageExcerpt: z.string().trim().max(300).nullable().optional().default(null),
 }).strict();
 
 export const reportArgumentsSchema = z.object({
-  claims: z.array(claimSchema).max(3),
+  // 结构上限高于单次核验上限：多出来的主张由程序移进未展开项并保留原文，不整份作废。
+  claims: z.array(claimSchema).max(MAX_CLAIMS_PER_REPORT),
   citations: z.array(z.object({
     sourceId: z.string().trim().min(1).max(80),
     role: z.enum(["value-basis", "term-explanation", "context"]).optional().default("value-basis"),
@@ -57,6 +65,8 @@ export const reportArgumentsSchema = z.object({
   }).strict()).optional().default([]),
   noApplicableSourceReason: z.string().trim().max(300).nullable().optional().default(null),
   unresolvedItems: z.array(z.string().trim().min(1).max(200)).max(8).optional().default([]),
+  /** 配文里没有展开成主张的原文片段；单次最多核验三条，其余必须留在这里。 */
+  omittedClaims: z.array(z.string().trim().min(1).max(300)).max(6).optional().default([]),
 }).strict();
 
 export interface ModelFinding {
@@ -64,6 +74,7 @@ export interface ModelFinding {
   citations: Array<{ sourceId: string; role: CitationRole; note: string | null }>;
   noApplicableSourceReason: string | null;
   unresolvedItems: string[];
+  omittedClaims: string[];
 }
 
 export function toModelFinding(input: z.infer<typeof reportArgumentsSchema>): ModelFinding {
@@ -76,6 +87,7 @@ export function toModelFinding(input: z.infer<typeof reportArgumentsSchema>): Mo
       value: claim.value,
       basis: claim.basis as ComparisonBasis | null,
       kind: claim.kind as SourceClaimKind,
+      direction: claim.direction,
       fromImage: claim.fromImage,
       imageExcerpt: claim.imageExcerpt,
     })),
@@ -86,6 +98,7 @@ export function toModelFinding(input: z.infer<typeof reportArgumentsSchema>): Mo
     })),
     noApplicableSourceReason: input.noApplicableSourceReason,
     unresolvedItems: input.unresolvedItems,
+    omittedClaims: input.omittedClaims,
   };
 }
 
@@ -109,12 +122,12 @@ export const reportToolSchema = {
   properties: {
     claims: {
       type: "array",
-      maxItems: 3,
+      maxItems: MAX_CLAIMS_PER_REPORT,
       items: {
         type: "object",
         additionalProperties: false,
         properties: {
-          claimText: { type: "string", description: "逐字保留的主张原文，不要改写。" },
+          claimText: { type: "string", description: "逐字保留的主张原文，不要改写；配文主张必须是配文里出现过的文字。" },
           metric: nullString,
           scope: nullString,
           period: nullString,
@@ -124,12 +137,22 @@ export const reportToolSchema = {
               { type: "string", enum: ["year-on-year", "month-on-month"] },
               { type: "null" },
             ],
-            description: "同比为 year-on-year，环比为 month-on-month；文中没写比较方式时填 null。",
+            description: "同比为 year-on-year，环比为 month-on-month；文中没写比较方式时填 null。推断类主张必须填它依赖的比较方式。",
           },
           kind: {
             type: "string",
-            enum: ["direct", "inference"],
-            description: "direct 为原文直接陈述，inference 为需要推出来的结论。",
+            enum: ["direct", "inference", "opinion"],
+            description:
+              "direct 为原文直接陈述；inference 为由原文推出、原文没有直接写的可检查结论（例如从「同比涨幅下降」推出「比上月便宜」）；"
+              + "opinion 为对原因、动机、价值或未来走势的观点，这类不支持核验，不会被判错。",
+          },
+          direction: {
+            anyOf: [
+              { type: "string", enum: ["up", "down"] },
+              { type: "null" },
+            ],
+            description:
+              "主张断言的价格水平方向：价格比上期更高填 up，更低填 down；没有方向、或主张说的是「涨幅回落／涨幅扩大」这类涨幅本身的变化时填 null。",
           },
           fromImage: { type: "boolean", description: "这条主张是否来自图片上的文字。" },
           imageExcerpt: {
@@ -137,8 +160,9 @@ export const reportToolSchema = {
             description: "从图上逐字抄录、支撑这条主张的文字。图上没有对应文字时填 null；程序会据此核对比较方式是否真的写在图上。",
           },
         },
-        required: ["claimText", "metric", "scope", "period", "value", "basis", "kind", "fromImage", "imageExcerpt"],
+        required: ["claimText", "metric", "scope", "period", "value", "basis", "kind", "direction", "fromImage", "imageExcerpt"],
       },
+      description: `最多核验 ${AUDITED_CLAIMS_LIMIT} 条主张；配文更长时，把没有展开的原文放进 omittedClaims，不能省略。`,
     },
     citations: {
       type: "array",
@@ -163,8 +187,13 @@ export const reportToolSchema = {
       description: "本次没有适用来源时说明原因；有适用来源时填 null。",
     },
     unresolvedItems: { type: "array", items: { type: "string" }, description: "证据不足、仍未解决的问题。" },
+    omittedClaims: {
+      type: "array",
+      items: { type: "string" },
+      description: `配文里没有展开成主张的原文片段（逐字保留）；配文超过 ${AUDITED_CLAIMS_LIMIT} 条主张时，多出来的必须写在这里，没有就填空数组。`,
+    },
   },
-  required: ["claims", "citations", "noApplicableSourceReason", "unresolvedItems"],
+  required: ["claims", "citations", "noApplicableSourceReason", "unresolvedItems", "omittedClaims"],
 };
 
 export const sourceToolDeclarations: AnthropicToolDefinition[] = [
@@ -204,7 +233,8 @@ export const sourceToolDeclarations: AnthropicToolDefinition[] = [
   },
   {
     name: REPORT_TOOL_NAME,
-    description: "结束调查并给出结构化结果。必须在看完工具结果之后再调用；引用只能来自本次检索命中的资料。",
+    description: "结束调查并给出结构化结果。必须在看完工具结果之后再调用；引用只能来自本次检索命中的资料。"
+      + `最多核验 ${AUDITED_CLAIMS_LIMIT} 条主张，未展开的配文内容必须写进 omittedClaims。`,
     input_schema: reportToolSchema,
   },
 ];

@@ -714,6 +714,175 @@ describe("CPI 图文来源核验 API", () => {
     expect(JSON.stringify(investigation)).not.toMatch(/造假|动机|已核实/);
   });
 
+  it("配文只写月份时按图上标注补全年份，并把补全说明写进结论", async () => {
+    const driver = scriptedSourceDriver([
+      sourceReply({
+        calls: [{
+          id: "s1",
+          name: "search_source_library",
+          input: { metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: ["环比"] },
+        }],
+      }),
+      sourceReply({
+        calls: [{
+          id: "r1",
+          name: "report_source_finding",
+          input: {
+            claims: [
+              {
+                claimText: "2025 年 12 月全国 CPI 上涨 0.8%",
+                metric: "全国居民消费价格",
+                scope: "全国",
+                period: "2025-12",
+                value: 0.8,
+                basis: null,
+                kind: "direct",
+                direction: null,
+                fromImage: true,
+                imageExcerpt: "2025 年 12 月全国 CPI 上涨 0.8%",
+              },
+              { ...captionedClaim, period: "12 月" },
+            ],
+            citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+            noApplicableSourceReason: null,
+            unresolvedItems: [],
+            omittedClaims: [],
+          },
+        }],
+      }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", "比上月上涨 0.8%")
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const investigation = response.body.investigation;
+    expect(investigation.claims[1].period).toBe("2025-12");
+    expect(investigation.conclusions[1].periodNote).toContain("年份按图上标注的 2025-12 补全");
+    expect(investigation.conclusions[1].status).toBe("source-mismatch");
+  });
+
+  it("观点与未展开内容随调查结果返回，观点不判假", async () => {
+    const driver = scriptedSourceDriver([
+      sourceReply({ calls: [{
+        id: "s1",
+        name: "search_source_library",
+        input: { metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: [] },
+      }] }),
+      sourceReply({
+        calls: [{
+          id: "r1",
+          name: "report_source_finding",
+          input: {
+            claims: [
+              captionedClaim,
+              {
+                claimText: "CPI 涨幅回落说明政策效果显现",
+                metric: "全国居民消费价格",
+                scope: "全国",
+                period: "2025-12",
+                value: null,
+                basis: null,
+                kind: "opinion",
+                direction: null,
+                fromImage: false,
+                imageExcerpt: null,
+              },
+            ],
+            citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+            noApplicableSourceReason: null,
+            unresolvedItems: [],
+            omittedClaims: ["12 月 CPI 比上月便宜"],
+          },
+        }],
+      }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+
+    const caption = "比上月上涨 0.8%。CPI 涨幅回落说明政策效果显现。12 月 CPI 比上月便宜。";
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", caption)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const investigation = response.body.investigation;
+    expect(investigation.conclusions[0].status).toBe("source-mismatch");
+    expect(investigation.conclusions[1]).toMatchObject({
+      status: "not-verifiable",
+      claimKind: "opinion",
+      officialValue: null,
+      difference: null,
+      parts: [{ label: "可核验性", status: "insufficient" }],
+    });
+    expect(investigation.conclusions[1].summary).toContain("不对它做真假定论");
+    expect(investigation.conclusions[1].summary).not.toMatch(/造假|虚假|错误/);
+    // 未展开的配文内容保留原文，并给出明确提示。
+    expect(investigation.omittedClaims).toEqual([
+      { claimText: "12 月 CPI 比上月便宜", reason: expect.stringContaining("模型说明"), source: "caption" },
+    ]);
+    expect(investigation.captionCoverageNote).toContain("12 月 CPI 比上月便宜");
+    expect(investigation.captionCoverage).toBeGreaterThan(0);
+  });
+
+  it("推断缺少适用环比来源时返回「推断依据不足」，并说明缺哪一项依据", async () => {
+    const driver = scriptedSourceDriver([
+      sourceReply({ calls: [{
+        id: "s1",
+        name: "search_source_library",
+        input: { metric: "全国居民消费价格", period: "2026-07", scope: "全国", terms: ["环比"] },
+      }] }),
+      sourceReply({
+        calls: [{
+          id: "r1",
+          name: "report_source_finding",
+          input: {
+            claims: [{
+              claimText: "7 月 CPI 比上月便宜",
+              metric: "全国居民消费价格",
+              scope: "全国",
+              period: "2026-07",
+              value: null,
+              basis: "month-on-month",
+              kind: "inference",
+              direction: "down",
+              fromImage: false,
+              imageExcerpt: null,
+            }],
+            citations: [],
+            noApplicableSourceReason: "资料库没有 2026 年 7 月的发布。",
+            unresolvedItems: [],
+            omittedClaims: [],
+          },
+        }],
+      }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", "7 月 CPI 比上月便宜。")
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const conclusion = response.body.investigation.conclusions[0];
+    expect(conclusion).toMatchObject({ status: "inference-unsupported", claimKind: "inference" });
+    expect(conclusion.unresolved.join("")).toContain("2026-07");
+    expect(conclusion.summary).toContain("不代表结论为假");
+  });
+
   it("缺少配文或图片时在调用模型前拒绝", async () => {
     let factoryCalls = 0;
     const app = createApp({

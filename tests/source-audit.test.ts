@@ -9,13 +9,17 @@ import {
 import {
   CLAIM_STATUS_LABELS,
   auditClaimsAgainstSources,
+  captionClaimCoverage,
   compareValues,
   basisMentionedInImage,
   evaluateApplicability,
+  fillClaimPeriodsFromImage,
   normalizeSourcePeriod,
   searchSourceLibrary,
+  traceClaimOrigin,
   validateCitations,
   type CitationRole,
+  type SourceClaim,
   type SourceHit,
 } from "../shared/source-audit.js";
 
@@ -520,5 +524,325 @@ describe("确定性数值比较", () => {
       summary: "两个数值相差 0.6%（0.8% 与 0.2%）。",
     });
     expect(compareValues(0.8, 0.8, "%").equal).toBe(true);
+  });
+});
+
+describe("主张原文的追溯", () => {
+  const imageClaim: SourceClaim = {
+    claimText: "2025 年 12 月全国 CPI 同比上涨 0.8%",
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period: "2025-12",
+    value: 0.8,
+    basis: "year-on-year",
+    kind: "direct",
+    fromImage: true,
+    imageExcerpt: "2025 年 12 月全国 CPI 同比上涨 0.8%",
+  };
+
+  it("配文里逐字出现的主张可追溯，并给出对应的原文片段", () => {
+    const trace = traceClaimOrigin(
+      { claimText: "比上月上涨 0.8%", fromImage: false, imageExcerpt: null },
+      { caption: "12 月 CPI 比上月上涨 0.8%。", imageClaims: [imageClaim] },
+    );
+    expect(trace.traceable).toBe(true);
+    expect(trace.coverage).toBe(1);
+    expect(trace.matchedRun).toContain("比上月上涨");
+    expect(trace.note).toBeNull();
+  });
+
+  it("模型把检索到的官方原句当成配文主张时判为不可追溯", () => {
+    const trace = traceClaimOrigin(
+      { claimText: "2025年12月份，全国居民消费价格同比上涨0.8%。", fromImage: false, imageExcerpt: null },
+      { caption: "比上月上涨 0.8%。", imageClaims: [imageClaim] },
+    );
+    expect(trace.traceable).toBe(false);
+    expect(trace.note).toContain("不是配文里的句子");
+  });
+
+  it("配文主张换了数字时，即使文字重合也判为不可追溯", () => {
+    const trace = traceClaimOrigin(
+      { claimText: "12 月 CPI 环比上涨 0.2%。", fromImage: false, imageExcerpt: null },
+      { caption: "12 月 CPI 同比上涨 0.8%。", imageClaims: [imageClaim] },
+    );
+    // 文字重合度够，但 0.2 既不在配文里也不在图上。
+    expect(trace.coverage).toBeGreaterThanOrEqual(0.3);
+    expect(trace.traceable).toBe(false);
+    expect(trace.note).toContain("都没有的数字");
+  });
+
+  it("配文主张没有配文原文时判为不可追溯", () => {
+    const trace = traceClaimOrigin({ claimText: "比上月上涨 0.8%", fromImage: false, imageExcerpt: null }, {});
+    expect(trace.traceable).toBe(false);
+    expect(trace.note).toContain("没有配文原文");
+  });
+
+  it("不可追溯的配文主张不给出来源结论，即使引用的是口径正确的发布", () => {
+    const hits = searchSourceLibrary(CPI_QUERY);
+    const outcome = auditClaimsAgainstSources({
+      claims: [{
+        claimText: "2025年12月份，全国居民消费价格同比上涨0.8%。",
+        metric: "全国居民消费价格",
+        scope: "全国",
+        period: "2025-12",
+        value: 0.8,
+        basis: "year-on-year",
+        kind: "direct",
+        fromImage: false,
+      }],
+      citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+      hits,
+      caption: "12 月 CPI 同比上涨 0.8%。",
+    });
+
+    expect(outcome.conclusions[0].status).toBe("source-pending");
+    expect(outcome.conclusions[0].summary).toContain("配文原文里找不到");
+    expect(outcome.conclusions[0].origin.traceable).toBe(false);
+    expect(outcome.conclusions[0].difference).toBeNull();
+  });
+});
+
+describe("配文月份按图补全", () => {
+  const imageClaim = (period: string): SourceClaim => ({
+    claimText: `图上写 ${period}`,
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period,
+    value: 0.8,
+    basis: "year-on-year",
+    kind: "direct",
+    fromImage: true,
+    imageExcerpt: `图上写 ${period}`,
+  });
+
+  it("配文只写月份时按图上标注补全年份", () => {
+    const result = fillClaimPeriodsFromImage([
+      imageClaim("2025-12"),
+      { claimText: "12 月 CPI 同比上涨 0.8%", metric: "全国居民消费价格", scope: "全国", period: "12 月", value: 0.8, basis: "year-on-year", kind: "direct", fromImage: false },
+    ]);
+    expect(result.claims[1].period).toBe("2025-12");
+    expect(result.notes[0]).toBeNull();
+    expect(result.notes[1]).toContain("按图上标注的 2025-12 补全");
+  });
+
+  it("图上没有年份或出现多个年份时不猜，并说明原因", () => {
+    const noYear = fillClaimPeriodsFromImage([
+      imageClaim("12 月"),
+      { claimText: "12 月 CPI 上涨 0.8%", metric: null, scope: null, period: "12 月", value: 0.8, basis: null, kind: "direct", fromImage: false },
+    ]);
+    expect(noYear.claims[1].period).toBe("12 月");
+    expect(noYear.notes[1]).toContain("图上没有可用的年份");
+
+    const twoYears = fillClaimPeriodsFromImage([
+      imageClaim("2025-12"),
+      imageClaim("2026-12"),
+      { claimText: "12 月 CPI 上涨 0.8%", metric: null, scope: null, period: "12 月", value: 0.8, basis: null, kind: "direct", fromImage: false },
+    ]);
+    expect(twoYears.claims[2].period).toBe("12 月");
+    expect(twoYears.notes[2]).toContain("多个年份");
+  });
+
+  it("补全后的月份能让结论落到具体发布，而不是退回待核对", () => {
+    const { claims, notes } = fillClaimPeriodsFromImage([
+      imageClaim("2025-12"),
+      { claimText: "比上月上涨 0.8%", metric: "全国居民消费价格", scope: "全国", period: "12 月", value: 0.8, basis: "month-on-month", kind: "direct", fromImage: false },
+    ]);
+    const outcome = auditClaimsAgainstSources({
+      claims,
+      citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+      hits: searchSourceLibrary(CPI_QUERY),
+      caption: "比上月上涨 0.8%",
+      periodNotes: notes,
+    });
+    expect(outcome.conclusions[1].status).toBe("source-mismatch");
+    expect(outcome.conclusions[1].periodNote).toContain("年份按图上标注的 2025-12 补全");
+  });
+});
+
+describe("推断缺口", () => {
+  const hits = searchSourceLibrary(CPI_QUERY);
+  const releaseCitation = [{ sourceId: "stats-cpi-2025-12", role: "value-basis" as const, note: null }];
+
+  const inferenceClaim = (overrides: Partial<SourceClaim> = {}): SourceClaim => ({
+    claimText: "12 月 CPI 比上月便宜",
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period: "2025-12",
+    value: null,
+    basis: "month-on-month",
+    kind: "inference",
+    direction: "down",
+    fromImage: false,
+    imageExcerpt: null,
+    ...overrides,
+  });
+
+  it("有适用环比来源时按方向改判：与发布相反即为来源不一致", () => {
+    const outcome = auditClaimsAgainstSources({
+      claims: [inferenceClaim()],
+      citations: releaseCitation,
+      hits,
+      caption: "12 月 CPI 比上月便宜",
+    });
+
+    const [conclusion] = outcome.conclusions;
+    expect(conclusion.status).toBe("source-mismatch");
+    expect(conclusion.parts.map((part) => [part.label, part.status])).toEqual([["推断结论", "contradicted"]]);
+    expect(conclusion.officialValue).toBe(0.2);
+    expect(conclusion.summary).toContain("环比 0.2%");
+    expect(conclusion.summary).toContain("与这条推断断言的「下降」相反");
+    // 数字对不上不等于造假，措辞不越界。
+    expect(conclusion.summary).not.toMatch(/造假|动机|虚假/);
+  });
+
+  it("方向与发布一致时标为来源支持", () => {
+    const outcome = auditClaimsAgainstSources({
+      claims: [inferenceClaim({ claimText: "12 月 CPI 比上月上涨", direction: "up" })],
+      citations: releaseCitation,
+      hits,
+      caption: "12 月 CPI 比上月上涨",
+    });
+    expect(outcome.conclusions[0].status).toBe("source-match");
+    expect(outcome.conclusions[0].parts[0].status).toBe("supported");
+    expect(outcome.conclusions[0].summary).toContain("支持这条推断");
+  });
+
+  it("没有适用环比来源时判为推断依据不足，并说明缺哪一项", () => {
+    const outcome = auditClaimsAgainstSources({
+      claims: [inferenceClaim({ period: "2026-07", claimText: "7 月 CPI 比上月便宜" })],
+      citations: [],
+      hits: searchSourceLibrary({ metric: "全国居民消费价格", period: "2026-07", scope: "全国", terms: [] }),
+      caption: "7 月 CPI 比上月便宜",
+      noApplicableSourceReason: "资料库没有 2026 年 7 月的发布。",
+    });
+
+    const [conclusion] = outcome.conclusions;
+    expect(conclusion.status).toBe("inference-unsupported");
+    expect(CLAIM_STATUS_LABELS[conclusion.status]).toBe("推断依据不足");
+    expect(conclusion.parts).toEqual([
+      { label: "推断结论", status: "insufficient", detail: expect.stringContaining("没有可用于这条推断的适用来源"), sourceId: null },
+    ]);
+    expect(conclusion.unresolved.join("")).toContain("2026-07");
+    expect(conclusion.unresolved.join("")).toContain("环比");
+    expect(conclusion.summary).toContain("不代表结论为假");
+    expect(conclusion.officialValue).toBeNull();
+  });
+
+  it("数字正确但缺少推断所依赖的口径时，整句仍给依据不足", () => {
+    const outcome = auditClaimsAgainstSources({
+      claims: [inferenceClaim({
+        claimText: "12 月 CPI 同比上涨 0.8%，所以比上月便宜",
+        value: 0.8,
+        basis: "month-on-month",
+        direction: "down",
+      })],
+      citations: [{ sourceId: "stats-cpi-2026-08", role: "value-basis", note: null }],
+      hits,
+      caption: "12 月 CPI 同比上涨 0.8%，所以比上月便宜",
+    });
+    // 引用的发布月份与主张不符：数值无法核对，整句保持依据不足而不是「一致」。
+    expect(outcome.conclusions[0].status).toBe("inference-unsupported");
+    expect(outcome.conclusions[0].difference).toBeNull();
+  });
+
+  it("推断没有写明比较方式时不给猜测结论，但仍要求它给出数值或方向", () => {
+    // 有方向、缺比较方式 → 依据不足，并说明缺的是比较方式。
+    const noBasis = auditClaimsAgainstSources({
+      claims: [inferenceClaim({ basis: null, claimText: "12 月 CPI 比上月便宜" })],
+      citations: releaseCitation,
+      hits,
+      caption: "12 月 CPI 比上月便宜",
+    });
+    expect(noBasis.conclusions[0].status).toBe("inference-unsupported");
+    expect(noBasis.conclusions[0].summary).toContain("没有写明它依赖的比较方式");
+
+    // 既没有数值也没有方向（例如术语类主张）→ 不替它下「依据不足」，退回来源待核对。
+    const noAnchor = auditClaimsAgainstSources({
+      claims: [inferenceClaim({ basis: null, direction: null, claimText: "12 月 CPI 环比是跟上年同期比出来的" })],
+      citations: releaseCitation,
+      hits,
+      caption: "12 月 CPI 环比是跟上年同期比出来的",
+    });
+    expect(noAnchor.conclusions[0].status).toBe("source-pending");
+    expect(noAnchor.conclusions[0].summary).toContain("没有给出数值，也没有写明价格涨跌方向");
+    expect(noAnchor.conclusions[0].parts[0].status).toBe("insufficient");
+  });
+});
+
+describe("观点不做真假判定", () => {
+  it("观点标为不支持核验，不套用数值结论也不判假", () => {
+    const hits = searchSourceLibrary(CPI_QUERY);
+    const outcome = auditClaimsAgainstSources({
+      claims: [{
+        claimText: "CPI 涨幅回落说明政策效果显现",
+        metric: "全国居民消费价格",
+        scope: "全国",
+        period: "2025-12",
+        value: null,
+        basis: null,
+        kind: "opinion",
+        fromImage: false,
+        imageExcerpt: null,
+      }],
+      citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+      hits,
+      caption: "CPI 涨幅回落说明政策效果显现",
+    });
+
+    const [conclusion] = outcome.conclusions;
+    expect(conclusion.status).toBe("not-verifiable");
+    expect(CLAIM_STATUS_LABELS[conclusion.status]).toBe("不支持核验");
+    expect(conclusion.summary).toContain("不对它做真假定论");
+    expect(conclusion.officialValue).toBeNull();
+    expect(conclusion.difference).toBeNull();
+    expect(conclusion.summary).not.toMatch(/造假|动机|虚假|错误/);
+    expect(conclusion.parts[0].label).toBe("可核验性");
+  });
+});
+
+describe("配文覆盖度", () => {
+  const caption = "8 月 CPI 同比上涨 0.8%，比上月上涨 0.4%。涨幅比 7 月回落。物价压力有所缓解。";
+  const claim = (claimText: string): SourceClaim => ({
+    claimText,
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period: "2026-08",
+    value: null,
+    basis: null,
+    kind: "direct",
+    fromImage: false,
+    imageExcerpt: null,
+  });
+
+  it("主张覆盖了配文时给出高覆盖度", () => {
+    const coverage = captionClaimCoverage([claim(caption)], caption);
+    expect(coverage.coverage).toBeGreaterThan(0.9);
+    expect(coverage.uncovered).toBeNull();
+  });
+
+  it("逐句展开的配文覆盖度按每句在配文里的位置累加，不误报漏项", () => {
+    const splitCaption = "2026 年 8 月 CPI 同比上涨 0.8%。8 月 CPI 比上月上涨 0.4%。7 月 CPI 比上月便宜。物价压力缓解。";
+    const coverage = captionClaimCoverage([
+      claim("2026 年 8 月 CPI 同比上涨 0.8%。"),
+      claim("8 月 CPI 比上月上涨 0.4%。"),
+      claim("7 月 CPI 比上月便宜。"),
+      claim("物价压力缓解。"),
+    ], splitCaption);
+    expect(coverage.coverage).toBeGreaterThan(0.9);
+    expect(coverage.uncovered).toBeNull();
+  });
+
+  it("配文里没有被任何主张覆盖的一段会被指出", () => {
+    const coverage = captionClaimCoverage([claim("8 月 CPI 同比上涨 0.8%")], caption);
+    expect(coverage.coverage).toBeLessThan(0.6);
+    expect(coverage.uncovered).toContain("物价压力");
+  });
+
+  it("没有任何配文主张时覆盖度为零", () => {
+    const coverage = captionClaimCoverage([], caption);
+    expect(coverage.coverage).toBe(0);
+    // 未覆盖段是归一化后的配文全文（去空白与标点）。
+    expect(coverage.uncovered).toContain("物价压力有所缓解");
+    expect(coverage.uncovered?.length).toBeGreaterThan(20);
   });
 });

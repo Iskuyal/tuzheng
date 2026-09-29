@@ -425,7 +425,7 @@ export function createApp(options: AppOptions = {}): Express {
         : new ResponsesSourceInvestigationDriver(config, image, caption, SOURCE_INVESTIGATION_PROMPT);
 
     try {
-      const investigation: SourceInvestigationResult = await runSourceInvestigation(driver);
+      const investigation: SourceInvestigationResult = await runSourceInvestigation(driver, { caption });
       response.json({ investigation });
     } catch (error) {
       if (error instanceof SourceInvestigationError && error.kind === "timeout") {
@@ -441,7 +441,7 @@ export function createApp(options: AppOptions = {}): Express {
         });
         return;
       }
-      console.warn("来源调查请求失败。");
+      console.warn("来源调查请求失败。", error instanceof Error ? error.message : error);
       response.status(502).json({
         error: { code: "SOURCE_INVESTIGATION_FAILED", message: "暂时无法完成来源调查，请稍后重试。" },
       });

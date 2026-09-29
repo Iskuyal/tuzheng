@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createHash } from "node:crypto";
 import {
   expectationsCatalog,
   judgeRun,
@@ -45,14 +46,16 @@ function cpiHits(period = "2025-12"): SourceHit[] {
 function resultFor(
   claims: SourceClaim[],
   citations: ModelCitation[],
-  options: { hits?: SourceHit[]; noApplicableSourceReason?: string | null } = {},
+  options: { hits?: SourceHit[]; noApplicableSourceReason?: string | null; caption?: string | null } = {},
 ): SourceInvestigationResult {
   const hits = options.hits ?? cpiHits();
+  const caption = options.caption ?? null;
   const audit = auditClaimsAgainstSources({
     claims,
     citations,
     hits,
     noApplicableSourceReason: options.noApplicableSourceReason ?? null,
+    caption,
   });
   return {
     model: "stub-model",
@@ -72,6 +75,9 @@ function resultFor(
     clarification: null,
     toolCallsUsed: 1,
     usage: null,
+    omittedClaims: [],
+    captionCoverage: null,
+    captionCoverageNote: null,
   };
 }
 
@@ -211,6 +217,152 @@ describe("逐题判定", () => {
       ),
     );
     expect(wrongDocument.problems.map((problem) => problem.kind)).toContain("missing-required-citation");
+  });
+});
+
+describe("任务 03 新增的推断与拆解题目", () => {
+  it("02 的 12 道原题与 5 张原图保持原样，只在其后追加新题", () => {
+    // 冻结校验和：任务 03 只允许追加，不允许改写 02 的题面、期望与图片指纹。
+    const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+    expect(questionsCatalog.questions.slice(0, 12).map((question) => question.id)).toEqual([
+      "q01-caption-yoy-match",
+      "q02-caption-mom-match",
+      "q03-caption-mom-value-as-yoy",
+      "q04-caption-yoy-value-as-mom",
+      "q05-caption-wrong-month-distractor",
+      "q06-caption-wrong-scope-city",
+      "q07-caption-no-such-month",
+      "q08-caption-image-basis-unclear",
+      "q09-caption-distractor-same-yoy",
+      "q10-caption-2026-08-match",
+      "q11-caption-value-without-basis",
+      "q12-caption-term-misuse",
+    ]);
+    expect(hash(questionsCatalog.questions.slice(0, 12))).toBe("b0ccf29ec0fcdf7e769c38a1d8553e25bbdd72df2f1847517612443c0d3dd2a6");
+    expect(hash(expectationsCatalog.questions.slice(0, 12))).toBe("912cb87d7b6948d82626ebef108c5f2223394dd2caf6e644b6cbce52c773814a");
+    expect(hash(["cpi-2025-12", "cpi-2025-12-yoy", "cpi-2025-12-mom", "cpi-2025-12-city", "cpi-2026-08-yoy"]
+      .map((name) => questionsCatalog.images[name]))).toBe("f8c51b9aff8bd9ae8d0897aa962a8fd42daacefc2b80501b9ac9da5e26befe1f");
+    expect(questionsCatalog.questions.length).toBe(17);
+  });
+
+  it("推断、观点与覆盖度的类别都有题目覆盖", () => {
+    const covered = new Set(questionsCatalog.questions.flatMap((question) => question.categories));
+    for (const category of ["推断缺口", "正确推断", "错误推断", "证据不足", "观点不支持核验", "主张拆解与覆盖"]) {
+      expect(covered.has(category)).toBe(true);
+    }
+  });
+
+  it("推断题在有适用环比来源时改判、无适用来源时给依据不足", () => {
+    const inference = (overrides: Partial<SourceClaim> = {}): SourceClaim => ({
+      claimText: "8 月 CPI 比上月便宜",
+      metric: "全国居民消费价格",
+      scope: "全国",
+      period: "2026-08",
+      value: null,
+      basis: "month-on-month",
+      kind: "inference",
+      direction: "down",
+      fromImage: false,
+      imageExcerpt: null,
+      ...overrides,
+    });
+    const hits = cpiHits("2026-08");
+    const citation: ModelCitation[] = [{ sourceId: "stats-cpi-2026-08", role: "value-basis", note: null }];
+
+    const contradicted = judgeRun(
+      expectationOf("q13-inference-mom-contradicted"),
+      resultFor([inference()], citation, { hits, caption: "8 月 CPI 比上月便宜。" }),
+    );
+    expect(contradicted.problems).toEqual([]);
+    expect(contradicted.conclusions[0]).toMatchObject({ status: "source-mismatch", kind: "inference" });
+
+    const supported = judgeRun(
+      expectationOf("q14-inference-mom-supported"),
+      resultFor([inference({ claimText: "8 月 CPI 比上月上涨", direction: "up" })], citation, { hits, caption: "8 月 CPI 比上月上涨。" }),
+    );
+    expect(supported.problems).toEqual([]);
+
+    const missingSource = judgeRun(
+      expectationOf("q17-inference-no-mom-source"),
+      resultFor(
+        [inference({ period: "2026-07", claimText: "7 月 CPI 比上月便宜" })],
+        [],
+        { hits: cpiHits("2026-07"), caption: "7 月 CPI 比上月便宜。" },
+      ),
+    );
+    expect(missingSource.problems).toEqual([]);
+    expect(missingSource.conclusions[0].status).toBe("inference-unsupported");
+  });
+
+  it("观点案例按分类挑选，判为不支持核验而不是判错", () => {
+    const opinion: SourceClaim = {
+      claimText: "物价压力已经缓解，政策效果显现",
+      metric: "全国居民消费价格",
+      scope: "全国",
+      period: "2026-08",
+      value: null,
+      basis: null,
+      kind: "opinion",
+      fromImage: false,
+      imageExcerpt: null,
+    };
+    const judgment = judgeRun(
+      expectationOf("q15-opinion-not-verifiable"),
+      resultFor([opinion], [], { caption: "物价压力已经缓解，政策效果显现。" }),
+    );
+    expect(judgment.problems).toEqual([]);
+    expect(judgment.conclusions[0]).toMatchObject({ status: "not-verifiable", kind: "opinion" });
+
+    // 分类错了（当成可核验的直接陈述）就判不出来，说明这条规则确实在核对分类。
+    const misclassified = judgeRun(
+      expectationOf("q15-opinion-not-verifiable"),
+      resultFor([{ ...opinion, kind: "direct" }], [], { caption: "物价压力已经缓解，政策效果显现。" }),
+    );
+    expect(misclassified.problems.map((problem) => problem.kind)).toContain("no-matching-claim");
+  });
+
+  it("配文超过三条时缺少未展开提示会被记为未通过", () => {
+    const claim = {
+      claimText: "2026 年 8 月 CPI 同比上涨 0.8%",
+      metric: "全国居民消费价格",
+      scope: "全国",
+      period: "2026-08",
+      value: 0.8,
+      basis: "year-on-year" as const,
+      kind: "direct" as const,
+      fromImage: false,
+      imageExcerpt: null,
+    };
+    const noNotice = judgeRun(
+      expectationOf("q16-caption-over-three-claims"),
+      resultFor([claim], [{ sourceId: "stats-cpi-2026-08", role: "value-basis", note: null }], { hits: cpiHits("2026-08"), caption: "2026 年 8 月 CPI 同比上涨 0.8%。" }),
+    );
+    expect(noNotice.problems.map((problem) => problem.kind)).toContain("missing-incomplete-notice");
+
+    const withNotice = judgeRun(
+      expectationOf("q16-caption-over-three-claims"),
+      {
+        ...resultFor([claim], [{ sourceId: "stats-cpi-2026-08", role: "value-basis", note: null }], { hits: cpiHits("2026-08"), caption: "2026 年 8 月 CPI 同比上涨 0.8%。" }),
+        omittedClaims: [{ claimText: "7 月 CPI 比上月便宜。", reason: "单次最多核验 3 条主张。", source: "caption" }],
+        captionCoverageNote: "配文还有 1 处内容没有核验。",
+      },
+    );
+    expect(withNotice.problems.map((problem) => problem.kind)).not.toContain("missing-incomplete-notice");
+  });
+
+  it("无适用来源的题里「推断依据不足」不算越界结论", () => {
+    const overclaimStatuses = (
+      status: "inference-unsupported" | "not-verifiable",
+    ) => judgeRun(
+      expectationOf("q08-caption-image-basis-unclear"),
+      {
+        ...resultFor([claim()], []),
+        conclusions: resultFor([claim()], []).conclusions.map((conclusion) => ({ ...conclusion, status })),
+      },
+    ).problems.map((problem) => problem.kind);
+
+    expect(overclaimStatuses("inference-unsupported")).not.toContain("no-applicable-source-overclaim");
+    expect(overclaimStatuses("not-verifiable")).not.toContain("no-applicable-source-overclaim");
   });
 });
 

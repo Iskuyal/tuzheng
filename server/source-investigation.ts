@@ -18,15 +18,22 @@ import {
 } from "./anthropic-messages.js";
 import type { ProviderConfig } from "./model-settings.js";
 import {
+  AUDITED_CLAIMS_LIMIT,
+  CAPTION_COVERAGE_MIN,
+  CLAIM_TRACE_MIN_COVERAGE,
   CLARIFICATIONS_PER_INVESTIGATION,
   INVESTIGATION_DEADLINE_MS,
   TOOL_CALLS_PER_INVESTIGATION,
   TOOL_CALLS_PER_ROUND,
   auditClaimsAgainstSources,
+  bigramCoverage,
+  captionClaimCoverage,
   compareValues,
+  fillClaimPeriodsFromImage,
   searchSourceLibrary,
   type ClarificationRequest,
   type ModelCitation,
+  type OmittedClaim,
   type SourceClaim,
   type SourceHit,
   type SourceInvestigationResult,
@@ -118,6 +125,7 @@ function fieldLabel(field: string): string {
 /**
  * 编排模型自选工具的多轮调查：逐个校验工具名与参数，累计命中资料，
  * 按轮与总计双重限制调用次数，最后由程序组合结论。
+ * 单次最多核验三条主张：多出来的（模型超额汇报或自己声明没展开的）一律保留原文列进未展开项。
  */
 export async function runSourceInvestigation(
   driver: SourceInvestigationDriver,
@@ -130,6 +138,8 @@ export async function runSourceInvestigation(
      * 命中集合保持为空，任何引用都会因「不在本次命中内」被降级。
      */
     allowSearch?: boolean;
+    /** 配文原文；用于核对配文主张能否追溯到原文并计算配文覆盖度。 */
+    caption?: string | null;
   } = {},
 ): Promise<SourceInvestigationResult> {
   const allowSearch = options.allowSearch ?? true;
@@ -144,6 +154,7 @@ export async function runSourceInvestigation(
   let findingCitations: ModelCitation[] = [];
   let noApplicableSourceReason: string | null = null;
   let modelUnresolved: string[] = [];
+  let modelOmittedClaims: string[] = [];
   let usage: SourceInvestigationResult["usage"] = null;
   let truncated = false;
   let recognizedModel = driver.model;
@@ -276,13 +287,15 @@ export async function runSourceInvestigation(
     findingCitations = parsedFinding.citations;
     noApplicableSourceReason = parsedFinding.noApplicableSourceReason;
     modelUnresolved = parsedFinding.unresolvedItems;
+    modelOmittedClaims = parsedFinding.omittedClaims;
     trace.push({
       round: currentRound,
       order,
       detail,
       status: "ok",
       tool: REPORT_TOOL_NAME,
-      inputSummary: `${parsedFinding.claims.length} 条主张、${parsedFinding.citations.length} 条引用`,
+      inputSummary: `${parsedFinding.claims.length} 条主张、${parsedFinding.citations.length} 条引用`
+        + (parsedFinding.omittedClaims.length > 0 ? `、声明 ${parsedFinding.omittedClaims.length} 条未展开` : ""),
       resultSummary: "已接收汇总，准备由程序校验引用并组合结论。",
       durationMs: 0,
     });
@@ -418,12 +431,77 @@ export async function runSourceInvestigation(
     }
   }
 
-  const claims = finding ?? [];
+  // 配文只写月份时按图上标注补全年份，让口径能落到具体发布。
+  const { claims: filledClaims, notes: periodNotes } = fillClaimPeriodsFromImage(finding ?? []);
+  // 超过单次上限时优先保留配文主张（用户自己写的那句话），图上主张排在其后；
+  // 保留的主张仍按模型给出的顺序排列，没进核验的每一条都保留原文列进未展开项，不静默丢弃。
+  const keepIndexes = new Set<number>();
+  for (const [index, claim] of filledClaims.entries()) {
+    if (!claim.fromImage && keepIndexes.size < AUDITED_CLAIMS_LIMIT) keepIndexes.add(index);
+  }
+  for (const [index, claim] of filledClaims.entries()) {
+    if (claim.fromImage && keepIndexes.size < AUDITED_CLAIMS_LIMIT) keepIndexes.add(index);
+  }
+  const claims = filledClaims.filter((_, index) => keepIndexes.has(index));
+  const auditedPeriodNotes = periodNotes.filter((_, index) => keepIndexes.has(index));
+  const overflowClaims = filledClaims.filter((_, index) => !keepIndexes.has(index));
+
+  // 未展开的主张：模型超额汇报的与它自己声明没展开的都保留原文，不静默丢弃。
+  // 声明里能追溯到配文原文的算「配文没展开」，其余的（多数是图上说明文字）另计，
+  // 避免把图表页脚当成用户配文里没核验的内容。
+  const caption = options.caption?.trim() || null;
+  const omittedClaims: OmittedClaim[] = [
+    ...overflowClaims.map((claim) => ({
+      claimText: claim.claimText,
+      reason: claim.fromImage
+        ? `单次最多核验 ${AUDITED_CLAIMS_LIMIT} 条主张，这条图上主张没有展开，也没有参与结论。`
+        : `单次最多核验 ${AUDITED_CLAIMS_LIMIT} 条主张，这条配文主张没有展开，也没有参与结论。`,
+      source: claim.fromImage ? "other" as const : "caption" as const,
+    })),
+    ...modelOmittedClaims.map((claimText) => {
+      const trace = caption ? bigramCoverage(claimText, caption) : { coverage: 0 };
+      const inCaption = trace.coverage >= CLAIM_TRACE_MIN_COVERAGE;
+      return {
+        claimText,
+        reason: inCaption
+          ? "模型说明这段配文没有展开成主张，本次没有核验。"
+          : "模型声明这段内容没有展开；它不在配文里（可能是图上说明），本次没有核验。",
+        source: inCaption ? "caption" as const : "other" as const,
+      };
+    }),
+  ];
+
+  const coverage = caption ? captionClaimCoverage(claims, caption) : null;
+  const captionOmissions = omittedClaims.filter((claim) => claim.source === "caption");
+  const otherOmissions = omittedClaims.filter((claim) => claim.source === "other");
+  const coverageNotes: string[] = [];
+  if (captionOmissions.length > 0) {
+    coverageNotes.push(
+      `配文还有 ${captionOmissions.length} 处内容没有核验：${captionOmissions.map((claim) => `「${claim.claimText}」`).join("、")}。`
+      + "缩小配文范围后可以重新核验。",
+    );
+  }
+  if (otherOmissions.length > 0) {
+    coverageNotes.push(
+      `另有 ${otherOmissions.length} 处模型声明但没有展开的图上说明文字，一并保留原文，不计入配文覆盖。`,
+    );
+  }
+  if (coverage && coverage.coverage < CAPTION_COVERAGE_MIN) {
+    coverageNotes.push(
+      `配文里有约 ${Math.round((1 - coverage.coverage) * 100)}% 的文字没有被已核验主张覆盖`
+      + `${coverage.uncovered ? `，例如「${coverage.uncovered}」` : ""}；请缩小配文或补充主张后重试，避免漏掉内容。`,
+    );
+  }
+  const captionCoverageNote = coverageNotes.length > 0 ? coverageNotes.join(" ") : null;
+
   const audit = auditClaimsAgainstSources({
     claims,
     citations: findingCitations,
     hits: [...hitsById.values()],
     noApplicableSourceReason,
+    caption,
+    periodNotes: auditedPeriodNotes,
+    imageClaimsContext: filledClaims.filter((claim) => claim.fromImage),
   });
 
   return {
@@ -444,6 +522,9 @@ export async function runSourceInvestigation(
     clarification,
     toolCallsUsed,
     usage,
+    omittedClaims,
+    captionCoverage: coverage ? coverage.coverage : null,
+    captionCoverageNote,
   };
 }
 
