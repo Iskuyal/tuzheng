@@ -51,6 +51,8 @@ const questionSchema = z.object({
   categories: z.array(z.string().min(1)).min(1),
   image: z.string().min(1),
   caption: z.string().min(1),
+  /** 补证后阶段由人写定的用户回答：输入侧字段，不由模型生成。 */
+  clarifyAnswer: z.string().min(1).max(400).optional(),
   note: z.string().optional(),
 }).strict();
 
@@ -86,6 +88,24 @@ const expectationSchema = z.object({
   noApplicableSource: z.boolean().optional(),
   /** 配文超过三条或存在未覆盖内容时，本次运行必须给出明确提示。 */
   incompleteNotice: z.boolean().optional(),
+  /** 补证前阶段必须提出一次追问。 */
+  clarificationRequired: z.boolean().optional(),
+  /** 有检索臂里追问必须发生在至少一次成功检索之后。 */
+  clarificationAfterSearch: z.boolean().optional(),
+  /** 任何一次运行都不允许提出追问（资料已覆盖的案例）。 */
+  clarificationForbidden: z.boolean().optional(),
+  /** 同一题的补证后阶段：用题面 clarifyAnswer 恢复后按这套规则判定。 */
+  resume: z.object({
+    expect: z.array(expectRuleSchema).min(1),
+    otherClaimStatuses: z.array(statusSchema).min(1),
+    requiredAcceptedCitations: z.array(z.string().min(1)).optional(),
+    forbiddenValueBasisCitations: z.array(z.string().min(1)).optional(),
+    noApplicableSource: z.boolean().optional(),
+    incompleteNotice: z.boolean().optional(),
+    /** 恢复段必须记录已套用的用户补充。 */
+    supplementApplied: z.boolean().optional(),
+    expectationNote: z.string().optional(),
+  }).strict().optional(),
   expectationNote: z.string().optional(),
 }).strict();
 
@@ -138,6 +158,8 @@ export const REQUIRED_CATEGORIES = [
   "证据不足",
   "观点不支持核验",
   "主张拆解与覆盖",
+  "补证与恢复",
+  "无需追问",
 ] as const;
 
 export interface JudgmentProblem {
@@ -166,6 +188,8 @@ export interface RunRecord {
   questionId: string;
   arm: Arm;
   run: number;
+  /** before = 补证前初查；after = 用题面 clarifyAnswer 恢复的补证后阶段。 */
+  phase: "before" | "after";
   status: "ok" | "failed";
   failureKind: string | null;
   failureMessage: string | null;
@@ -174,7 +198,11 @@ export interface RunRecord {
   toolCallsUsed: number | null;
   toolSequence: string[];
   stopReason: string | null;
-  clarification: { question: string; purpose: string; field: string } | null;
+  clarification: { question: string; purpose: string; field: string; claimText?: string | null } | null;
+  /** 补证后阶段的补充记录（问题、回答、解析与冲突）；补证前阶段为 null。 */
+  supplement: SourceInvestigationResult["supplement"];
+  /** 补证后阶段与补证前结论的逐条对照。 */
+  conclusionChanges: SourceInvestigationResult["conclusionChanges"];
   noApplicableSourceReason: string | null;
   model: string | null;
   usage: { inputTokens: number | null; outputTokens: number | null } | null;
@@ -218,14 +246,35 @@ function selectLabel(select: ClaimSelect): string {
   return parts.join(" · ");
 }
 
+/** 判定上下文：arm 决定追问顺序检查是否生效，phase 区分补证前后两段。 */
+export interface JudgeContext {
+  arm?: Arm;
+  phase?: "before" | "after";
+}
+
 /**
  * 按人写的期望判定一次运行。判定只用程序可读的字段（fromImage／basis／value／period／状态／引用），
- * 不让生成答案的模型给自己评分。
+ * 不让生成答案的模型给自己评分。phase="after" 时改用 expectation.resume 里的规则。
  */
 export function judgeRun(
   expectation: QuestionExpectation,
   result: SourceInvestigationResult,
+  context: JudgeContext = {},
 ): { ok: boolean; problems: JudgmentProblem[]; conclusions: JudgedConclusion[] } {
+  const phase = context.phase ?? "before";
+  if (phase === "after" && !expectation.resume) {
+    throw new Error(`期望 ${expectation.id} 缺少 resume 规则，无法判定补证后阶段。`);
+  }
+  const rules = phase === "after"
+    ? {
+      expect: expectation.resume!.expect,
+      otherClaimStatuses: expectation.resume!.otherClaimStatuses,
+      requiredAcceptedCitations: expectation.resume!.requiredAcceptedCitations,
+      forbiddenValueBasisCitations: expectation.resume!.forbiddenValueBasisCitations,
+      noApplicableSource: expectation.resume!.noApplicableSource,
+      incompleteNotice: expectation.resume!.incompleteNotice,
+    }
+    : expectation;
   const problems: JudgmentProblem[] = [];
   const conclusions = result.conclusions.map((conclusion, index): JudgedConclusion => {
     const claim = result.claims[index];
@@ -251,7 +300,7 @@ export function judgeRun(
   }
 
   const matchedIndexes = new Set<number>();
-  for (const rule of expectation.expect) {
+  for (const rule of rules.expect) {
     const min = rule.min ?? 1;
     const matched = result.claims
       .map((claim, index) => ({ claim, index }))
@@ -274,15 +323,15 @@ export function judgeRun(
 
   conclusions.forEach((conclusion, index) => {
     if (matchedIndexes.has(index)) return;
-    if (!expectation.otherClaimStatuses.includes(conclusion.status)) {
+    if (!rules.otherClaimStatuses.includes(conclusion.status)) {
       problems.push({
         kind: "unexpected-status",
-        detail: `未被期望规则覆盖的主张「${conclusion.claimText}」出现状态 ${conclusion.status}，允许的是 ${expectation.otherClaimStatuses.join("／")}。`,
+        detail: `未被期望规则覆盖的主张「${conclusion.claimText}」出现状态 ${conclusion.status}，允许的是 ${rules.otherClaimStatuses.join("／")}。`,
       });
     }
   });
 
-  for (const required of expectation.requiredAcceptedCitations ?? []) {
+  for (const required of rules.requiredAcceptedCitations ?? []) {
     if (!result.acceptedCitations.some((citation) => citation.sourceId === required)) {
       problems.push({
         kind: "missing-required-citation",
@@ -291,7 +340,7 @@ export function judgeRun(
     }
   }
 
-  for (const forbidden of expectation.forbiddenValueBasisCitations ?? []) {
+  for (const forbidden of rules.forbiddenValueBasisCitations ?? []) {
     if (result.acceptedCitations.some((citation) => citation.sourceId === forbidden && citation.role === "value-basis")) {
       problems.push({ kind: "forbidden-value-basis-citation", detail: `${forbidden} 不允许以数值依据角色通过校验。` });
     }
@@ -306,7 +355,7 @@ export function judgeRun(
     }
   }
 
-  if (expectation.incompleteNotice) {
+  if (rules.incompleteNotice) {
     // 单次最多核验三条：模型声明的配文漏项、程序按覆盖度发现的漏项都算明确提示。
     // 模型声明的图上说明文字另计，不当作配文内容。
     const noticed = result.omittedClaims.some((claim) => claim.source === "caption")
@@ -319,13 +368,52 @@ export function judgeRun(
     }
   }
 
-  if (expectation.noApplicableSource) {
+  if (rules.noApplicableSource) {
     // 没有适用来源时允许的克制状态：待核对、推断依据不足、不支持核验都算没有下确定结论。
     const restrained: ClaimSourceStatus[] = ["source-pending", "inference-unsupported", "not-verifiable"];
     for (const conclusion of conclusions.filter((entry) => !restrained.includes(entry.status))) {
       problems.push({
         kind: "no-applicable-source-overclaim",
         detail: `没有适用来源的题却给出确定来源结论「${conclusion.claimText}」：${conclusion.status}。`,
+      });
+    }
+  }
+
+  // —— 追问时机（只在补证前阶段判）——
+  if (phase === "before") {
+    if (expectation.clarificationRequired && !result.clarification) {
+      problems.push({
+        kind: "missing-clarification",
+        detail: "资料库回答不了这条口径缺口，模型必须提出一次追问，但本次没有追问。",
+      });
+    }
+    if (expectation.clarificationForbidden && result.clarification) {
+      problems.push({
+        kind: "unexpected-clarification",
+        detail: `资料已覆盖的问题不应追问用户，但模型提出了：${result.clarification.question}`,
+      });
+    }
+    if (expectation.clarificationAfterSearch && result.clarification && context.arm === "retrieval") {
+      // 有检索臂：第一次追问必须发生在至少一次成功检索之后（按轨迹顺序比较）。
+      const searchIndex = result.trace.findIndex((event) => event.tool === "search_source_library" && event.status === "ok");
+      const clarifyIndex = result.trace.findIndex(
+        (event) => event.tool === "request_clarification" && event.status === "ok",
+      );
+      if (clarifyIndex >= 0 && (searchIndex < 0 || searchIndex > clarifyIndex)) {
+        problems.push({
+          kind: "clarification-before-search",
+          detail: "追问发生在检索之前：资料已覆盖的部分应先自己检索核对，仍缺信息才追问用户。",
+        });
+      }
+    }
+  }
+
+  // —— 补证后阶段：必须记录已套用的用户补充 ——
+  if (phase === "after" && expectation.resume?.supplementApplied) {
+    if (!result.supplement || !result.supplement.applied) {
+      problems.push({
+        kind: "missing-supplement-application",
+        detail: `补证后应当把用户回答套用到受影响主张并标为用户提供，但本次补充记录为：${result.supplement ? result.supplement.note : "无"}`,
       });
     }
   }
@@ -352,9 +440,18 @@ function classifyFailure(error: unknown): { kind: string; message: string } {
   return { kind: "harness", message: error instanceof Error ? error.message : String(error) };
 }
 
-/** 本次将发出的请求数：题数 × 臂数 × 每臂每题次数。 */
-export function plannedRequests(questionCount: number, armCount: number, runsPerArm: number): number {
-  return questionCount * armCount * runsPerArm;
+/** 这道题是否有补证后阶段（题面写了人写定的回答且期望带 resume 规则）。 */
+export function hasResumePhase(
+  question: SourceAuditQuestions["questions"][number],
+  expectations: SourceAuditExpectations,
+): boolean {
+  const expectation = expectations.questions.find((entry) => entry.id === question.id);
+  return Boolean(question.clarifyAnswer && expectation?.resume);
+}
+
+/** 本次将发出的请求数：（题数 + 带补证阶段的题数）× 臂数 × 每臂每题次数。 */
+export function plannedRequests(questionCount: number, armCount: number, runsPerArm: number, resumeQuestionCount = 0): number {
+  return (questionCount + resumeQuestionCount) * armCount * runsPerArm;
 }
 
 export function isDeepSeekEndpoint(baseUrl: string): boolean {
@@ -443,6 +540,11 @@ export interface ArmSummary {
   clarifications: number;
   /** 真实运行里模型主动提出的追问原文，逐条保留。 */
   clarificationQuestions: string[];
+  /** 追问与检索时机问题数（缺追问、资料已覆盖仍追问、追问先于检索）。 */
+  clarificationProblems: number;
+  /** 成功运行的补证后阶段次数，以及其中把用户补充套用到主张的次数。 */
+  resumeRuns: number;
+  supplementAppliedRuns: number;
   noApplicableSourceOverclaims: number;
   inferenceUnsupported: number;
   notVerifiable: number;
@@ -483,9 +585,10 @@ const SHORT_STATUS: Record<ClaimSourceStatus, string> = {
 };
 
 function describeRun(record: RunRecord): string {
-  if (record.status === "failed") return `失败(${record.failureKind})`;
-  if (record.conclusions.length === 0) return "无结论";
-  return record.conclusions.map((conclusion) => `${conclusion.fromImage ? "图" : "文"}${SHORT_STATUS[conclusion.status]}`).join(" ");
+  const prefix = record.phase === "after" ? "补证后 " : "";
+  if (record.status === "failed") return `${prefix}失败(${record.failureKind})`;
+  if (record.conclusions.length === 0) return `${prefix}无结论`;
+  return prefix + record.conclusions.map((conclusion) => `${conclusion.fromImage ? "图" : "文"}${SHORT_STATUS[conclusion.status]}`).join(" ");
 }
 
 export function summarizeEvaluation(records: RunRecord[], expectations: SourceAuditExpectations): EvaluationSummary {
@@ -518,6 +621,13 @@ export function summarizeEvaluation(records: RunRecord[], expectations: SourceAu
       clarifications: valid.filter((record) => record.clarification !== null).length,
       clarificationQuestions: valid
         .flatMap((record) => (record.clarification ? [`${record.questionId}：${record.clarification.question}`] : [])),
+      clarificationProblems: armRecords.reduce(
+        (total, record) => total + record.judgment.problems.filter((problem) =>
+          ["missing-clarification", "unexpected-clarification", "clarification-before-search"].includes(problem.kind)).length,
+        0,
+      ),
+      resumeRuns: valid.filter((record) => record.phase === "after").length,
+      supplementAppliedRuns: valid.filter((record) => record.phase === "after" && record.supplement?.applied).length,
       noApplicableSourceOverclaims: armRecords.reduce(
         (total, record) => total + record.judgment.problems.filter((problem) => problem.kind === "no-applicable-source-overclaim").length,
         0,
@@ -619,96 +729,132 @@ export async function runPairedEvaluation(
   const log = options.log ?? (() => {});
   const records: RunRecord[] = [];
 
+  /** 把一次成功的结果按阶段判定并落成记录。 */
+  const recordSuccess = (
+    base: { questionId: string; arm: Arm; run: number; phase: "before" | "after" },
+    expectation: QuestionExpectation,
+    result: SourceInvestigationResult,
+  ): void => {
+    const judgment = judgeRun(expectation, result, { arm: base.arm, phase: base.phase });
+    const hitIds = new Set(result.hits.map((hit) => hit.document.id));
+    const record: RunRecord = {
+      questionId: base.questionId,
+      arm: base.arm,
+      run: base.run,
+      phase: base.phase,
+      status: "ok",
+      failureKind: null,
+      failureMessage: null,
+      latencyMs: result.latencyMs,
+      rounds: result.rounds,
+      toolCallsUsed: result.toolCallsUsed,
+      toolSequence: result.trace.map((event) => `${event.tool}:${event.status}`),
+      stopReason: result.stopReason,
+      clarification: result.clarification,
+      supplement: result.supplement,
+      conclusionChanges: result.conclusionChanges,
+      noApplicableSourceReason: result.noApplicableSourceReason,
+      model: result.model,
+      usage: result.usage,
+      conclusions: judgment.conclusions,
+      acceptedCitations: result.acceptedCitations.map((citation) => `${citation.sourceId}|${citation.role}`),
+      rejectedCitations: result.citationsRejected,
+      fabricatedCitations: result.citationsRejected
+        .filter((rejected) => !findSourceDocument(rejected.sourceId))
+        .map((rejected) => rejected.sourceId),
+      recalledCitations: result.citationsRejected
+        .filter((rejected) => !hitIds.has(rejected.sourceId) && Boolean(findSourceDocument(rejected.sourceId)))
+        .map((rejected) => rejected.sourceId),
+      hitIds: [...hitIds],
+      excludedIds: result.excludedSources.map((entry) => entry.sourceId),
+      omittedClaims: result.omittedClaims.map((entry) => ({ claimText: entry.claimText, source: entry.source })),
+      captionCoverage: result.captionCoverage,
+      captionCoverageNote: result.captionCoverageNote,
+      judgment: { ok: judgment.ok, problems: judgment.problems },
+    };
+    records.push(record);
+    log(
+      `  ${base.questionId} [${base.arm}] #${base.run}${base.phase === "after" ? "（补证后）" : ""} `
+      + `${judgment.ok ? "通过" : "未通过"} ${describeRun(record)}`
+      + ` ${result.latencyMs} ms / ${result.rounds} 轮 / ${result.toolCallsUsed} 次调用`
+      + `${judgment.ok ? "" : `：${judgment.problems.map((problem) => problem.kind).join("、")}`}`,
+    );
+  };
+
+  const recordFailure = (
+    base: { questionId: string; arm: Arm; run: number; phase: "before" | "after" },
+    failure: { kind: string; message: string },
+  ): void => {
+    records.push({
+      questionId: base.questionId,
+      arm: base.arm,
+      run: base.run,
+      phase: base.phase,
+      status: "failed",
+      failureKind: failure.kind,
+      failureMessage: failure.message,
+      latencyMs: null,
+      rounds: null,
+      toolCallsUsed: null,
+      toolSequence: [],
+      stopReason: null,
+      clarification: null,
+      supplement: null,
+      conclusionChanges: null,
+      noApplicableSourceReason: null,
+      model: null,
+      usage: null,
+      conclusions: [],
+      acceptedCitations: [],
+      rejectedCitations: [],
+      fabricatedCitations: [],
+      recalledCitations: [],
+      hitIds: [],
+      excludedIds: [],
+      omittedClaims: [],
+      captionCoverage: null,
+      captionCoverageNote: null,
+      judgment: { ok: false, problems: [{ kind: "run-failed", detail: failure.message }] },
+    });
+    log(`  ${base.questionId} [${base.arm}] #${base.run}${base.phase === "after" ? "（补证后）" : ""} 失败（${failure.kind}）：${failure.message}`);
+  };
+
   for (const arm of arms) {
     for (const question of questions.questions) {
       const expectation = expectations.questions.find((entry) => entry.id === question.id);
       if (!expectation) throw new Error(`题集与期望不一致：${question.id} 没有独立期望。`);
       for (let run = 1; run <= runs; run += 1) {
         const driver = options.driverFactory(question, arm);
+        const before = { questionId: question.id, arm, run, phase: "before" as const };
         let result: SourceInvestigationResult | null = null;
-        let failure: { kind: string; message: string } | null = null;
         try {
           result = await runSourceInvestigation(driver, {
             allowSearch: arm === "retrieval",
             caption: question.caption,
           });
         } catch (error) {
-          failure = classifyFailure(error);
-        }
-
-        if (!result) {
-          records.push({
-            questionId: question.id,
-            arm,
-            run,
-            status: "failed",
-            failureKind: failure?.kind ?? "harness",
-            failureMessage: failure?.message ?? null,
-            latencyMs: null,
-            rounds: null,
-            toolCallsUsed: null,
-            toolSequence: [],
-            stopReason: null,
-            clarification: null,
-            noApplicableSourceReason: null,
-            model: null,
-            usage: null,
-            conclusions: [],
-            acceptedCitations: [],
-            rejectedCitations: [],
-            fabricatedCitations: [],
-            recalledCitations: [],
-            hitIds: [],
-            excludedIds: [],
-            omittedClaims: [],
-            captionCoverage: null,
-            captionCoverageNote: null,
-            judgment: { ok: false, problems: [{ kind: "run-failed", detail: failure?.message ?? "运行失败。" }] },
-          });
-          log(`  ${question.id} [${arm}] #${run} 失败（${failure?.kind}）：${failure?.message ?? ""}`);
+          recordFailure(before, classifyFailure(error));
           continue;
         }
+        recordSuccess(before, expectation, result);
 
-        const judgment = judgeRun(expectation, result);
-        const hitIds = new Set(result.hits.map((hit) => hit.document.id));
-        const record: RunRecord = {
-          questionId: question.id,
-          arm,
-          run,
-          status: "ok",
-          failureKind: null,
-          failureMessage: null,
-          latencyMs: result.latencyMs,
-          rounds: result.rounds,
-          toolCallsUsed: result.toolCallsUsed,
-          toolSequence: result.trace.map((event) => `${event.tool}:${event.status}`),
-          stopReason: result.stopReason,
-          clarification: result.clarification,
-          noApplicableSourceReason: result.noApplicableSourceReason,
-          model: result.model,
-          usage: result.usage,
-          conclusions: judgment.conclusions,
-          acceptedCitations: result.acceptedCitations.map((citation) => `${citation.sourceId}|${citation.role}`),
-          rejectedCitations: result.citationsRejected,
-          fabricatedCitations: result.citationsRejected
-            .filter((rejected) => !findSourceDocument(rejected.sourceId))
-            .map((rejected) => rejected.sourceId),
-          recalledCitations: result.citationsRejected
-            .filter((rejected) => !hitIds.has(rejected.sourceId) && Boolean(findSourceDocument(rejected.sourceId)))
-            .map((rejected) => rejected.sourceId),
-          hitIds: [...hitIds],
-          excludedIds: result.excludedSources.map((entry) => entry.sourceId),
-          omittedClaims: result.omittedClaims.map((entry) => ({ claimText: entry.claimText, source: entry.source })),
-          captionCoverage: result.captionCoverage,
-          captionCoverageNote: result.captionCoverageNote,
-          judgment: { ok: judgment.ok, problems: judgment.problems },
-        };
-        records.push(record);
-        log(
-          `  ${question.id} [${arm}] #${run} ${judgment.ok ? "通过" : "未通过"} ${describeRun(record)}`
-          + ` ${result.latencyMs} ms / ${result.rounds} 轮 / ${result.toolCallsUsed} 次调用`
-          + `${judgment.ok ? "" : `：${judgment.problems.map((problem) => problem.kind).join("、")}`}`,
-        );
+        // 补证后阶段：题面写了人写定的回答且初查提出了追问时，沿同一段对话恢复。
+        if (!question.clarifyAnswer || !expectation.resume) continue;
+        if (!result.clarification) {
+          log(`  ${question.id} [${arm}] #${run} 初查未提出追问，补证后阶段无法运行（已在补证前判定 missing-clarification）。`);
+          continue;
+        }
+        const after = { questionId: question.id, arm, run, phase: "after" as const };
+        try {
+          const resumed = await runSourceInvestigation(driver, {
+            allowSearch: arm === "retrieval",
+            caption: question.caption,
+            resume: { answer: question.clarifyAnswer, prior: result },
+          });
+          recordSuccess(after, expectation, resumed);
+        } catch (error) {
+          recordFailure(after, classifyFailure(error));
+        }
       }
     }
   }
@@ -744,6 +890,20 @@ export async function verifyFrozenSetup(
   const covered = new Set(questions.questions.flatMap((question) => question.categories));
   for (const category of REQUIRED_CATEGORIES) {
     if (!covered.has(category)) problems.push(`题集没有覆盖类别：${category}。`);
+  }
+
+  // 补证阶段的输入与期望必须成对冻结：有 clarifyAnswer 才有 resume 判定，反之亦然。
+  for (const question of questions.questions) {
+    const expectation = expectations.questions.find((entry) => entry.id === question.id);
+    if (question.clarifyAnswer && !expectation?.resume) {
+      problems.push(`题目 ${question.id} 写了 clarifyAnswer 但期望没有 resume 规则。`);
+    }
+    if (expectation?.resume && !question.clarifyAnswer) {
+      problems.push(`期望 ${expectation.id} 有 resume 规则但题面缺少 clarifyAnswer。`);
+    }
+    if (expectation?.resume && !expectation.resume.supplementApplied) {
+      problems.push(`期望 ${expectation.id} 的 resume 规则缺少 supplementApplied，无法验证补充确实被套用。`);
+    }
   }
 
   for (const question of questions.questions) {
@@ -867,7 +1027,8 @@ export function printReport(
       + `接受引用 ${arm.acceptedCitations} 条，被拒绝引用 ${arm.rejectedCitations} 条，虚构 ${arm.fabricatedCitations} 条，凭记忆复用 ${arm.recalledCitations} 条；`
       + `推断依据不足 ${arm.inferenceUnsupported} 条，不支持核验 ${arm.notVerifiable} 条，未展开配文内容 ${arm.omittedClaims} 条，模型声明的图上说明文字 ${arm.otherOmittedText} 条；`
       + `平均 ${arm.averageLatencyMs ?? "—"} ms，平均调用 ${arm.averageToolCalls ?? "—"} 次；`
-      + `追问 ${arm.clarifications} 次；无来源说明 ${arm.noApplicableSourceReasons} 次；越界结论 ${arm.noApplicableSourceOverclaims} 次`,
+      + `追问 ${arm.clarifications} 次（时机问题 ${arm.clarificationProblems} 次）；补证后运行 ${arm.resumeRuns} 次、补充套用 ${arm.supplementAppliedRuns} 次；`
+      + `无来源说明 ${arm.noApplicableSourceReasons} 次；越界结论 ${arm.noApplicableSourceOverclaims} 次`,
     );
   }
 
@@ -948,12 +1109,22 @@ async function main(): Promise<void> {
 
   // 花钱预检：先说清这次要发多少请求、账户还剩多少，余额不够就直接停，
   // 避免跑到一半因 402／400 白跑（阶段四任务 03 踩过一次）。
-  const planned = plannedRequests(selected.questions.length, options.arms.length, options.runs);
+  // 带补证阶段的题每次运行会发出两次请求（补证前 + 补证后），按上限计入计划。
+  const resumeQuestions = selected.questions.filter((question) => hasResumePhase(question, expectations)).length;
+  const planned = plannedRequests(selected.questions.length, options.arms.length, options.runs, resumeQuestions);
   console.log(
-    `本次计划发出 ${planned} 次请求（${selected.questions.length} 题 × ${options.arms.length} 臂 × ${options.runs} 次）；`
+    `本次计划发出 ${planned} 次请求（${selected.questions.length} 题 × ${options.arms.length} 臂 × ${options.runs} 次`
+    + `${resumeQuestions > 0 ? ` + ${resumeQuestions} 道补证题的恢复段` : ""}）；`
     + "每次调查通常再拆成 2—4 轮模型调用，因此实际调用次数约为请求数的 2—3 倍。",
   );
-  if (planned < questions.questions.length * expectations.frozen.arms.length * expectations.frozen.runsPerArm) {
+  const fullResumeQuestions = questions.questions.filter((question) => hasResumePhase(question, expectations)).length;
+  const fullGroup = plannedRequests(
+    questions.questions.length,
+    expectations.frozen.arms.length,
+    expectations.frozen.runsPerArm,
+    fullResumeQuestions,
+  );
+  if (planned < fullGroup) {
     console.log("（少于整组：使用了 --ids／--arms／--runs 限定，花的是整组的一部分。）");
   }
   const balance = await checkBalance(config.baseUrl, config.apiKey, options.minBalance);

@@ -39,6 +39,7 @@ import {
   type SourceInvestigationDriver,
 } from "./source-investigation.js";
 import { SOURCE_INVESTIGATION_PROMPT } from "./source-prompt.js";
+import { SourceSessionStore, inputFingerprint } from "./source-sessions.js";
 import type { SourceInvestigationResult } from "../shared/source-audit.js";
 
 export interface UploadedChartImage {
@@ -69,6 +70,8 @@ export interface AppOptions {
     image: UploadedChartImage,
     caption: string,
   ) => SourceInvestigationDriver;
+  /** 可恢复会话存储；测试可注入以控制过期时钟。 */
+  sessionStore?: SourceSessionStore;
 }
 
 function isCompletedModelEndpoint(value: string): boolean {
@@ -169,9 +172,31 @@ function detectImageMime(buffer: Buffer): UploadedChartImage["mimeType"] | null 
   return null;
 }
 
+/** 来源调查（初查与恢复）共用的失败映射：失败时不附带任何结论。 */
+function sendInvestigationError(error: unknown, response: express.Response): void {
+  if (error instanceof SourceInvestigationError && error.kind === "timeout") {
+    response.status(504).json({
+      error: { code: "SOURCE_INVESTIGATION_TIMEOUT", message: "来源调查超时。请稍后重试或换用更小的图片。" },
+    });
+    return;
+  }
+  if (error instanceof SourceInvestigationError && error.kind === "invalid-output") {
+    console.warn("来源调查返回内容不符合要求。");
+    response.status(502).json({
+      error: { code: "SOURCE_INVESTIGATION_INVALID", message: "模型返回的调查结果无法安全使用。请重试。" },
+    });
+    return;
+  }
+  console.warn("来源调查请求失败。", error instanceof Error ? error.message : error);
+  response.status(502).json({
+    error: { code: "SOURCE_INVESTIGATION_FAILED", message: "暂时无法完成来源调查，请稍后重试。" },
+  });
+}
+
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
   const settingsStore = options.settingsStore ?? new FileModelSettingsStore();
+  const sessionStore = options.sessionStore ?? new SourceSessionStore();
   const createVisionAdapter = options.visionAdapterFactory ?? ((settings: ModelSettings) => {
     const { provider, config } = activeProviderConfig(settings);
     return provider === "anthropic"
@@ -426,25 +451,109 @@ export function createApp(options: AppOptions = {}): Express {
 
     try {
       const investigation: SourceInvestigationResult = await runSourceInvestigation(driver, { caption });
+      // 签发调查记录 ID 并保存可恢复会话：追问提出后，回答要能续在同一段对话上。
+      const fingerprint = inputFingerprint(image.buffer, caption);
+      const investigationId = sessionStore.create({ fingerprint, driver, result: investigation });
+      investigation.investigationId = investigationId;
+      investigation.inputFingerprint = fingerprint;
       response.json({ investigation });
     } catch (error) {
-      if (error instanceof SourceInvestigationError && error.kind === "timeout") {
-        response.status(504).json({
-          error: { code: "SOURCE_INVESTIGATION_TIMEOUT", message: "来源调查超时。请稍后重试或换用更小的图片。" },
-        });
-        return;
-      }
-      if (error instanceof SourceInvestigationError && error.kind === "invalid-output") {
-        console.warn("来源调查返回内容不符合要求。");
-        response.status(502).json({
-          error: { code: "SOURCE_INVESTIGATION_INVALID", message: "模型返回的调查结果无法安全使用。请重试。" },
-        });
-        return;
-      }
-      console.warn("来源调查请求失败。", error instanceof Error ? error.message : error);
-      response.status(502).json({
-        error: { code: "SOURCE_INVESTIGATION_FAILED", message: "暂时无法完成来源调查，请稍后重试。" },
+      sendInvestigationError(error, response);
+    }
+  });
+
+  app.post("/api/source-audit/resume", upload.single("image"), async (request, response) => {
+    const caption = typeof request.body?.caption === "string" ? request.body.caption.trim() : "";
+    if (!caption) {
+      response.status(400).json({
+        error: { code: "CAPTION_REQUIRED", message: "请填写要核对的配文，至少一句话。" },
       });
+      return;
+    }
+    if (caption.length > 400) {
+      response.status(400).json({
+        error: { code: "CAPTION_TOO_LONG", message: "配文请控制在 400 字以内。" },
+      });
+      return;
+    }
+    const answer = typeof request.body?.answer === "string" ? request.body.answer.trim() : "";
+    if (!answer) {
+      response.status(400).json({
+        error: { code: "ANSWER_REQUIRED", message: "请先填写对追问的回答，再提交补充。" },
+      });
+      return;
+    }
+    if (answer.length > 400) {
+      response.status(400).json({
+        error: { code: "ANSWER_TOO_LONG", message: "补充回答请控制在 400 字以内。" },
+      });
+      return;
+    }
+    const investigationId = typeof request.body?.investigationId === "string" ? request.body.investigationId.trim() : "";
+    if (!investigationId) {
+      response.status(400).json({
+        error: { code: "INVESTIGATION_ID_REQUIRED", message: "缺少调查记录 ID，无法恢复这次调查。" },
+      });
+      return;
+    }
+    if (!request.file) {
+      response.status(400).json({
+        error: { code: "IMAGE_REQUIRED", message: "请选择一张 PNG、JPG 或 WebP 图片。" },
+      });
+      return;
+    }
+
+    const mimeType = detectImageMime(request.file.buffer);
+    if (!mimeType) {
+      response.status(415).json({
+        error: { code: "UNSUPPORTED_IMAGE", message: "图片内容无法识别，请使用 PNG、JPG 或 WebP。" },
+      });
+      return;
+    }
+
+    const session = sessionStore.get(investigationId);
+    if (!session) {
+      // 过期或不存在的记录一律拒绝：不能靠恢复复活一次早已失效的调查。
+      response.status(410).json({
+        error: {
+          code: "SESSION_EXPIRED",
+          message: "这次调查已过期或不存在，请重新发起核验。",
+        },
+      });
+      return;
+    }
+    if (inputFingerprint(request.file.buffer, caption) !== session.fingerprint) {
+      // 图片或配文任一改动都会失配：依赖旧输入的结论立即失效，不能在新输入上恢复。
+      response.status(409).json({
+        error: {
+          code: "INPUT_CHANGED",
+          message: "图片或配文已改动，依赖旧输入的结论已失效；请重新发起核验。",
+        },
+      });
+      return;
+    }
+    if (!session.result.clarification) {
+      response.status(409).json({
+        error: {
+          code: "NO_PENDING_CLARIFICATION",
+          message: "这次调查没有待回答的追问，无法补充恢复。",
+        },
+      });
+      return;
+    }
+
+    try {
+      const investigation: SourceInvestigationResult = await runSourceInvestigation(session.driver, {
+        caption,
+        resume: { answer, prior: session.result },
+      });
+      // 同一记录、同一段对话：恢复段更新会话里的最新结果，ID 保持不变。
+      investigation.investigationId = session.id;
+      investigation.inputFingerprint = session.fingerprint;
+      sessionStore.update(session.id, investigation);
+      response.json({ investigation });
+    } catch (error) {
+      sendInvestigationError(error, response);
     }
   });
 

@@ -38,6 +38,8 @@ export const clarifyArgumentsSchema = z.object({
   question: z.string().trim().min(1).max(240),
   purpose: z.string().trim().min(1).max(240),
   field: z.enum(["period", "scope", "metric", "basis", "value"]),
+  /** 这条追问影响的主张原文；模型没给出时为 null（补证会退回到「唯一缺口主张」匹配）。 */
+  claimText: z.string().trim().min(1).max(300).nullable().optional().default(null),
 }).strict();
 
 // 模型漏填的字段一律按「没读到」处理：缺失只会让结论退回「来源待核对」，
@@ -65,8 +67,11 @@ export const reportArgumentsSchema = z.object({
   }).strict()).optional().default([]),
   noApplicableSourceReason: z.string().trim().max(300).nullable().optional().default(null),
   unresolvedItems: z.array(z.string().trim().min(1).max(200)).max(8).optional().default([]),
-  /** 配文里没有展开成主张的原文片段；单次最多核验三条，其余必须留在这里。 */
-  omittedClaims: z.array(z.string().trim().min(1).max(300)).max(6).optional().default([]),
+  /**
+   * 配文里没有展开成主张的原文片段；单次最多核验三条，其余必须留在这里。
+   * 上限给足余量：这是「不静默丢弃」的出口，附属列表超限不该让整份汇总被拒。
+   */
+  omittedClaims: z.array(z.string().trim().min(1).max(300)).max(30).optional().default([]),
 }).strict();
 
 export interface ModelFinding {
@@ -189,8 +194,9 @@ export const reportToolSchema = {
     unresolvedItems: { type: "array", items: { type: "string" }, description: "证据不足、仍未解决的问题。" },
     omittedClaims: {
       type: "array",
+      maxItems: 30,
       items: { type: "string" },
-      description: `配文里没有展开成主张的原文片段（逐字保留）；配文超过 ${AUDITED_CLAIMS_LIMIT} 条主张时，多出来的必须写在这里，没有就填空数组。`,
+      description: `配文里没有展开成主张的原文片段（逐字保留）；配文超过 ${AUDITED_CLAIMS_LIMIT} 条主张时，多出来的必须写在这里，没有就填空数组。只放配文原文，不要放图上说明文字。`,
     },
   },
   required: ["claims", "citations", "noApplicableSourceReason", "unresolvedItems", "omittedClaims"],
@@ -219,16 +225,20 @@ export const sourceToolDeclarations: AnthropicToolDefinition[] = [
   },
   {
     name: CLARIFY_TOOL_NAME,
-    description: "当缺失的口径会改变结论、且资料库无法回答时，向用户提一个问题。单次调查最多一次。",
+    description: "资料库检索后仍缺会影响结论的口径时，向用户提一个具体问题。先自己检索，资料库已覆盖的问题不要问用户。单次调查最多一次。",
     input_schema: {
       type: "object",
       additionalProperties: false,
       properties: {
         question: { type: "string", description: "要问用户的一个具体问题。" },
-        purpose: { type: "string", description: "这个答案会怎样影响结论。" },
+        purpose: { type: "string", description: "这个答案会怎样影响结论、影响哪项口径。" },
         field: { type: "string", enum: ["period", "scope", "metric", "basis", "value"] },
+        claimText: {
+          anyOf: [{ type: "string" }, { type: "null" }],
+          description: "这条追问影响的主张原文（逐字引用该主张）；不影响具体主张时填 null。",
+        },
       },
-      required: ["question", "purpose", "field"],
+      required: ["question", "purpose", "field", "claimText"],
     },
   },
   {

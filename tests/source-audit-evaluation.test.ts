@@ -81,6 +81,10 @@ function resultFor(
     omittedClaims: [],
     captionCoverage: null,
     captionCoverageNote: null,
+    supplement: null,
+    conclusionChanges: null,
+    investigationId: null,
+    inputFingerprint: null,
   };
 }
 
@@ -225,7 +229,7 @@ describe("逐题判定", () => {
 
 describe("任务 03 新增的推断与拆解题目", () => {
   it("02 的 12 道原题与 5 张原图保持原样，只在其后追加新题", () => {
-    // 冻结校验和：任务 03 只允许追加，不允许改写 02 的题面、期望与图片指纹。
+    // 冻结校验和：任务 03／04 只允许追加，不允许改写 02 的题面、期望与图片指纹。
     const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
     expect(questionsCatalog.questions.slice(0, 12).map((question) => question.id)).toEqual([
       "q01-caption-yoy-match",
@@ -245,7 +249,27 @@ describe("任务 03 新增的推断与拆解题目", () => {
     expect(hash(expectationsCatalog.questions.slice(0, 12))).toBe("912cb87d7b6948d82626ebef108c5f2223394dd2caf6e644b6cbce52c773814a");
     expect(hash(["cpi-2025-12", "cpi-2025-12-yoy", "cpi-2025-12-mom", "cpi-2025-12-city", "cpi-2026-08-yoy"]
       .map((name) => questionsCatalog.images[name]))).toBe("f8c51b9aff8bd9ae8d0897aa962a8fd42daacefc2b80501b9ac9da5e26befe1f");
-    expect(questionsCatalog.questions.length).toBe(17);
+    expect(questionsCatalog.questions.length).toBe(19);
+  });
+
+  it("03 的 5 道推断与拆解题在任务 04 之后也保持原样", () => {
+    // 追加式冻结：02+03 共 17 题的题面与期望整体哈希，04 只能在其后追加。
+    const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+    expect(questionsCatalog.questions.slice(12, 17).map((question) => question.id)).toEqual([
+      "q13-inference-mom-contradicted",
+      "q14-inference-mom-supported",
+      "q15-opinion-not-verifiable",
+      "q16-caption-over-three-claims",
+      "q17-inference-no-mom-source",
+    ]);
+    expect(hash(questionsCatalog.questions.slice(0, 17)))
+      .toBe("7ff1614f0be6ca444a7bbb5dc09328f277de53939ac8f6d4fa2e008beb451c2b");
+    expect(hash(expectationsCatalog.questions.slice(0, 17)))
+      .toBe("bc434cc77696bcd5ca586bcf10aa45b27adb3223b665624dcb3ec6e5eb472cb2");
+    expect(hash(questionsCatalog.questions.slice(12, 17)))
+      .toBe("24365cdcdb47307a47a3f0a828ee7f847e185e8281eeb196d3bf01acd00f696e");
+    expect(hash(expectationsCatalog.questions.slice(12, 17)))
+      .toBe("8eefe62405e2408036a8abed0ccf0fd110b006b8c7abf3895b17a1fdb4fd7dc3");
   });
 
   it("推断、观点与覆盖度的类别都有题目覆盖", () => {
@@ -443,6 +467,7 @@ function scriptedDriver(claims: SourceClaim[], citations: ModelCitation[]): Sour
   return {
     model: "stub-model",
     async start() { return replies[index++] ?? replies[replies.length - 1]; },
+    async resume() { return replies[index++] ?? replies[replies.length - 1]; },
     async continue() { return replies[index++] ?? replies[replies.length - 1]; },
     async finalize() { return replies[replies.length - 1]; },
   };
@@ -515,5 +540,278 @@ describe("有检索与无检索两臂的配对运行", () => {
     expect(accuracy?.detail).toContain("100.0%");
     expect(report.summary.gateArm).toBe("retrieval");
     expect(report.summary.degradedQuestions).toEqual([]);
+  });
+});
+
+describe("任务 04 新增的补证与追问题", () => {
+  it("19 题：02+03 的 17 题不动，q18/q19 有独立输入与成对的期望", () => {
+    expect(questionsCatalog.questions.length).toBe(19);
+    expect(expectationsCatalog.questions.length).toBe(19);
+    const q18 = questionsCatalog.questions.find((question) => question.id === "q18-clarify-basis-resume");
+    const e18 = expectationOf("q18-clarify-basis-resume");
+    expect(q18?.clarifyAnswer).toBe("同比");
+    expect(e18.clarificationRequired).toBe(true);
+    expect(e18.clarificationAfterSearch).toBe(true);
+    expect(e18.resume?.supplementApplied).toBe(true);
+    expect(e18.resume?.expect).toEqual([
+      { select: { fromImage: false, basis: "year-on-year", value: 0.8 }, status: "source-match", min: 1 },
+    ]);
+
+    const q19 = questionsCatalog.questions.find((question) => question.id === "q19-covered-no-clarify");
+    const e19 = expectationOf("q19-covered-no-clarify");
+    expect(q19?.clarifyAnswer).toBeUndefined();
+    expect(e19.clarificationForbidden).toBe(true);
+    expect(e19.resume).toBeUndefined();
+  });
+
+  it("类别覆盖补证与恢复、无需追问两类", () => {
+    const covered = new Set(questionsCatalog.questions.flatMap((question) => question.categories));
+    for (const category of ["补证与恢复", "无需追问"]) expect(covered.has(category)).toBe(true);
+  });
+
+  it("题面与期望的补证配置成对冻结，缺一侧即报错", async () => {
+    await expect(verifyFrozenSetup(questionsCatalog, expectationsCatalog)).resolves.toEqual([]);
+
+    const missingResume = structuredClone(expectationsCatalog);
+    const e18 = missingResume.questions.find((entry) => entry.id === "q18-clarify-basis-resume");
+    if (e18) delete e18.resume;
+    expect((await verifyFrozenSetup(questionsCatalog, missingResume)).join("\n"))
+      .toContain("写了 clarifyAnswer 但期望没有 resume 规则");
+
+    const missingAnswer = structuredClone(questionsCatalog);
+    const q18 = missingAnswer.questions.find((question) => question.id === "q18-clarify-basis-resume");
+    if (q18) delete q18.clarifyAnswer;
+    expect((await verifyFrozenSetup(missingAnswer, expectationsCatalog)).join("\n"))
+      .toContain("有 resume 规则但题面缺少 clarifyAnswer");
+
+    const missingSupplement = structuredClone(expectationsCatalog);
+    const e18b = missingSupplement.questions.find((entry) => entry.id === "q18-clarify-basis-resume");
+    if (e18b?.resume) delete e18b.resume.supplementApplied;
+    expect((await verifyFrozenSetup(questionsCatalog, missingSupplement)).join("\n"))
+      .toContain("缺少 supplementApplied");
+  });
+
+  it("追问时机判定：缺追问、资料已覆盖仍追问、追问先于检索", () => {
+    const base = resultFor([claim()], VALUE_CITATION);
+    const withClarification = {
+      ...base,
+      clarification: { question: "是同比还是环比？", purpose: "决定口径。", field: "basis" as const, claimText: null },
+      trace: [
+        { round: 1, order: 1, detail: "", status: "ok" as const, tool: "search_source_library", inputSummary: "", resultSummary: "", durationMs: 1 },
+        { round: 2, order: 1, detail: "", status: "ok" as const, tool: "request_clarification", inputSummary: "", resultSummary: "", durationMs: 1 },
+      ],
+    };
+
+    // 缺追问：q18 要求必须追问。
+    const missing = judgeRun(expectationOf("q18-clarify-basis-resume"), base, { arm: "retrieval" });
+    expect(missing.problems.map((problem) => problem.kind)).toContain("missing-clarification");
+
+    // 追问先于检索（检索臂）：必须先检索再追问。
+    const beforeSearch = judgeRun(expectationOf("q18-clarify-basis-resume"), {
+      ...withClarification,
+      trace: [
+        { round: 1, order: 1, detail: "", status: "ok" as const, tool: "request_clarification", inputSummary: "", resultSummary: "", durationMs: 1 },
+        { round: 2, order: 1, detail: "", status: "ok" as const, tool: "search_source_library", inputSummary: "", resultSummary: "", durationMs: 1 },
+      ],
+    }, { arm: "retrieval" });
+    expect(beforeSearch.problems.map((problem) => problem.kind)).toContain("clarification-before-search");
+
+    // 同一轨迹在无检索臂不判顺序（没有可执行的检索）。
+    const noSearchArm = judgeRun(expectationOf("q18-clarify-basis-resume"), {
+      ...withClarification,
+      trace: [{ round: 1, order: 1, detail: "", status: "ok" as const, tool: "request_clarification", inputSummary: "", resultSummary: "", durationMs: 1 }],
+    }, { arm: "no-retrieval" });
+    expect(noSearchArm.problems.map((problem) => problem.kind)).not.toContain("clarification-before-search");
+
+    // 资料已覆盖的题不许追问。
+    const forbidden = judgeRun(expectationOf("q19-covered-no-clarify"), withClarification, { arm: "retrieval" });
+    expect(forbidden.problems.map((problem) => problem.kind)).toContain("unexpected-clarification");
+  });
+
+  it("补证后阶段用 resume 规则判定，并要求补充确实被套用", () => {
+    const before = resultFor([claim({ basis: null })], VALUE_CITATION);
+    const expectFn = expectationOf("q18-clarify-basis-resume");
+
+    // 补证后：口径填入、状态改判、补充记录存在 → 通过。
+    const supplemented = resultFor([claim({ basis: "year-on-year" })], VALUE_CITATION);
+    supplemented.supplement = {
+      question: "是同比还是环比？",
+      purpose: "决定口径。",
+      field: "basis",
+      claimText: "12 月 CPI 同比上涨 0.8%。",
+      answer: "同比",
+      normalized: "year-on-year",
+      applied: true,
+      conflicts: [],
+      parseNote: null,
+      note: "比较方式由用户补充确定，标为用户提供（不是官方来源）。",
+    };
+    const after = judgeRun(expectFn, supplemented, { arm: "retrieval", phase: "after" });
+    expect(after.problems).toEqual([]);
+
+    // 没有套用补充 → missing-supplement-application。
+    const notApplied = judgeRun(expectFn, before, { arm: "retrieval", phase: "after" });
+    expect(notApplied.problems.map((problem) => problem.kind)).toContain("missing-supplement-application");
+
+    // 补证后阶段仍按状态规则判定：口径没填上时 select 匹配不到期望的主张。
+    const stillPending = judgeRun(expectFn, before, { arm: "retrieval", phase: "after" });
+    expect(stillPending.problems.map((problem) => problem.kind)).toContain("no-matching-claim");
+  });
+
+  it("两阶段 runner：初查提出追问后沿同一段对话恢复，两段各自判定并落记录", async () => {
+    const clarifyCall = {
+      id: "c1",
+      name: "request_clarification",
+      input: {
+        question: "配文没写比较方式，0.8% 是同比还是环比？",
+        purpose: "决定用哪个口径核对。",
+        field: "basis",
+        claimText: "12 月 CPI 上涨 0.8%。",
+      },
+    };
+    const searchCall = {
+      id: "s1",
+      name: "search_source_library",
+      input: { metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: [] },
+    };
+    const claimNoBasis: SourceClaim = {
+      claimText: "12 月 CPI 上涨 0.8%。",
+      metric: "全国居民消费价格",
+      scope: "全国",
+      period: "2025-12",
+      value: 0.8,
+      basis: null,
+      kind: "direct",
+      direction: null,
+      fromImage: false,
+      imageExcerpt: null,
+    };
+    const reportCall = (basis: "month-on-month" | null) => ({
+      id: "r1",
+      name: "report_source_finding",
+      input: {
+        claims: [{ ...claimNoBasis, basis }],
+        citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+        noApplicableSourceReason: null,
+        unresolvedItems: [],
+        omittedClaims: [],
+      },
+    });
+    const replies: ToolLoopReply[] = [
+      { model: "stub", usage: null, text: "先检索。", calls: [searchCall], truncated: false },
+      { model: "stub", usage: null, text: "缺口径，追问。", calls: [clarifyCall], truncated: false },
+      { model: "stub", usage: null, text: "汇总。", calls: [reportCall(null)], truncated: false },
+      { model: "stub", usage: null, text: "补证后汇总。", calls: [reportCall("month-on-month")], truncated: false },
+    ];
+    let index = 0;
+    const driver: SourceInvestigationDriver = {
+      model: "stub",
+      async start() { return replies[index++] ?? replies[replies.length - 1]; },
+      async resume() { return replies[index++] ?? replies[replies.length - 1]; },
+      async continue() { return replies[index++] ?? replies[replies.length - 1]; },
+      async finalize() { return replies[replies.length - 1]; },
+    };
+
+    const questions = {
+      ...questionsCatalog,
+      questions: questionsCatalog.questions.filter((question) => question.id === "q18-clarify-basis-resume"),
+    };
+    const expectations: SourceAuditExpectations = {
+      ...expectationsCatalog,
+      questions: expectationsCatalog.questions.filter((entry) => entry.id === "q18-clarify-basis-resume"),
+    };
+    const report = await runPairedEvaluation(questions, expectations, {
+      runs: 1,
+      arms: ["retrieval"],
+      driverFactory: () => driver,
+    });
+
+    const before = report.records.find((record) => record.phase === "before");
+    const after = report.records.find((record) => record.phase === "after");
+    expect(before).toBeDefined();
+    expect(before?.clarification).toMatchObject({ field: "basis", claimText: "12 月 CPI 上涨 0.8%。" });
+    expect(before?.conclusions[0].status).toBe("source-pending");
+    expect(before?.judgment.ok).toBe(true);
+
+    // 补证后：程序把「同比」套用到主张、状态改判、补充记录落档。
+    expect(after).toBeDefined();
+    expect(after?.supplement).toMatchObject({ answer: "同比", applied: true });
+    expect(after?.conclusions[0].status).toBe("source-match");
+    expect(after?.conclusionChanges).toEqual([
+      expect.objectContaining({ before: "source-pending", after: "source-match", changed: true }),
+    ]);
+    expect(after?.judgment.ok).toBe(true);
+    // 预算跨阶段接续：第二段工具调用累计而不是从零算。
+    expect(after?.toolCallsUsed).toBeGreaterThanOrEqual(before?.toolCallsUsed ?? 0);
+    expect(report.summary.arms[0].resumeRuns).toBe(1);
+    expect(report.summary.arms[0].supplementAppliedRuns).toBe(1);
+  });
+
+  it("初查未追问时不跑补证后阶段，也不编造记录", async () => {
+    const searchCall = {
+      id: "s1",
+      name: "search_source_library",
+      input: { metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: [] },
+    };
+    const reportCall = {
+      id: "r1",
+      name: "report_source_finding",
+      input: {
+        claims: [{
+          claimText: "12 月 CPI 上涨 0.8%。",
+          metric: "全国居民消费价格",
+          scope: "全国",
+          period: "2025-12",
+          value: 0.8,
+          basis: null,
+          kind: "direct",
+          direction: null,
+          fromImage: false,
+          imageExcerpt: null,
+        }],
+        citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+        noApplicableSourceReason: null,
+        unresolvedItems: [],
+        omittedClaims: [],
+      },
+    };
+    const replies: ToolLoopReply[] = [
+      { model: "stub", usage: null, text: "检索。", calls: [searchCall], truncated: false },
+      { model: "stub", usage: null, text: "汇总。", calls: [reportCall], truncated: false },
+    ];
+    let index = 0;
+    const driver: SourceInvestigationDriver = {
+      model: "stub",
+      async start() { return replies[index++] ?? replies[replies.length - 1]; },
+      async resume() { throw new Error("初查未追问，不应进入恢复段"); },
+      async continue() { return replies[index++] ?? replies[replies.length - 1]; },
+      async finalize() { return replies[replies.length - 1]; },
+    };
+
+    const questions = {
+      ...questionsCatalog,
+      questions: questionsCatalog.questions.filter((question) => question.id === "q18-clarify-basis-resume"),
+    };
+    const expectations: SourceAuditExpectations = {
+      ...expectationsCatalog,
+      questions: expectationsCatalog.questions.filter((entry) => entry.id === "q18-clarify-basis-resume"),
+    };
+    const report = await runPairedEvaluation(questions, expectations, {
+      runs: 1,
+      arms: ["retrieval"],
+      driverFactory: () => driver,
+    });
+
+    // 只有一条补证前记录；未追问已由 missing-clarification 判为未通过。
+    expect(report.records).toHaveLength(1);
+    expect(report.records[0].phase).toBe("before");
+    expect(report.records[0].judgment.problems.map((problem) => problem.kind)).toContain("missing-clarification");
+    expect(report.records[0].judgment.ok).toBe(false);
+    expect(report.summary.arms[0].resumeRuns).toBe(0);
+  });
+
+  it("带补证阶段的题把计划请求数翻倍计", () => {
+    expect(plannedRequests(19, 2, 3, 1)).toBe(120); // 19 题 + q18 的恢复段
+    expect(plannedRequests(19, 2, 3)).toBe(114);
   });
 });

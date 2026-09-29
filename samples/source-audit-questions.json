@@ -1,7 +1,7 @@
 {
-  "version": 2,
+  "version": 3,
   "frozenAt": "2026-09-29",
-  "description": "阶段四任务 02 的 12 道固定问题集 + 任务 03 新增的 5 道推断与拆解题（q13—q17，原 12 题一字未改）。这里只放输入（图片、配文、图上声明文字与图片指纹）；独立期望另存于 samples/source-audit-expectations.json，两边都不由模型生成。",
+  "description": "阶段四任务 02 的 12 道固定问题集 + 任务 03 新增的 5 道推断与拆解题（q13—q17，原 12 题一字未改）+ 任务 04 新增的 2 道补证与追问题（q18—q19）。这里只放输入（图片、配文、图上声明文字、图片指纹与补证阶段的用户回答）；独立期望另存于 samples/source-audit-expectations.json，两边都不由模型生成。",
   "imageDirectory": "web/public/samples",
   "images": {
     "cpi-2025-12": {
@@ -165,6 +165,21 @@
       "image": "cpi-2026-07-08-yoy-trend",
       "caption": "7 月 CPI 比上月便宜。",
       "note": "资料库没有 2026 年 7 月的发布，也没有任何环比材料能支持这条推断 ⇒ 推断依据不足，且不等于结论为假。"
+    },
+    {
+      "id": "q18-clarify-basis-resume",
+      "categories": ["补证与恢复", "图上比较方式不明"],
+      "image": "cpi-2025-12-yoy",
+      "caption": "12 月 CPI 上涨 0.8%。",
+      "clarifyAnswer": "同比",
+      "note": "图上写明同比、配文没写比较方式；资料库同比 0.8% 与环比 0.2% 都有，缺的是配文这句的口径 —— 资料库回答不了，模型应先检索再追问。补证回答「同比」后配文主张应改判为与来源一致。"
+    },
+    {
+      "id": "q19-covered-no-clarify",
+      "categories": ["数值正确", "无需追问"],
+      "image": "cpi-2025-12-yoy",
+      "caption": "12 月 CPI 同比上涨 0.8%。",
+      "note": "配文自带比较方式与数值、资料库直接覆盖 ⇒ 资料已覆盖的问题先检索、不追问；任何一次运行出现追问都算未通过。"
     }
   ]
 }

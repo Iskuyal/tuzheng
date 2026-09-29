@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import SiteHeader from "../components/SiteHeader.vue";
 import SourceClaimCard from "../components/SourceClaimCard.vue";
 import {
+  CLAIM_STATUS_LABELS,
+  CLARIFICATION_FIELD_LABELS,
   TOOL_LABELS,
+  type ClaimSourceStatus,
   type PublicSourceLibraryEntry,
   type SourceClaim,
   type SourceInvestigationResult,
@@ -25,6 +28,12 @@ interface ClaimRow {
   index: number;
 }
 
+/** 被顶替或失效的历史结论；只作历史展示，不能当作当前结果。 */
+interface HistoryEntry {
+  result: SourceInvestigationResult;
+  reason: string;
+}
+
 const library = ref<PublicSourceLibraryEntry[]>([]);
 const sample = ref<SourceAuditSample | null>(null);
 const caption = ref("");
@@ -36,9 +45,49 @@ const elapsedSeconds = ref(0);
 const errorMessage = ref("");
 const errorCode = ref("");
 const result = ref<SourceInvestigationResult | null>(null);
+const history = ref<HistoryEntry[]>([]);
+const clarificationAnswer = ref("");
 const libraryOpen = ref(false);
 let timer: number | null = null;
 let controller: AbortController | null = null;
+/** 请求序号：输入改动或取消时递增，在途响应若序号过期直接丢弃，不写回旧结论。 */
+let requestSeq = 0;
+
+function fieldLabel(field: string): string {
+  return CLARIFICATION_FIELD_LABELS[field as keyof typeof CLARIFICATION_FIELD_LABELS] ?? field;
+}
+
+/** 在历史条目的对照里按主张原文找补证前状态；配不上对或本来就没有对照时返回 null。 */
+function changeBefore(
+  changes: SourceInvestigationResult["conclusionChanges"],
+  claimText: string,
+): ClaimSourceStatus | null {
+  return changes?.find((change) => change.claimText === claimText)?.before ?? null;
+}
+
+/** 把当前结论顶进历史并标记原因；历史只作展示，不参与当前判断。 */
+function retireCurrentResult(reason: string): void {
+  if (!result.value) return;
+  history.value.unshift({ result: result.value, reason });
+  result.value = null;
+  clarificationAnswer.value = "";
+}
+
+/**
+ * 输入（图片或配文）改动即失效：当前结论移入历史、在途请求作废、迟到响应被序号挡住。
+ * 依赖旧输入的证据与结论不能继续冒充当前结果——即使此刻还没有展示中的结论，
+ * 在途请求也必须作废，否则迟到响应会把旧输入的结论写回来。
+ */
+function invalidateCurrentResult(reason: string): void {
+  requestSeq += 1;
+  controller?.abort();
+  controller = null;
+  if (busy.value) {
+    busy.value = false;
+    stopTimer();
+  }
+  retireCurrentResult(reason);
+}
 
 function startTimer(): void {
   stopTimer();
@@ -56,6 +105,12 @@ function stopTimer(): void {
 onBeforeUnmount(() => {
   stopTimer();
   controller?.abort();
+});
+
+// 配文一改动（含月份、范围、比较方式这些写在配文里的口径），旧结论立即失效。
+// 无条件作废：即便当前没有展示中的结论，在途请求也必须被挡掉。
+watch(caption, () => {
+  invalidateCurrentResult("配文已改动，结论已失效");
 });
 
 onMounted(async () => {
@@ -122,10 +177,10 @@ function onFileChange(event: Event): void {
   const file = input.files?.[0] ?? null;
   errorMessage.value = "";
   errorCode.value = "";
-  result.value = null;
   if (!file) {
     pendingFile.value = null;
     selectedFileName.value = "";
+    invalidateCurrentResult("图片已改动，结论已失效");
     return;
   }
   if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
@@ -138,6 +193,7 @@ function onFileChange(event: Event): void {
     input.value = "";
     return;
   }
+  invalidateCurrentResult("图片已改动，结论已失效");
   setPendingImage(file, file.name);
 }
 
@@ -152,7 +208,7 @@ async function loadSampleImage(): Promise<void> {
   if (!sample.value) return;
   errorMessage.value = "";
   errorCode.value = "";
-  result.value = null;
+  invalidateCurrentResult("已载入样例图片，旧结论已失效");
   try {
     const response = await fetch(sample.value.imageUrl);
     if (!response.ok) throw new Error("sample-unavailable");
@@ -165,6 +221,7 @@ async function loadSampleImage(): Promise<void> {
 }
 
 function cancelRun(): void {
+  requestSeq += 1;
   controller?.abort();
   controller = null;
   busy.value = false;
@@ -172,10 +229,81 @@ function cancelRun(): void {
   errorMessage.value = "已取消这次来源核验。";
 }
 
+type PostOutcome =
+  | { kind: "ok"; investigation: SourceInvestigationResult }
+  | { kind: "error"; code: string; message: string }
+  | { kind: "aborted"; message: string }
+  | { kind: "stale" };
+
+/**
+ * 初查与补证恢复共用的提交：请求序号令牌 + AbortController 实现在途隔离——
+ * 输入改动或取消会递增令牌，迟到响应即使到达也被丢弃，不写回旧结论。
+ */
+async function postInvestigation(path: string, form: FormData, cancelMessage: string): Promise<PostOutcome> {
+  const seq = ++requestSeq;
+  busy.value = true;
+  startTimer();
+  controller = new AbortController();
+  try {
+    const response = await fetch(path, { method: "POST", body: form, signal: controller.signal });
+    const body = await response.json().catch(() => null) as
+      | { investigation: SourceInvestigationResult }
+      | { error: { code: string; message: string } }
+      | null;
+    if (seq !== requestSeq) return { kind: "stale" };
+    if (!response.ok) {
+      const failure = body && "error" in body ? body.error : null;
+      return {
+        kind: "error",
+        code: failure?.code ?? "",
+        message: failure?.message ?? "来源核验没有完成，请稍后重试。",
+      };
+    }
+    if (!body || !("investigation" in body)) {
+      return { kind: "error", code: "", message: "服务端返回内容无法识别，请重试。" };
+    }
+    return { kind: "ok", investigation: body.investigation };
+  } catch (error) {
+    if (seq !== requestSeq) return { kind: "stale" };
+    if (error instanceof Error && error.name === "AbortError") {
+      return { kind: "aborted", message: cancelMessage };
+    }
+    return { kind: "error", code: "", message: "无法连接本机服务端，请确认开发服务正在运行。" };
+  } finally {
+    if (seq === requestSeq) {
+      busy.value = false;
+      stopTimer();
+      controller = null;
+    }
+  }
+}
+
+function applyOutcome(outcome: PostOutcome): boolean {
+  if (outcome.kind === "stale") return false;
+  if (outcome.kind === "aborted") {
+    errorMessage.value = outcome.message;
+    return false;
+  }
+  if (outcome.kind === "error") {
+    errorCode.value = outcome.code;
+    errorMessage.value = outcome.message;
+    return false;
+  }
+  return true;
+}
+
+function buildAuditForm(): FormData {
+  const form = new FormData();
+  form.append("image", pendingFile.value as File);
+  form.append("caption", caption.value.trim());
+  return form;
+}
+
 async function runInvestigation(): Promise<void> {
   errorMessage.value = "";
   errorCode.value = "";
-  result.value = null;
+  // 重新核验会顶替当前结果；旧结论进历史，即使本次失败也不复活。
+  retireCurrentResult("重新核验，上一份结论已转为历史");
   if (!pendingFile.value) {
     errorMessage.value = "请先上传图表图片，或载入团队自制 CPI 样例。";
     return;
@@ -185,45 +313,35 @@ async function runInvestigation(): Promise<void> {
     return;
   }
 
-  const form = new FormData();
-  form.append("image", pendingFile.value);
-  form.append("caption", caption.value.trim());
+  const outcome = await postInvestigation("/api/source-audit/investigate", buildAuditForm(), "已取消这次来源核验。");
+  if (!applyOutcome(outcome) || outcome.kind !== "ok") return;
+  result.value = outcome.investigation;
+}
 
-  busy.value = true;
-  startTimer();
-  controller = new AbortController();
-  try {
-    const response = await fetch("/api/source-audit/investigate", {
-      method: "POST",
-      body: form,
-      signal: controller.signal,
-    });
-    const body = await response.json().catch(() => null) as
-      | { investigation: SourceInvestigationResult }
-      | { error: { code: string; message: string } }
-      | null;
-    if (!response.ok) {
-      const failure = body && "error" in body ? body.error : null;
-      errorCode.value = failure?.code ?? "";
-      errorMessage.value = failure?.message ?? "来源核验没有完成，请稍后重试。";
-      return;
-    }
-    if (!body || !("investigation" in body)) {
-      errorMessage.value = "服务端返回内容无法识别，请重试。";
-      return;
-    }
-    result.value = body.investigation;
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      errorMessage.value = "已取消这次来源核验。";
-    } else {
-      errorMessage.value = "无法连接本机服务端，请确认开发服务正在运行。";
-    }
-  } finally {
-    busy.value = false;
-    stopTimer();
-    controller = null;
+/** 提交对追问的回答，沿同一段对话恢复调查；旧结果在成功后转为历史。 */
+async function submitClarification(): Promise<void> {
+  errorMessage.value = "";
+  errorCode.value = "";
+  const current = result.value;
+  if (!current?.clarification || !current.investigationId) return;
+  if (!clarificationAnswer.value.trim()) {
+    errorMessage.value = "请先填写对追问的回答。";
+    return;
   }
+  if (!pendingFile.value) {
+    errorMessage.value = "图片已丢失，请重新发起核验。";
+    return;
+  }
+
+  const form = buildAuditForm();
+  form.append("answer", clarificationAnswer.value.trim());
+  form.append("investigationId", current.investigationId);
+
+  const outcome = await postInvestigation("/api/source-audit/resume", form, "已取消这次补充恢复。");
+  if (!applyOutcome(outcome) || outcome.kind !== "ok") return;
+  // 同一条记录的前后两段：补证前的结论转为历史，恢复段成为当前结果。
+  retireCurrentResult("已由补证结果接续，本段转为历史");
+  result.value = outcome.investigation;
 }
 </script>
 
@@ -345,10 +463,72 @@ async function runInvestigation(): Promise<void> {
           模型没有给出可用的汇总，本次没有生成任何来源结论；上面的停止原因与工具轨迹记录了实际发生的事。
         </p>
 
-        <div v-if="result.clarification" class="source-clarification">
+        <div v-if="result.clarification" class="source-clarification" data-testid="clarification-block">
           <p class="eyebrow">模型请求确认（本次调查仅此一次）</p>
           <p class="source-clarification-question">{{ result.clarification.question }}</p>
           <p class="source-clarification-purpose">用途：{{ result.clarification.purpose }}</p>
+          <p v-if="result.clarification.claimText" class="source-clarification-claim">
+            影响的主张：「{{ result.clarification.claimText }}」（{{ fieldLabel(result.clarification.field) }}）
+          </p>
+          <label class="source-answer-field" for="source-clarification-answer">
+            <span>补充回答（标为「用户提供」，只用于确定口径，不是官方来源）</span>
+            <textarea
+              id="source-clarification-answer"
+              v-model="clarificationAnswer"
+              rows="2"
+              maxlength="400"
+              :placeholder="`例如：${fieldLabel(result.clarification.field)}`"
+              data-testid="clarification-answer"
+            ></textarea>
+          </label>
+          <button
+            type="button"
+            class="read-image-button"
+            data-testid="submit-clarification"
+            :disabled="busy"
+            @click="submitClarification"
+          >
+            {{ busy ? `正在恢复（${elapsedSeconds} 秒）` : "提交补充并恢复调查" }}
+          </button>
+        </div>
+
+        <div v-if="result.supplement" class="source-supplement" data-testid="supplement-block">
+          <p class="eyebrow">补证记录</p>
+          <p class="source-supplement-item">
+            追问：{{ result.supplement.question }}
+            <template v-if="result.supplement.claimText">（影响主张：「{{ result.supplement.claimText }}」）</template>
+          </p>
+          <p class="source-supplement-item">
+            用户回答（用户提供）：{{ result.supplement.answer }}
+            <strong v-if="result.supplement.normalized" class="source-supplement-normalized">
+              → 解析为 {{ result.supplement.normalized }}
+            </strong>
+          </p>
+          <p class="source-supplement-note" data-testid="supplement-note">{{ result.supplement.note }}</p>
+          <ul v-if="result.supplement.conflicts.length" class="source-supplement-conflicts">
+            <li v-for="conflict in result.supplement.conflicts" :key="conflict.claimText">
+              「{{ conflict.claimText }}」：图文写明 {{ conflict.fromImage }}，用户补充 {{ conflict.fromUser }}——双方都保留，请更正补充或确认以原文为准。
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="result.conclusionChanges?.length" class="source-section" data-testid="conclusion-changes">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">补证前后</p>
+              <h2>结论变化</h2>
+            </div>
+          </div>
+          <p class="source-section-note">同一条主张在补充前后的状态对照，说明结论为什么改变；配不上对的主张也单列，不静默丢弃。</p>
+          <ul class="source-change-list">
+            <li v-for="change in result.conclusionChanges" :key="change.claimText" :class="{ 'is-changed': change.changed }">
+              <span class="source-change-claim">「{{ change.claimText }}」</span>
+              <span class="source-change-before">{{ change.before ? CLAIM_STATUS_LABELS[change.before] : "补证前无对照" }}</span>
+              <span aria-hidden="true">→</span>
+              <span class="source-change-after">{{ change.after ? CLAIM_STATUS_LABELS[change.after] : "恢复后未再汇报" }}</span>
+              <span class="source-change-reason">{{ change.reason }}</span>
+            </li>
+          </ul>
         </div>
 
         <div class="source-section">
@@ -510,6 +690,44 @@ async function runInvestigation(): Promise<void> {
             没有适用来源的原因：{{ result.noApplicableSourceReason }}
           </p>
         </div>
+      </section>
+
+      <section v-if="history.length" class="source-history" aria-label="历史结论" data-testid="history-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">历史</p>
+            <h2>历史结论（仅作历史展示）</h2>
+          </div>
+        </div>
+        <p class="source-section-note">
+          下列结论依赖的输入已改动或已被补证接续，只作历史查看，不代表当前结论。
+        </p>
+        <details
+          v-for="(entry, index) in history"
+          :key="`${entry.result.investigationId ?? 'entry'}-${index}`"
+          class="source-history-entry"
+          :data-testid="`history-entry-${index}`"
+        >
+          <summary>
+            <span class="source-history-badge">历史</span>
+            <span class="source-history-reason">{{ entry.reason }}</span>
+            <span class="source-history-meta">模型：{{ entry.result.model }} · 停止原因：{{ entry.result.stopReason }}</span>
+          </summary>
+          <ul class="source-history-claims">
+            <li v-for="(conclusion, conclusionIndex) in entry.result.conclusions" :key="conclusionIndex">
+              「{{ conclusion.claimText }}」——{{ CLAIM_STATUS_LABELS[conclusion.status] }}
+              <span
+                v-if="changeBefore(entry.result.conclusionChanges, conclusion.claimText)"
+                class="source-history-change"
+              >
+                （补证前：{{ CLAIM_STATUS_LABELS[changeBefore(entry.result.conclusionChanges, conclusion.claimText)!] }}）
+              </span>
+            </li>
+          </ul>
+          <p v-if="entry.result.supplement" class="source-history-supplement">
+            补证：{{ entry.result.supplement.answer }}（用户提供）——{{ entry.result.supplement.note }}
+          </p>
+        </details>
       </section>
 
       <section v-if="library.length" class="source-library" aria-label="固定资料库">

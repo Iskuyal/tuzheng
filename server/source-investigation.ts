@@ -15,28 +15,38 @@ import {
   type AnthropicToolDefinition,
   type AnthropicToolUseBlock,
   type AnthropicTurn,
+  type AnthropicTurnBlock,
 } from "./anthropic-messages.js";
 import type { ProviderConfig } from "./model-settings.js";
+import { sourceResumeMessage } from "./source-prompt.js";
 import {
   AUDITED_CLAIMS_LIMIT,
   CAPTION_COVERAGE_MIN,
   CLAIM_TRACE_MIN_COVERAGE,
   CLARIFICATIONS_PER_INVESTIGATION,
   INVESTIGATION_DEADLINE_MS,
+  INVESTIGATION_ROUNDS,
   TOOL_CALLS_PER_INVESTIGATION,
   TOOL_CALLS_PER_ROUND,
+  applySupplementToClaims,
   auditClaimsAgainstSources,
   bigramCoverage,
   captionClaimCoverage,
+  CLARIFICATION_FIELD_LABELS,
   compareValues,
+  diffConclusions,
   fillClaimPeriodsFromImage,
+  parseClarificationAnswer,
+  resolveSupplementTarget,
   searchSourceLibrary,
+  type ClaimSupplementInfo,
   type ClarificationRequest,
   type ModelCitation,
   type OmittedClaim,
   type SourceClaim,
   type SourceHit,
   type SourceInvestigationResult,
+  type SupplementRecord,
   type ToolTraceEvent,
 } from "../shared/source-audit.js";
 import {
@@ -84,6 +94,8 @@ export interface ToolResultPayload {
 export interface SourceInvestigationDriver {
   readonly model: string;
   start(): Promise<ToolLoopReply>;
+  /** 补证恢复：把用户回答作为一条新的用户消息注入同一段对话，再要下一轮回复。 */
+  resume(message: string): Promise<ToolLoopReply>;
   continue(results: ToolResultPayload[]): Promise<ToolLoopReply>;
   finalize(reason: string): Promise<ToolLoopReply>;
 }
@@ -100,6 +112,20 @@ export class SourceInvestigationError extends Error {
     );
     this.name = "SourceInvestigationError";
   }
+}
+
+/** 把 zod 校验问题压成一句可读的重报指令，让模型知道该改哪里。 */
+function summarizeReportIssues(issues: z.ZodIssue[]): string {
+  const parts = issues.slice(0, 3).map((issue) => {
+    const path = issue.path.join(".") || "根";
+    if (issue.code === "too_big" && "maximum" in issue) {
+      return `${path} 超出条数上限（最多 ${issue.maximum} 条）`;
+    }
+    if (issue.code === "invalid_union") return `${path} 类型不对`;
+    return `${path}: ${issue.message}`;
+  });
+  const suffix = issues.length > 3 ? `（另 ${issues.length - 3} 处）` : "";
+  return `问题：${parts.join("；")}${suffix}。`;
 }
 
 function summarizeArguments(input: unknown, maxLength = 160): string {
@@ -140,26 +166,44 @@ export async function runSourceInvestigation(
     allowSearch?: boolean;
     /** 配文原文；用于核对配文主张能否追溯到原文并计算配文覆盖度。 */
     caption?: string | null;
+    /**
+     * 补证恢复：用户已回答追问，沿同一段对话继续调查。
+     * 预算、轮次与追问次数从 prior 接续（不通过恢复清零），检索命中随会话带入，
+     * 引用与结论一律按本轮重新组合校验，不沿用 prior 的结论。
+     */
+    resume?: { answer: string; prior: SourceInvestigationResult };
   } = {},
 ): Promise<SourceInvestigationResult> {
   const allowSearch = options.allowSearch ?? true;
+  const resume = options.resume ?? null;
+  const resumeClarification = resume?.prior.clarification ?? null;
+  if (resume && !resumeClarification) {
+    throw new Error("恢复调查需要补证前存在一次待回答的追问。");
+  }
   const startedAt = Date.now();
-  const trace: ToolTraceEvent[] = [];
+  const trace: ToolTraceEvent[] = resume ? [...resume.prior.trace] : [];
   const hitsById = new Map<string, SourceHit>();
-  let toolCallsUsed = 0;
+  if (resume) {
+    // 同图同配文同资料库：把上一段的检索命中带入本次，引用仍要按本轮主张口径重新校验。
+    for (const hit of resume.prior.hits) hitsById.set(hit.document.id, hit);
+  }
+  // 共享预算：调用数、轮次与追问次数都从补证前的结果接续，恢复不能清零。
+  let toolCallsUsed = resume ? resume.prior.toolCallsUsed : 0;
   let repairUsed = false;
-  let clarifications = 0;
+  /** 最近一次汇总被拒的具体原因；重报指令要用它，否则模型只会重复同样的错误。 */
+  let reportIssueNote = "";
+  let clarifications = resumeClarification ? CLARIFICATIONS_PER_INVESTIGATION : 0;
   let clarification: ClarificationRequest | null = null;
   let finding: SourceClaim[] | null = null;
   let findingCitations: ModelCitation[] = [];
   let noApplicableSourceReason: string | null = null;
   let modelUnresolved: string[] = [];
   let modelOmittedClaims: string[] = [];
-  let usage: SourceInvestigationResult["usage"] = null;
+  let usage: SourceInvestigationResult["usage"] = resume ? resume.prior.usage : null;
   let truncated = false;
   let recognizedModel = driver.model;
   let stopReason = "模型没有给出汇总结果。";
-  let round = 0;
+  let round = resume ? resume.prior.rounds : 0;
 
   const runTool = async (
     call: ToolLoopCall,
@@ -247,6 +291,7 @@ export async function runSourceInvestigation(
           question: parsed.data.question,
           purpose: parsed.data.purpose,
           field: parsed.data.field,
+          claimText: parsed.data.claimText ?? null,
         };
         event("ok", `已记录追问（${fieldLabel(parsed.data.field)}）：${parsed.data.question}`);
         return {
@@ -270,6 +315,8 @@ export async function runSourceInvestigation(
   const acceptReport = (input: unknown, currentRound: number, order: number, detail: string): boolean => {
     const parsed = reportArgumentsSchema.safeParse(input);
     if (!parsed.success) {
+      // 把具体问题记下来：重报指令与轨迹都要说明错在哪，否则模型只会重复同样的错误。
+      reportIssueNote = summarizeReportIssues(parsed.error.issues);
       trace.push({
         round: currentRound,
         order,
@@ -277,7 +324,7 @@ export async function runSourceInvestigation(
         status: "rejected",
         tool: REPORT_TOOL_NAME,
         inputSummary: summarizeArguments(input),
-        resultSummary: "汇总结构不符合要求，未被采用。",
+        resultSummary: `汇总结构不符合要求，未被采用。${reportIssueNote}`,
         durationMs: 0,
       });
       return false;
@@ -302,7 +349,21 @@ export async function runSourceInvestigation(
     return true;
   };
 
-  let reply = await driver.start();
+  let reply: ToolLoopReply;
+  if (resume && resumeClarification) {
+    const parsed = parseClarificationAnswer(resumeClarification.field, resume.answer);
+    reply = await driver.resume(sourceResumeMessage({
+      question: resumeClarification.question,
+      purpose: resumeClarification.purpose,
+      field: resumeClarification.field,
+      claimText: resumeClarification.claimText,
+      answer: resume.answer,
+      normalized: parsed.ok ? parsed.value : null,
+      parseNote: parsed.ok ? null : parsed.reason,
+    }));
+  } else {
+    reply = await driver.start();
+  }
 
   while (true) {
     if (Date.now() - startedAt > INVESTIGATION_DEADLINE_MS) {
@@ -319,6 +380,34 @@ export async function runSourceInvestigation(
       break;
     }
 
+    // 补证前后共享轮次上限：工具轮最多 INVESTIGATION_ROUNDS 轮（与初查的 round >= INVESTIGATION_ROUNDS
+    // 检查同一语义——第4轮仍可执行工具）；恢复段越过上限时不再执行工具，强制汇总轮不计入工具轮。
+    if (round > INVESTIGATION_ROUNDS) {
+      for (const call of reply.calls.filter((entry) => entry.name !== REPORT_TOOL_NAME)) {
+        trace.push({
+          round,
+          order: reply.calls.indexOf(call) + 1,
+          detail: summarizeDetail(reply.text),
+          status: "rejected",
+          tool: call.name,
+          inputSummary: summarizeArguments(call.input),
+          resultSummary: "调查轮次上限已到（含补证前的轮次），本次调用未执行。",
+          durationMs: 0,
+        });
+      }
+      reply = await driver.finalize("调查轮次上限已到（含补证前的轮次），请基于已有证据立即汇总。");
+      round += 1;
+      usage = reply.usage ?? usage;
+      recognizedModel = reply.model || recognizedModel;
+      const finalReport = reply.calls.find((call) => call.name === REPORT_TOOL_NAME);
+      if (finalReport && acceptReport(finalReport.input, round, 1, "轮次用尽后按要求汇总。")) {
+        stopReason = "轮次达到上限（含补证前的轮次）后汇总。";
+      } else {
+        stopReason = "轮次达到上限（含补证前的轮次），且模型未给出有效汇总。";
+      }
+      break;
+    }
+
     const reportCalls = reply.calls.filter((call) => call.name === REPORT_TOOL_NAME);
     const actionCalls = reply.calls.filter((call) => call.name !== REPORT_TOOL_NAME);
 
@@ -328,10 +417,10 @@ export async function runSourceInvestigation(
         stopReason = "模型在看完工具结果后给出汇总。";
         break;
       }
-      // 结构不合法时给一次恢复机会：只保留汇总工具并强制重报，仍不合法就如实停止。
+      // 结构不合法时给一次恢复机会：带上具体错误重报，否则模型只会重复同样的错误。
       if (!repairUsed) {
         repairUsed = true;
-        reply = await driver.finalize("上一次汇总结构不符合要求，请重新汇总。");
+        reply = await driver.finalize(`上一次汇总结构不符合要求。${reportIssueNote}请修正后重新调用 report_source_finding 汇总。`);
         round += 1;
         usage = reply.usage ?? usage;
         recognizedModel = reply.model || recognizedModel;
@@ -394,7 +483,7 @@ export async function runSourceInvestigation(
         break;
       }
 
-      if (round >= 4) {
+      if (round >= INVESTIGATION_ROUNDS) {
         reply = await driver.finalize("轮次上限。");
         round += 1;
         const finalReport = reply.calls.find((call) => call.name === REPORT_TOOL_NAME);
@@ -413,7 +502,7 @@ export async function runSourceInvestigation(
     }
 
     if (actionCalls.length === 0 && reportCalls.length === 0) {
-      if (round >= 4 || toolCallsUsed >= TOOL_CALLS_PER_INVESTIGATION) {
+      if (round >= INVESTIGATION_ROUNDS || toolCallsUsed >= TOOL_CALLS_PER_INVESTIGATION) {
         reply = await driver.finalize("模型没有继续调用工具。");
         round += 1;
         const finalReport = reply.calls.find((call) => call.name === REPORT_TOOL_NAME);
@@ -432,7 +521,57 @@ export async function runSourceInvestigation(
   }
 
   // 配文只写月份时按图上标注补全年份，让口径能落到具体发布。
-  const { claims: filledClaims, notes: periodNotes } = fillClaimPeriodsFromImage(finding ?? []);
+  const { claims: rawClaims, notes: rawPeriodNotes } = fillClaimPeriodsFromImage(finding ?? []);
+  const caption = options.caption?.trim() || null;
+
+  // 补证恢复：把用户回答按字段套用到追问指向的主张（图文没写才填入；冲突保留双方、不覆盖）。
+  let filledClaims = rawClaims;
+  const periodNotes = rawPeriodNotes;
+  let supplementInfos: Array<ClaimSupplementInfo | null> = rawClaims.map(() => null);
+  let supplement: SupplementRecord | null = null;
+  if (resume && resumeClarification) {
+    const parsed = parseClarificationAnswer(resumeClarification.field, resume.answer);
+    const normalized = parsed.ok ? parsed.value : null;
+    const target = resolveSupplementTarget(
+      resume.prior.claims,
+      resumeClarification.field,
+      resumeClarification.claimText,
+      caption,
+    );
+    const applied = applySupplementToClaims({
+      claims: rawClaims,
+      priorClaims: resume.prior.claims,
+      field: resumeClarification.field,
+      rawAnswer: resume.answer,
+      normalized,
+      targetClaimText: target,
+      caption,
+    });
+    filledClaims = applied.claims;
+    supplementInfos = applied.infos;
+    const fieldText = CLARIFICATION_FIELD_LABELS[resumeClarification.field];
+    const parseNote = parsed.ok ? null : parsed.reason;
+    const note = parseNote
+      ? `回答无法解析为${fieldText}，补充未被采用（${parseNote}）。`
+      : applied.conflicts.length > 0
+        ? `用户补充的${fieldText}与图文写明的内容冲突，已保留双方并请求更正，结论保持待核对。`
+        : applied.appliedClaimTexts.length > 0
+          ? `${fieldText}由用户补充确定，标为用户提供（不是官方来源）。`
+          : `回答与图文写明的${fieldText}一致，未改动结论。`;
+    supplement = {
+      question: resumeClarification.question,
+      purpose: resumeClarification.purpose,
+      field: resumeClarification.field,
+      claimText: resumeClarification.claimText,
+      answer: resume.answer,
+      normalized,
+      applied: applied.appliedClaimTexts.length > 0,
+      conflicts: applied.conflicts,
+      parseNote,
+      note,
+    };
+  }
+
   // 超过单次上限时优先保留配文主张（用户自己写的那句话），图上主张排在其后；
   // 保留的主张仍按模型给出的顺序排列，没进核验的每一条都保留原文列进未展开项，不静默丢弃。
   const keepIndexes = new Set<number>();
@@ -444,12 +583,12 @@ export async function runSourceInvestigation(
   }
   const claims = filledClaims.filter((_, index) => keepIndexes.has(index));
   const auditedPeriodNotes = periodNotes.filter((_, index) => keepIndexes.has(index));
+  const auditedSupplementInfos = supplementInfos.filter((_, index) => keepIndexes.has(index));
   const overflowClaims = filledClaims.filter((_, index) => !keepIndexes.has(index));
 
   // 未展开的主张：模型超额汇报的与它自己声明没展开的都保留原文，不静默丢弃。
   // 声明里能追溯到配文原文的算「配文没展开」，其余的（多数是图上说明文字）另计，
   // 避免把图表页脚当成用户配文里没核验的内容。
-  const caption = options.caption?.trim() || null;
   const omittedClaims: OmittedClaim[] = [
     ...overflowClaims.map((claim) => ({
       claimText: claim.claimText,
@@ -501,8 +640,12 @@ export async function runSourceInvestigation(
     noApplicableSourceReason,
     caption,
     periodNotes: auditedPeriodNotes,
+    supplements: auditedSupplementInfos,
     imageClaimsContext: filledClaims.filter((claim) => claim.fromImage),
   });
+
+  // 补证前后按主张原文配对，逐条给出状态变化与原因，供页面与记录展示「结论为什么变」。
+  const conclusionChanges = resume ? diffConclusions(resume.prior.conclusions, audit.conclusions) : null;
 
   return {
     model: recognizedModel,
@@ -525,6 +668,10 @@ export async function runSourceInvestigation(
     omittedClaims,
     captionCoverage: coverage ? coverage.coverage : null,
     captionCoverageNote,
+    supplement,
+    conclusionChanges,
+    investigationId: null,
+    inputFingerprint: null,
   };
 }
 
@@ -619,10 +766,20 @@ export class AnthropicSourceInvestigationDriver implements SourceInvestigationDr
       throw new SourceInvestigationError(isTimeout(error) ? "timeout" : "upstream", { cause: error });
     }
     const loopReply = toToolLoopReply(reply, this.model);
-    this.turns.push({
-      role: "assistant",
-      content: loopReply.calls.map((call) => ({ type: "tool_use" as const, id: call.id, name: call.name, input: call.input })),
-    });
+    // assistant 消息必须带非空 content：纯文本回复没有 tool_use，要保留文本本身，
+    // 否则 Anthropic 会因空 content 拒绝整段对话（HTTP 400）。
+    const assistantContent: AnthropicTurnBlock[] = [
+      ...(loopReply.text ? [{ type: "text" as const, text: loopReply.text }] : []),
+      ...loopReply.calls.map((call) => ({
+        type: "tool_use" as const,
+        id: call.id,
+        name: call.name,
+        input: call.input,
+      })),
+    ];
+    if (assistantContent.length > 0) {
+      this.turns.push({ role: "assistant", content: assistantContent });
+    }
     return loopReply;
   }
 
@@ -630,28 +787,68 @@ export class AnthropicSourceInvestigationDriver implements SourceInvestigationDr
     return await this.sendTurn({});
   }
 
+  /**
+   * 最后一条 assistant 消息里尚未回传结果的 tool_use：同轮被拒的汇总、超限被丢的调用、
+   * 以及初查以汇总结束后的那次调用，都属于这一类。Anthropic 要求每个 tool_use 后紧跟
+   * 配对的 tool_result，否则整段对话被 HTTP 400 拒绝——发任何新用户消息前先补齐。
+   * `exclude` 是本次消息里已自带结果的调用 ID，避免重复回传。
+   */
+  private pendingToolResults(exclude: ReadonlySet<string> = new Set()): AnthropicTurnBlock[] {
+    const last = this.turns[this.turns.length - 1];
+    if (last?.role !== "assistant") return [];
+    const answered = new Set<string>(exclude);
+    for (const turn of this.turns) {
+      if (turn.role !== "user") continue;
+      for (const block of turn.content) {
+        if (block.type === "tool_result") answered.add(block.tool_use_id);
+      }
+    }
+    return last.content
+      .filter((block): block is AnthropicToolUseBlock =>
+        block.type === "tool_use" && Boolean(block.id) && !answered.has(block.id as string))
+      .map((block) => ({
+        type: "tool_result" as const,
+        tool_use_id: block.id as string,
+        content: "该工具调用的结果未被采用或调查已进入下一阶段；请基于已有信息继续。",
+        is_error: true,
+      }));
+  }
+
+  async resume(message: string): Promise<ToolLoopReply> {
+    this.turns.push({
+      role: "user",
+      content: [...this.pendingToolResults(), { type: "text", text: message }],
+    });
+    return await this.sendTurn({});
+  }
+
   async continue(results: ToolResultPayload[]): Promise<ToolLoopReply> {
+    const paired = results.map((result) => ({
+      type: "tool_result" as const,
+      tool_use_id: result.id,
+      content: result.output,
+      ...(result.isError ? { is_error: true } : {}),
+    }));
+    const pairedIds = new Set(results.map((result) => result.id));
     if (results.length > 0) {
-      this.turns.push({
-        role: "user",
-        content: results.map((result) => ({
-          type: "tool_result" as const,
-          tool_use_id: result.id,
-          content: result.output,
-          ...(result.isError ? { is_error: true } : {}),
-        })),
-      });
+      this.turns.push({ role: "user", content: [...this.pendingToolResults(pairedIds), ...paired] });
     } else {
       this.turns.push({
         role: "user",
-        content: [{ type: "text", text: "请继续：调用工具，或调用 report_source_finding 汇总。" }],
+        content: [...this.pendingToolResults(), { type: "text", text: "请继续：调用工具，或调用 report_source_finding 汇总。" }],
       });
     }
     return await this.sendTurn({});
   }
 
   async finalize(reason: string): Promise<ToolLoopReply> {
-    this.turns.push({ role: "user", content: [{ type: "text", text: `${reason}${FINALIZE_SUFFIX}` }] });
+    this.turns.push({
+      role: "user",
+      content: [
+        ...this.pendingToolResults(),
+        { type: "text", text: `${reason}${FINALIZE_SUFFIX}` },
+      ],
+    });
     return await this.sendTurn({
       tools: sourceToolDeclarations.filter((tool) => tool.name === REPORT_TOOL_NAME),
       toolChoice: { type: "tool", name: REPORT_TOOL_NAME },
@@ -778,10 +975,47 @@ export class ResponsesSourceInvestigationDriver implements SourceInvestigationDr
     return await this.sendTurn({});
   }
 
-  async continue(results: ToolResultPayload[]): Promise<ToolLoopReply> {
-    if (results.length === 0) {
-      this.input.push({ role: "user", content: [{ type: "input_text", text: "请继续：调用工具，或调用 report_source_finding 汇总。" }] });
+  /**
+   * 尾部尚未回传输出的 function_call（同轮被拒的汇总、超限被丢的调用、初查以汇总结束的那次）。
+   * Responses 同样要求 function_call 紧跟配对的 function_call_output；`exclude` 是本次消息
+   * 已自带输出的调用 ID，避免重复回传。
+   */
+  private pendingFunctionOutputs(exclude: ReadonlySet<string> = new Set()): ResponseInputItem[] {
+    const answered = new Set(exclude);
+    for (const item of this.input) {
+      if ((item as { type?: string }).type === "function_call_output") {
+        answered.add((item as { call_id?: string }).call_id as string);
+      }
     }
+    const pending: Array<{ call_id?: string }> = [];
+    for (const item of [...this.input].reverse()) {
+      if ((item as { type?: string }).type !== "function_call") break;
+      pending.push(item as { call_id?: string });
+    }
+    return pending.reverse()
+      .filter((call) => call.call_id && !answered.has(call.call_id))
+      .map((call) => ({
+        type: "function_call_output",
+        call_id: call.call_id as string,
+        output: "该工具调用的结果未被采用或调查已进入下一阶段；请基于已有信息继续。",
+      }) as ResponseInputItem);
+  }
+
+  async resume(message: string): Promise<ToolLoopReply> {
+    this.input.push(...this.pendingFunctionOutputs());
+    this.input.push({ role: "user", content: [{ type: "input_text", text: message }] });
+    return await this.sendTurn({});
+  }
+
+  async continue(results: ToolResultPayload[]): Promise<ToolLoopReply> {
+    // 先扫描尾部未配对调用（此时还没 push 本次结果），再回传本次结果与补齐项。
+    const pending = this.pendingFunctionOutputs(new Set(results.map((result) => result.id)));
+    if (results.length === 0) {
+      this.input.push(...pending);
+      this.input.push({ role: "user", content: [{ type: "input_text", text: "请继续：调用工具，或调用 report_source_finding 汇总。" }] });
+      return await this.sendTurn({});
+    }
+    this.input.push(...pending);
     for (const result of results) {
       this.input.push({
         type: "function_call_output",
@@ -793,6 +1027,7 @@ export class ResponsesSourceInvestigationDriver implements SourceInvestigationDr
   }
 
   async finalize(reason: string): Promise<ToolLoopReply> {
+    this.input.push(...this.pendingFunctionOutputs());
     this.input.push({ role: "user", content: [{ type: "input_text", text: `${reason}${FINALIZE_SUFFIX}` }] });
     return await this.sendTurn({
       tools: [reportFunctionTool],
