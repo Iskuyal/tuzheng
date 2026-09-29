@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "frozenAt": "2026-09-29",
+  "description": "阶段四任务 02 的固定问题集输入。这里只放输入（图片、配文、图上声明文字与图片指纹）；独立期望另存于 samples/source-audit-expectations.json，两边都不由模型生成。",
+  "imageDirectory": "web/public/samples",
+  "images": {
+    "cpi-2025-12": {
+      "svgSha256": "b8df51c5cba61913f052eef4814bb930ff565b3e23fc7c0c83110bd61d968289",
+      "pngSha256": "302708110302488f72fad8650ba0cbf6a9791c3675226c404b2190cbf18f1c77",
+      "imageText": ["2025 年 12 月全国 CPI 上涨 0.8%"],
+      "note": "团队自制；图上只写数值，没有比较方式。阶段四任务 01 的样例图。"
+    },
+    "cpi-2025-12-yoy": {
+      "svgSha256": "d4a5d98827786fa63edd8da6c4e796f997dc31b3030ff01924111c167d1befe9",
+      "pngSha256": "568de51008c4bc7d2e62ff6385d7418239c2aede616023bb61d7885a5a2ed2b4",
+      "imageText": ["2025 年 12 月全国 CPI 同比上涨 0.8%", "全国 · 2025 年 12 月 · 同比"],
+      "note": "团队自制；图上写明比较方式为同比。"
+    },
+    "cpi-2025-12-mom": {
+      "svgSha256": "94552fbddd4183d3e73cd7c3519ef1423bcab0e0d1ad6c6b0bcfcab99b7d51d7",
+      "pngSha256": "1cffbe1a8b82fbb025250dfdce8ea769d79d0c667176cd2d9f35a488c35aee43",
+      "imageText": ["2025 年 12 月全国 CPI 环比上涨 0.2%", "全国 · 2025 年 12 月 · 环比"],
+      "note": "团队自制；图上写明比较方式为环比。"
+    },
+    "cpi-2025-12-city": {
+      "svgSha256": "431948a5c45b28bacec143e1d4f1f9c5026faea84115e1912de55d43e028adf5",
+      "pngSha256": "351fe5d8091c9e76096aeb0df88b874e5e4e45b3abf22cd93227d20955c7dd1b",
+      "imageText": ["2025 年 12 月全国城市 CPI 同比上涨 0.8%", "全国城市 · 2025 年 12 月 · 同比"],
+      "note": "团队自制；范围是全国城市，与资料库的全国口径不同。"
+    },
+    "cpi-2026-08-yoy": {
+      "svgSha256": "1a5eaa08a07198d49e2094b3b700b21880d7523b8e4416ca7de2ae527c8293c3",
+      "pngSha256": "74225b518dbaf0b9a7c25b5dc72739b62f92654f7ddb6b45321ce7782af9136b",
+      "imageText": ["2026 年 8 月全国 CPI 同比上涨 0.8%", "全国 · 2026 年 8 月 · 同比"],
+      "note": "团队自制；同比数值与 2025 年 12 月相同，月份不同。"
+    }
+  },
+  "questions": [
+    {
+      "id": "q01-caption-yoy-match",
+      "categories": ["数值正确"],
+      "image": "cpi-2025-12-yoy",
+      "caption": "12 月 CPI 同比上涨 0.8%。",
+      "note": "配文口径与图上一致，资料库有对应发布，正确答案是与来源一致。"
+    },
+    {
+      "id": "q02-caption-mom-match",
+      "categories": ["数值正确"],
+      "image": "cpi-2025-12-mom",
+      "caption": "12 月 CPI 环比上涨 0.2%。",
+      "note": "环比数值正确，用来验证检索臂能给出一致结论。"
+    },
+    {
+      "id": "q03-caption-mom-value-as-yoy",
+      "categories": ["同比与环比错用"],
+      "image": "cpi-2025-12",
+      "caption": "12 月 CPI 同比上涨 0.2%。",
+      "note": "把官方环比数值 0.2% 说成同比；同比实际为 0.8%。"
+    },
+    {
+      "id": "q04-caption-yoy-value-as-mom",
+      "categories": ["同比与环比错用", "图上比较方式不明"],
+      "image": "cpi-2025-12",
+      "caption": "比上月上涨 0.8%。",
+      "note": "阶段四任务 01 的基线题：配文把图上 0.8% 说成比上月，官方环比为 0.2%。"
+    },
+    {
+      "id": "q05-caption-wrong-month-distractor",
+      "categories": ["错月份", "干扰来源命中"],
+      "image": "cpi-2025-12",
+      "caption": "2026 年 8 月全国 CPI 比上月上涨 0.8%。",
+      "note": "配文写的月份与图上不同；资料库恰好收录 2026 年 8 月发布（环比 0.4%），必须按该发布核对而不是按同值的 2025 年 12 月发布。"
+    },
+    {
+      "id": "q06-caption-wrong-scope-city",
+      "categories": ["错范围与人群", "资料库无适用来源"],
+      "image": "cpi-2025-12-city",
+      "caption": "12 月全国城市 CPI 同比上涨 0.8%。",
+      "note": "资料库只有全国口径，没有全国城市口径的材料，不能拿全国数值替代。"
+    },
+    {
+      "id": "q07-caption-no-such-month",
+      "categories": ["错月份", "资料库无适用来源"],
+      "image": "cpi-2025-12",
+      "caption": "2026 年 5 月全国 CPI 比上月上涨 0.8%。",
+      "note": "资料库没有 2026 年 5 月的发布，只能保持来源待核对。"
+    },
+    {
+      "id": "q08-caption-image-basis-unclear",
+      "categories": ["图上比较方式不明", "资料库无适用来源"],
+      "image": "cpi-2025-12",
+      "caption": "12 月物价上涨 0.8%。",
+      "note": "图上与配文都没有比较方式，同比 0.8% 与环比 0.2% 都无法确定对应哪一个。"
+    },
+    {
+      "id": "q09-caption-distractor-same-yoy",
+      "categories": ["数值正确", "干扰来源命中"],
+      "image": "cpi-2025-12",
+      "caption": "12 月 CPI 同比上涨 0.8%。",
+      "note": "配文口径正确；资料库中 2026 年 8 月发布的同比同为 0.8%，按数值检索会误命中，必须按月份选对 2025 年 12 月发布。"
+    },
+    {
+      "id": "q10-caption-2026-08-match",
+      "categories": ["数值正确", "干扰来源命中"],
+      "image": "cpi-2026-08-yoy",
+      "caption": "8 月 CPI 同比上涨 0.8%。",
+      "note": "与 q09 反向：这次正确的材料是 2026 年 8 月发布，2025 年 12 月发布才是干扰项。"
+    },
+    {
+      "id": "q11-caption-value-without-basis",
+      "categories": ["图上比较方式不明"],
+      "image": "cpi-2025-12-mom",
+      "caption": "12 月物价上涨 0.2%。",
+      "note": "图上写了环比，但配文自己没有写比较方式；不能把图上的口径补到配文主张上。"
+    },
+    {
+      "id": "q12-caption-term-misuse",
+      "categories": ["术语页不可作数值依据"],
+      "image": "cpi-2025-12",
+      "caption": "12 月 CPI 环比是跟上年同期比出来的。",
+      "note": "术语解释页明确说明环比是与上月比较；当前结论词汇只能到来源待核对，术语页也不得被当作数值依据，这道题用于如实记录该局限。"
+    }
+  ]
+}

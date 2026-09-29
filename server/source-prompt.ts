@@ -14,3 +14,21 @@ export const SOURCE_INVESTIGATION_PROMPT = [
 export const SOURCE_FINALIZE_INSTRUCTION =
   "调查预算已用尽，请立刻调用 report_source_finding 汇总目前已经拿到的证据；引用只能来自上面出现过的 sourceId，"
   + "没有适用来源时把原因写进 noApplicableSourceReason，并把还没解决的问题放进 unresolvedItems。";
+
+/**
+ * 无检索对照臂的必要说明：检索工具不可用时，模型必须说明缺少可用来源，
+ * 不允许凭记忆引用资料库 ID，也不允许把记忆里的数值当成来源证据。
+ */
+export const SOURCE_NO_RETRIEVAL_NOTE = [
+  "本次调查不提供资料库检索工具（search_source_library 不可用），你也不掌握本机资料库的内容。",
+  "因此不要引用任何 sourceId，也不要把记忆里的统计数字当成来源证据。",
+  "把「本次没有可用来源」写进 noApplicableSourceReason，把仍未解决的问题放进 unresolvedItems；"
+  + "其余写法（主张字段、比较方式、图上抄录）与有检索时完全一致。",
+].join("\n");
+
+/** 两臂除检索工具可用性及这句必要说明外使用同一提示词。 */
+export function sourceInvestigationPrompt(options: { retrieval: boolean }): string {
+  return options.retrieval
+    ? SOURCE_INVESTIGATION_PROMPT
+    : `${SOURCE_INVESTIGATION_PROMPT}\n${SOURCE_NO_RETRIEVAL_NOTE}`;
+}

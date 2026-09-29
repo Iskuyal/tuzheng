@@ -15,6 +15,7 @@ import {
   REPORT_TOOL_NAME,
   SEARCH_TOOL_NAME,
 } from "../server/source-tools.js";
+import { SOURCE_INVESTIGATION_PROMPT, SOURCE_NO_RETRIEVAL_NOTE, sourceInvestigationPrompt } from "../server/source-prompt.js";
 import { TOOL_CALLS_PER_INVESTIGATION } from "../shared/source-audit.js";
 
 /** 替身驱动器：按脚本依次返回模型回复，并记录实际回传的工具结果。 */
@@ -411,5 +412,104 @@ describe("来源调查编排", () => {
       "source-pending",
     ]);
     expect(result.citationsRejected[0].reason).toContain("不在本次检索命中内");
+  });
+});
+
+describe("无检索对照臂", () => {
+  it("两臂的提示词只差一句必要说明", () => {
+    const withRetrieval = sourceInvestigationPrompt({ retrieval: true });
+    const withoutRetrieval = sourceInvestigationPrompt({ retrieval: false });
+
+    expect(withRetrieval).toBe(SOURCE_INVESTIGATION_PROMPT);
+    expect(withoutRetrieval.startsWith(withRetrieval)).toBe(true);
+    expect(withoutRetrieval.slice(withRetrieval.length)).toBe(`\n${SOURCE_NO_RETRIEVAL_NOTE}`);
+    expect(withoutRetrieval).toContain("noApplicableSourceReason");
+    expect(withoutRetrieval).toContain("不要引用任何 sourceId");
+  });
+
+  it("检索调用被拒绝、不执行检索、命中集合保持为空", async () => {
+    let searchCalls = 0;
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH], text: "先检索。" }),
+      reply({ calls: [REPORT], text: "汇总。" }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, {
+      allowSearch: false,
+      search: () => {
+        searchCalls += 1;
+        return [];
+      },
+    });
+
+    expect(searchCalls).toBe(0);
+    expect(result.toolCallsUsed).toBe(0);
+    expect(result.hits).toEqual([]);
+    const rejected = result.trace.find((event) => event.tool === SEARCH_TOOL_NAME);
+    expect(rejected?.status).toBe("rejected");
+    expect(rejected?.resultSummary).toContain("无检索对照");
+    // 引用只能来自本次命中：无检索臂里即使模型引用真实资料 ID 也必须降级。
+    expect(result.conclusions.map((conclusion) => conclusion.status)).toEqual([
+      "source-pending",
+      "source-pending",
+    ]);
+    expect(result.citationsRejected[0].reason).toContain("不在本次检索命中内");
+    expect(result.citations[0].sourceId).toBe("stats-cpi-2025-12");
+  });
+
+  it("无检索臂用同一份调用上限，比较与追问仍然可用", async () => {
+    const compare = call(COMPARE_TOOL_NAME, { left: 0.8, right: 0.8, unit: "%" }, "c1");
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH, compare], text: "先比较。" }),
+      reply({ calls: [REPORT], text: "汇总。" }),
+    ]);
+
+    const result = await runSourceInvestigation(driver, { allowSearch: false });
+
+    expect(result.toolCallsUsed).toBe(1);
+    expect(result.trace.map((event) => [event.tool, event.status])).toEqual([
+      [SEARCH_TOOL_NAME, "rejected"],
+      [COMPARE_TOOL_NAME, "ok"],
+      [REPORT_TOOL_NAME, "ok"],
+    ]);
+  });
+
+  it("Anthropic 驱动器在无检索臂里不声明检索工具", async () => {
+    const bodies: Array<{ tools: Array<{ name: string }> }> = [];
+    const driver = new AnthropicSourceInvestigationDriver(
+      { baseUrl: "https://api.example.com/v1", model: "stub-model", apiKey: "sk-test" },
+      { buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47]), mimeType: "image/png" },
+      "配文",
+      "提示词",
+      async (body) => {
+        bodies.push(body as unknown as { tools: Array<{ name: string }> });
+        return { content: [{ type: "text", text: "好的" }] };
+      },
+      { includeSearch: false },
+    );
+
+    await driver.start();
+
+    expect(bodies[0].tools.map((tool) => tool.name)).not.toContain(SEARCH_TOOL_NAME);
+    expect(bodies[0].tools.map((tool) => tool.name)).toEqual([COMPARE_TOOL_NAME, CLARIFY_TOOL_NAME, REPORT_TOOL_NAME]);
+  });
+
+  it("Responses 驱动器同样支持不声明检索工具", async () => {
+    const bodies: Array<{ tools: Array<{ name: string }> }> = [];
+    const driver = new ResponsesSourceInvestigationDriver(
+      { baseUrl: "https://api.example.com/v1", model: "stub-model", apiKey: "sk-test" },
+      { buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47]), mimeType: "image/png" },
+      "配文",
+      "提示词",
+      async (parameters) => {
+        bodies.push(parameters as unknown as { tools: Array<{ name: string }> });
+        return { output_text: "好的", output: [] };
+      },
+      { includeSearch: false },
+    );
+
+    await driver.start();
+
+    expect(bodies[0].tools.map((tool) => tool.name)).toEqual([COMPARE_TOOL_NAME, CLARIFY_TOOL_NAME, REPORT_TOOL_NAME]);
   });
 });

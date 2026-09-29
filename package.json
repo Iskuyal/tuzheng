@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "eval:samples": "tsx scripts/evaluate-samples.ts",
+    "eval:source-audit": "tsx scripts/evaluate-source-audit.ts",
     "verify:sample-renders": "node scripts/verify-sample-renders.mjs"
   },
   "dependencies": {

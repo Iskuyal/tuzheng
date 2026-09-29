@@ -166,7 +166,7 @@ describe("引用校验", () => {
     expect(result.rejected).toEqual([]);
   });
 
-  it("引用不存在的资料、错月份的材料或术语页都会降级并说明原因", () => {
+  it("引用不存在的资料或把术语页当数值依据都会被拒绝", () => {
     const citations: Array<{ sourceId: string; role: CitationRole; note: string | null }> = [
       { sourceId: "stats-not-in-library", role: "value-basis", note: null },
       { sourceId: "stats-cpi-2026-08", role: "value-basis", note: null },
@@ -175,11 +175,35 @@ describe("引用校验", () => {
     ];
     const result = validateCitations(citations, hits);
 
-    expect(result.accepted.map((citation) => citation.role)).toEqual(["term-explanation"]);
-    expect(result.rejected).toHaveLength(3);
+    expect(result.accepted.map((citation) => [citation.sourceId, citation.role])).toEqual([
+      ["stats-cpi-2026-08", "value-basis"],
+      ["stats-term-yoy-mom", "term-explanation"],
+    ]);
+    expect(result.rejected).toHaveLength(2);
     expect(result.rejected[0].reason).toContain("不在本次检索命中内");
-    expect(result.rejected[1].reason).toContain("口径不一致");
-    expect(result.rejected[2].reason).toContain("术语解释页");
+    expect(result.rejected[1].reason).toContain("术语解释页");
+  });
+
+  it("命中内的资料与主张口径不符时仍被拒绝并说明原因", () => {
+    const outcome = auditClaimsAgainstSources({
+      claims: [{
+        claimText: "比上月上涨 0.8%",
+        metric: "全国居民消费价格",
+        scope: "全国",
+        period: "2025-12",
+        value: 0.8,
+        basis: "month-on-month",
+        kind: "direct",
+        fromImage: false,
+      }],
+      citations: [{ sourceId: "stats-cpi-2026-08", role: "value-basis", note: null }],
+      hits,
+    });
+
+    expect(outcome.acceptedCitations).toEqual([]);
+    expect(outcome.conclusions[0].status).toBe("source-pending");
+    expect(outcome.citationsRejected[0].reason).toContain("口径不一致");
+    expect(outcome.citationsRejected[0].reason).toContain("月份");
   });
 
   it("数据发布不能当作术语解释引用", () => {
@@ -307,6 +331,101 @@ describe("主张的来源结论", () => {
     });
     expect(outcome.conclusions[0].status).toBe("source-pending");
     expect(outcome.conclusions[0].reasons).toEqual(["资料库没有覆盖该指标。"]);
+  });
+
+  it("引用与主张自己的月份不符时降级，而不是按检索查询的口径放行", () => {
+    // 检索用的是图上写的 2025-12，主张写的是 2026-05：查询层面适配，主张层面不适配。
+    const monthClaim = {
+      claimText: "2026 年 5 月全国 CPI 比上月上涨 0.2%",
+      metric: "全国居民消费价格",
+      scope: "全国",
+      period: "2026-05",
+      value: 0.2,
+      basis: "month-on-month" as const,
+      kind: "direct" as const,
+      fromImage: false,
+    };
+    const outcome = auditClaimsAgainstSources({
+      claims: [monthClaim],
+      citations: releaseCitation,
+      hits,
+    });
+
+    expect(outcome.acceptedCitations).toEqual([]);
+    expect(outcome.conclusions[0].status).toBe("source-pending");
+    expect(outcome.conclusions[0].officialValue).toBeNull();
+    expect(outcome.citationsRejected[0].reason).toContain("口径不一致");
+    expect(outcome.citationsRejected[0].reason).toContain("月份");
+  });
+
+  it("同一份资料对一条主张成立、对另一条不成立时，只降级不成立的那条", () => {
+    // 模型按图上月份检索到 2025-12 发布，同时汇报配文里写的 2026-08 主张并引用 2026-08 发布。
+    const hitsForBoth = searchSourceLibrary({ metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: [] });
+    const outcome = auditClaimsAgainstSources({
+      claims: [
+        {
+          claimText: "2025 年 12 月全国 CPI 上涨 0.8%",
+          metric: "全国居民消费价格",
+          scope: "全国",
+          period: "2025-12",
+          value: 0.8,
+          basis: null,
+          kind: "direct",
+          fromImage: true,
+          imageExcerpt: "2025 年 12 月全国 CPI 上涨 0.8%",
+        },
+        {
+          claimText: "2026 年 8 月全国 CPI 比上月上涨 0.8%",
+          metric: "全国居民消费价格",
+          scope: "全国",
+          period: "2026-08",
+          value: 0.8,
+          basis: "month-on-month",
+          kind: "direct",
+          fromImage: false,
+        },
+      ],
+      citations: [
+        { sourceId: "stats-cpi-2025-12", role: "value-basis", note: null },
+        { sourceId: "stats-cpi-2026-08", role: "value-basis", note: null },
+      ],
+      hits: hitsForBoth,
+    });
+
+    // 图内主张缺比较方式 → 待核对；配文主张按 2026-08 发布核对 → 与来源不一致（环比 0.4%）。
+    expect(outcome.conclusions.map((conclusion) => conclusion.status)).toEqual([
+      "source-pending",
+      "source-mismatch",
+    ]);
+    expect(outcome.conclusions[1].officialValue).toBe(0.4);
+    expect(outcome.citationsRejected).toEqual([]);
+    expect(outcome.acceptedCitations.map((citation) => citation.sourceId).sort()).toEqual([
+      "stats-cpi-2025-12",
+      "stats-cpi-2026-08",
+    ]);
+  });
+
+  it("主张漏填指标或范围时不会因此得到来源一致", () => {
+    for (const claim of [
+      { metric: null, scope: "全国" },
+      { metric: "全国居民消费价格", scope: "全国城市" },
+    ]) {
+      const outcome = auditClaimsAgainstSources({
+        claims: [{
+          claimText: "比上月上涨 0.2%",
+          period: "2025-12",
+          value: 0.2,
+          basis: "month-on-month",
+          kind: "direct",
+          fromImage: false,
+          ...claim,
+        }],
+        citations: releaseCitation,
+        hits,
+      });
+      expect(outcome.conclusions[0].status).toBe("source-pending");
+      expect(outcome.conclusions[0].difference).toBeNull();
+    }
   });
 });
 

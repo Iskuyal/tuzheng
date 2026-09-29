@@ -172,8 +172,8 @@ const FULL_INVESTIGATION = {
     hit(TERM_DOCUMENT, false, ["术语解释材料，可用于比较方式说明"]),
   ],
   excludedSources: [
-    { sourceId: "stats-cpi-2026-08", title: DISTRACTOR_DOCUMENT.title, reason: "口径不符（月份）：资料适用月份为 2026-08，与查询月份不同" },
-    { sourceId: "stats-term-yoy-mom", title: TERM_DOCUMENT.title, reason: "术语解释页只用于说明同比与环比的差别，不提供具体月份的数值。" },
+    { sourceId: "stats-cpi-2026-08", title: DISTRACTOR_DOCUMENT.title, reason: "所引资料与主张口径不一致（月份），不作为数值依据。" },
+    { sourceId: "stats-term-yoy-mom", title: TERM_DOCUMENT.title, reason: "同比与环比有何不同 是术语解释页，只用于说明同比与环比的差别，不能作为数值依据。" },
   ],
   unresolvedItems: ["图片卡片本身未标注比较基准（未写同比/环比）。"],
   noApplicableSourceReason: null,
@@ -249,8 +249,8 @@ test("从自制图与配文走到带引用与工具轨迹的来源结论", async
   // 干扰材料与术语页被排除，并给出原因。
   const excludedSources = page.getByTestId("excluded-sources");
   await expect(excludedSources).toContainText("2026年8月份居民消费价格同比上涨0.8%");
-  await expect(excludedSources).toContainText("口径不符（月份）");
-  await expect(excludedSources).toContainText("术语解释页只用于说明同比与环比的差别");
+  await expect(excludedSources).toContainText("所引资料与主张口径不一致（月份）");
+  await expect(excludedSources).toContainText("只用于说明同比与环比的差别");
 
   // 工具轨迹展示实际事件、状态与拒绝原因。
   const trace = page.getByTestId("tool-trace").locator("li");
@@ -306,6 +306,37 @@ test("引用错月份材料时降级为来源待核对并列出被拒绝的引�
   // 术语解释页不能充当具体月份的数值依据。
   await expect(page.getByTestId("rejected-citations")).toContainText("术语解释页");
   await expect(page.getByTestId("rejected-citations")).toContainText("不能作为数值依据");
+  await expectNoHorizontalOverflow(page);
+});
+
+test("上游失败或超时时只显示失败原因，不展示任何结论", async ({ page }) => {
+  await page.goto("/source-audit");
+  await page.getByTestId("load-source-sample").click();
+  await expect(page.locator(".source-image-stage img")).toBeVisible();
+
+  await page.route("**/api/source-audit/investigate", async (route) => {
+    await route.fulfill({
+      status: 502,
+      json: { error: { code: "SOURCE_INVESTIGATION_FAILED", message: "暂时无法完成来源调查，请稍后重试。" } },
+    });
+  });
+  await page.getByTestId("run-source-audit").click();
+  await expect(page.locator(".error-message")).toContainText("暂时无法完成来源调查");
+  await expect(page.locator(".source-result")).toHaveCount(0);
+  await expect(page.getByTestId("tool-trace")).toHaveCount(0);
+  await expect(page.getByTestId("stop-reason")).toHaveCount(0);
+
+  await page.unroute("**/api/source-audit/investigate");
+  await page.route("**/api/source-audit/investigate", async (route) => {
+    await route.fulfill({
+      status: 504,
+      json: { error: { code: "SOURCE_INVESTIGATION_TIMEOUT", message: "来源调查超时。请稍后重试或换用更小的图片。" } },
+    });
+  });
+  await page.getByTestId("run-source-audit").click();
+  await expect(page.locator(".error-message")).toContainText("来源调查超时");
+  // 失败不会用上一次或预置结果顶替。
+  await expect(page.locator(".source-claim-card")).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 });
 

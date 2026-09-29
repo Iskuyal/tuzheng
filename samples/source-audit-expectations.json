@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "frozenAt": "2026-09-29",
+  "authoredBy": "团队人工逐题写定，先于任何一次模型运行；不由模型生成或回填。",
+  "rubric": [
+    "select.fromImage=false 表示配文主张，true 表示图内主张（程序读模型返回的 fromImage 字段，不额外调用模型）。",
+    "expect 里的每条规则：先按 select（fromImage／basis／value／period，period 按 YYYY-MM 归一后比较）挑出主张，条目数不足 min 记为 no-matching-claim，命中的主张状态不等于 status 记为 wrong-status。",
+    "otherClaimStatuses 是「没被任何 expect 规则挑中」的主张允许出现的状态；出现其他状态记为 unexpected-status。",
+    "requiredAcceptedCitations：本次通过程序校验的数据依据引用里必须包含这些资料 ID，否则记为 missing-required-citation。",
+    "forbiddenValueBasisCitations：这些资料不允许以 value-basis 角色进入本次被接受的引用。",
+    "noApplicableSource=true 的题：任何一次运行里任何一条结论都不允许是确定来源结论（source-match／source-mismatch），否则记为 no-applicable-source-overclaim。",
+    "虚构引用＝引用了固定资料库中不存在的 sourceId；引用资料库中真实存在但不在本次命中内的 ID 另计为 recalled-citation，两者分开统计。",
+    "状态正确率＝判定为通过的有效运行数 ÷ 有效运行数（有效运行＝模型返回了结论运行；上游失败、超时等未产生结论的运行单列为失败，不进入分母）。"
+  ],
+  "frozen": {
+    "provider": "anthropic",
+    "baseUrl": "https://api.deepseek.com/anthropic/v1",
+    "model": "deepseek-flash",
+    "runsPerArm": 3,
+    "arms": ["retrieval", "no-retrieval"],
+    "noRetrievalMethod": "服务端把 search_source_library 从工具声明里移除，并让编排层拒绝任何检索调用（不执行检索、不回落命中）；两臂除该工具可用性与一句必要说明外配置一致。",
+    "budget": {
+      "toolCallsPerRound": 3,
+      "toolCallsPerInvestigation": 6,
+      "clarificationsPerInvestigation": 1,
+      "rounds": 4,
+      "deadlineMs": 150000
+    },
+    "libraryFingerprints": {
+      "stats-cpi-2025-12": "67828d756d2d683d",
+      "stats-term-yoy-mom": "3873318af079acdd",
+      "stats-cpi-2026-08": "1629bc6cd4a8e45f"
+    },
+    "gates": {
+      "gateArm": "retrieval",
+      "claimStatusAccuracy": 0.8,
+      "fabricatedCitations": 0,
+      "noApplicableSourceOverclaims": 0
+    }
+  },
+  "questions": [
+    {
+      "id": "q01-caption-yoy-match",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.8, "period": "2025-12" }, "status": "source-match", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match"],
+      "requiredAcceptedCitations": ["stats-cpi-2025-12"],
+      "expectationNote": "配文口径与官方发布一致；图上也写明同比，因此图内主张同样允许一致。"
+    },
+    {
+      "id": "q02-caption-mom-match",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "month-on-month", "value": 0.2, "period": "2025-12" }, "status": "source-match", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match"],
+      "requiredAcceptedCitations": ["stats-cpi-2025-12"],
+      "expectationNote": "环比数值正确，检索臂应给出一致；图上也写明环比，图内主张允许一致。"
+    },
+    {
+      "id": "q03-caption-mom-value-as-yoy",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.2, "period": "2025-12" }, "status": "source-mismatch", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending"],
+      "requiredAcceptedCitations": ["stats-cpi-2025-12"],
+      "expectationNote": "0.2% 是环比数值，被说成同比后与官方同比 0.8% 不一致。"
+    },
+    {
+      "id": "q04-caption-yoy-value-as-mom",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "month-on-month", "value": 0.8, "period": "2025-12" }, "status": "source-mismatch", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending"],
+      "requiredAcceptedCitations": ["stats-cpi-2025-12"],
+      "expectationNote": "阶段四任务 01 的基线题；图内主张必须保持待核对（图上没有比较方式）。"
+    },
+    {
+      "id": "q05-caption-wrong-month-distractor",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "month-on-month", "value": 0.8, "period": "2026-08" }, "status": "source-mismatch", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending"],
+      "requiredAcceptedCitations": ["stats-cpi-2026-08"],
+      "expectationNote": "配文写的是 2026 年 8 月，必须按该月的发布核对（环比 0.4%）；2025 年 12 月的发布同比也是 0.8%，但月份不符，不得作为依据。"
+    },
+    {
+      "id": "q06-caption-wrong-scope-city",
+      "expect": [
+        { "select": { "fromImage": false }, "status": "source-pending", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending"],
+      "noApplicableSource": true,
+      "expectationNote": "资料库没有全国城市口径的材料，不能拿全国数值替代。"
+    },
+    {
+      "id": "q07-caption-no-such-month",
+      "expect": [
+        { "select": { "fromImage": false }, "status": "source-pending", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending"],
+      "noApplicableSource": true,
+      "expectationNote": "资料库没有 2026 年 5 月的发布。"
+    },
+    {
+      "id": "q08-caption-image-basis-unclear",
+      "expect": [
+        { "select": { "fromImage": false }, "status": "source-pending", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending"],
+      "noApplicableSource": true,
+      "expectationNote": "图上与配文都没有比较方式，同比 0.8% 与环比 0.2% 都不能确定；出现确定结论即为越界。"
+    },
+    {
+      "id": "q09-caption-distractor-same-yoy",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.8, "period": "2025-12" }, "status": "source-match", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending"],
+      "requiredAcceptedCitations": ["stats-cpi-2025-12"],
+      "expectationNote": "2026 年 8 月发布的同比同为 0.8%，按月份选对材料才算答对。"
+    },
+    {
+      "id": "q10-caption-2026-08-match",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.8, "period": "2026-08" }, "status": "source-match", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match"],
+      "requiredAcceptedCitations": ["stats-cpi-2026-08"],
+      "expectationNote": "与 q09 反向：正确的材料是 2026 年 8 月发布。"
+    },
+    {
+      "id": "q11-caption-value-without-basis",
+      "expect": [
+        { "select": { "fromImage": false }, "status": "source-pending", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match"],
+      "expectationNote": "配文自己没写比较方式，不能把图上的环比口径补到配文主张上；图内主张写明环比，可以一致。"
+    },
+    {
+      "id": "q12-caption-term-misuse",
+      "expect": [
+        { "select": { "fromImage": false }, "status": "source-pending", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending"],
+      "forbiddenValueBasisCitations": ["stats-term-yoy-mom"],
+      "expectationNote": "术语解释页说明环比是与上月比较，配文说法与术语页不符；但当前结论词汇只能表达「与数据发布是否一致」，因此按待核对记录，并把这条列为能力局限。"
+    }
+  ]
+}

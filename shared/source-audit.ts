@@ -221,7 +221,12 @@ export interface CitationValidation {
   rejected: Array<{ citation: ModelCitation; reason: string }>;
 }
 
-/** 引用只能来自本次命中；数值依据还必须口径适配，术语依据只能指向解释页。 */
+/**
+ * 结构校验：引用必须来自本次命中，且角色与资料类型相符。
+ * 口径是否适配不在这里一刀切——同一次调查可能按好几个口径检索，命中里同一份资料的
+ * 适用性是按某次查询算的，不能代表它对某条主张是否适用；按主张判断见
+ * `fitsClaimAsValueBasis` 与 `auditClaimsAgainstSources`。
+ */
 export function validateCitations(
   citations: ModelCitation[],
   hits: SourceHit[],
@@ -236,22 +241,12 @@ export function validateCitations(
       rejected.push({ citation, reason: `引用 ${citation.sourceId} 不在本次检索命中内，不作为依据。` });
       continue;
     }
-    if (citation.role === "value-basis") {
-      if (hit.document.kind === "term-explanation") {
-        rejected.push({
-          citation,
-          reason: `${hit.document.title} 是术语解释页，只用于说明同比与环比的差别，不能作为数值依据。`,
-        });
-        continue;
-      }
-      if (!hit.applicability.applicableForValue) {
-        const detail = [...hit.applicability.mismatchFields, ...hit.applicability.missingFields].join("、");
-        rejected.push({
-          citation,
-          reason: `所引资料与主张口径不一致（${detail || "口径不适配"}），不作为数值依据。`,
-        });
-        continue;
-      }
+    if (citation.role === "value-basis" && hit.document.kind === "term-explanation") {
+      rejected.push({
+        citation,
+        reason: `${hit.document.title} 是术语解释页，只用于说明同比与环比的差别，不能作为数值依据。`,
+      });
+      continue;
     }
     if (citation.role === "term-explanation" && hit.document.kind !== "term-explanation") {
       rejected.push({
@@ -264,6 +259,43 @@ export function validateCitations(
   }
 
   return { accepted, rejected };
+}
+
+export function claimQueryOf(claim: Pick<SourceClaim, "metric" | "period" | "scope">): SourceQuery {
+  return { metric: claim.metric, period: claim.period, scope: claim.scope, terms: [] };
+}
+
+/** 这份材料能不能作为这批主张里某一条的数值依据（指标、月份、范围都要对上）。 */
+export function fitsClaimAsValueBasis(document: SourceDocument, claims: readonly SourceClaim[]): boolean {
+  return claims.some((claim) => evaluateApplicability(claimQueryOf(claim), document).applicableForValue);
+}
+
+function claimApplicabilityFields(
+  document: SourceDocument,
+  claims: readonly SourceClaim[],
+): { mismatch: string[]; missing: string[] } {
+  const mismatch = new Set<string>();
+  const missing = new Set<string>();
+  for (const claim of claims) {
+    const applicability = evaluateApplicability(claimQueryOf(claim), document);
+    for (const field of applicability.mismatchFields) mismatch.add(field);
+    for (const field of applicability.missingFields) missing.add(field);
+  }
+  return { mismatch: [...mismatch], missing: [...missing] };
+}
+
+export function describeInapplicableSource(document: SourceDocument, claims: readonly SourceClaim[]): string {
+  if (document.kind === "term-explanation") {
+    return `${document.title} 是术语解释页，只用于说明同比与环比的差别，不能作为数值依据。`;
+  }
+  const { mismatch, missing } = claimApplicabilityFields(document, claims);
+  if (mismatch.length > 0) {
+    return `所引资料与主张口径不一致（${mismatch.map(fieldLabel).join("、")}），不作为数值依据。`;
+  }
+  if (missing.length > 0) {
+    return `无法确认所引资料与主张口径是否一致（${missing.map(fieldLabel).join("、")}），不作为数值依据。`;
+  }
+  return "所引资料与主张口径不匹配，不作为数值依据。";
 }
 
 export type ClaimSourceStatus = "source-match" | "source-mismatch" | "source-pending";
@@ -316,17 +348,16 @@ export function basisMentionedInImage(excerpt: string | null | undefined, basis:
   return BASIS_MARKERS[basis].some((marker) => normalized.includes(normalizeText(marker)));
 }
 
-function resolveCitationDocument(
-  citation: ModelCitation,
-  hits: SourceHit[],
-): { hit: SourceHit; document: SourceDocument } | null {
-  const hit = hits.find((candidate) => candidate.document.id === citation.sourceId);
-  return hit ? { hit, document: hit.document } : null;
+/** 引用只能落在本次命中的资料上；找不到就是没有这份材料可用。 */
+function resolveCitedDocument(citation: ModelCitation, hits: SourceHit[]): SourceDocument | null {
+  return hits.find((candidate) => candidate.document.id === citation.sourceId)?.document ?? null;
 }
 
 /**
  * 结论由程序按「引用是否有效 + 口径是否匹配 + 数值比对」组合，模型只提供引用与解释。
  * 引用缺失、不存在或口径不适配，一律降级为「来源待核对」。
+ * 口径按**这条主张自己**的指标／月份／范围判定，而不是按检索时用的查询判定：
+ * 检索查询错了（例如用图的月份去查配文写的另一个月）不能让结论跟着错。
  */
 export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceConclusion {
   const { claim, citations, hits } = input;
@@ -355,23 +386,33 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
     };
   }
 
-  const resolvedValueCitation = valueCitations
-    .map((citation) => ({ citation, resolved: resolveCitationDocument(citation, hits) }))
-    .find((entry) => entry.resolved?.hit.applicability.applicableForValue);
+  const claimQuery = claimQueryOf(claim);
+  const resolvedValueCitations = valueCitations
+    .map((citation) => ({ citation, document: resolveCitedDocument(citation, hits) }))
+    .filter((entry): entry is { citation: ModelCitation; document: SourceDocument } => entry.document !== null);
+  const resolvedValueCitation = resolvedValueCitations
+    .find((entry) => evaluateApplicability(claimQuery, entry.document).applicableForValue);
 
-  if (!resolvedValueCitation?.resolved) {
+  if (!resolvedValueCitation) {
+    const details = resolvedValueCitations.map((entry) => {
+      const applicability = evaluateApplicability(claimQuery, entry.document);
+      const fields = [...applicability.mismatchFields, ...applicability.missingFields].map(fieldLabel).join("、");
+      return `《${entry.document.title}》${fields ? `（${fields}）` : ""}`;
+    });
     return {
       ...base,
       status: "source-pending",
       summary: "来源待核对：所引来源与主张口径不一致，不能作为数值依据。",
       officialValue: null,
       difference: null,
-      reasons: ["引用资料的口径与主张不一致，未能用于数值核对。"],
+      reasons: [details.length > 0
+        ? `引用资料的口径与主张不一致，未能用于数值核对：${details.join("；")}。`
+        : "引用资料的口径与主张不一致，未能用于数值核对。"],
       unresolved: [],
     };
   }
 
-  const { document } = resolvedValueCitation.resolved;
+  const { document } = resolvedValueCitation;
 
   if (!claim.basis) {
     return {
@@ -465,29 +506,37 @@ export interface SourceAuditOutcome {
 
 export function auditClaimsAgainstSources(input: SourceAuditInput): SourceAuditOutcome {
   const validation = validateCitations(input.citations, input.hits);
+
+  // 口径按主张判定：同一次调查可能按好几个口径检索过，同一份命中资料对不同主张的适用性也不同。
+  const usableCitations: ModelCitation[] = [];
+  const inapplicableCitations: Array<{ citation: ModelCitation; reason: string }> = [];
+  for (const citation of validation.accepted) {
+    if (citation.role !== "value-basis") {
+      usableCitations.push(citation);
+      continue;
+    }
+    const document = input.hits.find((hit) => hit.document.id === citation.sourceId)?.document;
+    if (!document || fitsClaimAsValueBasis(document, input.claims)) usableCitations.push(citation);
+    else inapplicableCitations.push({ citation, reason: describeInapplicableSource(document, input.claims) });
+  }
+
   const conclusions = input.claims.map((claim) => concludeClaimSource({
     claim,
-    citations: validation.accepted,
+    citations: usableCitations,
     hits: input.hits,
     noApplicableSourceReason: input.noApplicableSourceReason,
   }));
 
   const excluded = input.hits
-    .filter((hit) => !hit.applicability.applicableForValue)
+    .filter((hit) => !fitsClaimAsValueBasis(hit.document, input.claims))
     .map((hit) => ({
       sourceId: hit.document.id,
       title: hit.document.title,
-      reason: hit.document.kind === "term-explanation"
-        ? "术语解释页只用于说明同比与环比的差别，不提供具体月份的数值。"
-        : hit.applicability.mismatchFields.length > 0
-          ? `口径不符（${hit.applicability.mismatchFields.map(fieldLabel).join("、")}）：${hit.matchReasons.join("；")}`
-          : hit.applicability.missingFields.length > 0
-            ? `无法确认口径（${hit.applicability.missingFields.map(fieldLabel).join("、")}）：${hit.matchReasons.join("；")}`
-            : "该材料与主张口径不匹配，未采用。",
+      reason: describeInapplicableSource(hit.document, input.claims),
     }));
 
   const seen = new Set<string>();
-  const acceptedCitations = validation.accepted.filter((citation) => {
+  const acceptedCitations = usableCitations.filter((citation) => {
     const key = `${citation.sourceId}|${citation.role}`;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -498,7 +547,7 @@ export function auditClaimsAgainstSources(input: SourceAuditInput): SourceAuditO
     conclusions,
     acceptedCitations,
     excluded,
-    citationsRejected: validation.rejected.map((entry) => ({
+    citationsRejected: [...validation.rejected, ...inapplicableCitations].map((entry) => ({
       sourceId: entry.citation.sourceId,
       reason: entry.reason,
     })),

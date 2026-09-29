@@ -12,6 +12,7 @@ import {
   requestAnthropicTurn,
   type AnthropicMessagesRequester,
   type AnthropicReply,
+  type AnthropicToolDefinition,
   type AnthropicToolUseBlock,
   type AnthropicTurn,
 } from "./anthropic-messages.js";
@@ -124,8 +125,14 @@ export async function runSourceInvestigation(
     /** 检索实现可替换，便于替身测试；默认按固定资料库真实检索。 */
     search?: (query: z.infer<typeof searchArgumentsSchema>) => SourceHit[];
     compare?: (left: number, right: number, unit: string) => { equal: boolean; difference: number; summary: string };
+    /**
+     * 无检索对照臂：为 false 时拒绝一切检索调用且不执行检索，
+     * 命中集合保持为空，任何引用都会因「不在本次命中内」被降级。
+     */
+    allowSearch?: boolean;
   } = {},
 ): Promise<SourceInvestigationResult> {
+  const allowSearch = options.allowSearch ?? true;
   const startedAt = Date.now();
   const trace: ToolTraceEvent[] = [];
   const hitsById = new Map<string, SourceHit>();
@@ -171,6 +178,15 @@ export async function runSourceInvestigation(
 
     switch (call.name) {
       case SEARCH_TOOL_NAME: {
+        if (!allowSearch) {
+          event("rejected", "本次为无检索对照，检索工具不可用，未执行检索。");
+          return {
+            id: call.id,
+            name: call.name,
+            isError: true,
+            output: "本次调查不提供资料库检索工具，没有可用的检索结果。请在没有命中材料的情况下汇总，并在 noApplicableSourceReason 里说明缺少可用来源。",
+          };
+        }
         const parsed = searchArgumentsSchema.safeParse(call.input);
         if (!parsed.success) {
           event("rejected", "检索参数不符合要求，未执行。");
@@ -480,6 +496,8 @@ function toToolLoopReply(reply: AnthropicReply, fallbackModel: string): ToolLoop
 export class AnthropicSourceInvestigationDriver implements SourceInvestigationDriver {
   private readonly turns: AnthropicTurn[] = [];
   private readonly send: AnthropicMessagesRequester;
+  /** 无检索对照臂从工具声明里去掉检索，模型看不到也就不会调用。 */
+  private readonly toolDeclarations: AnthropicToolDefinition[];
 
   constructor(
     config: ProviderConfig,
@@ -487,9 +505,13 @@ export class AnthropicSourceInvestigationDriver implements SourceInvestigationDr
     caption: string,
     prompt: string,
     requester?: AnthropicMessagesRequester,
+    options: { includeSearch?: boolean } = {},
   ) {
     this.model = config.model;
     this.send = requester ?? createAnthropicMessagesRequester(config, { timeoutMs: REQUEST_TIMEOUT_MS });
+    this.toolDeclarations = options.includeSearch === false
+      ? sourceToolDeclarations.filter((tool) => tool.name !== SEARCH_TOOL_NAME)
+      : sourceToolDeclarations;
     this.turns.push({
       role: "user",
       content: [
@@ -508,7 +530,7 @@ export class AnthropicSourceInvestigationDriver implements SourceInvestigationDr
         model: this.model,
         max_tokens: MAX_OUTPUT_TOKENS,
         messages: [...this.turns],
-        tools: extra.tools ?? sourceToolDeclarations,
+        tools: extra.tools ?? this.toolDeclarations,
         tool_choice: extra.toolChoice ?? variant.toolChoice,
         ...(variant.thinking ? { thinking: variant.thinking } : {}),
       }));
@@ -588,14 +610,30 @@ const sourceFunctionTools = sourceToolDeclarations.map((tool) => ({
   strict: true,
 }));
 
+/** 无检索对照臂：声明里去掉检索工具，模型看不到也就不会调用。 */
+function sourceFunctionToolsFor(includeSearch: boolean) {
+  return includeSearch
+    ? sourceFunctionTools
+    : sourceFunctionTools.filter((tool) => tool.name !== SEARCH_TOOL_NAME);
+}
+
 /** Responses 协议的工具循环：累积 input 数组，逐轮回传 function_call 与其输出。 */
 export class ResponsesSourceInvestigationDriver implements SourceInvestigationDriver {
   readonly model: string;
   private readonly input: ResponseInputItem[] = [];
   private readonly send: ResponsesRequester;
+  private readonly functionTools: ReturnType<typeof sourceFunctionToolsFor>;
 
-  constructor(config: ProviderConfig, image: UploadedChartImage, caption: string, prompt: string, requester?: ResponsesRequester) {
+  constructor(
+    config: ProviderConfig,
+    image: UploadedChartImage,
+    caption: string,
+    prompt: string,
+    requester?: ResponsesRequester,
+    options: { includeSearch?: boolean } = {},
+  ) {
     this.model = config.model;
+    this.functionTools = sourceFunctionToolsFor(options.includeSearch !== false);
     if (requester) {
       this.send = requester;
     } else {
@@ -623,7 +661,7 @@ export class ResponsesSourceInvestigationDriver implements SourceInvestigationDr
         model: this.model,
         store: false,
         input: [...this.input],
-        tools: sourceFunctionTools,
+        tools: this.functionTools,
         tool_choice: "auto",
         ...parameters,
       });
