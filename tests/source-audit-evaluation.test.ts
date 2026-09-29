@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import {
+  checkBalance,
   expectationsCatalog,
+  isDeepSeekEndpoint,
   judgeRun,
+  plannedRequests,
   questionsCatalog,
   REQUIRED_CATEGORIES,
   runPairedEvaluation,
@@ -363,6 +366,60 @@ describe("任务 03 新增的推断与拆解题目", () => {
 
     expect(overclaimStatuses("inference-unsupported")).not.toContain("no-applicable-source-overclaim");
     expect(overclaimStatuses("not-verifiable")).not.toContain("no-applicable-source-overclaim");
+  });
+});
+
+describe("开跑前的花费预检", () => {
+  it("按题数 × 臂数 × 次数算出本次要发出的请求数", () => {
+    expect(plannedRequests(17, 2, 3)).toBe(102);
+    expect(plannedRequests(1, 1, 1)).toBe(1);
+  });
+
+  it("只对 DeepSeek 官方端点做余额预检，其他端点直接跳过", async () => {
+    expect(isDeepSeekEndpoint("https://api.deepseek.com/anthropic/v1")).toBe(true);
+    expect(isDeepSeekEndpoint("https://api.anthropic.com/v1")).toBe(false);
+
+    const skipped = await checkBalance("https://api.anthropic.com/v1", "sk-test", 1, async () => {
+      throw new Error("跳过时不该发起请求");
+    });
+    expect(skipped).toMatchObject({ checked: false, blocked: false });
+    expect(skipped.message).toContain("跳过余额预检");
+  });
+
+  it("余额低于下限时拦下运行，余额充足时不拦", async () => {
+    const low = await checkBalance(
+      "https://api.deepseek.com/anthropic/v1",
+      "sk-test",
+      1,
+      async () => new Response(JSON.stringify({
+        is_available: false,
+        balance_infos: [{ currency: "CNY", total_balance: "-0.01", granted_balance: "0.00", topped_up_balance: "-0.01" }],
+      }), { status: 200 }),
+    );
+    expect(low).toMatchObject({ checked: true, totalBalance: -0.01, blocked: true });
+    expect(low.message).toContain("不可用");
+
+    const enough = await checkBalance(
+      "https://api.deepseek.com/anthropic/v1",
+      "sk-test",
+      1,
+      async () => new Response(
+        JSON.stringify({ is_available: true, balance_infos: [{ currency: "CNY", total_balance: "8.50" }] }),
+        { status: 200 },
+      ),
+    );
+    expect(enough).toMatchObject({ checked: true, totalBalance: 8.5, blocked: false });
+  });
+
+  it("余额接口不可用时只提示不拦截，不让预检本身挡住评测", async () => {
+    const broken = await checkBalance(
+      "https://api.deepseek.com/anthropic/v1",
+      "sk-test",
+      1,
+      async () => new Response("boom", { status: 500 }),
+    );
+    expect(broken).toMatchObject({ checked: false, blocked: false });
+    expect(broken.message).toContain("HTTP 500");
   });
 });
 
