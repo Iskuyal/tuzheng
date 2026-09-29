@@ -352,6 +352,66 @@ function classifyFailure(error: unknown): { kind: string; message: string } {
   return { kind: "harness", message: error instanceof Error ? error.message : String(error) };
 }
 
+/** 本次将发出的请求数：题数 × 臂数 × 每臂每题次数。 */
+export function plannedRequests(questionCount: number, armCount: number, runsPerArm: number): number {
+  return questionCount * armCount * runsPerArm;
+}
+
+export function isDeepSeekEndpoint(baseUrl: string): boolean {
+  try {
+    return new URL(baseUrl).hostname === "api.deepseek.com";
+  } catch {
+    return false;
+  }
+}
+
+export interface BalanceGuard {
+  checked: boolean;
+  totalBalance: number | null;
+  message: string;
+  /** 余额低于下限：默认停止运行，避免跑到一半因 402 白跑。 */
+  blocked: boolean;
+}
+
+/**
+ * 开跑前的余额预检（只在 DeepSeek 官方端点做；余额接口免费）。
+ * 取不到余额时不拦，只提示——不能因为预检本身不可用就挡住评测。
+ */
+export async function checkBalance(
+  baseUrl: string,
+  apiKey: string,
+  minBalanceYuan: number,
+  fetchImpl: typeof fetch = fetch,
+): Promise<BalanceGuard> {
+  if (!isDeepSeekEndpoint(baseUrl)) {
+    return { checked: false, totalBalance: null, message: "当前端点不是 DeepSeek 官方地址，跳过余额预检。", blocked: false };
+  }
+  try {
+    const response = await fetchImpl("https://api.deepseek.com/user/balance", {
+      headers: { authorization: `Bearer ${apiKey}` },
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const body = await response.json() as {
+      is_available?: boolean;
+      balance_infos?: Array<{ currency?: string; total_balance?: string }>;
+    };
+    const info = body.balance_infos?.find((entry) => entry.currency === "CNY") ?? body.balance_infos?.[0];
+    const total = info?.total_balance === undefined ? Number.NaN : Number(info.total_balance);
+    if (Number.isNaN(total)) {
+      return { checked: false, totalBalance: null, message: "余额接口没有返回可读数值，跳过预检。", blocked: false };
+    }
+    return {
+      checked: true,
+      totalBalance: total,
+      message: `账户余额 ${total.toFixed(2)} 元（下限 ${minBalanceYuan.toFixed(2)} 元${body.is_available === false ? "，账户当前不可用" : ""}）。`,
+      blocked: total < minBalanceYuan,
+    };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return { checked: false, totalBalance: null, message: `余额预检没成功（${reason}），不拦截，继续运行。`, blocked: false };
+  }
+}
+
 export interface EvaluationOptions {
   driverFactory: (question: SourceAuditQuestion, arm: Arm) => SourceInvestigationDriver;
   runs?: number;
@@ -745,6 +805,8 @@ interface CliOptions {
   record: string | null;
   strict: boolean;
   ids: string[] | null;
+  minBalance: number;
+  allowLowBalance: boolean;
 }
 
 function parseCli(argv: string[]): CliOptions {
@@ -756,6 +818,8 @@ function parseCli(argv: string[]): CliOptions {
     record: null,
     strict: false,
     ids: null,
+    minBalance: 1,
+    allowLowBalance: false,
   };
   for (const argument of argv) {
     const [key, value = ""] = argument.split("=");
@@ -765,11 +829,14 @@ function parseCli(argv: string[]): CliOptions {
     else if (key === "--record") options.record = value;
     else if (key === "--ids") options.ids = value.split(",").map((id) => id.trim()).filter(Boolean);
     else if (key === "--strict") options.strict = true;
+    else if (key === "--min-balance") options.minBalance = Number.parseFloat(value);
+    else if (key === "--allow-low-balance") options.allowLowBalance = true;
     else throw new Error(`未知参数：${argument}`);
   }
   if (!Number.isInteger(options.runs) || options.runs < 1) throw new Error(`--runs 必须是正整数，收到「${options.runs}」。`);
   if (options.arms.length === 0) throw new Error("--arms 只能取 retrieval 或 no-retrieval。");
   if (options.ids !== null && options.ids.length === 0) throw new Error("--ids 至少给一个题号。");
+  if (Number.isNaN(options.minBalance) || options.minBalance < 0) throw new Error(`--min-balance 必须是非负数，收到「${options.minBalance}」。`);
   return options;
 }
 
@@ -878,6 +945,27 @@ async function main(): Promise<void> {
   const selected: SourceAuditQuestions = options.ids
     ? { ...questions, questions: questions.questions.filter((question) => options.ids?.includes(question.id)) }
     : questions;
+
+  // 花钱预检：先说清这次要发多少请求、账户还剩多少，余额不够就直接停，
+  // 避免跑到一半因 402／400 白跑（阶段四任务 03 踩过一次）。
+  const planned = plannedRequests(selected.questions.length, options.arms.length, options.runs);
+  console.log(
+    `本次计划发出 ${planned} 次请求（${selected.questions.length} 题 × ${options.arms.length} 臂 × ${options.runs} 次）；`
+    + "每次调查通常再拆成 2—4 轮模型调用，因此实际调用次数约为请求数的 2—3 倍。",
+  );
+  if (planned < questions.questions.length * expectations.frozen.arms.length * expectations.frozen.runsPerArm) {
+    console.log("（少于整组：使用了 --ids／--arms／--runs 限定，花的是整组的一部分。）");
+  }
+  const balance = await checkBalance(config.baseUrl, config.apiKey, options.minBalance);
+  console.log(`余额预检：${balance.message}`);
+  if (balance.blocked && !options.allowLowBalance) {
+    console.error(
+      `账户余额低于 ${options.minBalance.toFixed(2)} 元，已停止以避免中途失败白跑。`
+      + "充值后重试；确认要继续时加 --allow-low-balance。",
+    );
+    process.exitCode = 1;
+    return;
+  }
 
   const report = await runPairedEvaluation(selected, expectations, {
     runs: options.runs,

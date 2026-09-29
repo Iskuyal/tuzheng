@@ -2,6 +2,8 @@
 
 阶段四任务 03（拆解短配文并检查推断依据）已于 2026-09-29 完成实现在线验收，提交 `de4da13`，验收记录见 [evidence/stage-4-source-audit-claim-reasoning-2026-09-29.md](evidence/stage-4-source-audit-claim-reasoning-2026-09-29.md)（逐次运行记录见同目录 `stage-4-source-audit-eval-2026-09-29-claims-a.json` … `-claims-e.json`）。下一个无阻塞任务是 04「补充关键信息并恢复调查」；05 依赖 04，06 为 P1 条件增强。
 
+**先说钱：2026-09-29 收尾时该 DeepSeek 账户余额已经用尽（`total_balance: -0.01`，`is_available: false`）。** 当天两段整组评测把 10 元充完：阶段四 02 三轮约 216 次请求，阶段四 03 五轮约 510 次请求。03 之所以跑五轮，是为了「修复前／修复后」各留版本对照，成本是最初要求的一轮的 5 倍——**04 不要再重复这个做法**。评测入口现在会在开跑前打印计划请求数并查一次余额（`https://api.deepseek.com/user/balance`，免费），余额低于 `--min-balance`（默认 1 元）就直接停，不会再有「跑到一半 402」的白跑。
+
 复制下面整段到以 `F:\VibeCoding\web-match` 为工作目录的新会话。一次只执行任务 04；05 按 `Blocked by` 顺序另行启动。
 
 ```text
@@ -21,9 +23,21 @@
 - 固定评测：17 题（02 的 12 题 + 03 的 q13—q17），输入与期望分开冻结；入口 `npm run eval:source-audit`（会调用真实模型），支持 `--runs`／`--arms`／`--ids`／`--record`／`--strict`，运行前校验图片指纹、资料库指纹、预算常量与类别覆盖。逐次记录里已有 `periodNote`、`parts`、`origin`、`clarification`、`omittedClaims`。
 - 测试：`npm test` 244 条、`npm run test:e2e` 66 条 × 320／390／1280px、`npm run build` 通过。
 
+## 预算纪律（先读这一节，再动手）
+
+真实模型调用要花钱，钱已经花光过一次。这一轮按下面的顺序花，不要跳步：
+
+1. **默认零成本**：`npm test`、`npm run test:e2e`、`npm run build`、`npm run eval:samples`、`npm run verify:sample-renders` 都不调用真实模型。04 的实现、失败分支、过期恢复、预算与隔离全部先用替身驱动器与浏览器接缝验证（沿用 `AppOptions.investigationDriverFactory`），**这些不需要 API Key**。
+2. **要碰真实模型时，先跑最小档**：
+   - 只测新增能力：`npm run eval:source-audit -- --ids=<新题号,…> --arms=retrieval --runs=1`（几次请求，几毛钱以内）；
+   - 便宜档：`--arms=retrieval` 省一半，`--runs=1` 省三分之二，`--ids=` 只跑一部分。
+3. **整组只跑一轮**：`npm run eval:source-audit -- --runs=3 --record=docs/evidence/<新文件>.json`，17 题 ×2 臂 ×3 次 = 102 次请求、约 25—30 分钟、实测约 0.15—0.3M tokens。**不要再跑第二、第三轮对照**；确实需要对照时，先在报告里说明理由并先估花费，再问 owner 要不要跑。
+4. **开跑前先看脚本打印的两行**：本次计划请求数、账户余额。跑完把余额写进证据记录，便于下一位控制花费。
+5. **失败先查钱**：拿到 `failureKind: upstream` 时先看失败原因里有没有 `402 Insufficient Balance`；那说明余额问题，不是程序缺陷，不要据此改代码。
+
 ## 本环境已实测的事实（不要重新踩）
 
-- **再次跑真实模型前先确认 API Key 可用。** 03 的第五轮跑到一半时提供方开始返回 `402 {"error":{"message":"Insufficient Balance"}}`，会话末尾余额耗尽、无法再跑；五轮上游失败率 25%—50%，只有最后一轮记到了确切原因（400 与 402 混合）。失败运行单列、不进分母，也不要用预置结果顶替。
+- **再次跑真实模型前先确认 API Key 可用。** 交接时该 DeepSeek 账户 `total_balance` 为 **-0.01 元、`is_available: false`**：03 的第五轮跑到一半时提供方开始返回 `402 {"error":{"message":"Insufficient Balance"}}`，余额耗尽后无法再跑；五轮上游失败率 25%—50%，只有最后一轮记到了确切原因（400 与 402 混合）。评测入口现在开跑前会查一次余额（免费接口）并在低于 `--min-balance`（默认 1 元）时直接停。失败运行单列、不进分母，也不要用预置结果顶替。
 - 在线可用的是 **Anthropic Messages 协议 + DeepSeek 官方端点**：`https://api.deepseek.com/anthropic/v1` + `deepseek-flash`。单次调查 3.5—7.7 秒、平均 2.8—3.4 次调用；无检索臂 0.5—0.7 次。**Responses 协议的工具循环仍只有替身测试**，不要把它的结果写成在线通过。
 - `request_clarification` 的真实调用：03 五轮共 9 次，**全部在无检索臂**（q17「无环比来源的推断」3 次，另有 q03／q04／q07／q11／q12／q14 各 1 次），有检索时 0 次。这正是 04 的问题：**有检索时模型从不主动追问**，而 04 要求「资料已经覆盖的问题先检索；仍缺信息时提出一个具体问题」。追问原文与用途已存档在 03 的逐次记录里，可作为设计参考。
 - 模型行为漂移（继续如实计数）：同一张图拆 1—3 条主张，条数在运行间跳动；有时把图上说明文字写进 `omittedClaims`（程序已按出处分「配文未展开／图上说明」，不计入配文覆盖）；偶发漏报配文主张；q11 出现过模型给配文主张补了图上才有的比较方式，程序分不清「配文写了」与「模型补的」。
@@ -44,7 +58,7 @@
 
 ## 收尾要求
 
-运行 `npm test`、`npm run test:e2e`、`npm run build`，保留 `npm run eval:samples`（23/23）、`npm run verify:sample-renders`（18/18）继续通过，并用 `npm run eval:source-audit -- --runs=3 --record=docs/evidence/<新文件>.json` 整组复跑（先确认余额充足；一轮 17 题 ×2 臂 ×3 次约 25—30 分钟）。用固定的对照点审查本次改动。只有验收项实际通过后才更新 issue 04、docs/PHASES.md 与 README.md。真实模型记录写进 docs/evidence/ 新文件，明确重复运行次数、波动、失败运行数与「哪些数字属于哪个程序版本」。以中文提交说明提交并推送（本仓库已设置 `git config http.version HTTP/1.1`），建议分支 + PR 落地。最后用中文报告交付内容、实测数字、未达标项、尚未验证项，以及任务 05 的阻塞状态。
+先零成本验证：`npm test`、`npm run test:e2e`、`npm run build`，并保留 `npm run eval:samples`（23/23）、`npm run verify:sample-renders`（18/18）继续通过。再按第七节的预算纪律花一次真实模型预算：先用 `--ids=<新题> --arms=retrieval --runs=1` 确认补证与新路径（几毛钱），最后**整组只跑一轮** `npm run eval:source-audit -- --runs=3 --record=docs/evidence/<新文件>.json`（102 次请求、约 25—30 分钟）；脚本会先打印计划请求数并查余额，余额不足会直接停（要强行跑加 `--allow-low-balance`）。用固定的对照点审查本次改动。只有验收项实际通过后才更新 issue 04、docs/PHASES.md 与 README.md。真实模型记录写进 docs/evidence/ 新文件，明确重复运行次数、波动、失败运行数、**开跑与收尾时的账户余额**，以及「哪些数字属于哪个程序版本」；不要把余额耗尽造成的失败写成程序缺陷。以中文提交说明提交并推送（本仓库已设置 `git config http.version HTTP/1.1`），建议分支 + PR 落地。最后用中文报告交付内容、实测数字、未达标项、尚未验证项、本轮花费区间，以及任务 05 的阻塞状态。
 
 动手前请先确认你理解这一片要证明什么：**不是让用户替模型找材料，而是让模型说清「还缺哪一项、它会影响哪条结论」，并在拿到补充后沿同一条主张把调查做完、把改动后的旧结论及时作废。**
 ```
