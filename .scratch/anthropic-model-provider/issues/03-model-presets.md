@@ -15,4 +15,9 @@
 
 ## Comments
 
-**2026-09-28 完成：**首批收录 5 条预设——Anthropic 协议：DeepSeek 官方 `https://api.deepseek.com/anthropic/v1` + `deepseek-flash`（**已实测**）、阿里云百炼 `https://dashscope.aliyuncs.com/apps/anthropic/v1` + `qwen3-vl-flash`（官方文档）、Anthropic 官方 `https://api.anthropic.com/v1` + `claude-sonnet-4-6`（官方文档）；Responses 协议：commandcode 网关 + `deepseek/deepseek-v4.1-flash`（既有实测）、OpenAI 官方 + `gpt-4.1-mini`（官方文档）。DeepSeek 的实测同时促成一处兼容修复：其思考模式拒绝强制工具调用（400），应用在 Anthropic 请求中显式关闭思考后连接测试与图片读取均通过。Kimi 未收录：其 Anthropic 兼容端点（`api.kimi.com/coding`）的视觉支持未见文档，多模态仅见于 OpenAI 兼容端点，不属于本项目当前两种协议。
+**2026-09-28 完成：**首批收录 11 条预设，两种协议都覆盖「厂商官方」与「中转站」，且只收录支持图片输入的型号——
+
+- **Anthropic Messages 协议**（6 条）：DeepSeek 官方 `https://api.deepseek.com/anthropic/v1` + `deepseek-flash`（**已实测**）；阿里云百炼 `https://dashscope.aliyuncs.com/apps/anthropic/v1` + `qwen3.8-flash`（官方文档：多模态、支持 Function Calling）；智谱开放平台 `https://open.bigmodel.cn/api/anthropic/v1` + `glm-5.3-flash`（官方文档：GLM-5 系列首个原生多模态）；OpenCode Zen `https://opencode.ai/zen/v1` + `qwen3.8-flash`；OpenRouter `https://openrouter.ai/api/v1` + `deepseek/deepseek-v4.1-flash`；Anthropic 官方 + `claude-sonnet-4-6`。
+- **OpenAI Responses 兼容协议**（5 条）：DeepSeek 官方 `https://api.deepseek.com/v1` + `deepseek-flash`（端点探测 200）；commandcode 网关（既有实测）；OpenCode Zen + `gpt-5.6-luna`；OpenRouter + `openai/gpt-5.6-luna`；OpenAI 官方 + `gpt-4.1-mini`。
+
+**2026-09-28 配套兼容修复：**智谱 GLM-5.3-Flash 的思考不可关闭、且不支持强制工具选择；DeepSeek 的思考模式同样与强制工具调用互斥。应用改为两段式：先按「关闭思考 + 强制工具调用」请求，被 400 拒绝时回退为「不带思考字段 + 自动工具选择」再试一次（`requestAnthropicToolCall`，仅 400 触发一次重试）。DeepSeek 路径在改动后重跑真机复验通过（连接 653 毫秒、读取 1.14 秒、40%/80→100）。

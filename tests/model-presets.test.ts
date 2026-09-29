@@ -6,7 +6,7 @@ const completedEndpointSuffixes = ["/responses", "/messages", "/chat/completions
 
 describe("常用模型预设", () => {
   it("每条预设都有协议、地址、型号、说明与出处，且 id 唯一", () => {
-    expect(MODEL_PRESETS.length).toBeGreaterThanOrEqual(4);
+    expect(MODEL_PRESETS.length).toBeGreaterThanOrEqual(8);
     for (const preset of MODEL_PRESETS) {
       expect(MODEL_PROVIDERS).toContain(preset.protocol);
       expect(preset.baseUrl.startsWith("https://")).toBe(true);
@@ -19,9 +19,15 @@ describe("常用模型预设", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("两种协议都有预设，且包含 DeepSeek 与通义千问的 flash 多模态型号", () => {
-    expect(presetsFor("anthropic").length).toBeGreaterThan(0);
-    expect(presetsFor("openai-responses").length).toBeGreaterThan(0);
+  it("两种协议都覆盖厂商官方 DeepSeek 与中转站，Qwen / GLM 使用 flash 多模态型号", () => {
+    for (const protocol of MODEL_PROVIDERS) {
+      const presets = presetsFor(protocol);
+      expect(presets.length).toBeGreaterThan(0);
+      expect(presets.some((preset) => preset.baseUrl.startsWith("https://api.deepseek.com"))).toBe(true);
+      expect(presets.some((preset) =>
+        ["https://opencode.ai/zen/v1", "https://openrouter.ai/api/v1", "https://api.commandcode.ai/provider/v1"]
+          .includes(preset.baseUrl))).toBe(true);
+    }
 
     expect(MODEL_PRESETS.find((preset) => preset.id === "deepseek-anthropic-flash")).toMatchObject({
       protocol: "anthropic",
@@ -29,10 +35,20 @@ describe("常用模型预设", () => {
       model: "deepseek-flash",
       verification: "live",
     });
-    expect(MODEL_PRESETS.find((preset) => preset.id === "dashscope-anthropic-qwen-vl-flash")).toMatchObject({
+    expect(MODEL_PRESETS.find((preset) => preset.id === "deepseek-responses-flash")).toMatchObject({
+      protocol: "openai-responses",
+      baseUrl: "https://api.deepseek.com/v1",
+      model: "deepseek-flash",
+    });
+    expect(MODEL_PRESETS.find((preset) => preset.id === "dashscope-anthropic-qwen-flash")).toMatchObject({
       protocol: "anthropic",
       baseUrl: "https://dashscope.aliyuncs.com/apps/anthropic/v1",
-      model: "qwen3-vl-flash",
+      model: "qwen3.8-flash",
+    });
+    expect(MODEL_PRESETS.find((preset) => preset.id === "zhipu-anthropic-glm-flash")).toMatchObject({
+      protocol: "anthropic",
+      baseUrl: "https://open.bigmodel.cn/api/anthropic/v1",
+      model: "glm-5.3-flash",
     });
   });
 

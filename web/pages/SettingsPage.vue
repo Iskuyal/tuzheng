@@ -27,7 +27,7 @@ const PROVIDER_META: Record<ModelProvider, {
 }> = {
   "openai-responses": {
     label: "OpenAI Responses 兼容",
-    badge: "OpenAI Responses API 候选协议",
+    badge: "OpenAI Responses 兼容协议",
     baseUrlLabel: "Responses API Base URL",
     defaultBaseUrl: "https://api.openai.com/v1",
     defaultModel: "gpt-4.1-mini",
@@ -36,8 +36,8 @@ const PROVIDER_META: Record<ModelProvider, {
     structuredOutputLabel: "Responses 结构化输出",
   },
   anthropic: {
-    label: "Anthropic Messages",
-    badge: "Anthropic Messages 协议",
+    label: "Anthropic Messages 兼容",
+    badge: "Anthropic Messages 兼容协议",
     baseUrlLabel: "Anthropic Messages Base URL",
     defaultBaseUrl: "https://api.anthropic.com/v1",
     defaultModel: "claude-sonnet-4-6",
@@ -259,7 +259,7 @@ onMounted(loadSettings);
               <span>接口协议</span>
               <select v-model="selectedProvider" :disabled="testingConnection" @change="resetKeyDraft">
                 <option value="openai-responses">OpenAI Responses 兼容</option>
-                <option value="anthropic">Anthropic Messages</option>
+                <option value="anthropic">Anthropic Messages 兼容</option>
               </select>
               <small>保存后用于图片读取；切换协议会带出该协议已保存的地址与模型，密钥留空会保留该协议已存密钥。</small>
             </label>

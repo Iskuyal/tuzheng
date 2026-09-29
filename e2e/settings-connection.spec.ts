@@ -110,7 +110,8 @@ test("模型预设按协议过滤，选取后填入地址与型号", async ({ pa
   await providerSelect.selectOption("anthropic");
   await expect(presetSelect.locator("option")).toContainText([
     "DeepSeek 官方 · V4.1 Flash 多模态",
-    "阿里云百炼 · 通义千问 VL Flash 多模态",
+    "阿里云百炼 · Qwen3.8 Flash 多模态",
+    "智谱开放平台 · GLM-5.3-Flash 原生多模态",
   ]);
 
   await presetSelect.selectOption("deepseek-anthropic-flash");

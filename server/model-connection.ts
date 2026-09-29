@@ -6,6 +6,7 @@ import type {
 import { activeProviderConfig, type ModelProvider, type ModelSettings, type ProviderConfig } from "./model-settings.js";
 import {
   createAnthropicMessagesRequester,
+  requestAnthropicToolCall,
   type AnthropicMessagesRequester,
   type AnthropicToolUseBlock,
 } from "./anthropic-messages.js";
@@ -164,7 +165,7 @@ export async function testAnthropicConnection(
   const startedAt = Date.now();
   let reply: Awaited<ReturnType<AnthropicMessagesRequester>>;
   try {
-    reply = await send({
+    reply = await requestAnthropicToolCall(send, CONNECTION_TOOL_NAME, (variant) => ({
       model: config.model,
       max_tokens: CONNECTION_MAX_OUTPUT_TOKENS,
       messages: [
@@ -180,10 +181,9 @@ export async function testAnthropicConnection(
           input_schema: connectionToolSchema,
         },
       ],
-      tool_choice: { type: "tool", name: CONNECTION_TOOL_NAME },
-      // DeepSeek 等提供方默认开启思考，思考模式会拒绝强制工具调用；连接测试关闭思考。
-      thinking: { type: "disabled" },
-    });
+      tool_choice: variant.toolChoice,
+      ...(variant.thinking ? { thinking: variant.thinking } : {}),
+    }));
   } catch (error) {
     throw classifyRequestError(error, provider);
   }
