@@ -19,6 +19,8 @@
 
 **2026-09-28 验收（本地 + 实机走查）：**`npm test` 116/116、`npm run test:e2e` 48/48（320／390／1280px，新增「切换协议带出该协议已存配置并按所选协议测试连接」用例）、`npm run build` 通过。Edge 实机走查：旧版扁平设置文件（commandcode 网关）读取时迁移为按协议结构；切换协议带出对应配置与文案；Anthropic 无密钥时测试连接返回「请填写 API Key」而不误用另一协议密钥；保存后设置文件重写为 `{activeProvider, providers}` 且原密钥保留（长度未变，页面与接口不回显）；320/390px 无横向溢出。
 
-**2026-09-28 真实网关探测（连接测试在线部分）：**用可用的 commandcode 网关密钥请求 `https://api.commandcode.ai/provider/v1/messages`：路由存在、鉴权头被接受，且只服务 Claude 模型——deepseek／gpt／glm／kimi 等族被网关以 400 明确拒绝并提示改用 `/chat/completions`（应用归类为 request-rejected），Claude 模型受套餐限制（403 `MODEL_NOT_IN_PLAN`，需 Pro 及以上或按量付费，应用归类为 auth）。因此「成功」状态的在线连接测试仍未完成，保持待验证；诊断中还发现 Anthropic 卡曾被填入一把与可用密钥不同的值（112 位 vs 92 位）而报 401，密钥需与卡片一一对应。
+**2026-09-28 真实网关探测（连接测试在线部分）：**用可用的 commandcode 网关密钥请求 `https://api.commandcode.ai/provider/v1/messages`：路由存在、鉴权头被接受，且只服务 Claude 模型——deepseek／gpt／glm／kimi 等族被网关以 400 明确拒绝并提示改用 `/chat/completions`（应用归类为 request-rejected），Claude 模型受套餐限制（403 `MODEL_NOT_IN_PLAN`，需 Pro 及以上或按量付费，应用归类为 auth）。诊断中还发现 Anthropic 卡曾被填入一把与可用密钥不同的值（112 位 vs 92 位）而报 401，密钥需与卡片一一对应。
+
+**2026-09-28 在线连接测试通过（DeepSeek 官方端点，补齐上一段）：**改用 DeepSeek 官方 Anthropic 兼容端点 `https://api.deepseek.com/anthropic/v1` + `deepseek-flash` 后，应用「测试连接」成功（644 毫秒）；同一配置的图片读取也已通过，见任务 02。commandcode 网关因套餐限制仍不可用于 Anthropic 协议，如实保留上述记录。
 
 **2026-09-28 附带修复（Responses 在线路径，非本任务新增能力）：**走查中发现网关开始拒绝 `text.verbosity` 字段（HTTP 400 InvalidParameter），已从视觉请求移除；连接测试的 64 输出上限被推理型模型的思考 token 吃光（`status: incomplete`、空输出），上限调整为 512 后真实连接测试成功（3.5 秒）。真实读取复验：`consistent.png` 返回 1 条主张（80→100、标题 25%），耗时 29.5 秒；`conflict.png` 因模型把 `claimedGrowthPercent` 返回为字符串 `"40%"` 而被结构校验拒绝（2/2）。详见 `docs/evidence/anthropic-provider-2026-09-28.md`。

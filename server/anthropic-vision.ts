@@ -2,6 +2,7 @@ import type { UploadedChartImage, VisionAdapter, VisionReadResult } from "./app.
 import type { ProviderConfig } from "./model-settings.js";
 import {
   createAnthropicMessagesRequester,
+  requestAnthropicToolCall,
   type AnthropicMessagesRequester,
   type AnthropicReply,
   type AnthropicToolUseBlock,
@@ -35,7 +36,7 @@ export class AnthropicMessagesVisionAdapter implements VisionAdapter {
     let reply: AnthropicReply;
 
     try {
-      reply = await this.send({
+      reply = await requestAnthropicToolCall(this.send, OBSERVATION_TOOL_NAME, (variant) => ({
         model: this.model,
         max_tokens: MAX_OUTPUT_TOKENS,
         messages: [
@@ -61,8 +62,9 @@ export class AnthropicMessagesVisionAdapter implements VisionAdapter {
             input_schema: observationSchema,
           },
         ],
-        tool_choice: { type: "tool", name: OBSERVATION_TOOL_NAME },
-      });
+        tool_choice: variant.toolChoice,
+        ...(variant.thinking ? { thinking: variant.thinking } : {}),
+      }));
     } catch (error) {
       if (error instanceof Error && error.name === "TimeoutError") {
         throw new VisionModelError("timeout", { cause: error });

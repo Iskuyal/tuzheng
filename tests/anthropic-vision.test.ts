@@ -26,7 +26,7 @@ function image() {
 }
 
 describe("Anthropic Messages 视觉适配器", () => {
-  it("以 base64 图片块与强制工具调用请求结构化观察值", async () => {
+  it("以 base64 图片块与强制工具调用请求结构化观察值，并关闭思考模式", async () => {
     let sent: AnthropicMessageRequestBody | undefined;
     const adapter = new AnthropicMessagesVisionAdapter(config, async (body) => {
       sent = body;
@@ -51,6 +51,8 @@ describe("Anthropic Messages 视觉适配器", () => {
     expect(sent?.model).toBe("claude-x");
     expect(sent?.max_tokens).toBeGreaterThan(0);
     expect(sent?.tool_choice).toEqual({ type: "tool", name: "record_chart_observation" });
+    // DeepSeek 等提供方默认开启思考，思考模式会拒绝强制工具调用；提取请求必须关闭思考。
+    expect(sent?.thinking).toEqual({ type: "disabled" });
     expect(sent?.tools?.[0]).toMatchObject({ name: "record_chart_observation" });
 
     const content = sent?.messages[0]?.content ?? [];

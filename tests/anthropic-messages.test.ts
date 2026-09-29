@@ -3,6 +3,7 @@ import {
   ANTHROPIC_API_VERSION,
   AnthropicRequestError,
   createAnthropicMessagesRequester,
+  requestAnthropicToolCall,
   type AnthropicMessageRequestBody,
 } from "../server/anthropic-messages.js";
 
@@ -62,5 +63,44 @@ describe("Anthropic Messages 发送器", () => {
     });
 
     await expect(send(pingBody)).rejects.toBeInstanceOf(Error);
+  });
+
+  it("首选形态被 400 拒绝时回退为自动工具选择且不带思考字段", async () => {
+    const seen: AnthropicMessageRequestBody[] = [];
+    const reply = await requestAnthropicToolCall(async (body) => {
+      seen.push(body);
+      if (seen.length === 1) throw new AnthropicRequestError(400);
+      return { content: [{ type: "tool_use", name: "connection_check", input: { ok: true } }] };
+    }, "connection_check", (variant) => ({
+      model: "claude-x",
+      max_tokens: 8,
+      messages: [{ role: "user", content: [{ type: "text", text: "ping" }] }],
+      tool_choice: variant.toolChoice,
+      ...(variant.thinking ? { thinking: variant.thinking } : {}),
+    }));
+
+    expect(seen).toHaveLength(2);
+    expect(seen[0]).toMatchObject({
+      tool_choice: { type: "tool", name: "connection_check" },
+      thinking: { type: "disabled" },
+    });
+    expect(seen[1]?.tool_choice).toEqual({ type: "auto" });
+    expect(seen[1]?.thinking).toBeUndefined();
+    expect(reply.content).toHaveLength(1);
+  });
+
+  it("非 400 错误不回退，只请求一次", async () => {
+    let calls = 0;
+    await expect(requestAnthropicToolCall(async () => {
+      calls += 1;
+      throw new AnthropicRequestError(500);
+    }, "connection_check", (variant) => ({
+      model: "claude-x",
+      max_tokens: 8,
+      messages: [{ role: "user", content: [{ type: "text", text: "ping" }] }],
+      tool_choice: variant.toolChoice,
+      ...(variant.thinking ? { thinking: variant.thinking } : {}),
+    }))).rejects.toMatchObject({ status: 500 });
+    expect(calls).toBe(1);
   });
 });

@@ -27,6 +27,8 @@ export interface AnthropicMessageRequestBody {
   messages: Array<{ role: "user"; content: AnthropicRequestContentBlock[] }>;
   tools?: AnthropicToolDefinition[];
   tool_choice?: { type: "tool"; name: string } | { type: "auto" } | { type: "any" };
+  /** 部分提供方（如 DeepSeek）默认开启思考，思考模式会拒绝强制工具调用；结构化提取显式关闭。 */
+  thinking?: { type: "disabled" } | { type: "enabled"; budget_tokens?: number };
 }
 
 export interface AnthropicToolUseBlock {
@@ -60,6 +62,39 @@ export class AnthropicRequestError extends Error {
   constructor(readonly status: number, options?: ErrorOptions) {
     super(`Anthropic Messages 请求失败（HTTP ${status}）。`, options);
     this.name = "AnthropicRequestError";
+  }
+}
+
+export interface AnthropicToolCallVariant {
+  toolChoice: { type: "tool"; name: string } | { type: "auto" };
+  thinking?: { type: "disabled" };
+}
+
+/**
+ * 结构化提取的工具调用变体：首选「关闭思考 + 强制工具调用」（DeepSeek、Anthropic 等），
+ * 回退为「不带思考字段 + 自动工具选择」（GLM-5.3-Flash 思考不可关闭、部分提供方不支持强制选择）。
+ */
+export function anthropicToolCallVariants(toolName: string): [AnthropicToolCallVariant, AnthropicToolCallVariant] {
+  return [
+    { toolChoice: { type: "tool", name: toolName }, thinking: { type: "disabled" } },
+    { toolChoice: { type: "auto" } },
+  ];
+}
+
+/** 首选变体被 400 拒绝时，用回退变体再请求一次；其他错误直接抛出。 */
+export async function requestAnthropicToolCall(
+  send: AnthropicMessagesRequester,
+  toolName: string,
+  buildBody: (variant: AnthropicToolCallVariant) => AnthropicMessageRequestBody,
+): Promise<AnthropicReply> {
+  const [preferred, fallback] = anthropicToolCallVariants(toolName);
+  try {
+    return await send(buildBody(preferred));
+  } catch (error) {
+    if (error instanceof AnthropicRequestError && error.status === 400) {
+      return await send(buildBody(fallback));
+    }
+    throw error;
   }
 }
 
