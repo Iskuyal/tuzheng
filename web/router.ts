@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import("./pages/AuditPage.vue"),
     },
     {
+      path: "/source-audit",
+      name: "source-audit",
+      component: () => import("./pages/SourceAuditPage.vue"),
+    },
+    {
       path: "/settings",
       name: "settings",
       component: () => import("./pages/SettingsPage.vue"),

@@ -1,6 +1,7 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp, type VisionAdapter, type VisionReadResult } from "../server/app.js";
+import { SourceInvestigationError } from "../server/source-investigation.js";
 import { ModelConnectionError } from "../server/model-connection.js";
 import { VisionModelError } from "../server/vision-error.js";
 import {
@@ -534,5 +535,262 @@ describe("单图审计 API", () => {
 
     expect(response.body.error.code).toBe("MODEL_NOT_CONFIGURED");
     expect(factoryCalls).toBe(0);
+  });
+});
+
+const PNG_HEADER = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+function sourceReply(options: { calls?: Array<{ id: string; name: string; input: unknown }>; text?: string | null }) {
+  return {
+    model: "stub-source-model",
+    usage: { inputTokens: 120, outputTokens: 40 },
+    text: options.text ?? null,
+    calls: options.calls ?? [],
+    truncated: false,
+  };
+}
+
+function scriptedSourceDriver(
+  replies: Array<ReturnType<typeof sourceReply>>,
+  finalizeReply?: ReturnType<typeof sourceReply>,
+) {
+  let index = 0;
+  return {
+    model: "stub-source-model",
+    async start() { return replies[index++] ?? sourceReply({}); },
+    async continue() { return replies[index++] ?? sourceReply({}); },
+    async finalize() { return finalizeReply ?? replies[index++] ?? sourceReply({}); },
+  };
+}
+
+const captionedClaim = {
+  claimText: "比上月上涨 0.8%",
+  metric: "全国居民消费价格",
+  scope: "全国",
+  period: "2025-12",
+  value: 0.8,
+  basis: "month-on-month",
+  kind: "direct",
+  fromImage: false,
+  imageExcerpt: null,
+};
+
+describe("CPI 图文来源核验 API", () => {
+  it("提供固定资料库清单、样例与链接发布日期", async () => {
+    const app = createApp();
+    const library = await request(app).get("/api/source-audit/library").expect(200);
+
+    expect(library.body.library.map((entry: { id: string }) => entry.id)).toEqual([
+      "stats-cpi-2025-12",
+      "stats-term-yoy-mom",
+      "stats-cpi-2026-08",
+    ]);
+    expect(library.body.library[0]).toMatchObject({
+      url: "https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html",
+      publisher: "国家统计局",
+      publishedAt: "2026-01-09",
+      measureCount: 2,
+    });
+    expect(library.body.library[2].distractor).toBe(true);
+
+    const sample = await request(app).get("/api/source-audit/sample").expect(200);
+    expect(sample.body.sample).toMatchObject({
+      id: "cpi-2025-12",
+      caption: "比上月上涨 0.8%",
+      imageUrl: "/samples/cpi-2025-12.png",
+    });
+    expect(sample.body.sample.note).toContain("不是国家统计局原图");
+  });
+
+  it("走完模型自选工具到来源结论的完整路径", async () => {
+    const driver = scriptedSourceDriver([
+      sourceReply({
+        calls: [{
+          id: "s1",
+          name: "search_source_library",
+          input: { metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: ["同比", "环比"] },
+        }],
+        text: "先检索 2025 年 12 月的全国 CPI 材料。",
+      }),
+      sourceReply({
+        calls: [{
+          id: "r1",
+          name: "report_source_finding",
+          input: {
+            claims: [
+              {
+                claimText: "2025 年 12 月全国 CPI 上涨 0.8%",
+                metric: "全国居民消费价格",
+                scope: "全国",
+                period: "2025-12",
+                value: 0.8,
+                basis: null,
+                kind: "direct",
+                fromImage: true,
+                imageExcerpt: "2025 年 12 月全国 CPI 上涨 0.8%",
+              },
+              captionedClaim,
+            ],
+            citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+            noApplicableSourceReason: null,
+            unresolvedItems: ["图上未标注比较方式。"],
+          },
+        }],
+        text: "用现行命中汇总。",
+      }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", "比上月上涨 0.8%")
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const investigation = response.body.investigation;
+    expect(investigation.model).toBe("stub-source-model");
+    expect(investigation.toolCallsUsed).toBe(1);
+    expect(investigation.trace[0]).toMatchObject({ tool: "search_source_library", status: "ok" });
+    expect(investigation.conclusions.map((conclusion: { status: string }) => conclusion.status)).toEqual([
+      "source-pending",
+      "source-mismatch",
+    ]);
+    expect(investigation.conclusions[1].summary).toContain("环比 0.2%");
+    expect(investigation.conclusions[1].citedSourceIds).toEqual(["stats-cpi-2025-12"]);
+    expect(investigation.acceptedCitations).toEqual([
+      { sourceId: "stats-cpi-2025-12", role: "value-basis", note: null },
+    ]);
+    expect(investigation.hits.map((hit: { document: { id: string } }) => hit.document.id)).toContain("stats-cpi-2026-08");
+    expect(investigation.unresolvedItems).toEqual(["图上未标注比较方式。"]);
+    expect(investigation.stopReason).toContain("汇总");
+  });
+
+  it("引用错月份材料时保持来源待核对，并列出排除原因", async () => {
+    const driver = scriptedSourceDriver([
+      sourceReply({
+        calls: [{
+          id: "s1",
+          name: "search_source_library",
+          input: { metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: ["环比"] },
+        }],
+      }),
+      sourceReply({
+        calls: [{
+          id: "r1",
+          name: "report_source_finding",
+          input: {
+            claims: [captionedClaim],
+            citations: [{ sourceId: "stats-cpi-2026-08", role: "value-basis", note: "看起来同为 0.8%" }],
+            noApplicableSourceReason: null,
+            unresolvedItems: [],
+          },
+        }],
+      }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", "比上月上涨 0.8%")
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const investigation = response.body.investigation;
+    expect(investigation.conclusions[0].status).toBe("source-pending");
+    expect(investigation.citationsRejected).toHaveLength(1);
+    expect(investigation.citationsRejected[0].reason).toContain("口径不一致");
+    expect(investigation.excludedSources.map((entry: { sourceId: string }) => entry.sourceId)).toEqual([
+      "stats-cpi-2026-08",
+      "stats-term-yoy-mom",
+    ]);
+    expect(investigation.excludedSources[0].reason).toContain("月份");
+    // 措辞不得越界成造假或动机判断。
+    expect(JSON.stringify(investigation)).not.toMatch(/造假|动机|已核实/);
+  });
+
+  it("缺少配文或图片时在调用模型前拒绝", async () => {
+    let factoryCalls = 0;
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => {
+        factoryCalls += 1;
+        return scriptedSourceDriver([sourceReply({})]);
+      },
+    });
+
+    const noCaption = await request(app)
+      .post("/api/source-audit/investigate")
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(400);
+    expect(noCaption.body.error.code).toBe("CAPTION_REQUIRED");
+
+    const noImage = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", "比上月上涨 0.8%")
+      .expect(400);
+    expect(noImage.body.error.code).toBe("IMAGE_REQUIRED");
+
+    const badImage = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", "比上月上涨 0.8%")
+      .attach("image", Buffer.from("not-an-image"), { filename: "fake.png", contentType: "image/png" })
+      .expect(415);
+    expect(badImage.body.error.code).toBe("UNSUPPORTED_IMAGE");
+
+    expect(factoryCalls).toBe(0);
+  });
+
+  it("没有密钥时给出可操作的提示，不运行调查", async () => {
+    let factoryCalls = 0;
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic"),
+      investigationDriverFactory: () => {
+        factoryCalls += 1;
+        return scriptedSourceDriver([sourceReply({})]);
+      },
+    });
+
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", "比上月上涨 0.8%")
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(503);
+
+    expect(response.body.error.code).toBe("MODEL_NOT_CONFIGURED");
+    expect(response.body.error.message).toContain("模型设置页");
+    expect(response.body).not.toHaveProperty("investigation");
+    // 未配置密钥时不借用替身驱动器跑出「通过」。
+    expect(factoryCalls).toBe(0);
+  });
+
+  it.each([
+    ["timeout", 504, "SOURCE_INVESTIGATION_TIMEOUT"],
+    ["upstream", 502, "SOURCE_INVESTIGATION_FAILED"],
+    ["invalid-output", 502, "SOURCE_INVESTIGATION_INVALID"],
+  ] as const)("来源调查 %s 失败时返回可区分的错误且不附带结论", async (kind, status, code) => {
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => ({
+        model: "stub-source-model",
+        start: async () => { throw new SourceInvestigationError(kind); },
+        continue: async () => sourceReply({}),
+        finalize: async () => sourceReply({}),
+      }),
+    });
+
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", "比上月上涨 0.8%")
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(status);
+
+    expect(response.body.error.code).toBe(code);
+    expect(response.body).not.toHaveProperty("investigation");
   });
 });

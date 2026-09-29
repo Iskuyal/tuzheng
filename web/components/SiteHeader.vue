@@ -35,6 +35,7 @@ function closeMenuWithEscape(): void {
     <nav id="site-navigation" class="site-nav" :class="{ open: menuOpen }" aria-label="主导航">
       <RouterLink class="site-nav-link" active-class="active" exact-active-class="active" to="/" @click="closeMenu">首页</RouterLink>
       <RouterLink class="site-nav-link" active-class="active" to="/audit" @click="closeMenu">审计工作台</RouterLink>
+      <RouterLink class="site-nav-link" active-class="active" to="/source-audit" @click="closeMenu">来源核验</RouterLink>
       <RouterLink class="site-nav-link" active-class="active" to="/settings" @click="closeMenu">
         模型设置
       </RouterLink>

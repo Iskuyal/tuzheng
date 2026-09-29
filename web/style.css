@@ -725,3 +725,97 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .axis-input span { color: #435d68; font-size: 12px; font-weight: 700; }
 .axis-input input { width: 110px; height: 36px; padding: 0 8px; border: 1px solid #d7e0dc; border-radius: 3px; font-size: 13px; }
 @media (max-width: 620px) { .axis-compare { grid-template-columns: 1fr; } }
+
+/* 阶段四：CPI 图文主张的公开来源核验 */
+.source-audit-page { padding-bottom: 56px; }
+.source-input-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr); gap: 26px; align-items: start; }
+.source-panel { border: 1px solid var(--line); background: var(--paper); padding: 16px; }
+.source-panel .section-heading { min-height: 0; margin-bottom: 12px; }
+.source-image-stage { display: grid; min-height: 260px; padding: 12px; place-items: center; border: 1px solid #e5ebe8; background: #f7f9f8; }
+.source-image-stage img { display: block; width: 100%; max-height: 320px; object-fit: contain; }
+.source-image-empty { display: flex; flex-direction: column; gap: 7px; color: var(--muted); text-align: center; }
+.source-image-empty strong { color: var(--ink); font-size: 14px; }
+.source-image-empty span { font-size: 12px; }
+.source-file-name { margin: 9px 1px 0; color: var(--quiet); font-size: 12px; word-break: break-all; }
+.source-sample-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 11px; }
+.source-sample-note { flex: 1 1 200px; color: var(--quiet); font-size: 12px; line-height: 1.5; }
+.ghost-button { min-height: 38px; padding: 0 12px; border: 1px solid #9fb6bb; color: #294d59; background: #f7faf8; font-size: 12px; font-weight: 700; cursor: pointer; }
+.ghost-button:hover { border-color: #78a89b; background: #edf5f1; }
+.source-caption-field { display: flex; flex-direction: column; gap: 7px; color: #344e5b; font-size: 13px; }
+.source-caption-field textarea { width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 0; color: var(--ink); background: #fff; font-family: inherit; font-size: 15px; line-height: 1.6; resize: vertical; }
+.source-caption-hint { margin: 10px 1px 0; color: var(--quiet); font-size: 12px; line-height: 1.6; }
+.source-run-row { display: flex; flex-wrap: wrap; align-items: center; gap: 11px; margin-top: 13px; }
+.source-run-note { flex: 1 1 180px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.source-settings-link { display: inline-block; margin-left: 8px; color: var(--teal-dark); font-weight: 700; }
+
+.source-result { margin-top: 34px; }
+.source-run-summary { display: flex; flex-wrap: wrap; gap: 8px; }
+.source-run-chip { padding: 5px 9px; border: 1px solid var(--line); color: #294d59; background: #fff; font-family: var(--mono); font-size: 12px; }
+.source-stop-reason { margin: 11px 0 0; color: #344e5b; font-size: 13px; line-height: 1.6; }
+.source-clarification { margin-top: 18px; padding: 14px 15px; border: 1px solid var(--amber); background: var(--amber-pale); }
+.source-clarification-question { margin: 4px 0 0; color: var(--ink); font-size: 15px; font-weight: 700; }
+.source-clarification-purpose { margin: 6px 0 0; color: #6b4d16; font-size: 13px; }
+
+.source-section { margin-top: 30px; }
+.source-section-note { margin: -6px 0 13px; color: var(--quiet); font-size: 13px; line-height: 1.6; }
+.source-claim-card { margin-bottom: 13px; padding: 15px; border: 1px solid var(--line); background: var(--paper); }
+.source-claim-text { margin: 0; color: var(--ink); font-size: 16px; font-weight: 700; line-height: 1.5; }
+.source-claim-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 8px 14px; margin: 12px 0 0; }
+.source-claim-meta div { display: flex; flex-direction: column; gap: 3px; }
+.source-claim-meta dt { color: var(--quiet); font-size: 12px; }
+.source-claim-meta dd { margin: 0; color: var(--ink); font-size: 13px; word-break: break-word; }
+.source-conclusion { margin-top: 13px; padding: 12px 13px; border-left: 3px solid var(--line-strong); background: #fff; }
+.source-conclusion.source-state-ok { border-left-color: var(--teal); }
+.source-conclusion.source-state-conflict { border-left-color: var(--red); background: var(--red-pale); }
+.source-conclusion.source-state-pending { border-left-color: var(--amber); background: var(--amber-pale); }
+.source-state-pill { display: inline-block; padding: 3px 8px; color: #fff; background: var(--quiet); font-size: 12px; font-weight: 700; }
+.source-state-ok .source-state-pill { background: var(--teal); }
+.source-state-conflict .source-state-pill { background: var(--red); }
+.source-state-pending .source-state-pill { background: var(--amber); }
+.source-conclusion-summary { margin: 9px 0 0; color: var(--ink); font-size: 14px; line-height: 1.65; }
+.source-reason-list, .source-unresolved-list, .source-cited-list { margin: 9px 0 0; padding-left: 19px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.source-unresolved-list { color: #6b4d16; }
+.source-cited-note { color: var(--quiet); }
+
+.source-document-card { margin-bottom: 12px; padding: 14px 15px; border: 1px solid var(--line); background: #fff; }
+.source-document-card.is-cited { border-color: var(--teal); box-shadow: inset 3px 0 0 var(--teal); }
+.source-document-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.source-document-head h3 { margin: 0; color: var(--ink); font-size: 15px; }
+.source-cited-badge, .source-excluded-badge { padding: 3px 8px; font-size: 12px; font-weight: 700; }
+.source-cited-badge { color: #fff; background: var(--teal); }
+.source-excluded-badge { color: #6b4d16; background: var(--amber-pale); }
+.source-document-meta { margin: 8px 0 0; color: var(--quiet); font-size: 12px; }
+.source-document-excerpt { margin: 9px 0 0; color: var(--ink); font-size: 13px; line-height: 1.65; }
+.source-document-fingerprint { margin: 9px 0 0; color: var(--quiet); font-family: var(--mono); font-size: 12px; }
+.source-document-link { display: inline-block; margin-top: 7px; color: var(--teal-dark); font-size: 13px; font-weight: 700; }
+.source-excluded { margin-top: 15px; padding: 13px 15px; border: 1px dashed var(--line-strong); background: #f8faf9; }
+.source-excluded h3 { margin: 0 0 8px; color: var(--ink); font-size: 14px; }
+.source-excluded ul { margin: 0; padding-left: 19px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+.source-trace { margin: 0; padding: 0; list-style: none; }
+.source-trace li { margin-bottom: 10px; padding: 12px 13px; border: 1px solid var(--line); background: #fff; }
+.source-trace li.trace-rejected { border-style: dashed; border-color: var(--amber); background: var(--amber-pale); }
+.source-trace li.trace-failed { border-color: var(--red); background: var(--red-pale); }
+.trace-head { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.trace-round { color: var(--quiet); font-family: var(--mono); font-size: 12px; }
+.trace-tool { color: var(--ink); font-size: 13px; font-weight: 700; }
+.trace-status { padding: 2px 7px; color: #fff; background: var(--quiet); font-size: 11px; }
+.trace-ok .trace-status { background: var(--teal); }
+.trace-rejected .trace-status { background: var(--amber); }
+.trace-failed .trace-status { background: var(--red); }
+.trace-duration { color: var(--quiet); font-family: var(--mono); font-size: 12px; }
+.trace-detail { margin: 8px 0 0; color: var(--ink); font-size: 13px; line-height: 1.55; }
+.trace-io { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; word-break: break-word; }
+
+.source-library { margin-top: 38px; padding-top: 22px; border-top: 1px solid var(--line); }
+.source-library .section-heading { min-height: 0; }
+.source-library-list { margin: 0; padding: 0; list-style: none; }
+.source-library-list li { display: flex; flex-direction: column; gap: 4px; padding: 11px 0; border-bottom: 1px solid #e5ebe8; }
+.source-library-list a { color: var(--teal-dark); font-size: 14px; font-weight: 700; }
+.source-library-meta { color: var(--quiet); font-size: 12px; }
+.source-library-fingerprint { color: var(--quiet); font-family: var(--mono); font-size: 12px; }
+
+@media (max-width: 860px) {
+  .source-input-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+}
+.source-no-finding { margin: 11px 0 0; padding: 12px 13px; border: 1px dashed var(--amber); background: var(--amber-pale); color: #6b4d16; font-size: 13px; line-height: 1.6; }

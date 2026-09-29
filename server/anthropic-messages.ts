@@ -15,6 +15,25 @@ export interface AnthropicTextBlock {
 
 export type AnthropicRequestContentBlock = AnthropicImageBlock | AnthropicTextBlock;
 
+/** 工具结果的回传块：多轮编排里把程序执行结果交回模型。 */
+export interface AnthropicToolResultBlock {
+  type: "tool_result";
+  tool_use_id: string;
+  content: string;
+  is_error?: boolean;
+}
+
+export type AnthropicTurnBlock =
+  | AnthropicImageBlock
+  | AnthropicTextBlock
+  | AnthropicToolUseBlock
+  | AnthropicToolResultBlock;
+
+export interface AnthropicTurn {
+  role: "user" | "assistant";
+  content: AnthropicTurnBlock[];
+}
+
 export interface AnthropicToolDefinition {
   name: string;
   description?: string;
@@ -24,7 +43,7 @@ export interface AnthropicToolDefinition {
 export interface AnthropicMessageRequestBody {
   model: string;
   max_tokens: number;
-  messages: Array<{ role: "user"; content: AnthropicRequestContentBlock[] }>;
+  messages: AnthropicTurn[];
   tools?: AnthropicToolDefinition[];
   tool_choice?: { type: "tool"; name: string } | { type: "auto" } | { type: "any" };
   /** 部分提供方（如 DeepSeek）默认开启思考，思考模式会拒绝强制工具调用；结构化提取显式关闭。 */
@@ -81,7 +100,34 @@ export function anthropicToolCallVariants(toolName: string): [AnthropicToolCallV
   ];
 }
 
+/**
+ * 工具循环的变体：首选「关闭思考」，被 400 拒绝时去掉 thinking 字段重试；
+ * 两种变体都让模型自行选择工具，服务端不在此处指定具体工具名。
+ */
+export function anthropicTurnVariants(): [AnthropicToolCallVariant, AnthropicToolCallVariant] {
+  return [
+    { toolChoice: { type: "auto" }, thinking: { type: "disabled" } },
+    { toolChoice: { type: "auto" } },
+  ];
+}
+
 /** 首选变体被 400 拒绝时，用回退变体再请求一次；其他错误直接抛出。 */
+export async function requestAnthropicTurn(
+  send: AnthropicMessagesRequester,
+  buildBody: (variant: AnthropicToolCallVariant) => AnthropicMessageRequestBody,
+): Promise<AnthropicReply> {
+  const [preferred, fallback] = anthropicTurnVariants();
+  try {
+    return await send(buildBody(preferred));
+  } catch (error) {
+    if (error instanceof AnthropicRequestError && error.status === 400) {
+      return await send(buildBody(fallback));
+    }
+    throw error;
+  }
+}
+
+/** 结构化提取用的强制工具调用；多轮调查请用 requestAnthropicTurn 自带工具声明。 */
 export async function requestAnthropicToolCall(
   send: AnthropicMessagesRequester,
   toolName: string,
