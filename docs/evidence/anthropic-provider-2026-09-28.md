@@ -6,4 +6,6 @@
 
 **附带发现与修复（Responses 在线路径，非本次新增能力）：**2026-09-28 实测发现两点上游行为变化。其一，网关对未知字段返回 400（`json: unknown field "verbosity"`），视觉请求中的 `text.verbosity: "low"` 已移除。其二，连接测试 64 输出上限被模型的思考 token 吃光（`status: incomplete`、`reasoning_tokens: 64`、空输出），上限调整为 512 后真实连接测试成功（模型 `deepseek/deepseek-v4.1-flash`，3.5 秒）。修复后真实读取复验：`consistent.png` 返回 1 条主张（标题 25%、80→100），耗时 29.5 秒、输出 3,237 tokens；`conflict.png` 连续两次被结构校验拒绝，原因是模型把 `claimedGrowthPercent` 返回为字符串 `"40%"`（期望 number）。模型当前还表现出：单主张读取耗时从 09-26 的 3.2—4.4 秒升至约 30 秒，多主张样例（`multi-claims.png`）在 45 秒超时内未完成。这些是端点/模型行为变化，应用按设计拒绝不可用输出，未做数值猜测。
 
+**协议 vs 端点的边界补充（2026-09-28 查证）：**Anthropic Messages 是线格式而非模型绑定——多个厂商提供 Anthropic 兼容端点供 harness 使用非 Claude 模型（如 DeepSeek 官方 `https://api.deepseek.com/anthropic`、Kimi `https://api.kimi.com/coding/`、DeepInfra `https://api.deepinfra.com/anthropic`，以及自建 LiteLLM 代理在 `/v1/messages` 上做格式转换）。本项目 Anthropic 卡片同样不绑定 Claude：把这类端点填到版本段（如 `https://api.deepseek.com/anthropic/v1`）即可，模型名按其支持填写。commandcode 不支持这种用法——其 `/messages` 只服务自家 Claude 模型，探测过的其他 Anthropic 路径（`/v1/messages`、`/anthropic/v1/messages` 等）均 404，这是该网关的路由策略而非协议限制。
+
 **边界说明：**本记录中的本地测试（116 条行为测试、48 条浏览器用例、构建）使用替身与预置数据，不代表真实模型调用；在线部分只覆盖上述具体端点、模型与样例，不代表 Anthropic 协议本身在官方端点的可用性，也不能外推识别准确率。建议具备 Claude 权限的密钥或官方 Anthropic 端点后再补做成功路径的在线验收。
