@@ -594,6 +594,8 @@ describe("CPI 图文来源核验 API", () => {
       "stats-cpi-2025-12",
       "stats-term-yoy-mom",
       "stats-cpi-2026-08",
+      "stats-retail-2026-07",
+      "stats-retail-2026-08",
     ]);
     expect(library.body.library[0]).toMatchObject({
       url: "https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html",
@@ -602,6 +604,10 @@ describe("CPI 图文来源核验 API", () => {
       measureCount: 2,
     });
     expect(library.body.library[2].distractor).toBe(true);
+    expect(library.body.library[4].revision).toMatchObject({
+      revisedAt: "2026-09-15",
+      supersedes: "stats-retail-2026-07",
+    });
 
     const sample = await request(app).get("/api/source-audit/sample").expect(200);
     expect(sample.body.sample).toMatchObject({
