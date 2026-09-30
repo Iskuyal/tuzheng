@@ -9,7 +9,7 @@
 ```text
 [$implement](C:\Users\dusta\.agents\skills\implement\SKILL.md)
 
-请在 F:\VibeCoding\web-match 实现阶段五任务 08（.scratch/stage-5-stability-submission/issues/08-cross-picker-cancelled-during-load.md），并在同一会话里顺带完成阶段五 07 剩下的「人为变红」验证项（.scratch/stage-5-stability-submission/issues/07-ci-pipeline.md 最后一项）。开始前先记录当前 HEAD（应为 b96026d，PR #14 的合并点）作为代码审查对照点、检查工作区，并阅读 AGENTS.md、CONTEXT.md、PLAN.md、docs/PHASES.md 的阶段三（跨图）与阶段五一节、.scratch/stage-5-stability-submission/spec.md 与同目录 issues/07、08、docs/agents/domain.md（AGENTS.md 约定架构决策记录放 docs/adr/，该目录目前还不存在，本任务要建第一条）。
+请在 F:\VibeCoding\web-match 实现阶段五任务 08（.scratch/stage-5-stability-submission/issues/08-cross-picker-cancelled-during-load.md），并在同一会话里顺带完成阶段五 07 剩下的「人为变红」验证项（.scratch/stage-5-stability-submission/issues/07-ci-pipeline.md 最后一项）。开始前先记录当前 HEAD 作为代码审查对照点（写这份提示词时是 eaf00d2；它与 b96026d 之间只有文档与提示词的改动，产品代码状态相同——以你实际开工时的 `git rev-parse HEAD` 为准）、检查工作区，并阅读 AGENTS.md、CONTEXT.md、PLAN.md、docs/PHASES.md 的阶段三（跨图）与阶段五一节、.scratch/stage-5-stability-submission/spec.md 与同目录 issues/07、08、docs/agents/domain.md（AGENTS.md 约定架构决策记录放 docs/adr/，该目录目前还不存在，本任务要建第一条）。
 
 先简短说明你对任务的理解、两种候选语义的取舍理由和验收方式。这一片要证明的是：**主图仍在载入时用户对对照图选择器所做的操作，要么真正生效、要么被明确拒绝并说明原因，不再出现「选了下拉框又自己弹回去、且没有任何说明」。**
 
