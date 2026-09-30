@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>图证 · 技术报告</title>
+<style>
+  :root {
+    --ink: #1d2b32;
+    --muted: #52646b;
+    --line: #cfdde0;
+    --accent: #0f6f7a;
+    --accent-soft: #e6eff0;
+    --warn: #8a5a00;
+    --warn-soft: #fdf3e0;
+    --ok: #1d6b45;
+    --ok-soft: #e6f3ec;
+    --bad: #9c2f2f;
+    --bad-soft: #fbeaea;
+  }
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "微软雅黑", "Segoe UI", sans-serif;
+    color: var(--ink);
+    font-size: 9.6pt;
+    line-height: 1.52;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  h1, h2, h3, h4 { line-height: 1.28; margin: 0 0 0.45em; }
+  h1 { font-size: 17pt; }
+  h2 {
+    font-size: 13.5pt;
+    margin-top: 0;
+    padding-bottom: 3px;
+    border-bottom: 2px solid var(--accent);
+    color: var(--accent);
+  }
+  h3 { font-size: 11pt; margin-top: 0.9em; }
+  h4 { font-size: 10.2pt; margin-top: 0.75em; color: var(--muted); }
+  p { margin: 0 0 0.5em; }
+  ul, ol { margin: 0 0 0.6em; padding-left: 1.3em; }
+  li { margin-bottom: 0.2em; }
+  code, .mono { font-family: Consolas, "Cascadia Mono", monospace; font-size: 8.6pt; background: #f2f6f7; padding: 0 3px; border-radius: 3px; }
+  a { color: var(--accent); text-decoration: none; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; margin: 0.35em 0 0.7em; font-size: 8.7pt; }
+  th, td { border: 1px solid var(--line); padding: 3px 5px; text-align: left; vertical-align: top; }
+  th { background: var(--accent-soft); font-weight: 600; }
+  figure { margin: 0.5em 0 0.8em; break-inside: avoid; page-break-inside: avoid; }
+  figure img { display: block; max-width: 100%; max-height: 96mm; margin: 0 auto; border: 1px solid var(--line); border-radius: 4px; }
+  figcaption { font-size: 8.2pt; color: var(--muted); margin-top: 2px; }
+  .chapter { break-before: page; page-break-before: always; }
+  .cover { break-after: page; page-break-after: always; padding-top: 26mm; }
+  .cover h1 { font-size: 30pt; letter-spacing: 2px; margin-bottom: 6px; }
+  .cover .sub { font-size: 13pt; color: var(--muted); margin-bottom: 34mm; }
+  .cover .meta { font-size: 10pt; color: var(--muted); }
+  .cover .meta div { margin-bottom: 4px; }
+  .kicker { color: var(--accent); font-size: 9.5pt; letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+  .lead { font-size: 11pt; }
+  .callout { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 8px 10px; margin: 0.6em 0 0.9em; break-inside: avoid; }
+  .callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+  .callout.bad { background: var(--bad-soft); border-left-color: var(--bad); }
+  .tag { display: inline-block; font-size: 8pt; padding: 1px 6px; border-radius: 9px; border: 1px solid transparent; white-space: nowrap; }
+  .tag.local { background: var(--accent-soft); color: var(--accent); border-color: #b9d3d6; }
+  .tag.live { background: var(--ok-soft); color: var(--ok); border-color: #b7d8c7; }
+  .tag.none { background: #eceff0; color: #5b6a70; border-color: #d5dcde; }
+  .toc { margin-top: 1em; }
+  .toc ol { list-style: none; padding-left: 0; }
+  .toc li { display: flex; gap: 8px; border-bottom: 1px dotted var(--line); padding: 3px 0; }
+  .toc .n { width: 2.6em; color: var(--accent); }
+  .toc .t { flex: 1; }
+  .toc .d { color: var(--muted); font-size: 9pt; flex: 0 0 34%; text-align: right; }
+  .toc .p { width: 2.4em; text-align: right; color: var(--muted); }
+  .small { font-size: 8.5pt; color: var(--muted); }
+  .num { font-variant-numeric: tabular-nums; }
+  .cols2 { column-count: 2; column-gap: 12mm; }
+  .kv { font-size: 9pt; }
+  .kv th { width: 30%; }
+  .path { font-family: Consolas, "Cascadia Mono", monospace; font-size: 8.5pt; }
+  hr.soft { border: 0; border-top: 1px solid var(--line); margin: 1.2em 0; }
+</style>
+</head>
+<body>
+
+<!-- ======================= 封面 ======================= -->
+<section class="cover">
+  <p class="kicker">AI-WEB 网页开发挑战赛 · 省赛作品技术报告</p>
+  <h1>图证</h1>
+  <p class="sub">让只有截图的读者，能复查一张图表说的到底是不是图上和公开来源里有的东西</p>
+  <div class="meta">
+    <div><strong>作品形态：</strong>Windows 本机运行的 Web 应用（Vue 3 + Node/Express + TypeScript），配固定资料库的受限工具循环</div>
+    <div><strong>报告内容：</strong>需求分析、系统架构、AI 技术方案、核心功能实现、测试与部署、实际验证范围、创新点与局限</div>
+    <div><strong>材料版本：</strong>__DATE__（生成本 PDF 时的仓库基线 <span class="mono">__COMMIT__</span>；本任务只新增文档、截图脚本与材料索引，未改动产品代码）</div>
+    <div><strong>配套材料：</strong>演示视频（5—8 分钟 MP4，1080p）与代码仓库 README 的「提交材料索引」一节</div>
+    <div><strong>团队信息：</strong>按赛事报名信息填写（见 README「团队信息」一节与本报告附录 B）</div>
+  </div>
+  <div class="callout warn" style="margin-top: 20mm;">
+    <strong>阅读前请先看这一条。</strong>本报告把「本地测试通过」「真实模型在线验证」「尚未验证」分开标注。所有在线数字都引用仓库内
+    <span class="path">docs/evidence/</span> 的逐次运行记录，并写明重复次数、波动区间与失败运行数；报告中的界面截图由替身响应渲染（脚本
+    <span class="path">e2e/submission-screenshots.mjs</span>，不调用真实模型），真实模型输出以证据记录为准。
+  </div>
+</section>
+
+<!-- ======================= 目录 ======================= -->
+<section class="chapter">
+  <h2>目录</h2>
+  <p class="small">页码为 PDF 实际页码。各章末尾的「证据出处」列出一句话结论能指到的命令或文件。</p>
+  <div class="toc">
+    <ol>
+      <li><span class="n">一</span><span class="t">项目概述：问题、用户与边界</span><span class="d">定位与一句话能力声明</span><span class="p" data-toc="一、项目概述"></span></li>
+      <li><span class="n">二</span><span class="t">需求分析</span><span class="d">用户故事到能力的映射</span><span class="p" data-toc="二、需求分析"></span></li>
+      <li><span class="n">三</span><span class="t">系统架构设计</span><span class="d">三层结构、两个窄接口、数据边界</span><span class="p" data-toc="三、系统架构设计"></span></li>
+      <li><span class="n">四</span><span class="t">AI 技术方案</span><span class="d">选型理由、集成方式、受限工具循环与程序把关</span><span class="p" data-toc="四、AI 技术方案"></span></li>
+      <li><span class="n">五</span><span class="t">核心功能实现</span><span class="d">从图内审计到来源核验与修改建议</span><span class="p" data-toc="五、核心功能实现"></span></li>
+      <li><span class="n">六</span><span class="t">测试与部署</span><span class="d">五层测试、配对评测方法、运行与 CI</span><span class="p" data-toc="六、测试与部署"></span></li>
+      <li><span class="n">七</span><span class="t">实际验证范围</span><span class="d">逐项标注本地／在线／未验证</span><span class="p" data-toc="七、实际验证范围"></span></li>
+      <li><span class="n">八</span><span class="t">创新点</span><span class="d">技术创新的五处与对应的证据</span><span class="p" data-toc="八、创新点"></span></li>
+      <li><span class="n">九</span><span class="t">总结与展望</span><span class="d">已做到的、做不到的、下一步</span><span class="p" data-toc="九、总结与展望"></span></li>
+      <li><span class="n">附 A</span><span class="t">证据索引</span><span class="d">每个数字的命令或文件出处</span><span class="p" data-toc="附录A　证据索引"></span></li>
+      <li><span class="n">附 B</span><span class="t">材料纪律与敏感信息声明</span><span class="d">真实／替身／预置分开计数</span><span class="p" data-toc="附录B　材料纪律与敏感信息声明"></span></li>
+    </ol>
+  </div>
+
+  <h3>本报告怎么读</h3>
+  <ul>
+    <li><strong>只想知道做了什么</strong>：读第一章与第七章的两张表。</li>
+    <li><strong>关心 AI 怎么做</strong>：读第四章（工具循环、程序把关、优化策略）与第五章的来源核验一节。</li>
+    <li><strong>要复现</strong>：读第六章与 README 的「Windows 快速开始」「本地验证」，先跑不花钱的离线命令，再决定是否配置模型密钥。</li>
+    <li><strong>要核对数字</strong>：附录 A 给出每个数字的命令或证据文件；本报告不出现无法指认出处的数字。</li>
+  </ul>
+</section>
+
+<!-- ======================= 一、项目概述 ======================= -->
+<section class="chapter">
+  <h2>一、项目概述</h2>
+
+  <h3>1.1 问题</h3>
+  <p class="lead">
+    社交平台和资讯站点上大量图表以截图形式传播。读者往往只有一张图，配文写在标题或正文里，出处要么没有，要么是一句「据国家统计局」。
+    读者要判断的其实是很朴素的两件事：<strong>图里写的东西自己是否自洽</strong>（例如柱高对应的涨幅和标题里的百分比对不对得上），以及
+    <strong>配文说的和图上、和可查的公开来源是否一致</strong>。这两件事目前都靠人肉：自己算一遍百分比，再去搜索官方发布核对口径。
+  </p>
+  <p>
+    更麻烦的是第二件事很容易做错。同一张 CPI 图，同比和环比可以是两个完全不同的数字；「上涨 0.8%」在 2025 年 12 月和
+    2026 年 8 月两个发布里同时存在，只看数值相等就下结论会得到相反的答案。普通读者既没有资料库，也没有逐条记录推理过程的工具。
+  </p>
+
+  <h3>1.2 目标用户</h3>
+  <p>
+    <strong>第一目标用户是只有截图的普通读者</strong>：他拿不到原始数据，也不打算做专业查证，只想知道这张图「能不能信、能信到什么程度、哪里需要打问号」。
+    这个定位决定了产品的三条底线：
+  </p>
+  <ul>
+    <li><strong>只检查有依据的部分。</strong>图上读不到、资料库没有的内容，一律给「需要确认／待核对」，不猜、不补。</li>
+    <li><strong>结论不越权。</strong>图内一致不代表现实数据真实；来源结论只说明「与所引发布是否一致」，不判断造假或作者动机。</li>
+    <li><strong>过程可复查。</strong>每条结论都要能点回到图上的抄录、模型读到的原文、程序算出的差值和所引用的公开材料。</li>
+  </ul>
+
+  <h3>1.3 产品形态与已完成的路径</h3>
+  <p>应用在本机运行：<code>npm run dev</code> 同时启动页面与 API，浏览器打开 <span class="mono">http://127.0.0.1:5173</span>。四个页面：着陆页、审计工作台、来源核验、模型设置。</p>
+  <table class="kv">
+    <tr><th>图内审计（阶段一—阶段三）</th><td>上传或选用团队自制样例 → 模型读出图上原文与数值 → 用户逐条确认／更正 → 程序按公式计算增长率并判定「图内一致／图内矛盾／需要确认」；可放入第二张图做跨图口径比对，可对柱状图给出纵轴不从零的呈现风险提示。</td></tr>
+    <tr><th>来源核验（阶段四，本次主演示路径）</th><td>上传图文 → 模型拆解主张（直接陈述／可检查推断／观点）→ 在固定国家统计局资料库里多轮调用受限工具检索与比较 → 程序校验引用与口径后给出逐条结论 → 缺关键口径时向用户提出一个具体问题 → 用户补充后沿同一条调查记录恢复 → 给出逐处有据的修改建议，由用户决定是否采用。</td></tr>
+    <tr><th>失败恢复（阶段五）</th><td>区分未配置密钥、上游失败、超时、结构错误与格式不支持；失败时不展示任何旧结论或预置结果，给出可操作的下一步。</td></tr>
+  </table>
+
+  <h3>1.4 本报告不声称的能力</h3>
+  <div class="callout bad">
+    <strong>以下能力未实现或未验收，本报告与演示视频都不作为能力声明：</strong>
+    <ul style="margin-bottom:0">
+      <li>固定资料库内的<strong>反证与版本复查</strong>（同一口径的冲突／修订来源对）——规划为条件增强任务，缺经核对的来源对，状态 <span class="mono">needs-info</span>，未实现。</li>
+      <li><strong>开放网络检索／通用 RAG／任意网页抓取</strong>——运行时只查构建期写死的三条材料，不访问开放网络。</li>
+      <li><strong>用户登录、协作、数据库、默认公网部署</strong>——本作品是 Windows 本机应用；公网演示为可选加分项，本报告记录决定与所需条件（见 6.4），本次不提供。</li>
+      <li><strong>CSV／手填来源、MCP 协议集成</strong>——未实现。</li>
+      <li><strong>Responses 协议下的工具循环在线验证</strong>——只有替身测试；在线验证使用 Anthropic Messages 协议。</li>
+    </ul>
+  </div>
+
+  <h3>1.5 一句话结论</h3>
+  <p>
+    在<strong>这张图 + 这几条可核查的官方材料</strong>的范围内，应用能给出带引用的分部位结论，能明确说出「哪一部分现在推不出来、缺什么才能继续」，
+    并且把模型能做的（读图、语义匹配、措辞提议）和必须由程序做的（计算、口径适配、引用校验、改写把关）分开——
+    这套分工有 20 题 ×2 臂 ×3 次的真实模型配对评测记录在案（详见第六章与第七章）。
+  </p>
+
+  <div class="callout">
+    <strong>本章证据出处：</strong>能力清单与状态见 <span class="path">README.md</span>「当前能力状态」表与 <span class="path">docs/PHASES.md</span>；未实现项与阻塞状态见 <span class="path">.scratch/stage-5-stability-submission/issues/</span>。
+  </div>
+</section>
+
+<!-- ======================= 二、需求分析 ======================= -->
+<section class="chapter">
+  <h2>二、需求分析</h2>
+
+  <h3>2.1 用户故事到能力的映射</h3>
+  <p>下表把项目各阶段写定的用户故事收敛成能力项，并给出验收状态。<span class="tag local">本地</span>＝有自动化测试；<span class="tag live">在线</span>＝有真实模型运行记录；<span class="tag none">未验证</span>＝只有计划或替身。</p>
+  <table>
+    <thead><tr><th style="width:26%">用户需求（引项目任务书）</th><th style="width:38%">实现方式</th><th style="width:20%">验收方式</th><th style="width:16%">状态</th></tr></thead>
+    <tbody>
+      <tr><td>读者想在保存错误的模型接口地址时立即看懂哪里填错</td><td>保存时拒绝完整端点路径（<code>/responses</code>、<code>/chat/completions</code> 等），提示填写根地址，且不改动原设置</td><td>API 行为测试 + 三种视口浏览器走查</td><td><span class="tag local">本地</span></td></tr>
+      <tr><td>读者想在模型不可用或输出无效时看到真实错误和下一步操作</td><td>未配置／连接失败／超时／结构不符／格式不支持分类提示；失败不展示任何结论</td><td>API 替身测试 + e2e「上游失败或超时只显示失败原因」</td><td><span class="tag local">本地</span><span class="tag live">在线</span>（阶段四评测中出现过真实失败与降级）</td></tr>
+      <tr><td>读者想在缺数字、缺证据或跨图口径不合时看到待确认</td><td>图内检查在数值、单位、时间顺序、文字依据不全时降级「需要确认」；跨图四要素（指标／时间／单位／范围）任一不齐只能「待核对」</td><td>共享规则单测 + 固定样例离线评测 23/23</td><td><span class="tag local">本地</span></td></tr>
+      <tr><td>评审想看见图片输入、模型观察、人工确认、确定性计算和证据如何接续</td><td>每条观察标出来源（模型读取／预置示例／用户更正／暂不可读）；确认后由程序计算并给出公式</td><td>e2e 三视口断言 + 独立 UI 评审 9/10</td><td><span class="tag local">本地</span><span class="tag live">在线</span>（阶段一三张自制 PNG 真实读取）</td></tr>
+      <tr><td>读者想核对配文与公开来源是否一致，并知道依据</td><td>固定资料库 + 四个受限工具的多轮调查；引用逐条校验角色与口径，结论给到分部位状态</td><td>20 题 ×2 臂 ×3 次真实模型配对评测</td><td><span class="tag live">在线</span></td></tr>
+      <tr><td>读者想在被指出问题后拿到可用的修改建议</td><td>逐处改动关联原句、建议、理由与当前有效引用；模型提议逐条过校验；采用与否由用户决定</td><td>整组评测中的建议规则 + e2e 采用/撤回用例</td><td><span class="tag live">在线</span>（生成与校验）<span class="tag local">本地</span>（页面采用与撤回）</td></tr>
+      <tr><td>团队成员想在新 Windows 环境按 README 安装并启动</td><td>根目录 <code>npm install</code> + <code>npm run dev</code>；无数据库、Docker、WSL 依赖</td><td>README 安装步骤 + CI（windows-latest，Node 24）</td><td><span class="tag local">本地</span><span class="tag none">第二台机器验收待任务 05 执行</span></td></tr>
+      <tr><td>评审想获得可访问的仓库、技术 PDF 与演示视频</td><td>README 材料索引、本报告、演示脚本与走查清单</td><td>本报告第六章与访问检查记录</td><td><span class="tag local">材料就绪</span><span class="tag none">视频录制与仓库公开待人工</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 需求上的取舍</h3>
+  <table>
+    <thead><tr><th style="width:30%">取舍</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>不做开放网络检索，改做「构建期固定的三条官方材料」</td><td>开放网络检索无法保证「引用的材料确实存在、口径确实匹配、摘录没有被改动」这三件事；固定资料库带内容指纹与口径字段，能让「引用不在本次命中内」「口径不适配」成为<strong>可判定的程序规则</strong>而不是模型的自觉。范围换来了可验证性。</td></tr>
+      <tr><td>不做自动改写配文，只给建议并要求用户点击「采用」</td><td>配文是用户的内容。程序只提议、逐处留痕、用户决定，避免「AI 悄悄改了你说的话」。</td></tr>
+      <tr><td>结论词汇限定为「与来源一致／不一致／待核对／推断依据不足／不支持核验」</td><td>这五个词都是<strong>关于「与所引发布是否一致」</strong>的表述，不表达真假与动机；术语类主张因此只能到「待核对／依据不足」，这是有意保留的能力边界。</td></tr>
+      <tr><td>不引入数据库与前端状态管理库</td><td>单机会话型应用，审计状态只存在于当前会话内存；减少依赖面与部署面，符合「Windows 根目录 Node/npm 可运行」的约束。</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.3 验收口径</h3>
+  <p>项目自始至终使用同一条纪律：<strong>计划、实现、验收是三种状态</strong>。任务书里未勾选的项不得写进能力声明；真实模型结果、替身测试与预置样例分别计数；失败运行单列、不进分母、不删题。这条纪律本身也是作品的一部分（见第八章第 4 条创新点）。</p>
+
+  <div class="callout"><strong>本章证据出处：</strong><span class="path">.scratch/stage-5-stability-submission/spec.md</span> 的用户故事与实现决定；<span class="path">docs/PHASES.md</span> 的阶段完成定义与逐条验收记录。</div>
+</section>
+
+<!-- ======================= 三、系统架构设计 ======================= -->
+<section class="chapter">
+  <h2>三、系统架构设计</h2>
+
+  <h3>3.1 技术选型</h3>
+  <table>
+    <thead><tr><th style="width:22%">层</th><th style="width:30%">选型</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>前端</td><td>Vue 3 + Vue Router + Vite + TypeScript</td><td>四个页面、一个工作台，组件数量不大；Vue 的单文件组件让「观察卡／结论卡／建议卡」这类结构重复、内容差异大的界面更好维护。Vite 提供秒级启动，便于「打开就能演示」。</td></tr>
+      <tr><td>服务端</td><td>Node + Express 5 + TypeScript（tsx 运行）</td><td>与前端同语言、同类型定义，模型适配器与领域层可以共享类型；只需一个 <code>npm install</code> 即可在 Windows 上跑起来。</td></tr>
+      <tr><td>领域层</td><td>纯 TypeScript（<span class="path">shared/</span>），零运行时依赖</td><td>计算、判定、引用校验、建议校验全部是可单测的纯函数，看不到任何模型协议与 HTTP。</td></tr>
+      <tr><td>模型接入</td><td>OpenAI Responses 兼容 + Anthropic Messages 两种协议各一个适配器</td><td>避免被单一提供方锁死：设置页按协议分别保存地址、模型与密钥，在线验证用的是 DeepSeek 官方 Anthropic 端点。</td></tr>
+      <tr><td>存储</td><td>无数据库；设置写入当前 Windows 用户的 LocalAppData，审计状态只在会话内存</td><td>密钥不进仓库、不回传页面；会话数据刷新即清空，符合读者一次性核对的用法。</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.2 分层与数据流</h3>
+  <p>三层结构：页面（<span class="path">web/</span>）— 服务端（<span class="path">server/</span>）— 领域层（<span class="path">shared/</span>）。源码约 11 800 行 TypeScript／Vue（含样式），测试与端到端用例约 8 800 行。</p>
+  <table>
+    <thead><tr><th style="width:20%">目录</th><th>职责</th></tr></thead>
+    <tbody>
+      <tr><td class="path">web/pages/</td><td>着陆页、审计工作台、来源核验、模型设置四个页面；来源核验页把「输入 → 结论 → 建议 → 证据 → 轨迹 → 未解决项」按复查顺序排列。</td></tr>
+      <tr><td class="path">server/app.ts</td><td>HTTP 入口与端点；只监听 <code>127.0.0.1</code>。定义 <code>VisionAdapter</code> 与 <code>SourceInvestigationDriver</code> 两个窄接口。</td></tr>
+      <tr><td class="path">server/source-investigation.ts</td><td>受限工具循环编排器：预算、轮次、工具参数校验、轨迹记录、补证恢复、建议生成。</td></tr>
+      <tr><td class="path">shared/source-audit.ts</td><td>引用与结论校验、口径适配、原句追溯、主张分类、建议生成与逐处校验（约 2 200 行的纯逻辑）。</td></tr>
+      <tr><td class="path">shared/source-library.ts</td><td>固定资料库：三条材料的原始链接、发布机构、发布日期、适用口径、逐句摘录与内容指纹。</td></tr>
+      <tr><td class="path">scripts/</td><td>离线固定样例评测、在线配对评测入口、SVG→PNG 同源核对。</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.3 两个窄接口</h3>
+  <p>
+    <strong>VisionAdapter</strong>（图片读取）：Responses 用严格 JSON Schema，Messages 用强制工具调用；输入一张图，输出结构化观察值。
+    <strong>SourceInvestigationDriver</strong>（来源调查）：输入图片与配文，输出工具调用序列与最终汇总，支持沿同一会话恢复。
+    两个接口的共同点是<strong>领域层与页面都看不到协议差异</strong>——换端点、换协议不改判定逻辑，这是后续能用同一套评测同时覆盖两种协议的前提。
+  </p>
+
+  <h3>3.4 数据与隐私边界</h3>
+  <table>
+    <thead><tr><th style="width:26%">数据</th><th style="width:36%">存放位置</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>模型 API Key</td><td>当前 Windows 用户的 <span class="path">%LOCALAPPDATA%\TuZheng\settings.json</span></td><td>只由本机设置页提交给回环服务端；不读环境变量、不回传页面、不入仓库。读取接口只返回「是否已配置」。同一 Windows 账户下的其他进程也能读取该文件，README 已如实写明。</td></tr>
+      <tr><td>上传的图片</td><td>仅在请求期间驻留服务端内存</td><td>不写入项目目录；预置样例不发送到云端模型。</td></tr>
+      <tr><td>调查记录（引用、轨迹、结论）</td><td>会话内存，服务端 30 分钟 TTL</td><td>服务端以「图片＋配文指纹」兜底防止改输入后用旧结论（失配返回 409，过期 410）。</td></tr>
+      <tr><td>评测逐次记录</td><td>仓库内 <span class="path">docs/evidence/*.json</span></td><td>只含题号、结论、引用、工具序列与耗时，不含密钥与端点凭据。</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.5 与赛事提交要求的关系（环境变量与密钥）</h3>
+  <p>
+    赛题文档要求「API 密钥等敏感信息不得出现在公开仓库中，须通过环境变量方式配置」。本作品采用更严格的等价做法：<strong>仓库内不存在任何密钥，也不从环境变量读取密钥</strong>，
+    唯一的环境变量是可选的服务端口（<span class="path">.env.example</span> 只有 <span class="mono">PORT=3001</span>）。密钥经本机设置页交给只监听 <code>127.0.0.1</code> 的服务端，
+    保存到当前用户的 LocalAppData，接口不回传。这样做的原因是：本应用是单机应用，密钥没有必要进入进程环境（环境变量会被子进程继承、也更容易被日志带走）。
+  </p>
+
+  <div class="callout"><strong>本章证据出处：</strong><span class="path">web/</span>、<span class="path">server/</span>、<span class="path">shared/</span> 目录结构与 <span class="path">README.md</span> 的「技术架构」一节；密钥处理见 <span class="path">README.md</span> 与 <span class="path">AGENTS.md</span> 的「密钥与示例」约定。</div>
+</section>
+
+<!-- ======================= 四、AI 技术方案 ======================= -->
+<section class="chapter">
+  <h2>四、AI 技术方案</h2>
+
+  <h3>4.1 选型理由：为什么是多模态模型 + 受限工具循环</h3>
+  <ul>
+    <li><strong>必须是多模态。</strong>输入是图表截图，模型要能读出「2025 年 12 月全国 CPI 同比上涨 0.8%」这样的图内原文。模型预设只收录支持图片输入的型号，避免接入纯文本模型后读图不可用。</li>
+    <li><strong>必须能调用工具。</strong>来源核验要「先检索、再比较、必要时问人」，这是多轮的、依赖中间结果的过程，单次问答无法表达「引用的是哪一条材料、用的哪个口径」。</li>
+    <li><strong>必须是结构化输出。</strong>观察值、主张、引用、建议都要能逐字段校验；两种协议都强制结构化（严格 JSON Schema／强制工具调用），并在提供方拒绝时按实测回退（DeepSeek 思考模式拒绝强制工具调用、GLM 类模型思考不可关闭——结构化请求先试「关闭思考 + 强制工具调用」，被 400 拒绝时回退「不关思考 + 自动工具选择」）。</li>
+    <li><strong>在线验证用的配置。</strong><span class="mono">Anthropic Messages 协议 + https://api.deepseek.com/anthropic/v1 + deepseek-flash</span>，逐张图约 1.1—1.4 秒、整次来源调查中位约 5—7 秒。这一配置写在证据记录里，评测脚本在开跑前会核对协议与模型，配置不符直接拒绝运行。</li>
+  </ul>
+
+  <h3>4.2 集成方式：一次来源调查里到底发生了什么</h3>
+  <p>一次来源调查（investigation）的完整约束如下——这些数字是代码常量，评测脚本逐项比对后才允许开跑：</p>
+  <table>
+    <thead><tr><th style="width:26%">约束</th><th style="width:20%">取值</th><th>作用</th></tr></thead>
+    <tbody>
+      <tr><td>可用工具</td><td>4 个</td><td><code>search_source_library</code>（检索固定资料库）、<code>compare_values</code>（确定性数值比较）、<code>request_clarification</code>（请求用户确认，最多 1 次）、<code>report_source_finding</code>（汇总，出口）</td></tr>
+      <tr><td>每轮工具调用上限</td><td>3 次</td><td>超出的调用<strong>不执行</strong>，并连同原因写进轨迹（页面上显示为「未执行」的黄色条目）</td></tr>
+      <tr><td>单次调查调用总预算</td><td>6 次</td><td>检索、比较、追问计入；汇总为出口不计入。达到上限后保留已核验结论，并列出未完成部分</td></tr>
+      <tr><td>轮次上限</td><td>4 轮</td><td>防止无限循环</td></tr>
+      <tr><td>整体时限</td><td>150 秒</td><td>超时按上游超时分类提示，不产出结论</td></tr>
+      <tr><td>单次可核验主张</td><td>最多 3 条</td><td>超出部分与模型声明未展开的内容按原文列出，按出处分「配文未展开／图上说明」，不静默丢弃</td></tr>
+      <tr><td>补证恢复</td><td>与初查共享同一组预算</td><td>恢复不能把预算清零；引用与结论按本轮主张口径重新校验</td></tr>
+    </tbody>
+  </table>
+
+  <figure>
+    <img src="assets/source-trace.png" alt="工具轨迹" />
+    <figcaption>图 1　工具轨迹（替身响应渲染）。每条记录轮次、工具、执行状态、耗时、模型给出的第一句行动理由与输入／结果摘要。第三条是<strong>被拒绝的调用</strong>：同一轮超过 3 次上限，程序不执行并留档原因。</figcaption>
+  </figure>
+
+  <h3>4.3 程序把关之一：引用与结论不由模型说了算</h3>
+  <p>模型只能「提出引用」，能不能成立由程序按固定规则判定，规则本身可以单测：</p>
+  <ol>
+    <li><strong>在不在本次命中内。</strong>引用不在本次检索命中里的 ID 一律降级「来源待核对」；引用了资料库中不存在的 ID 记为<strong>虚构引用</strong>，引用了存在但不在本次命中内的另记「凭记忆复用」，两类分开统计。</li>
+    <li><strong>角色是否与材料类型相符。</strong>引用一份材料时模型要声明它的角色：数值依据 / 术语解释 / 仅作背景。术语解释页只能解释「同比与环比有什么不同」，<strong>不能为某个具体月份的数值背书</strong>。</li>
+    <li><strong>口径是否适配（按主张判定，不按检索查询判定）。</strong>只有指标、月份、范围都匹配的数据发布才能作为数值依据。这一条曾经按「检索时用的查询口径」判定，在真实评测里造成「模型引用了正确月份的材料却被程序拒绝」，修复后改按<strong>这条主张自己</strong>的指标／月份／范围判定。</li>
+    <li><strong>原句能不能追溯到出处。</strong>配文主张必须能在配文原文里找到（文字重合度下限，且其中数字必须出现在配文或图上）；图内主张必须带图上逐字抄录，且所填比较方式要能在抄录里看到——这条规则是因为实测发现模型会给图上的数值<strong>补一个图上没写的「同比」</strong>，从而凭空把「待核对」变成「一致」。</li>
+    <li><strong>值对不上不等于整句成立。</strong>推断类主张按「数字与口径」「推断结论」两个部位分别给结论；数字一致但推断方向被来源否定时，整条主张判「与来源不一致」。</li>
+    <li><strong>措辞不越权。</strong>结论文案固定为「与所引国家统计局发布不一致」，不写「造假」「误导」，也不判断作者动机。</li>
+  </ol>
+
+  <figure>
+    <img src="assets/source-citations.png" alt="引用与检索命中" />
+    <figcaption>图 2　引用与检索命中（替身响应渲染）。命中材料带原始链接、发布机构、发布日期、摘录与内容指纹；用作数值依据的一份显示「用作数值依据」，干扰项与术语页列在「本次排除的材料及原因」中，逐条给出排除理由。</figcaption>
+  </figure>
+
+  <h3>4.4 程序把关之二：修改建议由程序逐处生成与校验</h3>
+  <p>核验结束后，程序按当前有效结论生成建议配文，每一步都关联证据：</p>
+  <table>
+    <thead><tr><th style="width:24%">主张状态</th><th style="width:26%">允许的改动类型</th><th>规则</th></tr></thead>
+    <tbody>
+      <tr><td>与来源一致</td><td>保留原句</td><td>不得改写、不得删除（模型提议改写已核实内容会被拒）</td></tr>
+      <tr><td>与来源不一致</td><td>替换数值</td><td>只能用<strong>所引来源同口径</strong>的正确数值改正；不得保留错误数值（例如把环比 0.8% 改正为官方环比的 0.2%）</td></tr>
+      <tr><td>来源待核对</td><td>保留并限定 / 建议删除</td><td>必须保留限定语（如「暂未核实」）或建议删除，不得写成确定表述</td></tr>
+      <tr><td>推断依据不足</td><td>保留并限定 / 建议删除</td><td>同上，并说明缺哪一项依据</td></tr>
+      <tr><td>观点（不支持核验）</td><td>保留原句 / 建议删除</td><td>不做真假改写</td></tr>
+    </tbody>
+  </table>
+  <p>
+    模型可以在汇总里可选地附上自己的<strong>改写提议</strong>，但每条提议都要过一遍逐处校验：不得引入原配文、本次主张与所引来源之外的数值、月份、范围或因果／加强表述；
+    不合格的提议<strong>连拒绝原因一起留档</strong>，改动退回程序生成的兜底建议；提议字段本身畸形（不是数组、条目不是对象、超限）不会让整份汇总作废。
+  </p>
+
+  <figure>
+    <img src="assets/source-suggestion.png" alt="修改建议" />
+    <figcaption>图 3　修改建议（替身响应渲染）。每处改动给出原句、建议、理由、处理方式、主张状态与当前有效引用，并标明「模型提议（已通过程序校验）」还是「程序按结论生成」；虚线框里是模型提议中被拒的一条及拒绝原因。底部按钮明确「采用这条建议（写入配文输入框）」，采用后旧结论与旧建议转入历史并要求重新核验。</figcaption>
+  </figure>
+
+  <h3>4.5 优化策略</h3>
+  <table>
+    <thead><tr><th style="width:24%">问题（实测发现）</th><th style="width:38%">优化</th><th>效果</th></tr></thead>
+    <tbody>
+      <tr><td>模型把图上的数值补一个图上没写的比较方式</td><td>图内主张必须带图上抄录，比较方式必须写在抄录里</td><td>该规则由单测与 API 替身测试守护；真实运行中该题的漂移仍如实记录（见 7.3）</td></tr>
+      <tr><td>模型把检索到的官方原句当成一条配文主张</td><td>配文主张必须能在配文原文里找到（重合度下限＋数字必须出现在配文或图上）</td><td>修复后三轮评测未再出现该类错误</td></tr>
+      <tr><td>配文只写「12 月」，模型不去图上取年份</td><td>程序按图上标注的月份补全年份；图上没有或出现多个年份时不猜、保留原样并说明</td><td>修复后相关三题在后三轮的有检索臂 18/18 通过</td></tr>
+      <tr><td>模型纯文本回复导致对话里出现空 content，被上游 400 拒绝</td><td>保留文本本身；为空时不再写入空消息</td><td>整段对话不再被协议拒绝</td></tr>
+      <tr><td>附属列表超限（把图上说明塞进未展开项）导致整份汇总被拒，且重报指令不说明原因</td><td>上限放宽并在提示词写明「只放配文原文」；重报指令带具体字段错误摘要</td><td>汇总被拒从「整份作废」变为「可修复重报」，被拒原因写进轨迹</td></tr>
+      <tr><td>补证恢复时，初查以「已接收但未回应的工具调用」结束，恢复段整段被 400 拒绝</td><td>恢复前先补齐工具调用与结果的配对（含同轮被丢弃的调用）</td><td>恢复路径实测可用（有检索臂 3/3 通过）</td></tr>
+      <tr><td>建议里的「更强的因果表述」没有兜底</td><td>固定词表拦截因果／程度加强／中文数字范围</td><td><strong>边界如实保留</strong>：未覆盖的措辞（实测出现过「略贵」）不会被拦，见 7.3</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.6 成本与可复现性</h3>
+  <p>
+    评测脚本在开跑前打印两行：本次计划发出的请求数与账户余额；支持 <code>--runs</code>／<code>--arms</code>／<code>--ids</code>／<code>--record</code>／<code>--strict</code>，
+    可以先跑最小档（几题 ×1 臂 ×1 次）确认配置，再决定是否跑整组。最近一次整组（20 题 ×2 臂 ×3 次＋补证恢复段＝计划 126 次请求）实耗约 1.02 元。
+    这一设计直接来自教训：早前的评测轮曾因提供方余额耗尽而出现大量失败，之后才加了余额预检与响应正文捕获。
+  </p>
+
+  <div class="callout"><strong>本章证据出处：</strong>工具与预算常量见 <span class="path">server/source-investigation.ts</span>、<span class="path">shared/source-audit.ts</span>；规则修复与实测见 <span class="path">docs/evidence/stage-4-source-audit-evaluation-2026-09-29.md</span>（第 8 节）、<span class="path">docs/evidence/stage-4-source-audit-claim-reasoning-2026-09-29.md</span>（第 6 节）、<span class="path">docs/evidence/stage-4-source-audit-clarify-resume-2026-09-29.md</span>（第 3 节）。</div>
+</section>
+
+<!-- ======================= 五、核心功能实现 ======================= -->
+<section class="chapter">
+  <h2>五、核心功能实现</h2>
+
+  <h3>5.1 图内审计：模型只读，程序才算</h3>
+  <p>
+    「模型只读不算」是第一条产品规则：模型负责读图、提取原文与数值、做语义匹配；所有百分比、差值、单位换算和结论判定都由确定性代码完成。
+    读图提示词明确禁止模型给出确认值、增长率或结果状态；模型输出先经 Zod 结构校验、再由用户逐条确认，才参与判定。
+  </p>
+  <figure>
+    <img src="assets/audit-workbench.png" alt="审计工作台" />
+    <figcaption>图 4　审计工作台（多主张样例；界面数据来自团队预置样例与用户确认，不涉及模型）。每个观察点标出来源与状态，确认后显示程序计算的增长率与结论。</figcaption>
+  </figure>
+
+  <h3>5.2 来源核验：本次主演示路径</h3>
+  <p>主演示路径为「上传图文 → 主张拆解 → 工具检索 → 推断检查 → 必要补证 → 修改建议」。下面按界面顺序说明每一段做了什么、依据是什么。</p>
+
+  <h4>（1）输入与主张拆解</h4>
+  <p>上传图表截图（或载入团队自制样例）并填写配文。模型把配文拆成三类主张：<strong>直接陈述</strong>（原文直接写出的事实或数值）、<strong>可检查推断</strong>（由原文推出、原文没有直接写的结论）、<strong>观点</strong>（对原因、动机、价值或未来走势的判断）。观点标为「不支持核验」，系统不对它做真假结论。</p>
+  <figure>
+    <img src="assets/source-input.png" alt="来源核验输入区" />
+    <figcaption>图 5　来源核验的输入区（替身响应渲染）。左侧是待核验图片（团队自制示意图，图上明确标注「不是国家统计局原图」），右侧是配文与运行按钮；页面顶部说明资料库在构建期固定、运行时不访问开放网络。</figcaption>
+  </figure>
+
+  <h4>（2）工具检索与逐条结论</h4>
+  <p>模型在四个受限工具中自行选择：检索固定资料库、比较数值、请求用户确认、汇报结论。程序校验工具名与参数，按轮次与总量计预算，被拒绝的调用同样留在轨迹里。结论分部位给出，并逐条关联依据：</p>
+  <figure>
+    <img src="assets/source-claims.png" alt="配文主张结论卡" />
+    <figcaption>图 6　配文主张的结论卡（替身响应渲染）。展开后可见：模型拆出的指标／范围／月份／数值／比较方式、原文核对（这条主张能在配文原文里找到）、结论与依据原句、以及所引材料的角色。</figcaption>
+  </figure>
+
+  <h4>（3）必要补证：把「回答不了的问题」交给用户</h4>
+  <p>
+    当配文没写比较方式、而资料库里同比与环比的发布都在时，资料库回答不了「这句配文说的是哪个口径」——这正是必须问人的问题。
+    程序要求：先自己检索，检索后仍缺且会影响结论时，提出<strong>一个</strong>指向具体主张与具体字段的问题；反过来，资料已经覆盖的问题（配文自带口径与数值）不允许追问。
+    用户回答标为「用户提供」，只用于确定口径：图文没写的才填入；图文已写且与回答冲突时不覆盖、保留双方并降级为「待核对」、同时请求更正；回答解析失败不套用并说明原因。
+  </p>
+  <figure>
+    <img src="assets/source-clarify.png" alt="模型请求确认" />
+    <figcaption>图 7　模型请求确认（替身响应渲染）。问题指明它影响哪条主张与哪项口径，并声明回答只用于确定口径、不是官方来源。</figcaption>
+  </figure>
+  <figure>
+    <img src="assets/source-conclusion-changes.png" alt="结论变化" />
+    <figcaption>图 8　补证前后的结论对照（替身响应渲染）。沿同一条调查记录续跑，给出每条主张 before → after 与原因；配不上对的主张也单列，不静默丢弃。</figcaption>
+  </figure>
+
+  <h4>（4）修改建议、采用与撤回</h4>
+  <p>建议不自动替换原配文。用户点击「采用」后建议才写入配文输入框，同时旧结论与旧建议转入「历史结论（仅作历史展示）」，并要求重新核验；此后任何输入改动、重新核验或被补证结果接续，都会让旧建议立即失效并只作历史展示，历史条目保留其依据快照指纹。</p>
+  <figure>
+    <img src="assets/source-history.png" alt="历史结论" />
+    <figcaption>图 9　采用建议后的历史结论（替身响应渲染）。历史条目标出「已采用建议」「旧结论与旧建议撤回」「不代表当前结果」，并可展开查看当时的建议配文与依据指纹。</figcaption>
+  </figure>
+
+  <h4>（5）无适用来源与证据不足时的表达</h4>
+  <p>资料库没有对应月份、或推断缺少必要依据时，结论保持「来源待核对／推断依据不足」，并明确写出「缺哪一项才能继续」「不代表结论为假」。数据边界同时显式声明：固定资料库共三条材料，干扰项与术语页会被排除并给出原因。</p>
+  <figure>
+    <img src="assets/source-library.png" alt="固定资料库清单" />
+    <figcaption>图 10　固定资料库清单（替身响应渲染）：三条材料带链接、发布机构、发布日期、适用口径与内容指纹，干扰项明确标注。</figcaption>
+  </figure>
+
+  <h3>5.3 失败恢复</h3>
+  <p>错误按类型区分，且失败时<strong>不展示任何结论</strong>（不用上一次结果或预置结果顶替）：</p>
+  <table>
+    <thead><tr><th style="width:26%">情形</th><th style="width:34%">页面表现</th><th>下一步</th></tr></thead>
+    <tbody>
+      <tr><td>未配置密钥</td><td>提示「来源核验需要调用模型选择工具」，并给出直达模型设置的链接</td><td>前往设置页填写并「测试连接」（测试不保存、不发图片）</td></tr>
+      <tr><td>上游失败 / 超时</td><td>只显示失败原因；结果区、轨迹、停止原因都不出现</td><td>稍后重试或换用更小的图片</td></tr>
+      <tr><td>结构不符 / 格式不支持</td><td>分类提示；图片路径另给出框选或改用预置样例的入口</td><td>重试或改用支持格式（PNG／JPG／WebP，5 MB 上限）</td></tr>
+      <tr><td>建议被认为不可靠</td><td>「模型提议但未通过校验（不采用）」逐条列出提议与拒绝原因</td><td>按程序兜底建议或原句自行修改</td></tr>
+    </tbody>
+  </table>
+  <figure>
+    <img src="assets/source-no-key.png" alt="未配置密钥" />
+    <figcaption>图 11　未配置密钥时的可操作提示（替身响应渲染）。下方「展开资料库」在不配置任何模型的情况下也能查看资料库清单。</figcaption>
+  </figure>
+
+  <h3>5.4 窄屏与可访问性</h3>
+  <p>全部页面在 320／390／1280px 三个视口有自动化断言（含「无横向溢出」）；审计台的桌面步骤导航在窄屏收为一行当前图与步骤选择器。以下为 390px 下的结论卡。</p>
+  <figure style="width:62%">
+    <img src="assets/source-mobile-claims.png" alt="窄屏结论卡" />
+    <figcaption>图 12　390px 下的结论卡（替身响应渲染）。状态胶囊、原文核对与依据原句在窄屏下完整可读。</figcaption>
+  </figure>
+
+  <div class="callout"><strong>本章证据出处：</strong>界面实现见 <span class="path">web/pages/</span> 与 <span class="path">web/components/</span>；浏览器行为断言见 <span class="path">e2e/</span>；截图由 <span class="path">e2e/submission-screenshots.mjs</span> 用替身响应重放生成（命令见 README）。</div>
+</section>
+
+<!-- ======================= 六、测试与部署 ======================= -->
+<section class="chapter">
+  <h2>六、测试与部署</h2>
+
+  <h3>6.1 五层测试</h3>
+  <table>
+    <thead><tr><th style="width:22%">层</th><th style="width:30%">命令</th><th style="width:14%">最近一次结果</th><th>覆盖与不覆盖</th></tr></thead>
+    <tbody>
+      <tr><td>单元与 API 行为测试</td><td><code>npm test</code></td><td class="num">332/332</td><td>计算边界、结论分级、跨图口径、纵轴风险、双协议设置与连接测试、工具循环预算与参数校验、引用与口径、主张追溯、补证解析与冲突、恢复共享预算、建议生成与逐处校验、改写提议容错解析。不调用真实模型。</td></tr>
+      <tr><td>浏览器端到端</td><td><code>npm run test:e2e</code></td><td class="num">78/78</td><td>26 条用例 × 320／390／1280px，含无横向溢出断言；来源核验用例用替身响应驱动页面，真实模型结果单列在证据记录里。</td></tr>
+      <tr><td>离线固定评测</td><td><code>npm run eval:samples</code></td><td class="num">23/23</td><td>18 张团队自制图的独立预期（观察值、增长率与公式、证据状态、轴范围、跨图待确认原因、纵轴提示）＋5 组跨图配对；改错结论、图中文字或待确认状态会报失败。</td></tr>
+      <tr><td>图片同源核对</td><td><code>npm run verify:sample-renders</code></td><td class="num">18/18</td><td>用 Edge 把每张 SVG 重新栅格化并与同名 PNG 逐字节比对 SHA-256，保证页面展示图与上传用图是同一份内容。</td></tr>
+      <tr><td>构建与类型</td><td><code>npm run build</code></td><td>通过</td><td>前端类型检查（vue-tsc）、服务端类型检查、Vite 打包与服务端编译。<strong>类型检查单独成步是实测教训</strong>：向 <span class="path">shared/axis-risk.ts</span> 注入类型错误后 <code>npm test</code> 仍全绿（vitest 走 esbuild，只剥离类型不做检查），只有 typecheck 能拦下。</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.2 真实模型评测方法：不设「预留题」，但把口径写死</h3>
+  <p>评测的目的不是产出一个漂亮分数，而是让「检索到底带来了什么」可被反驳。做法：</p>
+  <ul>
+    <li><strong>题集与期望分开冻结。</strong>输入（图片、配文、图上声明文字、图片双指纹）在 <span class="path">samples/source-audit-questions.json</span>，独立期望在 <span class="path">samples/source-audit-expectations.json</span>；期望由人<strong>先于任何模型运行</strong>写定，不由模型生成、也不按运行结果回填。旧题的哈希有校验和守护，改写即测试失败。</li>
+    <li><strong>配对对照。</strong>同一模型、同一题集、同一资料版本下只改变检索工具可用性：无检索臂由服务端把检索工具从声明里移除，编排层同时拒绝任何检索调用（不执行检索、不回落命中），并要求模型写清缺少可用来源的原因。</li>
+    <li><strong>三个维度分别报告。</strong>事实正确性（主张状态是否正确）、证据可追溯性（接受的引用条数与角色、被拒引用及原因，无检索臂恒为 0）、不适用来源识别（干扰项与术语页的排除、越界结论次数），<strong>不把引用能追溯当成准确率提高</strong>。</li>
+    <li><strong>允许无检索臂答对。</strong>无检索臂给不出确定结论时，正确答案本来就是「来源待核对」——这类题目会「免费」答对，记录里逐题列出，不隐藏、也不据此宣称无检索有价值。</li>
+    <li><strong>评测侧独立复算。</strong>修改建议的「不得引入新事实」不依赖服务端校验实现，评测脚本按原始载荷独立重算一遍（数值、月份、范围、加强表述、未解决主张是否保留限定）。</li>
+    <li><strong>失败运行单列。</strong>不进分母、不删题、不用预置或缓存结果顶替；失败原因（含提供方 HTTP 402 余额耗尽）逐轮记录。</li>
+  </ul>
+
+  <h3>6.3 真实模型整组结果（只引用证据记录口径）</h3>
+  <table>
+    <thead><tr><th style="width:14%">轮次</th><th style="width:30%">规模</th><th style="width:26%">有检索臂状态正确率</th><th>无检索臂／失败</th></tr></thead>
+    <tbody>
+      <tr><td>阶段四 02</td><td>12 题 ×2 臂 ×3 次 ×3 轮＝216 次请求，194 次产生结论</td><td>90.9% ／ 91.7% ／ 91.2%（合计 91.3%，94/103）</td><td>41.4% ／ 44.8% ／ 33.3%（合计 39.6%，36/91）；上游失败有检索 5/108、无检索 17/108</td></tr>
+      <tr><td>阶段四 03</td><td>17 题 ×2 臂 ×3 次 ×5 轮＝510 次尝试</td><td>97.2% ／ 90.3% ／ 100.0% ／ 96.8% ／ 92.6%（与提交代码一致的 E 轮 92.6%，25/27）</td><td>29.7% ／ 32.5% ／ 43.5% ／ 36.6% ／ 20.8%；上游失败 25%—50%，末尾确认是提供方余额耗尽（HTTP 402）</td></tr>
+      <tr><td>阶段四 04</td><td>19 题整组一轮（计划 120 次请求，119 条记录）</td><td><strong>90.0%（54/60）</strong></td><td>无检索 30.5%（18/59）；上游失败 0</td></tr>
+      <tr><td>阶段四 05</td><td>20 题整组一轮（计划 126 次请求，124 条记录）</td><td><strong>93.5%（58/62）</strong></td><td>无检索 30.6%（19/62）；配对差 62.9 个百分点；上游失败 0</td></tr>
+    </tbody>
+  </table>
+  <p class="small">
+    数据出处：<span class="path">docs/evidence/stage-4-source-audit-evaluation-2026-09-29.md</span>、<span class="path">-claim-reasoning-2026-09-29.md</span>、
+    <span class="path">-clarify-resume-2026-09-29.md</span>、<span class="path">-rewrite-2026-09-30.md</span>，逐次运行记录为同目录同名 <span class="mono">.json</span>。
+    取证不变量：虚构引用 0、无适用来源越界 0（各轮均如此）；阶段四 05 中模型 73 条改写提议里 31 条通过逐处校验被采用、42 条被拒并逐条留档；评测侧独立复算的「新事实不变量」在两臂 124 次有效运行里 0 次违规。
+  </p>
+
+  <h3>6.4 部署与运行</h3>
+  <table class="kv">
+    <tr><th>运行环境</th><td>Windows + Node.js（验收使用 Node 24.16 / npm 11.17；README 写明需 Node 22.12+ 的 22.x 或 24.x）。无数据库、Docker、WSL 依赖。</td></tr>
+    <tr><th>安装与启动</th><td><code>npm install</code> → <code>npm run dev</code> → 打开 <span class="mono">http://127.0.0.1:5173</span>（API 在 <code>127.0.0.1:3001</code>）。</td></tr>
+    <tr><th>密钥配置</th><td>设置页选择协议（Responses／Messages）→ 填地址、模型名、Key → 保存到当前用户 LocalAppData；「测试连接」用未保存的表单参数发一条短请求，不保存、不写文件、不发图片。远程地址必须 HTTPS，回环可用 HTTP。</td></tr>
+    <tr><th>持续集成</th><td><span class="path">.github/workflows/ci.yml</span>：windows-latest + Node 24，依次跑 typecheck → build → <code>npm test</code> → <code>eval:samples</code> → <code>verify:sample-renders</code>（不阻塞）→ <code>test:e2e</code>，失败时上传 Playwright trace。CI 只跑离线路径，不配置任何模型密钥，不执行在线评测，因此不产生费用。</td></tr>
+    <tr><th>在线演示（可选加分项）</th><td><strong>本次决定不提供公网演示</strong>。原因与所需条件记录在 <span class="path">docs/submission/accessibility-check.md</span>：本应用按设计把密钥保存在本机用户目录、服务只监听回环地址；公网演示需要另做「评审可用密钥方案」（例如平台侧代管密钥或一次性体验额度）与可用性承诺，属于独立工作项。评审请按 README 在本机启动，离线功能（样例、固定评测、三视口界面）不需要任何密钥即可运行。</td></tr>
+  </table>
+
+  <div class="callout"><strong>本章证据出处：</strong>命令与结果见 <span class="path">package.json</span>、<span class="path">.github/workflows/ci.yml</span>、<span class="path">docs/evidence/</span>；本地数字由本报告提交前的收尾运行实测（六个命令，结果见附录 A）。</div>
+</section>
+
+<!-- ======================= 七、实际验证范围 ======================= -->
+<section class="chapter">
+  <h2>七、实际验证范围</h2>
+  <p>这一章是评审复查的入口：每一项能力都标注它<strong>到哪一层被验证过</strong>，以及<strong>没被验证的是什么</strong>。</p>
+
+  <h3>7.1 逐项验证状态</h3>
+  <table>
+    <thead><tr><th style="width:26%">能力</th><th style="width:12%">本地测试</th><th style="width:12%">真实模型在线</th><th>尚未验证的部分</th></tr></thead>
+    <tbody>
+      <tr><td>图内观察提取与用户确认后计算增长率</td><td>是（332 条单测／API 测试）</td><td>是（2026-09-26，三张团队自制 PNG 经 Responses 端点，3.2—4.4 秒／张）</td><td>其他图表类型与端点的准确率未评估；换端点或模型后需按 STAGE-1 的五步重跑</td></tr>
+      <tr><td>跨图口径比对与数值冲突</td><td>是</td><td>是（2026-09-27，两张自制裁图读出 25% 对 50%，判「数值冲突」）</td><td>仅验证当前两张自制图；口径四要素的确认仍依赖用户逐项确认</td></tr>
+      <tr><td>柱状图纵轴风险提示</td><td>是（含 18 张固定样例的独立预期）</td><td>是（阶段三在线读数包含轴对象）</td><td>轴上限不明时柱形按示意处理，不声称精确还原</td></tr>
+      <tr><td>来源核验（拆主张→检索→结论）</td><td>是</td><td>是（20 题 ×2 臂 ×3 次整组一轮，有检索臂 93.5%）</td><td>题型全部是开发题、<strong>没有预留题</strong>，不外推准确率；只验证 <span class="mono">deepseek-flash</span> + Anthropic 协议</td></tr>
+      <tr><td>推断依据不足与观点不判假</td><td>是</td><td>是（同一条推断按有无适用来源分别判「依据不足／一致／不一致」）</td><td>主张分类的准确率没有单独统计</td></tr>
+      <tr><td>必要追问与补证恢复</td><td>是（替身覆盖解析、冲突、过期、指纹失配）</td><td>是（q18 有检索臂 3/3 先检索后追问、恢复段 3/3 通过；q19 资料已覆盖 0 次追问）</td><td>在线样本很小（补证恢复仅 5 次）；追问率有漂移（04 轮 3/3、05 轮 2/3）；会话过期与指纹失配等分支只有替身测试</td></tr>
+      <tr><td>修改建议的生成与逐处校验</td><td>是（26 条建议生成与校验的单测）</td><td>是（60 次运行生成建议、69 处改动；73 条提议中 31 条采用、42 条被拒留档）</td><td>「更强的因果表述」靠固定词表，实测出现的「略贵」不会被拦；月份／范围拦截只覆盖可解析写法</td></tr>
+      <tr><td>建议的采用与撤回</td><td>是（e2e 断言写入输入框、旧建议转历史）</td><td><strong>否</strong>：采用是页面行为，未做真实模型下的在线复验；服务端不记录用户是否采用</td><td>真实用户交互中的撤回体验未实测</td></tr>
+      <tr><td>失败恢复与错误分类</td><td>是（替身与 e2e；失败不展示结论）</td><td>部分：评测过程中出现过真实上游失败（阶段四 03 五轮 25%—50%，末尾确认 402 余额耗尽），页面与记录如实降级</td><td>真实故障下的窄屏体验、超时阈值边界未逐项复验</td></tr>
+      <tr><td>Responses 协议的工具循环</td><td>是（替身）</td><td><strong>否</strong></td><td>工具循环、恢复配对与建议提议在 Responses 协议下都只有替身测试</td></tr>
+      <tr><td>反证与版本复查（固定库内的冲突／修订来源对）</td><td colspan="2" style="text-align:center">未实现（<span class="mono">needs-info</span>：缺经核对的同口径来源对）</td><td>不进入任何能力声明</td></tr>
+      <tr><td>公网在线演示</td><td colspan="2" style="text-align:center">本次不提供（见 6.4）</td><td>如需提供需另记服务可用性与密钥方案</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.2 检索对照：无检索臂在哪些题上「免费答对」</h3>
+  <p>
+    无检索臂并非全错。在阶段四 05 的整组里，无检索臂 19/62 通过，其中 6 题 3/3 全对——这些题的正确答案本来就是「来源待核对」或「推断依据不足」（资料库没有适用来源、或配文没写口径），
+    无检索臂无法给出确定结论，因此与期望一致。<strong>记录逐题列出这类「免费答对」</strong>，不把它藏起来，也不据此宣称无检索更有价值：配对差 62.9 个百分点全部来自资料库确实覆盖的那几题。
+    同时，<strong>检索臂退化题 0 题</strong>——没有出现「有检索反而比无检索差」的题目，也没有为了让无检索臂显得更差而调整题面或期望。
+  </p>
+
+  <h3>7.3 仍然成立的局限（逐条保留，不删题）</h3>
+  <ol>
+    <li><strong>题型是开发题，没有预留题。</strong>四批评测的题集都由团队自制并在开发过程中扩展，不存在「先调好再考的留出题」，样本量不足以给出通用准确率。</li>
+    <li><strong>只验证了一个模型与一种在线协议。</strong><span class="mono">deepseek-flash</span> + Anthropic Messages；Responses 协议的工具循环只有替身测试。</li>
+    <li><strong>模型行为漂移如实记录。</strong>q18（缺比较方式 → 应先检索再追问）：阶段四 04 有检索臂 3/3、05 为 2/3；未追问的运行判未通过且不编造恢复记录。q11 出现过模型给配文主张补了图上才有的比较方式（程序无法区分「配文写了」与「模型补的」）。q14 一次没填推断方向、q16 两次汇总缺必填字段导致无结论。</li>
+    <li><strong>加强表述拦截有覆盖边界。</strong>词表能拦已知的因果／程度加强表述与中文数字范围，但实测出现过的「略贵」这类措辞不会被识别。</li>
+    <li><strong>术语类主张只能到「待核对／依据不足」。</strong>结论词汇不表达「与术语页矛盾」，这是有意的能力边界。</li>
+    <li><strong>补证恢复在线样本小</strong>（有检索 3 次、无检索 2 次）；补证回答解析只覆盖「同比／环比、YYYY-MM、数值、范围／指标原文」这类写法。</li>
+    <li><strong>无检索臂的上游失败率曾高于有检索臂</strong>（阶段四 02：17/108 对 5/108；03 轮末尾确认是余额耗尽）。这一不对称在样本内稳定出现但原因不能断定，只作观察记录。</li>
+  </ol>
+
+  <div class="callout"><strong>本章证据出处：</strong>上述每一条局限都能在对应证据记录的「不能外推、尚未验证的部分」小节找到原文；逐次运行 JSON 保留每题每次的结论、引用、工具序列与失败原因。</div>
+</section>
+
+<!-- ======================= 八、创新点 ======================= -->
+<section class="chapter">
+  <h2>八、创新点</h2>
+
+  <h3>8.1 技术创新</h3>
+  <table>
+    <thead><tr><th style="width:26%">创新点</th><th style="width:40%">具体做法</th><th>可核对的证据</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>1.「模型提议、程序把关」的受限工具循环</strong></td>
+        <td>模型能用的只有四个工具，且工具名、参数、每轮与总量预算都由服务端逐个校验；被拒绝的调用不执行但连原因留档；最终汇总里的引用、结论与改写提议全部要过程序规则。模型只负责它擅长的：读图、语义匹配、措辞提议。</td>
+        <td>工具轨迹界面与 e2e 断言；「被拒绝调用」与「被拒提议」在整组评测里各有实测记录（阶段四 05：42 条提议被拒并逐条留档）</td>
+      </tr>
+      <tr>
+        <td><strong>2. 把「口径」变成程序可判定的规则</strong></td>
+        <td>只有指标、月份、范围都匹配的数据发布才能作数值依据；术语页只能解释比较方式；口径按<strong>主张自己</strong>的字段判定而不是按检索查询判定。同值干扰项（两个发布同比都是 0.8%）因此可以被程序区分。</td>
+        <td>固定资料库的干扰项设计；被拒引用逐条给出「口径不一致（月份／范围）」原因</td>
+      </tr>
+      <tr>
+        <td><strong>3. 意图可用性的对抗性规则</strong></td>
+        <td>三条规则直接来自实测踩坑：图内比较方式必须出现在图上抄录里（防模型凭空补口径）；配文主张必须能追溯到配文原文（防把来源原句当成用户的话）；未解决主张在建议里必须保留限定或删除（防把不确定写成确定）。</td>
+        <td>三条规则各有单测；q04、q18 等题在真实运行中的表现为「待核对 → 用户补证 → 一致」或「必须保留暂未核实」</td>
+      </tr>
+      <tr>
+        <td><strong>4. 有对照、有失败、有独立复算的评测方法</strong></td>
+        <td>有／无检索配对对照；期望先写、题集冻结、旧题哈希守护；允许无检索答对并逐题列出；失败运行单列不进分母；建议的「新事实不变量」由评测侧按原始载荷独立复算，不依赖服务端实现。</td>
+        <td>四批整组记录与逐次运行 JSON；阶段四 05 的两臂 124 次有效运行 0 次违反</td>
+      </tr>
+      <tr>
+        <td><strong>5. 证据边界的界面表达</strong></td>
+        <td>结论不是一句话，而是「分部位状态 + 依据原句 + 当前有效引用 + 未解决项 + 本次排除的材料及原因」；历史结论与当前结论物理分开，历史建议标明依据指纹「不代表当前结果」。</td>
+        <td>来源核验页的区块顺序与 e2e 断言；采用／撤回用例</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>8.2 应用创新</h3>
+  <ul>
+    <li><strong>把「核实」拆成读者能自己复走的动作。</strong>不是给一个「可信度 82 分」的黑箱结论，而是把过程摊开：图上写了什么、模型读到什么、你确认了什么、程序算了什么、引用了哪份材料、哪些没解决。读者可以只信自己能复查的那部分。</li>
+    <li><strong>把「不知道」做成一等公民。</strong>「来源待核对」「推断依据不足」「不支持核验」都是正式结论，界面不允许把它们写成确定表述；「本次没有核验的内容」有独立区块与覆盖度提示。</li>
+    <li><strong>面向传播场景的克制。</strong>对普通读者最危险的情形是把话说满——所以系统在缺依据时主动降级，并且在页面上说明「不能作为造假判断」。产品立场是帮助读者提问，而不是替读者定罪。</li>
+  </ul>
+
+  <div class="callout"><strong>本章证据出处：</strong>创新点 1—5 的实现分别见 <span class="path">server/source-investigation.ts</span>、<span class="path">shared/source-audit.ts</span>（引用校验、建议校验）、<span class="path">scripts/evaluate-source-audit.ts</span>（评测侧独立复算）与 <span class="path">web/pages/SourceAuditPage.vue</span>。</div>
+</section>
+
+<!-- ======================= 九、总结与展望 ======================= -->
+<section class="chapter">
+  <h2>九、总结与展望</h2>
+
+  <h3>9.1 已经做到的</h3>
+  <ul>
+    <li>完成了一条端到端的、可在本机复现的图文来源核验路径：上传图文 → 主张拆解 → 工具检索 → 推断检查 → 必要补证 → 修改建议，并且每一段都留下可复查的记录。</li>
+    <li>把「模型能做什么」和「程序必须做什么」分开，并用一套可重复的评测去看这条分工是否真的有用：20 题 ×2 臂 ×3 次的整组对照里，有检索臂主张状态正确率 93.5%，无检索臂 30.6%，虚构引用与越界结论均为 0。</li>
+    <li>把失败与边界做成产品的一部分：错误分类提示、失败不展示结论、未解决项单列、建议只能由用户采用、旧结论立即失效并只作历史展示。</li>
+    <li>材料与实现对齐：本报告出现的每个数字都能指到一条命令或一份证据记录；未验收的能力（反证与版本复查、公网演示、Responses 协议工具循环）明确排除在结论之外。</li>
+  </ul>
+
+  <h3>9.2 做不到的（在本次提交里如实保留）</h3>
+  <ul>
+    <li>不能判断现实数据真伪，也不能判断作者动机；来源结论只说明「与所引发布是否一致」。</li>
+    <li>不能覆盖资料库之外的领域：只有 CPI 专题的三条公开材料，运行时不访问开放网络。</li>
+    <li>不能给出通用准确率：题集是开发题、没有预留题，样本量不支持外推。</li>
+    <li>不能保证模型行为稳定：追问率、主张条数、字段填写在不同运行之间有漂移，代码里能做的只是让它<strong>可见、可判、可失败</strong>。</li>
+  </ul>
+
+  <h3>9.3 下一步（按价值排序）</h3>
+  <ol>
+    <li><strong>固定库内的反证与版本复查</strong>（需先找到经核对的同口径冲突／修订来源对）：这是目前最影响「可信度判断」的缺口，但必须等来源对可核对后再做，否则就是把猜测写进结论。</li>
+    <li><strong>把在线评测扩到 40—60 题并引入预留题</strong>：现有题集把机制压测得比较充分，下一步要的是「没被调过的题」上的表现。</li>
+    <li><strong>Responses 协议的工具循环在线验证</strong>：目前只有替身测试，补齐后「双协议」才是完整的能力而非接口形态。</li>
+    <li><strong>公网演示的密钥方案</strong>：若决定提供在线演示，需要先定义平台侧代管密钥或一次性体验额度、限流与可用性承诺，再谈部署。</li>
+    <li><strong>建议的采用／撤回在真实模型下的体验复验</strong>，以及更自然的「加强表述」识别（词表之外的措辞）。</li>
+  </ol>
+
+  <h3>9.4 一句话</h3>
+  <p>图证想做的不是「让 AI 告诉你这张图是真的」，而是<strong>让 AI 把可核对的依据摆到你面前，并诚实地标出它自己也不知道的地方</strong>。</p>
+
+  <div class="callout"><strong>本章证据出处：</strong>局限清单与下一步来源：<span class="path">docs/PHASES.md</span> 阶段四、阶段五各节；<span class="path">docs/STAGE-5-PROMPT.md</span> 的「未完成清单」；各证据记录的「不能外推」小节。</div>
+</section>
+
+<!-- ======================= 附录 A ======================= -->
+<section class="chapter">
+  <h2>附录 A　证据索引</h2>
+  <p>本报告只引用下表范围内的数字。所有数字在提交前由收尾运行复测，命令与结果一一对应。</p>
+
+  <h3>A.1 本地命令（不调用真实模型）</h3>
+  <table>
+    <thead><tr><th style="width:34%">命令</th><th style="width:18%">最近结果</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>npm test</code></td><td class="num">332/332（20 个测试文件）</td><td>单元与 API 行为测试</td></tr>
+      <tr><td><code>npm run test:e2e</code></td><td class="num">78/78（26 用例 ×3 视口）</td><td>浏览器端到端，使用系统自带 Edge</td></tr>
+      <tr><td><code>npm run build</code></td><td>通过</td><td>含 vue-tsc 与服务端 tsc 类型检查</td></tr>
+      <tr><td><code>npm run eval:samples</code></td><td class="num">23/23</td><td>18 张固定样例 + 5 组跨图配对</td></tr>
+      <tr><td><code>npm run verify:sample-renders</code></td><td class="num">18/18</td><td>SVG→PNG 逐字节同源核对</td></tr>
+      <tr><td><code>node e2e/submission-screenshots.mjs</code></td><td>20 张 PNG</td><td>本报告与演示材料的界面截图（替身响应，不调用模型）</td></tr>
+    </tbody>
+  </table>
+
+  <h3>A.2 真实模型证据记录</h3>
+  <table>
+    <thead><tr><th style="width:40%">文件</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td class="path">docs/evidence/stage-4-source-audit-2026-09-29.md</td><td>阶段四 01：来源核验闭环首次在线验证（10 次运行 8 次成功）</td></tr>
+      <tr><td class="path">docs/evidence/stage-4-source-audit-evaluation-2026-09-29.md</td><td>阶段四 02：12 题 ×2 臂 ×3 次 ×3 轮配对评测与两处程序口径修复</td></tr>
+      <tr><td class="path">docs/evidence/stage-4-source-audit-claim-reasoning-2026-09-29.md</td><td>阶段四 03：主张分类与分部位推断结论，五轮整组</td></tr>
+      <tr><td class="path">docs/evidence/stage-4-source-audit-clarify-resume-2026-09-29.md</td><td>阶段四 04：追问 → 补证 → 恢复，改动即失效</td></tr>
+      <tr><td class="path">docs/evidence/stage-4-source-audit-rewrite-2026-09-30.md</td><td>阶段四 05：逐处有据的修改建议（本报告 7.1、7.2 的主要数字来源）</td></tr>
+      <tr><td class="path">docs/evidence/stage-4-source-audit-eval-2026-09-30-rewrite.json</td><td>阶段四 05 的逐次运行记录（124 条）</td></tr>
+      <tr><td class="path">docs/evidence/stage-3-live-vision-2026-09-27.md</td><td>跨图真实读取（25% 对 50%）</td></tr>
+      <tr><td class="path">docs/evidence/anthropic-provider-2026-09-28.md</td><td>Anthropic 协议在线探测与兼容修复</td></tr>
+      <tr><td class="path">docs/evidence/stage-5-connection-test-2026-09-27.md</td><td>「测试连接」真实点测记录</td></tr>
+      <tr><td class="path">docs/STAGE-1.md</td><td>阶段一验收记录（含真实视觉读取五步复验）</td></tr>
+    </tbody>
+  </table>
+
+  <h3>A.3 提交材料清单</h3>
+  <table>
+    <thead><tr><th style="width:30%">材料</th><th style="width:34%">位置</th><th>状态</th></tr></thead>
+    <tbody>
+      <tr><td>代码仓库</td><td><span class="mono">https://github.com/Iskuyal/web-match</span></td><td>内容就绪；<strong>当前为私有仓库，提交前须设为公开或为评审开通访问权限</strong>（见 accessibility-check.md）</td></tr>
+      <tr><td>README（介绍、架构、安装、团队）</td><td><span class="path">README.md</span></td><td>就绪，含「提交材料索引」</td></tr>
+      <tr><td>技术文档（PDF，≤30 页）</td><td><span class="path">docs/submission/web-match-technical-report.pdf</span></td><td>就绪（源文件 <span class="path">technical-report.html</span>，可用 <span class="path">build-report.mjs</span> 重建）</td></tr>
+      <tr><td>演示视频（5—8 分钟，1080p MP4）</td><td>由团队录制后放到 README 注明的地址</td><td><strong>待人工录制</strong>：脚本、分镜、演示数据与走查清单见 <span class="path">docs/submission/demo-video-script.md</span></td></tr>
+      <tr><td>环境配置说明</td><td><span class="path">.env.example</span>（仅 PORT）＋ README「Windows 快速开始」</td><td>就绪；仓库内不含任何密钥</td></tr>
+      <tr><td>在线演示（可选加分项）</td><td>—</td><td>本次不提供，条件记录在 <span class="path">docs/submission/accessibility-check.md</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ======================= 附录 B ======================= -->
+<section class="chapter">
+  <h2>附录 B　材料纪律与敏感信息声明</h2>
+
+  <h3>B.1 真实模型、替身与预置样例分开计数</h3>
+  <table>
+    <thead><tr><th style="width:24%">来源</th><th style="width:30%">用在哪里</th><th>纪律</th></tr></thead>
+    <tbody>
+      <tr><td><strong>真实模型在线</strong></td><td>四批整组评测、连接测试、阶段一与阶段三的图片读取</td><td>记录端点协议与模型、逐次运行 JSON、耗时、失败次数与原因；只出现在 <span class="path">docs/evidence/</span> 与第七章表格中</td></tr>
+      <tr><td><strong>替身响应</strong></td><td>全部浏览器端到端测试；本报告的界面截图；无检索臂与各种错误分支的 UI 验证</td><td>不写成模型实时结果；图表说明与图注逐张标注「替身响应渲染」</td></tr>
+      <tr><td><strong>预置样例</strong></td><td>18 张团队自制图与其独立预期；离线评测 <code>eval:samples</code></td><td>页面标为「预置示例」；不发送到云端模型；引入新图后需同步冻结指纹</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn">
+    本作品<strong>没有把任何动画、预置观察或替身响应当成模型的实时工具调用</strong>。演示视频录制前要求在真机（`npm run dev`）上按走查清单把演示题实际跑通，
+    录制内容必须包含真实工具轨迹与一次真实失败恢复；若某题在录制时出现漂移，按清单要求如实说明或改录另一条已验收的题，不剪辑成「每次都成功」的印象。
+  </div>
+
+  <h3>B.2 敏感信息</h3>
+  <ul>
+    <li>仓库内不存在模型 API Key；被跟踪的 <span class="path">.env*</span> 文件只有 <span class="path">.env.example</span>（内容仅 <span class="mono">PORT=3001</span>）。</li>
+    <li>密钥只保存在当前 Windows 用户的 LocalAppData，经回环服务端处理；设置读取接口只返回「是否已配置」，不回传密钥；构建产物中不含密钥。</li>
+    <li>评测记录与截图不含密钥、不含端点凭据；截图中的界面数据均为替身响应或团队预置样例。</li>
+    <li>示例图片均为团队自制，图上标注「团队自制示意图，不是国家统计局原图」；引用材料使用国家统计局公开页面的链接、标题与短摘录。</li>
+  </ul>
+
+  <h3>B.3 图片与资料的使用许可</h3>
+  <p>
+    自制图与栅格渲染文件位于 <span class="path">web/public/samples/</span>，其独立预期与使用许可记录在 <span class="path">samples/fixed-evaluation.json</span>；
+    固定资料库引用的公开材料在 <span class="path">shared/source-library.ts</span> 中保存原始链接、发布机构、发布日期与内容指纹，
+    读者可逐条打开原页面核对。
+  </p>
+</section>
+
+</body>
+</html>
