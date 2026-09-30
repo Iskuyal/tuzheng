@@ -18,7 +18,7 @@ const checkOnly = process.argv.includes("--check");
 const MAX_PAGES = 30;
 
 const shortCommit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
-const today = new Date().toISOString().slice(0, 10);
+const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const baseHtml = readFileSync(htmlPath, "utf8")
   .replaceAll("__COMMIT__", shortCommit)
   .replaceAll("__DATE__", today);

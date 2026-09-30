@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   verify:
-    # 必须是 Windows：playwright.config.ts 与 scripts/verify-sample-renders.mjs 都用 channel: "msedge"，
+    # 必须是 Windows：config/playwright.config.ts 与 scripts/verify-sample-renders.mjs 都用 channel: "msedge"，
     # 依赖系统自带 Edge（Linux runner 上没有）。
     runs-on: windows-latest
     timeout-minutes: 20
@@ -29,6 +29,9 @@ jobs:
         run: npm ci
 
       # 这一步与下面 `npm run build` 内置的类型检查有意重复：单独成步便于快速定位是哪一层失败。
+      - name: 文档本地链接
+        run: npm run docs:check
+
       - name: 类型检查
         run: npm run typecheck
 
@@ -55,6 +58,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-trace
-          path: test-results/
+          path: .cache/playwright/test-results/
           retention-days: 7
           if-no-files-found: ignore

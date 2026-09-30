@@ -17,7 +17,7 @@
 
 ## Comments
 
-**2026-10-01 候选来源对调研（只调研：未改代码／资料库／题集／期望，未跑评测，0 次真实模型请求）。** 产出：[`06-source-pairs-candidates.md`](06-source-pairs-candidates.md)（含 28 条检索词、逐个 `curl` HTTP 状态、12 个月份的新旧值对照表、不构成项与未覆盖路径）。
+**2026-10-01 候选来源对调研（只调研：未改代码／资料库／题集／期望，未跑评测，0 次真实模型请求）。** 产出：[`06-source-pairs-candidates.md`](../06-source-pairs-candidates.md)（含 28 条检索词、逐个 `curl` HTTP 状态、12 个月份的新旧值对照表、不构成项与未覆盖路径）。
 
 **结论：CPI 口径下本轮一对都没有找到**，实现所需的材料前提仍不满足，**Status 保持 `needs-info`**。
 

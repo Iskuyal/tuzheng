@@ -7,8 +7,8 @@
   // 真正的检查入口是 npm run typecheck。
   "files": [],
   "references": [
-    { "path": "./tsconfig.web.json" },
-    { "path": "./tsconfig.server.json" },
-    { "path": "./tsconfig.e2e.json" }
+    { "path": "./config/tsconfig.web.json" },
+    { "path": "./config/tsconfig.server.json" },
+    { "path": "./config/tsconfig.e2e.json" }
   ]
 }

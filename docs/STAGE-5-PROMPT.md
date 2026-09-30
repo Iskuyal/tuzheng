@@ -41,7 +41,7 @@
 ```text
 [$implement](C:\Users\dusta\.agents\skills\implement\SKILL.md)
 
-请在 F:\VibeCoding\web-match 收尾阶段五任务 05（.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md），**开工前先核对 04 的两项人工步骤是否已经完成**：① 仓库可见性——`gh repo view Iskuyal/web-match --json visibility` 应为 `PUBLIC`，或已为评审开通只读访问权限；② 演示视频——README「提交材料索引」的视频行应是可打开的链接，用 `curl -s -o NUL -w "%{http_code}" -L <链接>` 实测 200。两项都没就绪时：如实告诉用户还差什么、只做可先行部分并标成「等人」，**不要把没做的写成通过**。开始前先记录当前 HEAD 作为代码审查对照点、检查工作区，并阅读 AGENTS.md、CONTEXT.md、docs/PHASES.md 阶段四一节（06 记录）与阶段五一节（04、05、07、08 记录）、.scratch/stage-5-stability-submission/issues/04 与 05、README.md 的「提交材料索引」「当前能力状态」「本地验证」「持续集成」、docs/submission/accessibility-check.md、docs/submission/demo-video-script.md、docs/submission/technical-report.html、docs/adr/0001 与 0002，以及根目录「AI-WEB网页开发挑战赛文档.md」。
+请在 F:\VibeCoding\web-match 收尾阶段五任务 05（.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md），**开工前先核对 04 的两项人工步骤是否已经完成**：① 仓库可见性——`gh repo view Iskuyal/web-match --json visibility` 应为 `PUBLIC`，或已为评审开通只读访问权限；② 演示视频——README「提交材料索引」的视频行应是可打开的链接，用 `curl -s -o NUL -w "%{http_code}" -L <链接>` 实测 200。两项都没就绪时：如实告诉用户还差什么、只做可先行部分并标成「等人」，**不要把没做的写成通过**。开始前先记录当前 HEAD 作为代码审查对照点、检查工作区，并阅读 AGENTS.md、CONTEXT.md、docs/PHASES.md 阶段四一节（06 记录）与阶段五一节（04、05、07、08 记录）、.scratch/stage-5-stability-submission/issues/04 与 05、README.md 的「提交材料索引」「当前能力状态」「本地验证」「持续集成」、docs/submission/accessibility-check.md、docs/submission/demo-video-script.md、docs/submission/technical-report.html、docs/adr/0001 与 0002，以及`docs/competition/AI-WEB网页开发挑战赛文档.md`。
 
 当前基线（2026-10-01，写这份提示词时）：`npm test` **338/338**、`npm run test:e2e` **90/90**（30 用例 ×3 视口）、`npm run build` 通过、`npm run eval:samples` 23/23、`npm run verify:sample-renders` 18/18；技术 PDF **25/30 页**；固定资料库 5 条、题集 22 题；阶段四 06 的「版本修订／版本替代」已实现并整组实测，仍停在 `needs-info` 的只有「同口径冲突 → 来源存在分歧」。
 
@@ -69,7 +69,7 @@
 ```text
 [$implement](C:\Users\dusta\.agents\skills\implement\SKILL.md)
 
-请在 F:\VibeCoding\web-match 做阶段五任务 05 的**可先行部分**（.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md）：05 整体仍被 04 的两项人工步骤（录制视频、仓库可见性）阻塞，本片只做不依赖它们、并且能如实记录结果的部分，**不勾选被阻塞的验收项，不代做人工步骤，也不把「本机复跑」写成「另一台环境」**。开始前先记录当前 HEAD 作为代码审查对照点（写这份提示词时是 0834084；以你实际开工时的 `git rev-parse HEAD` 为准）、检查工作区，并阅读 AGENTS.md、CONTEXT.md、docs/PHASES.md 的阶段五一节（04、07、08 三段记录）、.scratch/stage-5-stability-submission/issues/04 与 05、README.md 的「提交材料索引」「当前能力状态」「本地验证」「持续集成」、docs/submission/accessibility-check.md、docs/submission/demo-video-script.md、docs/submission/technical-report.html、docs/adr/0001-disable-cross-picker-while-main-image-loads.md，以及根目录「AI-WEB网页开发挑战赛文档.md」的提交要求。
+请在 F:\VibeCoding\web-match 做阶段五任务 05 的**可先行部分**（.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md）：05 整体仍被 04 的两项人工步骤（录制视频、仓库可见性）阻塞，本片只做不依赖它们、并且能如实记录结果的部分，**不勾选被阻塞的验收项，不代做人工步骤，也不把「本机复跑」写成「另一台环境」**。开始前先记录当前 HEAD 作为代码审查对照点（写这份提示词时是 0834084；以你实际开工时的 `git rev-parse HEAD` 为准）、检查工作区，并阅读 AGENTS.md、CONTEXT.md、docs/PHASES.md 的阶段五一节（04、07、08 三段记录）、.scratch/stage-5-stability-submission/issues/04 与 05、README.md 的「提交材料索引」「当前能力状态」「本地验证」「持续集成」、docs/submission/accessibility-check.md、docs/submission/demo-video-script.md、docs/submission/technical-report.html、docs/adr/0001-disable-cross-picker-while-main-image-loads.md，以及`docs/competition/AI-WEB网页开发挑战赛文档.md`的提交要求。
 
 先简短说明你对任务的理解、哪些验收项现在可做、哪些仍缺人工输入，以及每项的验收方式。这一片要证明的是：**05 里不依赖人工步骤的部分都有可复查的记录（命令、版本、结果、未验证项），没做的部分被明确标成「等人」而不是「通过」。**
 
@@ -90,7 +90,7 @@
 2. **四类证据分别列出**（本地测试／真实模型在线／人工材料检查／仍未交付）：每条给出命令或证据文件出处——本地给命令与结果，在线引用 docs/evidence/ 记录并注明轮次与失败数，人工项给检查方式，未交付项写明原因。不把替身响应、预置样例或历史记录写成本轮实测。
 3. **材料与权限排查**：README 材料索引与仓库内链接逐一可打开；`node docs/submission/build-report.mjs --check` 的页数与 README／accessibility-check／issues/04 三处一致；`docs/submission/assets/` 的截图张数与「替身响应渲染」图注口径一致；仓库内无密钥（只跟踪 `.env.example`）、设置读取接口不回传密钥；确认 `dist/`、`node_modules/` 等未入库。
 4. **顺带修材料排查中发现的引用缺口**（只补引用，不新增能力声明）：① issues/05 的「19 张替身响应截图」应为 20 张；② 材料里没有一处引用 `docs/adr/0001-…`，而 `technical-report.html` 的 7.1 已声称该 ADR 里那条行为，附录 A.2 证据索引应补一条；③ 6.1 写着「类型检查单独成步是实测教训」，而 07 的三次 run（红→红→绿）在材料里没有出处，应在合适位置（README「持续集成」或报告 6.1／附录 A）补引用。判断某处不该加的，写清理由。
-5. **赛事日期与入口核对 + 人工提交清单**：读根目录「AI-WEB网页开发挑战赛文档.md」并（如需要）访问赛事官网，核对截止日期、提交入口与材料形式要求（accessibility-check 第 5 节记录了 2026-11-18），产出交给团队的人工提交清单（谁做、做什么、依赖什么、当前状态）。不代替团队登录、缴费或提交。
+5. **赛事日期与入口核对 + 人工提交清单**：读`docs/competition/AI-WEB网页开发挑战赛文档.md`并（如需要）访问赛事官网，核对截止日期、提交入口与材料形式要求（accessibility-check 第 5 节记录了 2026-11-18），产出交给团队的人工提交清单（谁做、做什么、依赖什么、当前状态）。不代替团队登录、缴费或提交。
 6. **状态与文档**：issue 05 的 Comments 写清本轮做了什么、命令、结果、仍未做什么（**不勾选被阻塞的验收项、不改 Status**）；docs/PHASES.md 阶段五一节补一条本次可先行部分的实测记录（改了什么、命令、结果、未验证项）；本文件（docs/STAGE-5-PROMPT.md）的「未完成清单」按实际结果收敛。
 7. **提交**：中文提交说明，分支 + PR 落地并用 CI 验证（网络偶发失败时重试；本仓库已设 `git config http.version HTTP/1.1`）。最后用中文报告：做了什么、命令与结果、哪些仍是人工步骤、未验证项。
 
@@ -148,7 +148,7 @@
 ```text
 [$implement](C:\Users\dusta\.agents\skills\implement\SKILL.md)
 
-请在 F:\VibeCoding\web-match 只实现阶段五任务 04：.scratch/stage-5-stability-submission/issues/04-demo-and-technical-materials.md。开始前先记录当前 HEAD 作为代码审查对照点、检查工作区，并阅读 AGENTS.md、CONTEXT.md、PLAN.md、docs/PHASES.md 的阶段五一节与阶段四一节、.scratch/stage-5-stability-submission/spec.md 与同目录 issues/04（本次任务）、05、07、08，以及阶段四证据记录 docs/evidence/stage-4-source-audit-rewrite-2026-09-30.md（05 的实测与局限）、stage-4-source-audit-clarify-resume-2026-09-29.md（04）、stage-4-source-audit-evaluation-2026-09-29.md（02）、stage-4-source-audit-claim-reasoning-2026-09-29.md（03）、docs/STAGE-1.md 与根目录「AI-WEB网页开发挑战赛文档.md」里的提交要求。任务 01、02、03、06 已完成；05 被本任务阻塞，07 只剩一项人为变红验证，08 是 needs-triage，阶段四 06 是 needs-info——这些本次都不要动。
+请在 F:\VibeCoding\web-match 只实现阶段五任务 04：.scratch/stage-5-stability-submission/issues/04-demo-and-technical-materials.md。开始前先记录当前 HEAD 作为代码审查对照点、检查工作区，并阅读 AGENTS.md、CONTEXT.md、PLAN.md、docs/PHASES.md 的阶段五一节与阶段四一节、.scratch/stage-5-stability-submission/spec.md 与同目录 issues/04（本次任务）、05、07、08，以及阶段四证据记录 docs/evidence/stage-4-source-audit-rewrite-2026-09-30.md（05 的实测与局限）、stage-4-source-audit-clarify-resume-2026-09-29.md（04）、stage-4-source-audit-evaluation-2026-09-29.md（02）、stage-4-source-audit-claim-reasoning-2026-09-29.md（03）、docs/STAGE-1.md 与`docs/competition/AI-WEB网页开发挑战赛文档.md`里的提交要求。任务 01、02、03、06 已完成；05 被本任务阻塞，07 只剩一项人为变红验证，08 是 needs-triage，阶段四 06 是 needs-info——这些本次都不要动。
 
 先简短说明你对任务的理解、关键假设、材料清单和每项的验收方式。这一片要证明的是：评审能从仓库说明启动项目，用一份技术 PDF 和一段 5—8 分钟视频看懂真实完成的 AI 路径、失败恢复与证据边界；材料只写已验收的能力，真实模型结果、替身测试与预置样例分开计数，未验收的能力（阶段四 06 反证与版本复查等）明确排除在结论之外。
 
