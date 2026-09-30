@@ -31,6 +31,7 @@ import {
   applySupplementToClaims,
   auditClaimsAgainstSources,
   bigramCoverage,
+  buildCaptionSuggestion,
   captionClaimCoverage,
   CLARIFICATION_FIELD_LABELS,
   compareValues,
@@ -39,6 +40,7 @@ import {
   parseClarificationAnswer,
   resolveSupplementTarget,
   searchSourceLibrary,
+  type CaptionRewriteProposal,
   type ClaimSupplementInfo,
   type ClarificationRequest,
   type ModelCitation,
@@ -196,6 +198,7 @@ export async function runSourceInvestigation(
   let clarification: ClarificationRequest | null = null;
   let finding: SourceClaim[] | null = null;
   let findingCitations: ModelCitation[] = [];
+  let findingRewrites: CaptionRewriteProposal[] = [];
   let noApplicableSourceReason: string | null = null;
   let modelUnresolved: string[] = [];
   let modelOmittedClaims: string[] = [];
@@ -332,6 +335,7 @@ export async function runSourceInvestigation(
     const parsedFinding = toModelFinding(parsed.data);
     finding = parsedFinding.claims;
     findingCitations = parsedFinding.citations;
+    findingRewrites = parsedFinding.rewrites;
     noApplicableSourceReason = parsedFinding.noApplicableSourceReason;
     modelUnresolved = parsedFinding.unresolvedItems;
     modelOmittedClaims = parsedFinding.omittedClaims;
@@ -342,7 +346,8 @@ export async function runSourceInvestigation(
       status: "ok",
       tool: REPORT_TOOL_NAME,
       inputSummary: `${parsedFinding.claims.length} 条主张、${parsedFinding.citations.length} 条引用`
-        + (parsedFinding.omittedClaims.length > 0 ? `、声明 ${parsedFinding.omittedClaims.length} 条未展开` : ""),
+        + (parsedFinding.omittedClaims.length > 0 ? `、声明 ${parsedFinding.omittedClaims.length} 条未展开` : "")
+        + (parsedFinding.rewrites.length > 0 ? `、${parsedFinding.rewrites.length} 条改写提议` : ""),
       resultSummary: "已接收汇总，准备由程序校验引用并组合结论。",
       durationMs: 0,
     });
@@ -647,6 +652,19 @@ export async function runSourceInvestigation(
   // 补证前后按主张原文配对，逐条给出状态变化与原因，供页面与记录展示「结论为什么变」。
   const conclusionChanges = resume ? diffConclusions(resume.prior.conclusions, audit.conclusions) : null;
 
+  // 建议配文：只基于本次已核验的配文主张与程序校验过的引用；模型提议先过逐处校验，不合格的退回程序兜底。
+  const captionSuggestion = finding && caption
+    ? buildCaptionSuggestion({
+      caption,
+      claims,
+      conclusions: audit.conclusions,
+      hits: [...hitsById.values()],
+      acceptedCitations: audit.acceptedCitations,
+      proposals: findingRewrites,
+      notes: captionCoverageNote ? [captionCoverageNote] : [],
+    })
+    : null;
+
   return {
     model: recognizedModel,
     latencyMs: Date.now() - startedAt,
@@ -670,6 +688,7 @@ export async function runSourceInvestigation(
     captionCoverageNote,
     supplement,
     conclusionChanges,
+    captionSuggestion,
     investigationId: null,
     inputFingerprint: null,
   };

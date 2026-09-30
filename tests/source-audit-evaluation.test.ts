@@ -19,6 +19,7 @@ import { REPORT_TOOL_NAME, SEARCH_TOOL_NAME } from "../server/source-tools.js";
 import type { SourceInvestigationDriver, ToolLoopCall, ToolLoopReply } from "../server/source-investigation.js";
 import {
   auditClaimsAgainstSources,
+  buildCaptionSuggestion,
   searchSourceLibrary,
   type ModelCitation,
   type SourceClaim,
@@ -83,6 +84,15 @@ function resultFor(
     captionCoverageNote: null,
     supplement: null,
     conclusionChanges: null,
+    captionSuggestion: caption
+      ? buildCaptionSuggestion({
+        caption,
+        claims,
+        conclusions: audit.conclusions,
+        hits,
+        acceptedCitations: audit.acceptedCitations,
+      })
+      : null,
     investigationId: null,
     inputFingerprint: null,
   };
@@ -94,6 +104,17 @@ function expectationOf(id: string) {
   const expectation = expectationsCatalog.questions.find((entry) => entry.id === id);
   if (!expectation) throw new Error(`期望里没有 ${id}`);
   return expectation;
+}
+
+/**
+ * 追加式冻结的投影：任务 05 在既有题目的期望上追加了 suggestion 规则（不改动原有规则），
+ * 冻结校验和按「去掉新增字段」比较，保证已验收的预期没有被改写。
+ */
+function withoutSuggestionRules(expectation: SourceAuditExpectations["questions"][number]): unknown {
+  const clone = structuredClone(expectation) as SourceAuditExpectations["questions"][number] & { suggestion?: unknown };
+  delete clone.suggestion;
+  if (clone.resume) delete (clone.resume as { suggestion?: unknown }).suggestion;
+  return clone;
 }
 
 describe("固定题集与独立期望", () => {
@@ -246,10 +267,11 @@ describe("任务 03 新增的推断与拆解题目", () => {
       "q12-caption-term-misuse",
     ]);
     expect(hash(questionsCatalog.questions.slice(0, 12))).toBe("b0ccf29ec0fcdf7e769c38a1d8553e25bbdd72df2f1847517612443c0d3dd2a6");
-    expect(hash(expectationsCatalog.questions.slice(0, 12))).toBe("912cb87d7b6948d82626ebef108c5f2223394dd2caf6e644b6cbce52c773814a");
+    expect(hash(expectationsCatalog.questions.slice(0, 12).map(withoutSuggestionRules)))
+      .toBe("912cb87d7b6948d82626ebef108c5f2223394dd2caf6e644b6cbce52c773814a");
     expect(hash(["cpi-2025-12", "cpi-2025-12-yoy", "cpi-2025-12-mom", "cpi-2025-12-city", "cpi-2026-08-yoy"]
       .map((name) => questionsCatalog.images[name]))).toBe("f8c51b9aff8bd9ae8d0897aa962a8fd42daacefc2b80501b9ac9da5e26befe1f");
-    expect(questionsCatalog.questions.length).toBe(19);
+    expect(questionsCatalog.questions.length).toBe(20);
   });
 
   it("03 的 5 道推断与拆解题在任务 04 之后也保持原样", () => {
@@ -264,11 +286,11 @@ describe("任务 03 新增的推断与拆解题目", () => {
     ]);
     expect(hash(questionsCatalog.questions.slice(0, 17)))
       .toBe("7ff1614f0be6ca444a7bbb5dc09328f277de53939ac8f6d4fa2e008beb451c2b");
-    expect(hash(expectationsCatalog.questions.slice(0, 17)))
+    expect(hash(expectationsCatalog.questions.slice(0, 17).map(withoutSuggestionRules)))
       .toBe("bc434cc77696bcd5ca586bcf10aa45b27adb3223b665624dcb3ec6e5eb472cb2");
     expect(hash(questionsCatalog.questions.slice(12, 17)))
       .toBe("24365cdcdb47307a47a3f0a828ee7f847e185e8281eeb196d3bf01acd00f696e");
-    expect(hash(expectationsCatalog.questions.slice(12, 17)))
+    expect(hash(expectationsCatalog.questions.slice(12, 17).map(withoutSuggestionRules)))
       .toBe("8eefe62405e2408036a8abed0ccf0fd110b006b8c7abf3895b17a1fdb4fd7dc3");
   });
 
@@ -545,8 +567,10 @@ describe("有检索与无检索两臂的配对运行", () => {
 
 describe("任务 04 新增的补证与追问题", () => {
   it("19 题：02+03 的 17 题不动，q18/q19 有独立输入与成对的期望", () => {
-    expect(questionsCatalog.questions.length).toBe(19);
-    expect(expectationsCatalog.questions.length).toBe(19);
+    // 任务 05 在其后追加了 q20，这里只核对 04 定下的前 19 题仍在原位。
+    expect(questionsCatalog.questions.slice(0, 19)).toHaveLength(19);
+    expect(questionsCatalog.questions.length).toBe(20);
+    expect(expectationsCatalog.questions.length).toBe(20);
     const q18 = questionsCatalog.questions.find((question) => question.id === "q18-clarify-basis-resume");
     const e18 = expectationOf("q18-clarify-basis-resume");
     expect(q18?.clarifyAnswer).toBe("同比");
@@ -629,11 +653,12 @@ describe("任务 04 新增的补证与追问题", () => {
   });
 
   it("补证后阶段用 resume 规则判定，并要求补充确实被套用", () => {
-    const before = resultFor([claim({ basis: null })], VALUE_CITATION);
+    const CAPTION = "12 月 CPI 同比上涨 0.8%。";
+    const before = resultFor([claim({ basis: null })], VALUE_CITATION, { caption: CAPTION });
     const expectFn = expectationOf("q18-clarify-basis-resume");
 
     // 补证后：口径填入、状态改判、补充记录存在 → 通过。
-    const supplemented = resultFor([claim({ basis: "year-on-year" })], VALUE_CITATION);
+    const supplemented = resultFor([claim({ basis: "year-on-year" })], VALUE_CITATION, { caption: CAPTION });
     supplemented.supplement = {
       question: "是同比还是环比？",
       purpose: "决定口径。",
@@ -813,5 +838,99 @@ describe("任务 04 新增的补证与追问题", () => {
   it("带补证阶段的题把计划请求数翻倍计", () => {
     expect(plannedRequests(19, 2, 3, 1)).toBe(120); // 19 题 + q18 的恢复段
     expect(plannedRequests(19, 2, 3)).toBe(114);
+  });
+});
+
+describe("任务 05 新增的改写期望题", () => {
+  const CAPTION = "2025 年 12 月 CPI 同比上涨 0.2%，2026 年 5 月 CPI 比上月上涨 0.1%。";
+  const WRONG_YOY: SourceClaim = {
+    claimText: "2025 年 12 月 CPI 同比上涨 0.2%",
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period: "2025-12",
+    value: 0.2,
+    basis: "year-on-year",
+    kind: "direct",
+    direction: null,
+    fromImage: false,
+    imageExcerpt: null,
+  };
+  const NO_SOURCE_MOM: SourceClaim = {
+    claimText: "2026 年 5 月 CPI 比上月上涨 0.1%",
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period: "2026-05",
+    value: 0.1,
+    basis: "month-on-month",
+    kind: "direct",
+    direction: null,
+    fromImage: false,
+    imageExcerpt: null,
+  };
+
+  function q20Result(): SourceInvestigationResult {
+    return resultFor([WRONG_YOY, NO_SOURCE_MOM], VALUE_CITATION, { caption: CAPTION });
+  }
+
+  it("q20 有独立输入与成对的期望：替换错误值 + 保留未解决项", () => {
+    const question = questionsCatalog.questions.find((entry) => entry.id === "q20-rewrite-replace-and-qualify");
+    expect(question?.caption).toBe(CAPTION);
+    expect(question?.categories).toContain("修改建议");
+    const expectation = expectationOf("q20-rewrite-replace-and-qualify");
+    expect(expectation.suggestion?.expectChanges).toEqual([
+      { select: { fromImage: false, basis: "year-on-year", period: "2025-12" }, kinds: ["replace-value"], min: 1 },
+      { select: { fromImage: false, basis: "month-on-month", period: "2026-05" }, kinds: ["keep-qualified", "suggest-delete"], min: 1 },
+    ]);
+    expect(expectation.suggestion?.requiredNumbers).toEqual([0.8]);
+    expect(expectation.suggestion?.forbiddenNumbers).toEqual([0.2]);
+
+    const judgment = judgeRun(expectation, q20Result(), { caption: CAPTION });
+    expect(judgment.problems).toEqual([]);
+    expect(q20Result().captionSuggestion?.suggestedCaption)
+      .toBe("2025 年 12 月 CPI 同比上涨 0.8%，2026 年 5 月 CPI 比上月上涨 0.1%（暂未核实）。");
+  });
+
+  it("引入新数值或把未解决主张原样保留都会被独立复算抓住", () => {
+    const result = q20Result();
+    const suggestion = result.captionSuggestion;
+    if (!suggestion) throw new Error("q20 应当生成建议配文");
+    const tampered: SourceInvestigationResult = {
+      ...result,
+      captionSuggestion: {
+        ...suggestion,
+        suggestedCaption: suggestion.suggestedCaption.replace("0.8", "1.2"),
+        changes: suggestion.changes.map((change) =>
+          change.kind === "keep-qualified" ? { ...change, kind: "unchanged" as const } : change),
+      },
+    };
+    const kinds = judgeRun(expectationOf("q20-rewrite-replace-and-qualify"), tampered, { caption: CAPTION })
+      .problems.map((problem) => problem.kind);
+    expect(kinds).toContain("suggestion-new-number");
+    expect(kinds).toContain("suggestion-missing-number");
+    expect(kinds).toContain("suggestion-unresolved-unqualified");
+  });
+
+  it("改写规则只追加在指定题目上，原有期望字段未被改写", () => {
+    const withSuggestion = expectationsCatalog.questions
+      .filter((entry) => entry.suggestion || entry.resume?.suggestion)
+      .map((entry) => entry.id);
+    expect(withSuggestion).toEqual([
+      "q03-caption-mom-value-as-yoy",
+      "q04-caption-yoy-value-as-mom",
+      "q05-caption-wrong-month-distractor",
+      "q08-caption-image-basis-unclear",
+      "q13-inference-mom-contradicted",
+      "q15-opinion-not-verifiable",
+      "q17-inference-no-mom-source",
+      "q18-clarify-basis-resume",
+      "q19-covered-no-clarify",
+      "q20-rewrite-replace-and-qualify",
+    ]);
+    // 没有被追加改写规则的题保持原样（没有任何 suggestion 字段）。
+    for (const id of ["q01-caption-yoy-match", "q16-caption-over-three-claims"]) {
+      const expectation = expectationOf(id);
+      expect(expectation.suggestion).toBeUndefined();
+      expect(expectation.resume?.suggestion).toBeUndefined();
+    }
   });
 });

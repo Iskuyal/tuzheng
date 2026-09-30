@@ -1,7 +1,7 @@
 {
-  "version": 3,
-  "frozenAt": "2026-09-29",
-  "authoredBy": "团队人工逐题写定，先于任何一次模型运行；不由模型生成或回填。任务 03 新增的 5 题（q13—q17）与任务 04 新增的 2 题（q18—q19）同样先写期望，02 的 12 题期望未改动。",
+  "version": 4,
+  "frozenAt": "2026-09-30",
+  "authoredBy": "团队人工逐题写定，先于任何一次模型运行；不由模型生成或回填。任务 03 新增的 5 题（q13—q17）、任务 04 新增的 2 题（q18—q19）与任务 05 新增的 1 题（q20）同样先写期望，02 的 12 题、03 的 5 题与 04 的 2 题期望原有规则未改动，只新增修改建议的检查。",
   "rubric": [
     "select.fromImage=false 表示配文主张，true 表示图内主张（程序读模型返回的 fromImage 字段，不额外调用模型）。",
     "select 还可带 kind（direct／inference／opinion）筛选主张分类；q15 用它固定「观点不支持核验」这条规则。",
@@ -14,6 +14,10 @@
     "clarificationRequired=true 的题（补证前阶段）：模型必须提出一次追问，否则记为 missing-clarification；clarificationForbidden=true 的题任何一次运行出现追问都记为 unexpected-clarification。两者只看模型是否提出问题，不看问题措辞。",
     "clarificationAfterSearch=true 的题：有检索臂里第一次追问必须发生在至少一次成功检索之后（按轨迹事件顺序比较），否则记为 clarification-before-search——证明「资料已覆盖的先检索，仍缺信息才追问」。无检索臂没有可执行的检索，此条不判。",
     "resume 是同一题的补证后阶段：runner 用题面里人写定的 clarifyAnswer 回答追问、沿同一段对话恢复，再用 resume 里的规则判定；supplementApplied=true 要求恢复段记录了已套用的用户补充（supplement.applied 为真），否则记为 missing-supplement-application。",
+    "suggestion.expectChanges：先按 select 挑出主张，再要求它有一处对应的改动说明，改动类型必须在 kinds 里；条目数不足记 no-matching-suggestion-change，类型不符记 suggestion-wrong-kind。",
+    "suggestion.requiredNumbers／forbiddenNumbers／forbiddenPhrases 检查建议配文全文：换错数值的题必须出现所引发布的正确数值、不得保留原文错误值；方向被来源否定的题不得留下原来的方向词。",
+    "suggestion.unchanged=true 要求本次每一处改动都是「保留原句」，即没有需要改写的内容。",
+    "修改建议的全量不变量（每一题、两臂都查，由评测程序独立复算，不依赖服务端校验实现）：建议里不得出现原配文、本次主张与所引来源之外的数值、月份、范围或原文没有的因果／加强表述（suggestion-new-number／-new-month／-new-scope／-new-wording）；每条已核验的配文主张都要有一处改动说明且改动不得对应不存在的主张（suggestion-missing-change／-orphan-change）；未解决（来源待核对／推断依据不足）的主张必须保留限定或建议删除，不得原样保留（suggestion-unresolved-unqualified）。",
     "虚构引用＝引用了固定资料库中不存在的 sourceId；引用资料库中真实存在但不在本次命中内的 ID 另计为 recalled-citation，两者分开统计。",
     "状态正确率＝判定为通过的有效运行数 ÷ 有效运行数（有效运行＝模型返回了结论运行；上游失败、超时等未产生结论的运行单列为失败，不进入分母；补证后阶段是独立的一次运行，单独判定后与补证前一起计入）。"
   ],
@@ -69,7 +73,15 @@
       ],
       "otherClaimStatuses": ["source-pending"],
       "requiredAcceptedCitations": ["stats-cpi-2025-12"],
-      "expectationNote": "0.2% 是环比数值，被说成同比后与官方同比 0.8% 不一致。"
+      "expectationNote": "0.2% 是环比数值，被说成同比后与官方同比 0.8% 不一致。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.2 }, "kinds": ["replace-value"], "min": 1 }
+        ],
+        "requiredNumbers": [0.8],
+        "forbiddenNumbers": [0.2],
+        "expectationNote": "错误值 0.2% 必须被所引发布的同比 0.8% 替换，建议配文里不得再出现 0.2%。"
+      }
     },
     {
       "id": "q04-caption-yoy-value-as-mom",
@@ -78,7 +90,15 @@
       ],
       "otherClaimStatuses": ["source-pending"],
       "requiredAcceptedCitations": ["stats-cpi-2025-12"],
-      "expectationNote": "阶段四任务 01 的基线题；图内主张必须保持待核对（图上没有比较方式）。"
+      "expectationNote": "阶段四任务 01 的基线题；图内主张必须保持待核对（图上没有比较方式）。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "basis": "month-on-month", "value": 0.8 }, "kinds": ["replace-value"], "min": 1 }
+        ],
+        "requiredNumbers": [0.2],
+        "forbiddenNumbers": [0.8],
+        "expectationNote": "把图上 0.8% 说成比上月的错误值要换成官方环比的 0.2%；建议配文里不得再保留 0.8%。"
+      }
     },
     {
       "id": "q05-caption-wrong-month-distractor",
@@ -87,7 +107,15 @@
       ],
       "otherClaimStatuses": ["source-pending"],
       "requiredAcceptedCitations": ["stats-cpi-2026-08"],
-      "expectationNote": "配文写的是 2026 年 8 月，必须按该月的发布核对（环比 0.4%）；2025 年 12 月的发布同比也是 0.8%，但月份不符，不得作为依据。"
+      "expectationNote": "配文写的是 2026 年 8 月，必须按该月的发布核对（环比 0.4%）；2025 年 12 月的发布同比也是 0.8%，但月份不符，不得作为依据。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "basis": "month-on-month", "value": 0.8 }, "kinds": ["replace-value"], "min": 1 }
+        ],
+        "requiredNumbers": [0.4],
+        "forbiddenNumbers": [0.8],
+        "expectationNote": "只能用 2026 年 8 月发布的环比 0.4% 替换错误值，不能用同值的 2025 年 12 月发布。"
+      }
     },
     {
       "id": "q06-caption-wrong-scope-city",
@@ -114,7 +142,13 @@
       ],
       "otherClaimStatuses": ["source-pending"],
       "noApplicableSource": true,
-      "expectationNote": "图上与配文都没有比较方式，同比 0.8% 与环比 0.2% 都不能确定；出现确定结论即为越界。"
+      "expectationNote": "图上与配文都没有比较方式，同比 0.8% 与环比 0.2% 都不能确定；出现确定结论即为越界。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false }, "kinds": ["keep-qualified"], "min": 1 }
+        ],
+        "expectationNote": "没有适用来源时建议必须保留限定或建议删除，不能写成确定数值表述。"
+      }
     },
     {
       "id": "q09-caption-distractor-same-yoy",
@@ -158,7 +192,15 @@
       ],
       "otherClaimStatuses": ["source-pending", "source-match"],
       "requiredAcceptedCitations": ["stats-cpi-2026-08"],
-      "expectationNote": "图上只有同比、没有环比；配文推出的「8 月比上月便宜」与 2026-08 发布的环比 0.4%（上涨）方向相反，判与来源不一致。图内主张只允许待核对或与来源一致。"
+      "expectationNote": "图上只有同比、没有环比；配文推出的「8 月比上月便宜」与 2026-08 发布的环比 0.4%（上涨）方向相反，判与来源不一致。图内主张只允许待核对或与来源一致。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "basis": "month-on-month", "period": "2026-08" }, "kinds": ["replace-value"], "min": 1 }
+        ],
+        "requiredNumbers": [0.4],
+        "forbiddenPhrases": ["便宜"],
+        "expectationNote": "被来源否定方向的说法必须改正：给出环比 0.4%（上涨），不得保留「便宜」。"
+      }
     },
     {
       "id": "q14-inference-mom-supported",
@@ -175,7 +217,13 @@
         { "select": { "fromImage": false, "kind": "opinion" }, "status": "not-verifiable", "min": 1 }
       ],
       "otherClaimStatuses": ["source-pending", "source-match", "inference-unsupported", "not-verifiable"],
-      "expectationNote": "第二句是对原因与效果的判断：不支持核验、不判真假；第一句数字照常允许与来源一致。"
+      "expectationNote": "第二句是对原因与效果的判断：不支持核验、不判真假；第一句数字照常允许与来源一致。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "kind": "opinion" }, "kinds": ["unchanged", "suggest-delete"], "min": 1 }
+        ],
+        "expectationNote": "观点不支持核验，只能保留原句或建议删除，不能被改写成另一条断言。"
+      }
     },
     {
       "id": "q16-caption-over-three-claims",
@@ -194,7 +242,13 @@
         { "select": { "fromImage": false, "basis": "month-on-month", "period": "2026-07" }, "status": "inference-unsupported", "min": 1 }
       ],
       "otherClaimStatuses": ["source-pending", "source-match", "inference-unsupported"],
-      "expectationNote": "资料库没有 2026 年 7 月的发布，也没有任何环比材料能支持这条推断 ⇒ 推断依据不足；不得给出确定来源结论，也不得据此判假。"
+      "expectationNote": "资料库没有 2026 年 7 月的发布，也没有任何环比材料能支持这条推断 ⇒ 推断依据不足；不得给出确定来源结论，也不得据此判假。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "basis": "month-on-month", "period": "2026-07" }, "kinds": ["keep-qualified"], "min": 1 }
+        ],
+        "expectationNote": "依据不足的推断在建议里要保留限定或建议删除，不能写成确定表述。"
+      }
     },
     {
       "id": "q18-clarify-basis-resume",
@@ -206,6 +260,12 @@
       "clarificationRequired": true,
       "clarificationAfterSearch": true,
       "expectationNote": "补证前：配文没写比较方式，程序不得替它补口径 ⇒ 配文主张只能来源待核对；缺的是配文这句的口径、资料库回答不了，模型必须先检索（同比与环比发布都在库里）再提一个指向这条主张的追问，不得凭数值相等自行认定同比。图上写明同比的图内主张照常与 2025-12 发布对照。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "basis": null }, "kinds": ["keep-qualified"], "min": 1 }
+        ],
+        "expectationNote": "补证前口径未定：建议必须保留限定，不得替用户把比较方式或结论写确定。"
+      },
       "resume": {
         "expect": [
           { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.8 }, "status": "source-match", "min": 1 }
@@ -213,7 +273,13 @@
         "otherClaimStatuses": ["source-pending", "source-match"],
         "requiredAcceptedCitations": ["stats-cpi-2025-12"],
         "supplementApplied": true,
-        "expectationNote": "补证后：用户回答「同比」只用于确定口径，配文主张据此与 2025-12 发布的同比 0.8% 对照改为与来源一致，引用仍来自本次命中；程序必须记录已套用的用户补充（标为用户提供），不能把它当成官方来源。"
+        "expectationNote": "补证后：用户回答「同比」只用于确定口径，配文主张据此与 2025-12 发布的同比 0.8% 对照改为与来源一致，引用仍来自本次命中；程序必须记录已套用的用户补充（标为用户提供），不能把它当成官方来源。",
+        "suggestion": {
+          "expectChanges": [
+            { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.8 }, "kinds": ["unchanged"], "min": 1 }
+          ],
+          "expectationNote": "口径确定且与来源一致后建议保留原句，不再带未核实限定。"
+        }
       }
     },
     {
@@ -224,7 +290,33 @@
       "otherClaimStatuses": ["source-pending", "source-match"],
       "requiredAcceptedCitations": ["stats-cpi-2025-12"],
       "clarificationForbidden": true,
-      "expectationNote": "资料已覆盖的案例：配文自带比较方式与数值，检索就能核对 ⇒ 任何一次运行提出追问都算未通过（不允许把资料库已能回答的问题丢给用户）；正确路径是先检索、直接给与来源一致的结论。"
+      "expectationNote": "资料已覆盖的案例：配文自带比较方式与数值，检索就能核对 ⇒ 任何一次运行提出追问都算未通过（不允许把资料库已能回答的问题丢给用户）；正确路径是先检索、直接给与来源一致的结论。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.8 }, "kinds": ["unchanged"], "min": 1 }
+        ],
+        "unchanged": true,
+        "expectationNote": "口径与数值都与来源一致：本次没有需要改写的内容，建议配文与原配文相同。"
+      }
+    },
+    {
+      "id": "q20-rewrite-replace-and-qualify",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "year-on-year", "period": "2025-12" }, "status": "source-mismatch", "min": 1 },
+        { "select": { "fromImage": false, "basis": "month-on-month", "period": "2026-05" }, "status": "source-pending", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match"],
+      "requiredAcceptedCitations": ["stats-cpi-2025-12"],
+      "expectationNote": "第一句同比 0.2% 与 2025-12 发布的 0.8% 不一致；第二句的 2026 年 5 月资料库没有发布，只能保持来源待核对。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "basis": "year-on-year", "period": "2025-12" }, "kinds": ["replace-value"], "min": 1 },
+          { "select": { "fromImage": false, "basis": "month-on-month", "period": "2026-05" }, "kinds": ["keep-qualified", "suggest-delete"], "min": 1 }
+        ],
+        "requiredNumbers": [0.8],
+        "forbiddenNumbers": [0.2],
+        "expectationNote": "同一段建议里两种处理并存：错误值换成所引发布的 0.8%，没有适用来源的那句保留限定或建议删除；不得凭空补 2026 年 5 月的数值。"
+      }
     }
   ]
 }

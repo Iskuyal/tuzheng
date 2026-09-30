@@ -4,6 +4,7 @@ import type { ComparisonBasis, SourceDocument } from "../shared/source-library.j
 import {
   AUDITED_CLAIMS_LIMIT,
   MAX_CLAIMS_PER_REPORT,
+  type CaptionRewriteProposal,
   type CitationRole,
   type SourceClaim,
   type SourceClaimKind,
@@ -57,6 +58,29 @@ const claimSchema = z.object({
   imageExcerpt: z.string().trim().max(300).nullable().optional().default(null),
 }).strict();
 
+/**
+ * 建议配文的改写提议：附属输出，畸形提议只被逐条拒绝并由程序兜底，不能让整份汇总作废。
+ * 所以这里不写 .strict()（多写的字段忽略）、字段允许缺省（缺的由建议生成器按「未写清」拒绝）、
+ * 顶层不是数组或超过条数上限时按空数组／截断处理——新增的可选输出不该成为新的失败点。
+ */
+const rewriteText = (max: number) =>
+  z.string().trim().max(max).nullable().optional().transform((value) => value ?? "");
+
+const rewriteSchema = z.object({
+  claimText: rewriteText(300),
+  /** 建议文本；空串表示建议删除这句。 */
+  suggestedText: rewriteText(300),
+  reason: rewriteText(240),
+});
+
+const rewritesSchema = z.preprocess(
+  // 不是数组按空数组；条目不是对象就丢掉；超过条数上限只截断——新增的可选输出不该让整份汇总被拒。
+  (value) => (Array.isArray(value)
+    ? value.filter((item) => item !== null && typeof item === "object").slice(0, MAX_CLAIMS_PER_REPORT)
+    : []),
+  z.array(rewriteSchema),
+);
+
 export const reportArgumentsSchema = z.object({
   // 结构上限高于单次核验上限：多出来的主张由程序移进未展开项并保留原文，不整份作废。
   claims: z.array(claimSchema).max(MAX_CLAIMS_PER_REPORT),
@@ -72,6 +96,8 @@ export const reportArgumentsSchema = z.object({
    * 上限给足余量：这是「不静默丢弃」的出口，附属列表超限不该让整份汇总被拒。
    */
   omittedClaims: z.array(z.string().trim().min(1).max(300)).max(30).optional().default([]),
+  /** 可选的逐条改写提议；程序按结论逐条校验，不合格的不被采用。 */
+  rewrites: rewritesSchema.optional().default([]),
 }).strict();
 
 export interface ModelFinding {
@@ -80,6 +106,7 @@ export interface ModelFinding {
   noApplicableSourceReason: string | null;
   unresolvedItems: string[];
   omittedClaims: string[];
+  rewrites: CaptionRewriteProposal[];
 }
 
 export function toModelFinding(input: z.infer<typeof reportArgumentsSchema>): ModelFinding {
@@ -104,6 +131,11 @@ export function toModelFinding(input: z.infer<typeof reportArgumentsSchema>): Mo
     noApplicableSourceReason: input.noApplicableSourceReason,
     unresolvedItems: input.unresolvedItems,
     omittedClaims: input.omittedClaims,
+    rewrites: input.rewrites.map((rewrite): CaptionRewriteProposal => ({
+      claimText: rewrite.claimText,
+      suggestedText: rewrite.suggestedText,
+      reason: rewrite.reason,
+    })),
   };
 }
 
@@ -198,6 +230,28 @@ export const reportToolSchema = {
       items: { type: "string" },
       description: `配文里没有展开成主张的原文片段（逐字保留）；配文超过 ${AUDITED_CLAIMS_LIMIT} 条主张时，多出来的必须写在这里，没有就填空数组。只放配文原文，不要放图上说明文字。`,
     },
+    rewrites: {
+      type: "array",
+      maxItems: MAX_CLAIMS_PER_REPORT,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          claimText: { type: "string", description: "这条改写针对的主张原文（逐字引用）。" },
+          suggestedText: {
+            type: "string",
+            description:
+              "建议的配文写法：保持原句结构，只改有依据的部分；与所引来源不一致时用来源里的正确数值替换错误值；"
+              + "没有适用来源或推断依据不足时必须保留限定词（例如「暂未核实」）；建议删除这句时填空字符串。",
+          },
+          reason: { type: "string", description: "为什么这样改，引用所依据的来源。" },
+        },
+        required: ["claimText", "suggestedText", "reason"],
+      },
+      description:
+        "可选的逐条改写提议。规则：与所引来源一致的主张原样保留；不得引入图上、配文与所引来源里都没有的数值、月份或范围，"
+        + "也不要新增原文没有的因果或加强表述；程序会逐条校验，不合格的提议不会被采用。没有把握时填空数组。",
+    },
   },
   required: ["claims", "citations", "noApplicableSourceReason", "unresolvedItems", "omittedClaims"],
 };
@@ -244,7 +298,8 @@ export const sourceToolDeclarations: AnthropicToolDefinition[] = [
   {
     name: REPORT_TOOL_NAME,
     description: "结束调查并给出结构化结果。必须在看完工具结果之后再调用；引用只能来自本次检索命中的资料。"
-      + `最多核验 ${AUDITED_CLAIMS_LIMIT} 条主张，未展开的配文内容必须写进 omittedClaims。`,
+      + `最多核验 ${AUDITED_CLAIMS_LIMIT} 条主张，未展开的配文内容必须写进 omittedClaims。`
+      + "可以在 rewrites 里附上逐条配文改写提议（可选）；程序会按结论逐条校验，不合格的不会被采用。",
     input_schema: reportToolSchema,
   },
 ];

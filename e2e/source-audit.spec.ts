@@ -118,6 +118,36 @@ function originTrace(claim: typeof IMAGE_CLAIM | typeof CAPTION_CLAIM) {
   };
 }
 
+/** 修改建议：逐处关联原句、建议、理由与当前有效引用；模型提议未通过校验的也要留档。 */
+const CAPTION_SUGGESTION = {
+  caption: "比上月上涨 0.8%",
+  suggestedCaption: "比上月上涨 0.2%",
+  changes: [
+    {
+      claimText: CAPTION_CLAIM.claimText,
+      original: "比上月上涨 0.8%",
+      suggested: "比上月上涨 0.2%",
+      kind: "replace-value",
+      reason: "所引发布记载环比 0.2%，原文写 0.8%，建议改为 0.2%。",
+      sourceIds: ["stats-cpi-2025-12"],
+      status: "source-mismatch",
+      origin: "model",
+      rejectedReason: null,
+      applied: true,
+    },
+  ],
+  rejectedProposals: [
+    {
+      claimText: "比上月上涨 0.8%",
+      suggestedText: "比上月上涨 0.2%，创下近三年新高。",
+      reason: "补充背景。",
+      rejectedReason: "建议新增了原配文没有的程度加强表述「创下」。",
+    },
+  ],
+  notes: ["配文还有 1 处内容没有核验：「物价压力缓解」。"],
+  fingerprint: "3f9c1d2a5b7e4c60",
+};
+
 const FULL_INVESTIGATION = {
   model: "stub-source-model",
   latencyMs: 6787,
@@ -203,6 +233,7 @@ const FULL_INVESTIGATION = {
   omittedClaims: [],
   captionCoverage: 1,
   captionCoverageNote: null,
+  captionSuggestion: CAPTION_SUGGESTION,
 };
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
@@ -285,6 +316,53 @@ test("从自制图与配文走到带引用与工具轨迹的来源结论", async
   await expect(trace.nth(2)).toContainText("本轮超过 3 次工具调用上限");
 
   await expect(page.getByTestId("unresolved-items")).toContainText("未标注比较基准");
+  await expectNoHorizontalOverflow(page);
+});
+
+test("修改建议逐处给出原句、理由与引用；采用后写入配文并转入历史", async ({ page }) => {
+  await page.route("**/api/source-audit/investigate", async (route) => {
+    await route.fulfill({ status: 200, json: { investigation: FULL_INVESTIGATION } });
+  });
+
+  await page.goto("/source-audit");
+  await page.getByTestId("load-source-sample").click();
+  await expect(page.locator("#source-audit-caption")).toHaveValue("比上月上涨 0.8%");
+  await page.getByTestId("run-source-audit").click();
+
+  // 建议面板：原配文与建议配文分开显示，明确不自动替换。
+  const panel = page.getByTestId("caption-suggestion");
+  await expect(panel).toBeVisible();
+  await expect(panel).toContainText("不自动替换原配文");
+  await expect(page.getByTestId("suggested-caption")).toContainText("比上月上涨 0.2%");
+
+  // 逐处改动：原句、建议、理由、状态与当前有效引用。
+  const change = page.getByTestId("suggestion-changes").locator("li").first();
+  await expect(change).toContainText("替换数值");
+  await expect(change).toContainText("原句：比上月上涨 0.8%");
+  await expect(change).toContainText("建议：比上月上涨 0.2%");
+  await expect(change).toContainText("理由：所引发布记载环比 0.2%");
+  await expect(change).toContainText("引用：2025年12月份居民消费价格同比上涨0.8%");
+  await expect(change).toContainText("与来源不一致");
+
+  // 模型提议未通过校验时留档，并给出拒绝原因。
+  await expect(page.getByTestId("suggestion-rejected")).toContainText("创下");
+  await expect(page.getByTestId("suggestion-notes")).toContainText("没有核验");
+
+  // 没有被自动替换：配文输入框里仍然是原句。
+  await expect(page.locator("#source-audit-caption")).toHaveValue("比上月上涨 0.8%");
+
+  // 采用：只把建议写进输入框，旧结论与旧建议撤回并转入历史。
+  await page.getByTestId("adopt-suggestion").click();
+  await expect(page.locator("#source-audit-caption")).toHaveValue("比上月上涨 0.2%");
+  await expect(page.getByTestId("adopted-notice")).toContainText("请重新核验");
+  await expect(page.getByTestId("caption-suggestion")).toHaveCount(0);
+
+  const historyEntry = page.getByTestId("history-entry-0");
+  await expect(historyEntry).toContainText("已采用建议");
+  await expect(historyEntry).toContainText("旧结论与旧建议撤回");
+  await historyEntry.locator("summary").click();
+  await expect(page.getByTestId("history-suggestion")).toContainText("历史建议配文：比上月上涨 0.2%");
+  await expect(page.getByTestId("history-suggestion")).toContainText("不代表当前结果");
   await expectNoHorizontalOverflow(page);
 });
 
@@ -562,6 +640,26 @@ test("追问 → 提交补充 → 沿同一记录恢复出新结论，旧结论�
       },
     ],
     clarification: null,
+    // 补证后主张改判为一致：建议随之改为保留原句（旧建议在页面上转入历史）。
+    captionSuggestion: {
+      caption: "比上月上涨 0.8%",
+      suggestedCaption: "比上月上涨 0.8%",
+      changes: [{
+        claimText: CAPTION_CLAIM.claimText,
+        original: "比上月上涨 0.8%",
+        suggested: "比上月上涨 0.8%",
+        kind: "unchanged",
+        reason: "所引来源与这条主张的口径和数值一致（引用：stats-cpi-2025-12），保留原句。",
+        sourceIds: ["stats-cpi-2025-12"],
+        status: "source-match",
+        origin: "program",
+        rejectedReason: null,
+        applied: true,
+      }],
+      rejectedProposals: [],
+      notes: [],
+      fingerprint: "8a2b6c0d4e1f7395",
+    },
     supplement: {
       question: "配文没有写比较方式，0.8% 是同比还是环比？",
       purpose: "比较方式决定用同比 0.8% 还是环比 0.2% 核对，结论会不同。",
