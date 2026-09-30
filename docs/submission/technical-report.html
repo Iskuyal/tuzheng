@@ -24,7 +24,7 @@
     font-family: "Microsoft YaHei", "微软雅黑", "Segoe UI", sans-serif;
     color: var(--ink);
     font-size: 9.6pt;
-    line-height: 1.52;
+    line-height: 1.42;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -46,11 +46,15 @@
   a { color: var(--accent); text-decoration: none; word-break: break-all; }
   table { width: 100%; border-collapse: collapse; margin: 0.35em 0 0.7em; font-size: 8.7pt; }
   th, td { border: 1px solid var(--line); padding: 3px 5px; text-align: left; vertical-align: top; }
+  tr { break-inside: avoid; page-break-inside: avoid; }
   th { background: var(--accent-soft); font-weight: 600; }
   figure { margin: 0.5em 0 0.8em; break-inside: avoid; page-break-inside: avoid; }
   figure img { display: block; max-width: 100%; max-height: 96mm; margin: 0 auto; border: 1px solid var(--line); border-radius: 4px; }
   figcaption { font-size: 8.2pt; color: var(--muted); margin-top: 2px; }
   .chapter { break-before: page; page-break-before: always; }
+.chapter.compact { line-height: 1.35; }
+  .chapter.compact h3 { margin-top: 0.65em; }
+  .chapter.compact .callout { padding: 6px 8px; margin: 0.4em 0 0.6em; }
   .cover { break-after: page; page-break-after: always; padding-top: 26mm; }
   .cover h1 { font-size: 30pt; letter-spacing: 2px; margin-bottom: 6px; }
   .cover .sub { font-size: 13pt; color: var(--muted); margin-bottom: 34mm; }
@@ -132,7 +136,7 @@
 </section>
 
 <!-- ======================= 一、项目概述 ======================= -->
-<section class="chapter">
+<section class="chapter compact">
   <h2>一、项目概述</h2>
 
   <h3>1.1 问题</h3>
@@ -181,7 +185,7 @@
   <p>
     在<strong>这张图 + 这几条可核查的官方材料</strong>的范围内，应用能给出带引用的分部位结论，能明确说出「哪一部分现在推不出来、缺什么才能继续」，
     并且把模型能做的（读图、语义匹配、措辞提议）和必须由程序做的（计算、口径适配、引用校验、改写把关）分开——
-    这套分工有 20 题 ×2 臂 ×3 次的真实模型配对评测记录在案（详见第六章与第七章）。
+    这套分工有阶段四 05 的 20 题及 06 的 22 题真实模型配对评测记录在案（详见第六章与第七章）。
   </p>
 
   <div class="callout">
@@ -190,7 +194,7 @@
 </section>
 
 <!-- ======================= 二、需求分析 ======================= -->
-<section class="chapter">
+<section class="chapter compact">
   <h2>二、需求分析</h2>
 
   <h3>2.1 用户故事到能力的映射</h3>
@@ -371,7 +375,7 @@
   <h3>4.6 成本与可复现性</h3>
   <p>
     评测脚本在开跑前打印两行：本次计划发出的请求数与账户余额；支持 <code>--runs</code>／<code>--arms</code>／<code>--ids</code>／<code>--record</code>／<code>--strict</code>，
-    可以先跑最小档（几题 ×1 臂 ×1 次）确认配置，再决定是否跑整组。最近一次整组（20 题 ×2 臂 ×3 次＋补证恢复段＝计划 126 次请求）实耗约 1.02 元。
+    可以先跑最小档（几题 ×1 臂 ×1 次）确认配置，再决定是否跑整组。阶段四 05 的整组（20 题 ×2 臂 ×3 次＋补证恢复段＝计划 126 次请求）实耗约 1.02 元。
     这一设计直接来自教训：早前的评测轮曾因提供方余额耗尽而出现大量失败，之后才加了余额预检与响应正文捕获。
   </p>
 
