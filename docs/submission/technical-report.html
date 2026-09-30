@@ -473,7 +473,7 @@
     <thead><tr><th style="width:22%">层</th><th style="width:30%">命令</th><th style="width:14%">最近一次结果</th><th>覆盖与不覆盖</th></tr></thead>
     <tbody>
       <tr><td>单元与 API 行为测试</td><td><code>npm test</code></td><td class="num">332/332</td><td>计算边界、结论分级、跨图口径、纵轴风险、双协议设置与连接测试、工具循环预算与参数校验、引用与口径、主张追溯、补证解析与冲突、恢复共享预算、建议生成与逐处校验、改写提议容错解析。不调用真实模型。</td></tr>
-      <tr><td>浏览器端到端</td><td><code>npm run test:e2e</code></td><td class="num">78/78</td><td>26 条用例 × 320／390／1280px，含无横向溢出断言；来源核验用例用替身响应驱动页面，真实模型结果单列在证据记录里。</td></tr>
+      <tr><td>浏览器端到端</td><td><code>npm run test:e2e</code></td><td class="num">87/87</td><td>29 条用例 × 320／390／1280px，含无横向溢出断言与「主图载入期间跨图区禁用并说明原因、载入失败／取消后恢复」；来源核验用例用替身响应驱动页面，真实模型结果单列在证据记录里。</td></tr>
       <tr><td>离线固定评测</td><td><code>npm run eval:samples</code></td><td class="num">23/23</td><td>18 张团队自制图的独立预期（观察值、增长率与公式、证据状态、轴范围、跨图待确认原因、纵轴提示）＋5 组跨图配对；改错结论、图中文字或待确认状态会报失败。</td></tr>
       <tr><td>图片同源核对</td><td><code>npm run verify:sample-renders</code></td><td class="num">18/18</td><td>用 Edge 把每张 SVG 重新栅格化并与同名 PNG 逐字节比对 SHA-256，保证页面展示图与上传用图是同一份内容。</td></tr>
       <tr><td>构建与类型</td><td><code>npm run build</code></td><td>通过</td><td>前端类型检查（vue-tsc）、服务端类型检查、Vite 打包与服务端编译。<strong>类型检查单独成步是实测教训</strong>：向 <span class="path">shared/axis-risk.ts</span> 注入类型错误后 <code>npm test</code> 仍全绿（vitest 走 esbuild，只剥离类型不做检查），只有 typecheck 能拦下。</td></tr>
@@ -536,7 +536,7 @@
       <tr><td>必要追问与补证恢复</td><td>是（替身覆盖解析、冲突、过期、指纹失配）</td><td>是（q18 有检索臂 3/3 先检索后追问、恢复段 3/3 通过；q19 资料已覆盖 0 次追问）</td><td>在线样本很小（补证恢复仅 5 次）；追问率有漂移（04 轮 3/3、05 轮 2/3）；会话过期与指纹失配等分支只有替身测试</td></tr>
       <tr><td>修改建议的生成与逐处校验</td><td>是（26 条建议生成与校验的单测）</td><td>是（60 次运行生成建议、69 处改动；73 条提议中 31 条采用、42 条被拒留档）</td><td>「更强的因果表述」靠固定词表，实测出现的「略贵」不会被拦；月份／范围拦截只覆盖可解析写法</td></tr>
       <tr><td>建议的采用与撤回</td><td>是（e2e 断言写入输入框、旧建议转历史）</td><td><strong>否</strong>：采用是页面行为，未做真实模型下的在线复验；服务端不记录用户是否采用</td><td>真实用户交互中的撤回体验未实测</td></tr>
-      <tr><td>失败恢复与错误分类</td><td>是（替身与 e2e；失败不展示结论）</td><td>部分：评测过程中出现过真实上游失败（阶段四 03 五轮 25%—50%，末尾确认 402 余额耗尽），页面与记录如实降级</td><td>真实故障下的窄屏体验、超时阈值边界未逐项复验</td></tr>
+      <tr><td>失败恢复与错误分类</td><td>是（替身与 e2e；失败不展示结论；主图载入在途时跨图区禁用并说明原因，载入失败／取消后恢复）</td><td>部分：评测过程中出现过真实上游失败（阶段四 03 五轮 25%—50%，末尾确认 402 余额耗尽），页面与记录如实降级</td><td>真实故障下的窄屏体验、超时阈值边界未逐项复验；主图载入在途的跨图区锁定只在预置样例与 route 替身下验证，上传图的模型读取路径只有替身，无真实模型复验</td></tr>
       <tr><td>Responses 协议的工具循环</td><td>是（替身）</td><td><strong>否</strong></td><td>工具循环、恢复配对与建议提议在 Responses 协议下都只有替身测试</td></tr>
       <tr><td>反证与版本复查（固定库内的冲突／修订来源对）</td><td colspan="2" style="text-align:center">未实现（<span class="mono">needs-info</span>：缺经核对的同口径来源对）</td><td>不进入任何能力声明</td></tr>
       <tr><td>公网在线演示</td><td colspan="2" style="text-align:center">本次不提供（见 6.4）</td><td>如需提供需另记服务可用性与密钥方案</td></tr>
@@ -655,7 +655,7 @@
     <thead><tr><th style="width:34%">命令</th><th style="width:18%">最近结果</th><th>说明</th></tr></thead>
     <tbody>
       <tr><td><code>npm test</code></td><td class="num">332/332（20 个测试文件）</td><td>单元与 API 行为测试</td></tr>
-      <tr><td><code>npm run test:e2e</code></td><td class="num">78/78（26 用例 ×3 视口）</td><td>浏览器端到端，使用系统自带 Edge</td></tr>
+      <tr><td><code>npm run test:e2e</code></td><td class="num">87/87（29 用例 ×3 视口）</td><td>浏览器端到端，使用系统自带 Edge</td></tr>
       <tr><td><code>npm run build</code></td><td>通过</td><td>含 vue-tsc 与服务端 tsc 类型检查</td></tr>
       <tr><td><code>npm run eval:samples</code></td><td class="num">23/23</td><td>18 张固定样例 + 5 组跨图配对</td></tr>
       <tr><td><code>npm run verify:sample-renders</code></td><td class="num">18/18</td><td>SVG→PNG 逐字节同源核对</td></tr>

@@ -50,7 +50,11 @@ async function render(html, target) {
   await page.close();
 }
 
-/** 用 pypdf 找出每个目录条目所在页码；不可用时返回 null（目录页码留空）。 */
+/**
+ * 用 pypdf 找出每个目录条目所在页码；不可用时返回 null（目录页码留空）。
+ * python 必须带 `-X utf8`：Windows 中文控制台下 python 默认 stdout 编码是 gbk，
+ * 含中文的锚点 JSON 会被按 utf8 解码成乱码键，页码回填会「只告警不生效」。
+ */
 function locateTocPages(pdfFile, anchors) {
   const script = `
 import json, sys
@@ -71,7 +75,7 @@ for index, page in enumerate(reader.pages, start=1):
 print(json.dumps(found, ensure_ascii=False))
 `;
   try {
-    const out = execFileSync("python", ["-c", script, pdfFile, JSON.stringify(anchors)], { encoding: "utf8" });
+    const out = execFileSync("python", ["-X", "utf8", "-c", script, pdfFile, JSON.stringify(anchors)], { encoding: "utf8" });
     return JSON.parse(out.trim());
   } catch (error) {
     console.warn("目录页码回填跳过（需要 python + pypdf）：", String(error).split("\n")[0]);
@@ -85,7 +89,7 @@ import sys
 from pypdf import PdfReader
 print(len(PdfReader(sys.argv[1]).pages))
 `;
-  return Number(execFileSync("python", ["-c", script, pdfFile], { encoding: "utf8" }).trim());
+  return Number(execFileSync("python", ["-X", "utf8", "-c", script, pdfFile], { encoding: "utf8" }).trim());
 }
 
 const anchors = [...baseHtml.matchAll(/data-toc="([^"]+)"/g)].map((match) => match[1]);
