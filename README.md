@@ -136,7 +136,7 @@ node e2e/submission-screenshots.mjs           # 生成提交材料用的界面�
 
 推送与合并请求会由 [CI](.github/workflows/ci.yml) 自动执行类型检查、构建、`npm test`、`npm run eval:samples` 与三视口 `npm run test:e2e`。CI **只跑离线路径**：不配置任何模型密钥，也不执行 `npm run eval:source-audit`，因此不会产生模型费用，评测结果也不会写回仓库。
 
-两处仍需在本机手动执行，不进入 CI：`npm run eval:source-audit` 会调用真实模型并产生费用，需要本机已保存的模型配置；`npm run verify:sample-renders` 逐字节比对 PNG 的 SHA-256，结果依赖本机 Edge 版本的字体栅格化，CI 上只作为不阻塞的信号运行（见工作流中的说明）。
+两处仍需在本机手动执行，不进入 CI：`npm run eval:source-audit` 会调用真实模型并产生费用，需要本机已保存的模型配置；`npm run verify:sample-renders` 逐字节比对 PNG 的 SHA-256，结果依赖本机 Edge 版本的字体栅格化。2026-09-30 实测：当前 `windows-latest` 镜像（`windows-2025-vs2026`）的 Edge 与开发机栅格化结果不同，该信号在 CI 上为 **0/18** 失败；因此它在工作流里是 `continue-on-error: true` 的不阻塞信号，失败不拦截合并，逐字节同源核对只在开发机（18/18）作为证据。
 
 ## 产品边界
 
