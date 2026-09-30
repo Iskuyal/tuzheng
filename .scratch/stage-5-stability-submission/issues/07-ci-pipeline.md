@@ -4,14 +4,14 @@
 
 **Blocked by:** 无
 
-**Status:** 已实现，首次 CI 运行已验收大部分项；剩余一项见下方 Comments
+**Status:** completed（2026-09-30，全部验收项已由真实 CI 运行确认，含刻意注入的变红验证，见下方 Comments）
 
 - [x] 推送与合并请求触发一次完整校验：类型检查、构建、`npm test`、`npm run eval:samples`、`npm run test:e2e`；任一步失败即整体失败。
 - [x] 运行环境为 Windows 且 Node 为 24.x：`playwright.config.ts` 与 `scripts/verify-sample-renders.mjs` 都用 `channel: "msedge"`，依赖系统自带 Edge；Node 版本与阶段验收记录一致。
 - [x] CI 只跑离线路径：不配置任何模型密钥，不执行 `npm run eval:source-audit`；仓库内不出现真实密钥，评测结果不写回仓库。
 - [x] `npm run verify:sample-renders` 作为**不阻塞**的信号运行：它逐字节比对 SHA-256，结果依赖本机 Edge 版本的字体栅格化，CI 的 Edge 版本与开发机不同可能报与环境有关的假失败，失败只提示不拦截。
 - [x] 失败时上传 Playwright trace 作为构建产物以便复查；成功运行不保留多余产物。
-- [ ] 人为引入一处类型错误与一处断言失败，确认 CI 变红，回退后确认恢复绿色；绿态连续两次可重复。
+- [x] 人为引入一处类型错误与一处断言失败，确认 CI 变红，回退后确认恢复绿色；绿态连续两次可重复。
 - [x] README 的「本地验证」一节说明 CI 覆盖哪些检查、哪些仍需本机手动执行（`npm run eval:source-audit` 与真实模型相关的验收）。
 
 ## Comments
@@ -46,4 +46,28 @@
 修复的验证方式是人为给 `/api/audit/sample` 注入 400ms 延迟做前后对照：修复前 24 通过 / 12 失败，修复后 66 通过 / 0 失败。
 
 **剩余一项（未勾选）说明：** 「人为引入类型错误与断言失败确认 CI 变红」这一项，本轮观察到的是**真实失败**导致的变红与修复后的转绿，不是刻意注入的变异；类型错误路径只在本机验证过（注入 `shared/axis-risk.ts` 后 `npm run typecheck` 退出码 2，而 `npm test` 仍全绿）。为如实区分，该项保持未勾选。它不阻塞本任务的核心交付，需要时可在一次性分支上用 `workflow_dispatch` 单独跑一次变异验证。
+
+---
+
+**2026-09-30 人为变红验证记录（本条已补齐；下面两次变红都是刻意注入的变异，不是真实缺陷）。**
+
+在临时分支 `chore/ci-negative-check`（从 `main` 的 `e8d4363` 开出，**验证后本地与远端都已删除、从未合并**）上用 `gh workflow run CI --ref chore/ci-negative-check` 触发 `workflow_dispatch`，分别注入两类缺陷，两次都变红：
+
+| 次数 | 注入内容 | 结果 | 失败步骤与证据 |
+| --- | --- | --- | --- |
+| 1 | `shared/axis-risk.ts` 加 `export const __ciMutationCheck: number = "not a number";` | **红**（41 秒） | [run 36723291466](https://github.com/Iskuyal/web-match/actions/runs/36723291466)：`Run npm run typecheck` → `shared/axis-risk.ts(4,14): error TS2322: Type 'string' is not assignable to type 'number'.`，job 退出码 1，后续步骤未执行 |
+| 2 | 回退类型错误，改把 `tests/axis-risk.test.ts` 的期望值写成 `"misleading-risk"` | **红**（1 分 21 秒） | [run 36723673814](https://github.com/Iskuyal/web-match/actions/runs/36723673814)：类型检查与构建都通过，失败落在 `Run npm test` → `AssertionError: expected 'ok' to be 'misleading-risk'`（`tests/axis-risk.test.ts:16`） |
+
+**本机同条件复验（与上面两次独立）：** 注入类型错误后 `npm run typecheck` 退出码 2（TS2322），而**同一变异下 `npm test` 仍 332/332 通过**——再次确认类型错误必须由单独的 `npm run typecheck` 步骤拦截，单测走 esbuild 只剥离类型不做检查。第二次注入后本机 `npm run typecheck` 退出码 0、`npm test` **331 通过 / 1 失败**，失败点与 CI 一致。
+
+**回退与绿态：** 临时分支已删除（本地 `git branch -D`、远端 `git push origin --delete`，`git ls-remote --heads origin` 已无该分支）；注入内容在 `main` 与修复分支上都不存在（`git grep __ciMutationCheck` 与 `git grep 一次性变异验证` 均为空，`tests/axis-risk.test.ts:15` 已恢复 `toBe("ok")`，工作区 `git status` 干净）。删除后重新 `workflow_dispatch` 跑 `main`：[run 36724007809](https://github.com/Iskuyal/web-match/actions/runs/36724007809) **绿色**。加上此前 PR #11—#16 的连续绿态，以及本次任务 08 的 PR #17（[run 36722687288](https://github.com/Iskuyal/web-match/actions/runs/36722687288)）同样绿色，「绿态连续两次可重复」成立，且本次两次刻意变红之后已确认转绿。
+
+**未做：** 没有把变红分支留在远端、没有为它开 PR；仓库可见性与演示视频仍是人工步骤，不在本任务范围。
+
+**附带观察（2026-09-30，非本任务引入）：** 上面两次变红运行与本次的绿态运行（以及 12:44 的 `main` 推送运行）里，`npm run verify:sample-renders` 在 CI 上**全部 0/18 失败**（`FAIL conflict SVG→PNG` 起逐张失败），即当前 `windows-latest` 镜像（`windows-2025-vs2026` / 镜像版本 20260925）的 Edge 字体栅格化已经与开发机不同。四项事实据此更新：
+
+1. 第 4 个验收项（不阻塞信号）从「声明」变成「实际发生并被容忍」——该步骤 `continue-on-error: true`，失败只出注释与 `##[error]Process completed with exit code 1`，job 与整次运行仍是绿色（[run 36724007809](https://github.com/Iskuyal/web-match/actions/runs/36724007809) 的 `✓ verify in 3m52s`）。若当初把它设为阻塞，CI 会因环境原因永久变红，与产品无关。
+2. 本文档 2026-09-29 那句「`verify:sample-renders` 在 CI 上通过（18/18）……`continue-on-error` 暂未触发」**已经过时**，以上述实测为准。
+3. 逐字节 SHA-256 同源核对只在**开发机**（本机 18/18）与本地验收记录中作为证据；CI 上它只是信号，不能当作图片未改动的证据。
+4. 演示截图与技术 PDF 用的是仓库内已生成的静态 PNG，不受该信号影响。
 

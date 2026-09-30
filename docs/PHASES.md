@@ -168,7 +168,7 @@
 
 ### 阶段 5：稳定性与提交
 
-规格与任务：[`spec.md`](../.scratch/stage-5-stability-submission/spec.md) 与同目录 `issues/`。阶段四任务 01、02、03、04、05 已实现在线验收（阶段四核心完成），阶段五先做不依赖来源核验的稳定性工作；最终演示与技术材料在阶段四 01—05 核心验收后冻结，06 只按实际完成情况选入。**阶段五 04「冻结演示路径并准备技术与运行材料」的仓库侧交付已完成（2026-09-30）：README 材料索引、24 页技术 PDF、演示脚本与逐条走查清单、访问检查记录、20 张界面截图；剩余人工步骤是录制 5—8 分钟视频、把仓库从私有改为评审可访问，并把视频链接补进 README。下一个无阻塞任务是阶段五 08（主图载入期间选择对照图被静默取消，`needs-triage`），交接提示见 [STAGE-5-PROMPT.md](STAGE-5-PROMPT.md)，可在同一会话顺带完成 07 剩下的人为变红验证；05 在视频与仓库可见性就绪前不能整体通过（其 Blocked by 04 的这两项人工步骤未完成）；阶段四 06 为 `needs-info`。**
+规格与任务：[`spec.md`](../.scratch/stage-5-stability-submission/spec.md) 与同目录 `issues/`。阶段四任务 01、02、03、04、05 已实现在线验收（阶段四核心完成），阶段五先做不依赖来源核验的稳定性工作；最终演示与技术材料在阶段四 01—05 核心验收后冻结，06 只按实际完成情况选入。**阶段五 04「冻结演示路径并准备技术与运行材料」的仓库侧交付已完成（2026-09-30）：README 材料索引、24 页技术 PDF、演示脚本与逐条走查清单、访问检查记录、20 张界面截图；剩余人工步骤是录制 5—8 分钟视频、把仓库从私有改为评审可访问，并把视频链接补进 README。阶段五 07（CI 门禁）与 08（主图载入期间选择对照图被静默取消）已于 2026-09-30 完成并实测，记录见下方；交接提示见 [STAGE-5-PROMPT.md](STAGE-5-PROMPT.md)。05 在视频与仓库可见性就绪前不能整体通过（其 Blocked by 04 的这两项人工步骤未完成）；阶段四 06 为 `needs-info`。**
 
 - 团队自制的固定样例集覆盖算术矛盾、正确图、跨图冲突、视觉风险、模糊标签和缺失来源。
 - 新机器按 README 启动；API 不可用时给出真实的失败提示，不以预计算结果冒充实时 AI。
@@ -189,8 +189,25 @@
 - **演示视频材料**（[`docs/submission/demo-video-script.md`](submission/demo-video-script.md)）：7:00 左右的分镜表（开场／图内闭环／来源核验主路径／推断检查／必要补证／修改建议采用与撤回／故意改错地址演示失败恢复／评测数字与局限／收尾）、演示数据表（题号、图片文件、配文、期望结论）、每条分镜的「必须可见」与替补方案、13 条录制后走查清单、录制前准备（清端口、配置、1080p 与窗口设置）与录制后自检。**视频本身未录制**：录制需要人在有 GUI 的机器上操作，脚本明确要求现场真实调用、允许失败但不允许拿替身或预置结果冒充。
 - **界面截图**：`node e2e/submission-screenshots.mjs`（新增，[`e2e/submission-screenshots.mjs`](../e2e/submission-screenshots.mjs)）用替身响应重放 20 张 PNG 到 `docs/submission/assets/`，不调用真实模型；PDF 与 README 图注逐张标注「替身响应渲染」。
 - **访问检查**（[`docs/submission/accessibility-check.md`](submission/accessibility-check.md)）：三条国家统计局资料链接 `curl -L` 实测 200；PDF 页数与可打开性实测（pypdf 24 页 + Edge 阅读器渲染确认）；**仓库当前为 `PRIVATE`（未登录访问 404），赛事要求 Public 或提供评审访问权限，列为提交前必须人工处理的阻塞项**；公网在线演示**本次决定不提供**，并记录原因（密钥按设计只存本机用户目录、服务只监听回环）与将来提供所需的条件（平台代管密钥、可用性、限流、数据政策）。视频链接待录制后补入 README。
-- **材料纪律**：本任务未调用任何真实模型（0 次请求），材料里的在线数字全部引用阶段四证据记录并注明重复次数、波动与失败运行数；未验收的能力（阶段四 06 反证与版本复查、阶段五 08 载入期选择对照图、Responses 协议工具循环在线、采用／撤回的在线复验）在 PDF、README 与视频脚本里都明确排除在能力声明之外。
+- **材料纪律**：本任务未调用任何真实模型（0 次请求），材料里的在线数字全部引用阶段四证据记录并注明重复次数、波动与失败运行数；未验收的能力（阶段四 06 反证与版本复查、Responses 协议工具循环在线、采用／撤回的在线复验）在 PDF、README 与视频脚本里都明确排除在能力声明之外。当时仍列在排除项里的「阶段五 08 载入期选择对照图」已于 2026-09-30 修复（见下方 08 记录）：README「当前能力状态」已按新行为更新，**冻结的 PDF 与视频脚本仍按修复前的未验收状态表述**，下次重建材料时需要同步。
 - **收尾实测（2026-09-30）**：`npm test` **332/332**、`npm run test:e2e` **78/78**（26 用例 ×320／390／1280px）、`npm run build` 通过、`npm run eval:samples` **23/23**、`npm run verify:sample-renders` **18/18**；PDF 页数 24/30。本任务只新增文档、截图脚本与静态截图，未改动 `web/`、`server/`、`shared/` 与既有测试。
+
+**阶段五任务 08 验收记录（2026-09-30）：**主图载入完成会重置跨图会话并中止在途的对照图请求，因此用户在主图载入期间选对照图会被静默丢弃（CI 首次运行暴露，见[任务 08](../.scratch/stage-5-stability-submission/issues/08-cross-picker-cancelled-during-load.md)）。现改为「载入在途时跨图区禁用并说明原因」，语义写进仓库第一条 ADR。
+
+- **语义与 ADR**：新增 [`docs/adr/0001-disable-cross-picker-while-main-image-loads.md`](adr/0001-disable-cross-picker-while-main-image-loads.md)（`docs/adr/` 首条）。选「禁用＋说明」而不是「排队执行」：排队方案在**载入失败／取消**分支没有新的主图观察值，执行排队项会把对照图配到**旧**主图上、丢弃又退回静默；而载入期间跨图区本来就没有可比较的对象。禁用范围含两个对照图下拉框、上传输入、「读取这张对照图」、「确认对照图读数」、两侧主张下拉框与逐要素「确认一致」；**「移除对照图」刻意保持可用**（效果不会被重置静默撤销）。
+- **产品改动**：`web/pages/AuditPage.vue` 新增 `mainImageLoading`（在 `loadSample` 与上传图的模型读取中置位，在 `cancelImageRequest` 与请求收尾复位），跨图区据此 `:disabled` 并显示「主图还在载入，跨图区暂时不能操作；载入完成后才能选择或更换对照图。」；`web/style.css` 补锁定说明与禁用态样式。
+- **测试**：新增 3 条 e2e（三视口共 9 条）——载入期间禁用并在完成后恢复；载入失败后恢复可用且不残留半配对；已配对时重载，更换／主张选择／确认一致／确认读数一并禁用而「移除对照图」仍可用。产品改动前这 3 条在三视口全红（**6 failed / 0 passed**），改动后 **9 passed**。
+- **400ms 对照**：探针改为 e2e 内 `addInitScript` 延迟 `/api/audit/sample`（不再改 `server/app.ts`），跑完整 `npm run test:e2e`（29 用例 ×320／390／1280 = 87 条）：改动前 **78 通过 / 9 失败**（失败全部是新增的 3 条用例 ×3 视口），改动后 **87 通过 / 0 失败**。与本文档旧数字 24/12、66/0 的差异来源：基线已含 6 处「等主图载入完成」断言（24/12 无法复现）、用例数 22→29 条、探针延迟包含对照图请求。
+- **其余实测**：`npm run test:e2e` **87/87**（1.1 分钟）、`npm test` **332/332**、`npm run typecheck`／`npm run build` 通过、`npm run eval:samples` 23/23、`npm run verify:sample-renders` 18/18。**本次 0 次真实模型请求。**
+- **未验证与边界**：上传图的模型读取路径只用 route 替身验证「载入期锁定／失败后解锁」，未做真实模型复验；「先选对照图（在途）再主动切换主图仍会连会话一起取消」是保留的既有语义，e2e「重置会取消仍在载入的对照图」继续守护，并已在 ADR 写明。
+
+**阶段五任务 07 验收记录（2026-09-30 补齐最后一项）：**CI 流水线此前只差「确认刻意注入的缺陷能让 CI 变红」。本次在临时分支 `chore/ci-negative-check`（从 `main` 的 `e8d4363` 开出，验证后本地与远端都已删除、从未合并）上用 `gh workflow run CI --ref ...` 触发两次 `workflow_dispatch`，两次都变红且失败点不重复：
+
+- **类型错误**：`shared/axis-risk.ts` 加 `export const __ciMutationCheck: number = "not a number";` → [run 36723291466](https://github.com/Iskuyal/web-match/actions/runs/36723291466) 41 秒失败于 `npm run typecheck`（`error TS2322: Type 'string' is not assignable to type 'number'.`），后续步骤未执行。本机同条件复验：`npm run typecheck` 退出码 2，而**同一变异下 `npm test` 仍 332/332 通过**（vitest 走 esbuild 只剥离类型）。
+- **断言失败**：回退类型错误，把 `tests/axis-risk.test.ts` 的期望值写成 `"misleading-risk"` → [run 36723673814](https://github.com/Iskuyal/web-match/actions/runs/36723673814) 1 分 21 秒失败于 `npm test`（`AssertionError: expected 'ok' to be 'misleading-risk'`，类型检查与构建先通过）。本机复验：typecheck 退出码 0、`npm test` 331 通过 / 1 失败。
+- **回退与绿态**：两条注入都没进 `main`（`git grep` 为空、工作区干净、分支已删）。删除分支后重新 `workflow_dispatch` 跑 `main`：[run 36724007809](https://github.com/Iskuyal/web-match/actions/runs/36724007809) **绿色**（`verify` 3 分 52 秒），加上 PR #11—#16 与任务 08 的 PR #17（[run 36722687288](https://github.com/Iskuyal/web-match/actions/runs/36722687288)）连续绿态，「绿态连续两次可重复」成立。
+- **附带发现（如实记录）**：上述几次运行里 `npm run verify:sample-renders` 在 CI 上已变成 **0/18 失败**（当前 `windows-latest` 镜像 `windows-2025-vs2026` 的 Edge 栅格化与开发机不同），但该步骤 `continue-on-error: true`，整次运行仍绿——「不阻塞的信号」这一设计从声明变成实际发生并被容忍；2026-09-29 记录的「CI 上 18/18、`continue-on-error` 暂未触发」已过时。逐字节同源核对只在开发机（18/18）作为证据，CI 上仅作信号。
+- **未验证**：真实模型相关路径不在 CI（本任务 0 次真实模型请求）；仓库可见性与演示视频仍是人工步骤。
 
 ## 两人协作方式
 

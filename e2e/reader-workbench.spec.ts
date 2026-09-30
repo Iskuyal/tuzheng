@@ -1,6 +1,17 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 // 只走预置示例路径，不读取模型、不需要 API Key；真实云端读取另见 docs/STAGE-1.md 的复验步骤。
+
+// 切换主图在窄屏用折叠的选择器、桌面用样例卡，两者都调同一个 loadSample。
+async function selectMainSample(page: Page, id: string): Promise<void> {
+  const { samples } = await (await page.request.get("/api/samples")).json() as { samples: Array<{ id: string }> };
+  if ((page.viewportSize()?.width ?? 1280) <= 480) {
+    await page.locator("#mobile-sample-select").selectOption(id);
+    return;
+  }
+  await page.locator(".sample-button").nth(samples.findIndex((sample) => sample.id === id)).click();
+}
 
 test.beforeAll(async ({ request }) => {
   await expect
@@ -182,6 +193,147 @@ test("对照图读取失败在空状态可见并能重试", async ({ page, reque
   await page.getByRole("button", { name: "重试读取这张对照图" }).click();
   await expect(page.locator(".cross-body")).toBeVisible();
   await expect(page.locator(".cross-section .error-message")).toHaveCount(0);
+});
+
+// 阶段五任务 08：主图载入完成会重置跨图会话并中止在途的对照图请求（见 docs/adr/0001）。
+// 新语义是「载入在途时跨图区禁用并说明原因」，而不是让选择静默失效。
+test("主图载入期间跨图区禁用并说明原因，载入完成后恢复", async ({ page }) => {
+  await page.goto("/audit?sample=cross-a-revenue");
+  const cross = page.locator(".cross-section");
+  await expect(page.locator(".observation-form .title-field textarea")).toHaveValue("年营业收入增长 25%");
+  await expect(cross.locator(".cross-lock-note")).toHaveCount(0);
+
+  // 先备好一张待读取的对照图，锁定期才能看到「读取这张对照图」也被禁用。
+  await cross.locator(".cross-empty input[type=file]").setInputFiles("web/public/samples/cross-b-consistent.png");
+  const readButton = cross.locator(".cross-read-action button");
+  await expect(readButton).toBeEnabled();
+
+  // 换一张主图并按住这次载入：载入在途期间跨图区不能开始配对。
+  let markStarted!: () => void;
+  const started = new Promise<void>((resolve) => { markStarted = resolve; });
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => { release = resolve; });
+  await page.route("**/api/audit/sample", async (route) => {
+    if (route.request().postDataJSON()?.id !== "cross-b-consistent") {
+      await route.continue();
+      return;
+    }
+    markStarted();
+    await held;
+    await route.continue();
+  });
+
+  const reload = selectMainSample(page, "cross-b-consistent");
+  await started;
+  const picker = cross.locator(".cross-empty .cross-picker select");
+  await expect(cross.locator(".cross-lock-note")).toContainText("主图还在载入");
+  await expect(picker).toBeDisabled();
+  await expect(cross.locator(".cross-empty input[type=file]")).toBeDisabled();
+  await expect(readButton).toBeDisabled();
+
+  release();
+  await reload;
+  await expect(cross.locator(".cross-lock-note")).toHaveCount(0);
+  await expect(picker).toBeEnabled();
+  await expect(cross.locator(".cross-empty input[type=file]")).toBeEnabled();
+  // 载入成功会按既有语义重置跨图会话，之前选的待读文件一并清掉；重新选一张即可读。
+  await cross.locator(".cross-empty input[type=file]").setInputFiles("web/public/samples/cross-b-consistent.png");
+  await expect(readButton).toBeEnabled();
+  // 载入完成后选择照常生效：载入期间只是「不可用」，不是「选了也白选」。
+  await picker.selectOption("cross-b-conflict");
+  await expect(cross.locator(".cross-body")).toBeVisible();
+});
+
+test("主图载入失败后跨图区恢复可用且不残留半配对", async ({ page }) => {
+  let markFirstStarted!: () => void;
+  const firstStarted = new Promise<void>((resolve) => { markFirstStarted = resolve; });
+  let releaseFirst!: () => void;
+  const firstHeld = new Promise<void>((resolve) => { releaseFirst = resolve; });
+  // 前两次主图载入（请求的样例 + 清单兜底的那一张）都失败，之后放行。
+  let failuresLeft = 2;
+  let seen = 0;
+  await page.route("**/api/audit/sample", async (route) => {
+    if (failuresLeft <= 0) {
+      await route.continue();
+      return;
+    }
+    failuresLeft -= 1;
+    seen += 1;
+    if (seen === 1) {
+      markFirstStarted();
+      await firstHeld;
+    }
+    await route.fulfill({ status: 503, json: { error: { message: "样例载入失败（测试注入）" } } });
+  });
+
+  const navigation = page.goto("/audit?sample=cross-a-revenue");
+  await firstStarted;
+  const cross = page.locator(".cross-section");
+  const picker = cross.locator(".cross-empty .cross-picker select");
+  await expect(cross.locator(".cross-lock-note")).toContainText("主图还在载入");
+  await expect(picker).toBeDisabled();
+
+  releaseFirst();
+  await expect(page.locator(".review-column .error-message")).toContainText("样例载入失败（测试注入）");
+  // 载入失败后立刻解锁：既不残留「载入中」，也没有半配对状态。
+  await expect(cross.locator(".cross-lock-note")).toHaveCount(0);
+  await expect(picker).toBeEnabled();
+  await expect(cross.locator(".cross-body")).toHaveCount(0);
+  await expect(cross.locator(".cross-reference-label")).toHaveCount(0);
+  await expect(cross.locator(".cross-element")).toHaveCount(0);
+
+  // 失败之后选择器照常可用：对照图能载入，但没有主图主张时不会拼出半张比较表。
+  await picker.selectOption("cross-b-conflict");
+  await expect(cross.locator(".cross-body")).toBeVisible();
+  await expect(cross.locator(".cross-reference-label")).toContainText("跨图对照：说法对不上");
+  await expect(cross.locator(".cross-element")).toHaveCount(0);
+  await navigation;
+});
+
+test("主图重新载入期间跨图区已配对的操作一并禁用", async ({ page }) => {
+  await page.goto("/audit?sample=cross-a-revenue");
+  const cross = page.locator(".cross-section");
+  await expect(page.locator(".observation-form .title-field textarea")).toHaveValue("年营业收入增长 25%");
+  await cross.locator(".cross-empty .cross-picker select").selectOption("conflict");
+  await expect(cross.locator(".cross-element")).toHaveCount(4);
+  const missingElement = cross.locator(".cross-element").nth(3);
+  await expect(missingElement.locator(".cross-element-state")).toHaveText("图上没读到");
+  const confirmElementButton = missingElement.locator(".cross-confirm-button");
+  const confirmReferenceButton = cross.locator(".cross-side-note .cross-confirm-button");
+  await expect(confirmElementButton).toHaveCount(1);
+
+  let markStarted!: () => void;
+  const started = new Promise<void>((resolve) => { markStarted = resolve; });
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => { release = resolve; });
+  await page.route("**/api/audit/sample", async (route) => {
+    if (route.request().postDataJSON()?.id !== "cross-b-consistent") {
+      await route.continue();
+      return;
+    }
+    markStarted();
+    await held;
+    await route.continue();
+  });
+
+  const reload = selectMainSample(page, "cross-b-consistent");
+  await started;
+  await expect(cross.locator(".cross-lock-note")).toContainText("主图还在载入");
+  // 会改变配对的操作全部禁用：换图、两侧主张选择、逐要素「确认一致」、确认对照图读数。
+  await expect(cross.locator(".cross-swap select")).toBeDisabled();
+  await expect(cross.locator(".cross-body .cross-picker-row select").first()).toBeDisabled();
+  await expect(cross.locator(".cross-body .cross-picker-row select").nth(1)).toBeDisabled();
+  await expect(confirmElementButton).toBeDisabled();
+  await expect(confirmReferenceButton).toBeDisabled();
+  // 「移除对照图」刻意保持可用：它的效果不会被载入完成时的重置静默撤销（见 ADR）。
+  await expect(cross.locator(".cross-remove")).toBeEnabled();
+
+  release();
+  await reload;
+  // 载入成功后跨图会话按既有语义重置，不残留半配对。
+  await expect(cross.locator(".cross-empty")).toHaveCount(1);
+  await expect(cross.locator(".cross-lock-note")).toHaveCount(0);
+  await expect(cross.locator(".cross-element")).toHaveCount(0);
 });
 
 test("样例清单迟到时不覆盖刚选择的上传图", async ({ page }) => {
