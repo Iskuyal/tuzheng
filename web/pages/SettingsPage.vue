@@ -234,6 +234,7 @@ onMounted(loadSettings);
           <p class="section-kicker">连接说明</p>
           <h2>密钥留在这台电脑</h2>
           <ul class="settings-notes">
+            <li><strong>所配模型必须支持图片输入（多模态）。</strong>应用要靠模型读图；预设只收录支持图片输入的型号，手填时请自行确认型号的输入模态。</li>
             <li>浏览器提交后，由本机 Node 服务端写入当前 Windows 用户的 LocalAppData。</li>
             <li>读取设置时只返回“已配置”状态，不会把 API Key 回显给页面。</li>
             <li>审计图片由服务端发送到你配置的模型服务。</li>
@@ -261,7 +262,7 @@ onMounted(loadSettings);
                 <option value="openai-responses">OpenAI Responses 兼容</option>
                 <option value="anthropic">Anthropic Messages 兼容</option>
               </select>
-              <small>保存后用于图片读取；切换协议会带出该协议已保存的地址与模型，密钥留空会保留该协议已存密钥。</small>
+              <small>保存后用于图片读取；切换协议会带出该协议已保存的地址与模型，密钥留空会保留该协议已存密钥；预设列表随协议切换（同一家服务商只在支持该协议的端点上出现）。</small>
             </label>
 
             <label class="settings-field">
@@ -272,7 +273,7 @@ onMounted(loadSettings);
                   {{ preset.label }}{{ preset.verification === "live" ? "（本项目已实测）" : "（官方文档）" }}
                 </option>
               </select>
-              <small>{{ presetHint || "选取后覆盖当前协议的地址与模型，密钥不受影响；也可继续手动填写。" }}</small>
+              <small>{{ presetHint || "选取后覆盖当前协议的地址与模型，密钥不受影响；也可继续手动填写。两侧预设不同：同一家服务商只在支持该协议的端点上出现，同一家中转站按协议暴露的型号也可能不同。" }}</small>
             </label>
 
             <label class="settings-field">
@@ -326,12 +327,13 @@ onMounted(loadSettings);
               </button>
               <span v-else-if="clearApiKey" class="clear-key-pending">保存后清除 Key</span>
             </div>
-            <p class="settings-test-note">测试时向所填服务发送一条短文本请求和当前密钥，以检查{{ providerMeta.structuredOutputLabel }}；不发送图片，也不保存表单改动。</p>
+            <p class="settings-test-note">测试时向所填服务发送一条短文本请求和当前密钥，以检查{{ providerMeta.structuredOutputLabel }}；不发送图片，也不保存表单改动。<strong>测试通过不代表能读图</strong>：纯文本模型也可能测通，读图能力必须上传样例核验。</p>
           </form>
 
           <details class="settings-mobile-details settings-form-details">
             <summary><span>查看本机保存与图片发送范围</span><span class="disclosure-cue" aria-hidden="true"></span></summary>
             <ul class="settings-notes">
+              <li><strong>所配模型必须支持图片输入（多模态）。</strong>预设只收录支持图片输入的型号；「测试连接」不发送图片，纯文本模型也可能测通。</li>
               <li>提交后由本机 Node 服务写入当前 Windows 用户的 LocalAppData。</li>
               <li>设置读取接口只返回“已配置”状态，不会把密钥回传给页面。</li>
               <li>点击读取时，图片会发送到本页配置的模型服务。</li>
