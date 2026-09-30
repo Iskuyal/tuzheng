@@ -33,6 +33,9 @@ test("模型设置可用未保存参数测试连接，并区分成功和鉴权�
   const baseUrl = page.locator(".settings-field input[type=url]");
   const model = page.locator(".settings-field input[type=text]");
   const apiKey = page.locator(".settings-field input[type=password]");
+  // 测试说明写清「测通 ≠ 能读图」，避免把纯文本模型当成可用配置。
+  await expect(page.locator(".settings-test-note")).toContainText("测试通过不代表能读图");
+  await expect(page.locator(".settings-test-note")).toContainText("纯文本模型也可能测通");
   await baseUrl.fill("https://new.example/v1");
   await model.fill("new-model");
   await apiKey.fill("unsaved-test-key");
@@ -106,6 +109,12 @@ test("模型预设按协议过滤，选取后填入地址与型号", async ({ pa
   const presetSelect = page.locator(".settings-field select").nth(1);
 
   await expect(presetSelect.locator("option")).toContainText(["OpenAI 官方 · GPT-4.1 mini"]);
+  // 名称按官方写法（Command Code），并带「本项目已实测」标注。
+  await expect(presetSelect.locator('option[value="commandcode-responses-deepseek"]'))
+    .toHaveText("Command Code 网关 · DeepSeek V4.1 Flash（本项目已实测）");
+  // 多模态要求与「两侧预设为什么不同」写在页面上（桌面走侧栏说明、窄屏走移动端说明），不是只写在 README 里。
+  await expect(page.locator("li", { hasText: "所配模型必须支持图片输入（多模态）" }).first()).toBeAttached();
+  await expect(page.locator("small", { hasText: "同一家服务商只在支持该协议的端点上出现" }).first()).toBeAttached();
 
   await providerSelect.selectOption("anthropic");
   await expect(presetSelect.locator("option")).toContainText([

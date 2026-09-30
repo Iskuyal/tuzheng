@@ -94,11 +94,11 @@ export const MODEL_PRESETS: ModelPreset[] = [
   },
   {
     id: "commandcode-responses-deepseek",
-    label: "commandcode 网关 · DeepSeek V4.1 Flash",
+    label: "Command Code 网关 · DeepSeek V4.1 Flash",
     protocol: "openai-responses",
     baseUrl: "https://api.commandcode.ai/provider/v1",
     model: "deepseek/deepseek-v4.1-flash",
-    note: "本项目既有在线验收端点；2026-09-28 实测单张读取约 30 秒，模型偶发把百分比返回为字符串而被结构校验拒绝。",
+    note: "本项目既有在线验收端点（官方写作 Command Code，接口 /models 的 owned_by 为 command-code）；2026-09-28 实测单张读取约 30 秒，模型偶发把百分比返回为字符串而被结构校验拒绝。它的 /messages 面只服务自家 Claude 模型且受套餐限制，因此只列在 Responses 侧。",
     sourceUrl: "https://api.commandcode.ai/provider/v1/models",
     verification: "live",
   },
