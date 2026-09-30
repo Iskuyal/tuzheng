@@ -73,6 +73,11 @@ function sourceTitle(sourceId: string): string {
   return result.value?.hits.find((hit) => hit.document.id === sourceId)?.document.title ?? sourceId;
 }
 
+/** 资料库条目标题；修订声明里指向的那份发布也用它显示。 */
+function libraryTitle(sourceId: string): string {
+  return library.value.find((entry) => entry.id === sourceId)?.title ?? sourceId;
+}
+
 /** 在历史条目的对照里按主张原文找补证前状态；配不上对或本来就没有对照时返回 null。 */
 function changeBefore(
   changes: SourceInvestigationResult["conclusionChanges"],
@@ -855,9 +860,13 @@ function adoptSuggestion(): void {
             <a :href="entry.url" target="_blank" rel="noreferrer noopener">{{ entry.title }}</a>
             <span class="source-library-meta">
               {{ entry.publisher }} · {{ entry.publishedAt }} ·
-              {{ entry.kind === "data-release" ? "数据发布" : "术语解释" }}
+              {{ entry.kind === "data-release" ? "数据发布" : "术语解释" }} · {{ entry.basis.metric }}
               <template v-if="entry.basis.period"> · 适用 {{ entry.basis.period }}</template>
+              <template v-else-if="entry.kind === 'data-release'"> · 逐月 {{ entry.measureCount }} 行</template>
               <template v-if="entry.distractor"> · 干扰项</template>
+            </span>
+            <span v-if="entry.revision" class="source-library-revision" data-testid="library-revision">
+              本发布修订了《{{ libraryTitle(entry.revision.supersedes) }}》（{{ entry.revision.revisedAt }}）：{{ entry.revision.statement }}
             </span>
             <span class="source-library-fingerprint">指纹 {{ entry.fingerprint }}</span>
           </li>

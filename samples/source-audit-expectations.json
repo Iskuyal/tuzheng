@@ -1,7 +1,7 @@
 {
-  "version": 4,
-  "frozenAt": "2026-09-30",
-  "authoredBy": "团队人工逐题写定，先于任何一次模型运行；不由模型生成或回填。任务 03 新增的 5 题（q13—q17）、任务 04 新增的 2 题（q18—q19）与任务 05 新增的 1 题（q20）同样先写期望，02 的 12 题、03 的 5 题与 04 的 2 题期望原有规则未改动，只新增修改建议的检查。",
+  "version": 5,
+  "frozenAt": "2026-10-01",
+  "authoredBy": "团队人工逐题写定，先于任何一次模型运行；不由模型生成或回填。任务 03 新增的 5 题（q13—q17）、任务 04 新增的 2 题（q18—q19）与任务 05 新增的 1 题（q20）同样先写期望，任务 06 新增的 2 题（q21—q22，版本修订）亦然；02 的 12 题、03 的 5 题与 04 的 2 题期望原有规则未改动，只新增修改建议的检查。",
   "rubric": [
     "select.fromImage=false 表示配文主张，true 表示图内主张（程序读模型返回的 fromImage 字段，不额外调用模型）。",
     "select 还可带 kind（direct／inference／opinion）筛选主张分类；q15 用它固定「观点不支持核验」这条规则。",
@@ -38,7 +38,9 @@
     "libraryFingerprints": {
       "stats-cpi-2025-12": "67828d756d2d683d",
       "stats-term-yoy-mom": "3873318af079acdd",
-      "stats-cpi-2026-08": "1629bc6cd4a8e45f"
+      "stats-cpi-2026-08": "1629bc6cd4a8e45f",
+      "stats-retail-2026-07": "017220654d110dda",
+      "stats-retail-2026-08": "382eec551290742b"
     },
     "gates": {
       "gateArm": "retrieval",
@@ -317,6 +319,30 @@
         "forbiddenNumbers": [0.2],
         "expectationNote": "同一段建议里两种处理并存：错误值换成所引发布的 0.8%，没有适用来源的那句保留限定或建议删除；不得凭空补 2026 年 5 月的数值。"
       }
+    },
+    {
+      "id": "q21-retail-value-superseded",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "month-on-month", "value": 0.35, "period": "2026-06" }, "status": "source-mismatch", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-mismatch", "source-pending"],
+      "expectationNote": "配文的 0.35% 是被官方修订声明改写过的旧值：2026-09-15 发布把 2026 年 6 月环比改写为 0.40% ⇒ 与来源不一致，并要留下版本复查记录。引用两份发布中的任意一份都应得到同一结论。",
+      "suggestion": {
+        "expectChanges": [
+          { "select": { "fromImage": false, "basis": "month-on-month", "value": 0.35, "period": "2026-06" }, "kinds": ["replace-value"], "min": 1 }
+        ],
+        "requiredNumbers": [0.4],
+        "forbiddenNumbers": [0.35],
+        "expectationNote": "版本修订后建议必须用修订后的 0.40%，不得保留旧值 0.35%。"
+      }
+    },
+    {
+      "id": "q22-retail-value-current",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "month-on-month", "value": 0.4, "period": "2026-06" }, "status": "source-match", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-mismatch", "source-pending"],
+      "expectationNote": "配文用的就是修订后的 0.40% ⇒ 与来源一致；图内主张写的是旧值 0.35%，按修订后值判为不一致，两者互不干扰。"
     }
   ]
 }

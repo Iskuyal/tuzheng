@@ -844,6 +844,10 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .source-part-list li.part-insufficient { color: #6b4d16; }
 .source-reason-list, .source-unresolved-list, .source-cited-list { margin: 9px 0 0; padding-left: 19px; color: var(--muted); font-size: 13px; line-height: 1.6; }
 .source-unresolved-list { color: #6b4d16; }
+.source-revision-review { margin: 9px 0 0; padding: 9px 11px; border-left: 3px solid #b7791f; background: #fff8e6; color: #6b4d16; font-size: 13px; line-height: 1.65; border-radius: 0 6px 6px 0; }
+.source-revision-review a { color: inherit; text-decoration: underline; }
+.source-revision-statement { display: block; margin-top: 4px; color: #8a6d3b; }
+.source-library-revision { display: block; margin-top: 2px; color: #6b4d16; font-size: 12px; line-height: 1.6; }
 .source-cited-note { color: var(--quiet); }
 .source-omitted { padding: 14px 15px; border: 1px dashed var(--line-strong); background: #f8faf9; }
 .source-omitted-list { margin: 0; padding-left: 19px; color: #344e5b; font-size: 13px; line-height: 1.65; }

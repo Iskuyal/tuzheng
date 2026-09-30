@@ -236,6 +236,120 @@ const FULL_INVESTIGATION = {
   captionSuggestion: CAPTION_SUGGESTION,
 };
 
+// 阶段四 06：社会消费品零售总额的两份发布——旧值 0.35 被后续发布按官方声明修订为 0.40。
+const RETAIL_DOCUMENT: SourceDocumentFixture = {
+  id: "stats-retail-2026-07",
+  kind: "data-release",
+  title: "2026年1—7月份社会消费品零售总额增长1.2%",
+  publisher: "国家统计局",
+  url: "https://www.stats.gov.cn/sj/zxfb/202608/t20260817_1965052.html",
+  publishedAt: "2026-08-17",
+  basis: { metric: "社会消费品零售总额", period: null, scope: "全国" },
+  aliases: ["社会消费品零售总额"],
+  excerpt: "2026年1—7月份，社会消费品零售总额287744亿元，同比增长1.2%。附注5「环比数据修订」。",
+  measures: [{ basis: "month-on-month", value: 0.35, unit: "%", excerpt: "附注5「环比数据修订」的修订结果表：2026年 6月 环比增速（%）0.35。" }],
+  fingerprint: "017220654d110dda",
+};
+
+const RETAIL_REVISED_DOCUMENT: SourceDocumentFixture = {
+  ...RETAIL_DOCUMENT,
+  id: "stats-retail-2026-08",
+  title: "2026年1—8月份社会消费品零售总额增长1.1%",
+  url: "https://www.stats.gov.cn/sj/zxfb/202609/t20260915_1965311.html",
+  publishedAt: "2026-09-15",
+  excerpt: "2026年1—8月份，社会消费品零售总额327569亿元，同比增长1.1%。附注5「环比数据修订」。",
+  measures: [{ basis: "month-on-month", value: 0.4, unit: "%", excerpt: "附注5「环比数据修订」的修订结果表：2026年 6月 环比增速（%）0.4。" }],
+  fingerprint: "382eec551290742b",
+};
+
+const RETAIL_REVISION_STATEMENT = "根据季节调整模型自动修正的结果，对2025年8月份以来的社会消费品零售总额环比增速进行修订。";
+
+const RETAIL_CLAIM = {
+  ...CAPTION_CLAIM,
+  claimText: "2026 年 6 月社会消费品零售总额环比增长 0.35%",
+  metric: "社会消费品零售总额",
+  period: "2026-06",
+  value: 0.35,
+  basis: "month-on-month",
+  fromImage: false,
+  imageExcerpt: null,
+};
+
+const REVISION_INVESTIGATION = {
+  ...FULL_INVESTIGATION,
+  claims: [RETAIL_CLAIM],
+  conclusions: [
+    {
+      claimText: RETAIL_CLAIM.claimText,
+      claimKind: "direct",
+      fromImage: false,
+      status: "source-mismatch",
+      summary: `与所引国家统计局发布《${RETAIL_DOCUMENT.title}》（2026-08-17）不一致：该发布记载环比 0.4%，主张写 0.35%，相差 0.05 个百分点。版本复查：所引发布的 0.35% 已被官方修订声明修订为 0.4%，本条按修订后值对照。`,
+      basisLabel: "环比",
+      claimValue: 0.35,
+      officialValue: 0.4,
+      difference: 0.05,
+      citedSourceIds: ["stats-retail-2026-07"],
+      reasons: [
+        "依据原句：附注5「环比数据修订」的修订结果表：2026年 6月 环比增速（%）0.4。",
+        `修订声明：${RETAIL_REVISION_STATEMENT}（《${RETAIL_REVISED_DOCUMENT.title}》，2026-09-15）`,
+      ],
+      unresolved: [],
+      parts: [],
+      origin: originTrace(RETAIL_CLAIM),
+      periodNote: null,
+      revisionReview: {
+        fromSourceId: RETAIL_DOCUMENT.id,
+        fromTitle: RETAIL_DOCUMENT.title,
+        fromUrl: RETAIL_DOCUMENT.url,
+        fromPublishedAt: RETAIL_DOCUMENT.publishedAt,
+        fromValue: 0.35,
+        toSourceId: RETAIL_REVISED_DOCUMENT.id,
+        toTitle: RETAIL_REVISED_DOCUMENT.title,
+        toUrl: RETAIL_REVISED_DOCUMENT.url,
+        toPublishedAt: RETAIL_REVISED_DOCUMENT.publishedAt,
+        toValue: 0.4,
+        statement: RETAIL_REVISION_STATEMENT,
+        revisedAt: "2026-09-15",
+      },
+    },
+  ],
+  citations: [{ sourceId: "stats-retail-2026-07", role: "value-basis", note: null }],
+  acceptedCitations: [
+    { sourceId: "stats-retail-2026-07", role: "value-basis", note: null },
+    { sourceId: "stats-retail-2026-08", role: "value-basis", note: null },
+  ],
+  citationsRejected: [],
+  hits: [
+    hit(RETAIL_DOCUMENT, true, ["指标与资料口径匹配", "资料在该月份有记载（2026-06）", "范围与资料一致（全国）"]),
+    hit(RETAIL_REVISED_DOCUMENT, true, ["指标与资料口径匹配", "资料在该月份有记载（2026-06）", "范围与资料一致（全国）"]),
+    hit(TERM_DOCUMENT, false, ["术语解释材料，可用于比较方式说明"]),
+  ],
+  excludedSources: [],
+  unresolvedItems: [],
+  captionSuggestion: {
+    caption: RETAIL_CLAIM.claimText,
+    suggestedCaption: "2026 年 6 月社会消费品零售总额环比增长 0.4%。",
+    changes: [
+      {
+        claimText: RETAIL_CLAIM.claimText,
+        original: "2026 年 6 月社会消费品零售总额环比增长 0.35%",
+        suggested: "2026 年 6 月社会消费品零售总额环比增长 0.4%",
+        kind: "replace-value",
+        reason: "该值已被同系列后续发布按官方修订声明修订为 0.4%，按修订后值改正。",
+        sourceIds: ["stats-retail-2026-08"],
+        status: "source-mismatch",
+        origin: "program",
+        rejectedReason: null,
+        applied: true,
+      },
+    ],
+    rejectedProposals: [],
+    notes: [],
+    fingerprint: "5a1b2c3d4e5f6071",
+  },
+};
+
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const layout = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
@@ -363,6 +477,33 @@ test("修改建议逐处给出原句、理由与引用；采用后写入配文�
   await historyEntry.locator("summary").click();
   await expect(page.getByTestId("history-suggestion")).toContainText("历史建议配文：比上月上涨 0.2%");
   await expect(page.getByTestId("history-suggestion")).toContainText("不代表当前结果");
+  await expectNoHorizontalOverflow(page);
+});
+
+test("版本复查：结论卡展示修订前后值、官方声明原句与两份发布链接", async ({ page }) => {
+  await page.route("**/api/source-audit/investigate", async (route) => {
+    await route.fulfill({ status: 200, json: { investigation: REVISION_INVESTIGATION } });
+  });
+
+  await page.goto("/source-audit");
+  await page.getByTestId("load-source-sample").click();
+  await page.getByTestId("run-source-audit").click();
+
+  // 主张卡默认折叠，展开后再断言版本复查区块。
+  await page.locator(".source-claim-details summary").first().click();
+  const block = page.getByTestId("revision-review");
+  await expect(block).toBeVisible();
+  await expect(block).toContainText("版本复查");
+  await expect(block).toContainText("0.35");
+  await expect(block).toContainText("0.4");
+  await expect(block).toContainText("按修订后值对照");
+  // 官方修订声明逐字展示，并给出被修订发布与修订发布的原始链接。
+  await expect(block).toContainText("季节调整模型自动修正");
+  await expect(block.locator("a").nth(0)).toHaveAttribute("href", RETAIL_DOCUMENT.url);
+  await expect(block.locator("a").nth(1)).toHaveAttribute("href", RETAIL_REVISED_DOCUMENT.url);
+
+  // 建议配文用修订后的值。
+  await expect(page.getByTestId("suggested-caption")).toContainText("0.4");
   await expectNoHorizontalOverflow(page);
 });
 

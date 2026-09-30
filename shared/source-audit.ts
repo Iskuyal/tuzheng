@@ -1,5 +1,6 @@
 import {
   SOURCE_LIBRARY,
+  findSupersedingDocument,
   fnv1a64,
   type ComparisonBasis,
   type SourceDocument,
@@ -350,6 +351,19 @@ function metricMatches(metric: string | null, document: SourceDocument): boolean
   return candidates.some((candidate) => candidate.includes(normalized) || normalized.includes(candidate));
 }
 
+/**
+ * 这份材料覆盖的月份：多月份发布（`measures[].period`）逐行给出，其它材料用 `basis.period`。
+ * 口径判定与检索排序共用它，避免「同一份发布里逐月数值」被当成没有月份的材料。
+ */
+function documentPeriods(document: SourceDocument): string[] {
+  const rowPeriods = document.measures
+    .map((measure) => normalizeSourcePeriod(measure.period))
+    .filter((period): period is string => period !== null);
+  if (rowPeriods.length > 0) return rowPeriods;
+  const basisPeriod = normalizeSourcePeriod(document.basis.period);
+  return basisPeriod ? [basisPeriod] : [];
+}
+
 function termMatches(terms: string[], document: SourceDocument): string[] {
   const haystack = normalizeText([
     document.title,
@@ -387,7 +401,7 @@ export function evaluateApplicability(query: SourceQuery, document: SourceDocume
 
   if (!queryPeriod) {
     missingFields.push("period");
-  } else if (document.basis.period !== queryPeriod) {
+  } else if (!documentPeriods(document).includes(queryPeriod)) {
     mismatchFields.push("period");
   }
 
@@ -422,6 +436,7 @@ export function searchSourceLibrary(
     const metricOk = metricMatches(query.metric, document);
     const matchedTerms = termMatches(query.terms, document);
     const relatedToQuery = metricOk || matchedTerms.length > 0;
+    const periods = documentPeriods(document);
 
     if (metricOk) {
       score += 4;
@@ -434,13 +449,17 @@ export function searchSourceLibrary(
         score += 1.5;
         matchReasons.push("术语解释材料，可用于比较方式说明");
       }
-    } else if (metricOk && queryPeriod && document.basis.period === queryPeriod) {
+    } else if (metricOk && queryPeriod && periods.includes(queryPeriod)) {
       score += 4;
-      matchReasons.push(`资料适用月份为 ${document.basis.period}`);
-    } else if (metricOk && queryPeriod && document.basis.period !== queryPeriod) {
+      matchReasons.push(
+        document.basis.period === queryPeriod
+          ? `资料适用月份为 ${document.basis.period}`
+          : `资料在该月份有记载（${queryPeriod}）`,
+      );
+    } else if (metricOk && queryPeriod && periods.length > 0) {
       // 月份不同的官方材料仍返回，交由调用方看到并排除，不在这里隐藏。
       score += 0.5;
-      matchReasons.push(`资料适用月份为 ${document.basis.period}，与查询月份不同`);
+      matchReasons.push(`资料适用月份为 ${document.basis.period ?? periods.join("／")}，与查询月份不同`);
     }
 
     if (metricOk && query.scope && document.basis.scope) {
@@ -452,7 +471,9 @@ export function searchSourceLibrary(
       }
     }
 
-    if (matchedTerms.length > 0) {
+    // 数据发布只有在指标对得上（或查询根本没给指标）时才靠自由词加分：
+    // 「口径对齐才可比」——否则别的指标的材料会因为一个通用词混进结果。
+    if (matchedTerms.length > 0 && (metricOk || document.kind === "term-explanation" || !query.metric)) {
       score += Math.min(matchedTerms.length, 3) * 0.75;
       matchReasons.push(`命中关键词：${matchedTerms.join("、")}`);
     }
@@ -585,6 +606,30 @@ export interface ClaimEvidencePart {
   sourceId: string | null;
 }
 
+/**
+ * 「版本复查」记录：主张所引发布的值被同系列后续发布按**官方修订声明**改写时，
+ * 程序用修订后的值对照，并把前后值、官方声明原句与两份发布一并留下。
+ * 这不是新的结论状态——结论仍然是五类之一，只是多了一条前后留痕。
+ */
+export interface RevisionReview {
+  /** 主张所引的、被修订的那份发布。 */
+  fromSourceId: string;
+  fromTitle: string;
+  fromUrl: string;
+  fromPublishedAt: string;
+  fromValue: number;
+  /** 带修订声明、提供修订后值的后续发布。 */
+  toSourceId: string;
+  toTitle: string;
+  toUrl: string;
+  toPublishedAt: string;
+  toValue: number;
+  /** 官方修订声明的逐字原句。 */
+  statement: string;
+  /** 本次修订的发布日期。 */
+  revisedAt: string;
+}
+
 export interface ClaimSourceConclusion {
   claimText: string;
   claimKind: SourceClaimKind;
@@ -603,6 +648,11 @@ export interface ClaimSourceConclusion {
   parts: ClaimEvidencePart[];
   /** 主张原文与它声称的出处（图上抄录或配文原文）的核对结果。 */
   origin: ClaimOriginTrace;
+  /**
+   * 版本复查：所引发布的值被官方修订声明改写时，这里记修订前后值与声明原句。
+   * 没有修订关系时为 null（或省略）。
+   */
+  revisionReview?: RevisionReview | null;
   /** 配文只写月份、程序按图上标注补全年份时的说明。 */
   periodNote: string | null;
   /** 这条主张的口径由用户补充确定时的记录；没有补充时为 null。展示时标为「用户提供」。 */
@@ -629,8 +679,68 @@ function formatNumber(value: number): string {
   return new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(value);
 }
 
-function measureFor(document: SourceDocument, basis: ComparisonBasis): SourceMeasure | undefined {
-  return document.measures.find((measure) => measure.basis === basis);
+function measureFor(
+  document: SourceDocument,
+  basis: ComparisonBasis,
+  period?: string | null,
+): SourceMeasure | undefined {
+  const candidates = document.measures.filter((measure) => measure.basis === basis);
+  if (candidates.length === 0) return undefined;
+  const normalizedPeriod = normalizeSourcePeriod(period ?? null);
+  // 多月份发布：逐行月份必须对上，否则不能拿别月的值来核这一条。
+  if (normalizedPeriod && candidates.some((measure) => measure.period !== undefined)) {
+    return candidates.find((measure) => normalizeSourcePeriod(measure.period) === normalizedPeriod);
+  }
+  return candidates.find((measure) => measure.period === undefined) ?? candidates[0];
+}
+
+interface RevisionApplication {
+  /** 提供修订后值的发布。 */
+  document: SourceDocument;
+  measure: SourceMeasure;
+  review: RevisionReview;
+}
+
+/** 修订前后各值的一句话，用在结论摘要里。 */
+function revisionSentence(review: RevisionReview): string {
+  return `所引《${review.fromTitle}》（${review.fromPublishedAt}）记载的 ${formatNumber(review.fromValue)}% `
+    + `已被《${review.toTitle}》（${review.toPublishedAt}）按官方修订声明修订为 ${formatNumber(review.toValue)}%`;
+}
+
+/**
+ * 版本复查：所引发布若有同系列后续发布带官方修订声明，且真的改过这条主张口径上的数值，
+ * 就用修订后的值对照，并留下前后记录。没有修订关系或该月份没被改动时返回 null。
+ * 修订关系只依据资料里的官方声明字段，不由模型判断（与「模型提议、程序把关」同一条规则）。
+ */
+function applyRevision(
+  cited: SourceDocument,
+  citedMeasure: SourceMeasure,
+  claim: SourceClaim,
+): RevisionApplication | null {
+  if (!claim.basis) return null;
+  const superseding = findSupersedingDocument(cited.id);
+  if (!superseding?.revision) return null;
+  if (!evaluateApplicability(claimQueryOf(claim), superseding).applicableForValue) return null;
+  const revised = measureFor(superseding, claim.basis, claim.period);
+  if (!revised || revised.value === citedMeasure.value) return null;
+  return {
+    document: superseding,
+    measure: revised,
+    review: {
+      fromSourceId: cited.id,
+      fromTitle: cited.title,
+      fromUrl: cited.url,
+      fromPublishedAt: cited.publishedAt,
+      fromValue: citedMeasure.value,
+      toSourceId: superseding.id,
+      toTitle: superseding.title,
+      toUrl: superseding.url,
+      toPublishedAt: superseding.publishedAt,
+      toValue: revised.value,
+      statement: superseding.revision.statement,
+      revisedAt: superseding.revision.revisedAt,
+    },
+  };
 }
 
 /** 各比较方式在图上可能出现的写法。 */
@@ -868,13 +978,15 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
 
   // 推断类主张：数字与口径、推断结论分别核对，分别给出支持、矛盾或依据不足。
   if (claim.kind === "inference") {
-    const measure = measureFor(document, claim.basis);
+    const citedMeasure = measureFor(document, claim.basis, claim.period);
     const cite = `所引国家统计局发布《${document.title}》（${document.publishedAt}）`;
-    if (!measure) {
+    if (!citedMeasure) {
       return unsupportedInference(`所引《${document.title}》没有记载${BASIS_LABELS[claim.basis]}数值，无法核对这条推断`, [
         `所引发布未记载${BASIS_LABELS[claim.basis]}口径的数值。`,
       ]);
     }
+    const revision = applyRevision(document, citedMeasure, claim);
+    const measure = revision?.measure ?? citedMeasure;
     const parts: ClaimEvidencePart[] = [];
     if (claim.value !== null) {
       const difference = Number(Math.abs(claim.value - measure.value).toFixed(2));
@@ -899,16 +1011,20 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
     return {
       ...base,
       status,
-      summary: status === "source-match"
+      summary: (status === "source-match"
         ? `与${cite}一致：${joinPartDetails(parts)}。`
         : status === "source-mismatch"
           ? `与${cite}不一致：${joinPartDetails(parts)}。`
-          : `推断依据不足：${joinPartDetails(parts)}；这不代表结论为假，只是现有证据还不能推出它。`,
+          : `推断依据不足：${joinPartDetails(parts)}；这不代表结论为假，只是现有证据还不能推出它。`)
+        + (revision ? `版本复查：${revisionSentence(revision.review)}，本条按修订后值对照。` : ""),
       officialValue: measure.value,
       difference: claim.value === null ? null : Number(Math.abs(claim.value - measure.value).toFixed(2)),
       citedSourceIds: [document.id],
       parts,
-      reasons: [`依据原句：${measure.excerpt}`],
+      reasons: revision
+        ? [`依据原句：${measure.excerpt}`, `修订声明：${revision.review.statement}（《${revision.review.toTitle}》，${revision.review.revisedAt}）`]
+        : [`依据原句：${measure.excerpt}`],
+      ...(revision ? { revisionReview: revision.review } : {}),
       unresolved: status === "source-mismatch"
         ? ["这条推断与所引发布的方向或数字不一致，需要复核配文使用的口径（同比／环比）与数值。"]
         : status === "inference-unsupported"
@@ -918,8 +1034,8 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
   }
 
   // 直接陈述：有数字就比对数字；只写了涨跌方向就按方向比对；两者都没有时保持待核对。
-  const measure = measureFor(document, claim.basis);
-  if (!measure) {
+  const citedMeasure = measureFor(document, claim.basis, claim.period);
+  if (!citedMeasure) {
     return {
       ...base,
       status: "source-pending",
@@ -931,19 +1047,26 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
       unresolved: [],
     };
   }
+  const revision = applyRevision(document, citedMeasure, claim);
+  const measure = revision?.measure ?? citedMeasure;
+  const revisionSuffix = revision ? `（版本复查：${revisionSentence(revision.review)}，本条按修订后值对照）` : "";
+  const measureReasons = revision
+    ? [`依据原句：${measure.excerpt}`, `修订声明：${revision.review.statement}（《${revision.review.toTitle}》，${revision.review.revisedAt}）`]
+    : [`依据原句：${measure.excerpt}`];
 
   if (claim.value === null && claim.direction) {
     const comparison = directionComparison(measure, claim.direction, BASIS_LABELS[claim.basis]);
     return {
       ...base,
       status: comparison.status === "contradicted" ? "source-mismatch" : "source-match",
-      summary: comparison.status === "contradicted"
+      summary: (comparison.status === "contradicted"
         ? `与所引国家统计局发布《${document.title}》（${document.publishedAt}）不一致：${comparison.detail}。`
-        : `与所引国家统计局发布《${document.title}》（${document.publishedAt}）一致：${comparison.detail}。`,
+        : `与所引国家统计局发布《${document.title}》（${document.publishedAt}）一致：${comparison.detail}。`) + revisionSuffix,
       officialValue: measure.value,
       difference: null,
       citedSourceIds: [document.id],
-      reasons: [`依据原句：${measure.excerpt}`],
+      reasons: measureReasons,
+      ...(revision ? { revisionReview: revision.review } : {}),
       unresolved: comparison.status === "contradicted" ? ["需要复核配文使用的口径（同比／环比）与涨跌方向。"] : [],
     };
   }
@@ -964,8 +1087,8 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
   const difference = Number(Math.abs(claim.value - measure.value).toFixed(2));
   const agrees = difference === 0;
   const comparison = agrees
-    ? `与所引国家统计局发布《${document.title}》（${document.publishedAt}）记载的${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}% 一致。`
-    : `与所引国家统计局发布《${document.title}》（${document.publishedAt}）不一致：该发布记载${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}%，主张写 ${formatNumber(claim.value)}%，相差 ${formatNumber(difference)} 个百分点。`;
+    ? `与所引国家统计局发布《${document.title}》（${document.publishedAt}）记载的${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}% 一致。${revisionSuffix}`
+    : `与所引国家统计局发布《${document.title}》（${document.publishedAt}）不一致：该发布记载${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}%，主张写 ${formatNumber(claim.value)}%，相差 ${formatNumber(difference)} 个百分点。${revisionSuffix}`;
 
   return {
     ...base,
@@ -974,7 +1097,8 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
     officialValue: measure.value,
     difference,
     citedSourceIds: [document.id],
-    reasons: [`依据原句：${measure.excerpt}`],
+    reasons: measureReasons,
+    ...(revision ? { revisionReview: revision.review } : {}),
     unresolved: [],
   };
 }
@@ -2169,6 +2293,8 @@ export interface PublicSourceLibraryEntry {
   fingerprint: string;
   distractor?: boolean;
   note?: string;
+  /** 官方修订声明（只有带修订声明的发布才有）。 */
+  revision?: { statement: string; revisedAt: string; supersedes: string };
   measureCount: number;
   aliasCount: number;
 }

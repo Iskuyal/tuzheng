@@ -39,10 +39,36 @@ function hitById(hits: SourceHit[], id: string): SourceHit {
 describe("固定官方资料库", () => {
   it("指纹与元数据自洽，且含一条错口径干扰项", () => {
     expect(verifySourceLibrary()).toEqual([]);
-    expect(SOURCE_LIBRARY).toHaveLength(3);
+    // 三条 CPI 材料（阶段四冻结）+ 两条社会消费品零售总额发布（阶段四 06 的版本修订对）。
+    expect(SOURCE_LIBRARY).toHaveLength(5);
     expect(SOURCE_LIBRARY.filter((document) => document.distractor).map(({ id }) => id)).toEqual([
       "stats-cpi-2026-08",
     ]);
+  });
+
+  it("阶段四 06 的两条社零发布：逐行月份、修订声明与被修订的发布", () => {
+    const earlier = findSourceDocument("stats-retail-2026-07");
+    const later = findSourceDocument("stats-retail-2026-08");
+
+    // 多月份发布：basis.period 为空，月份在逐行数值上。
+    expect(earlier?.basis).toEqual({ metric: "社会消费品零售总额", period: null, scope: "全国" });
+    expect(earlier?.measures.every((measure) => measure.period !== undefined)).toBe(true);
+    expect(earlier?.measures.find((measure) => measure.period === "2026-06")).toMatchObject({
+      basis: "month-on-month",
+      value: 0.35,
+    });
+    expect(later?.measures.find((measure) => measure.period === "2026-06")).toMatchObject({
+      basis: "month-on-month",
+      value: 0.4,
+    });
+
+    // 修订声明逐字取自 2026-09-15 发布的附注 5，并指向被修订的那份发布。
+    expect(later?.revision).toEqual({
+      statement: "根据季节调整模型自动修正的结果，对2025年8月份以来的社会消费品零售总额环比增速进行修订。",
+      revisedAt: "2026-09-15",
+      supersedes: "stats-retail-2026-07",
+    });
+    expect(earlier?.revision).toBeUndefined();
   });
 
   it("记录原始链接、发布机构、发布日期与适用口径", () => {
@@ -846,3 +872,125 @@ describe("配文覆盖度", () => {
     expect(coverage.uncovered?.length).toBeGreaterThan(20);
   });
 });
+
+describe("版本修订与版本替代（阶段四 06）", () => {
+  const RETAIL_QUERY = {
+    metric: "社会消费品零售总额",
+    period: "2026-06",
+    scope: "全国",
+    terms: ["环比"],
+  };
+
+  function retailClaim(overrides: Partial<SourceClaim>): SourceClaim {
+    return {
+      claimText: "2026 年 6 月社会消费品零售总额环比增长 0.35%",
+      metric: "社会消费品零售总额",
+      scope: "全国",
+      period: "2026-06",
+      value: 0.35,
+      basis: "month-on-month",
+      kind: "direct",
+      fromImage: false,
+      ...overrides,
+    };
+  }
+
+  it("多月份发布按逐行月份判定口径，模型可以检索到，且不会污染别的指标", () => {
+    const hits = searchSourceLibrary(RETAIL_QUERY);
+    expect(hits.map((hit) => hit.document.id)).toEqual([
+      "stats-retail-2026-07",
+      "stats-retail-2026-08",
+      "stats-term-yoy-mom",
+    ]);
+    expect(hitById(hits, "stats-retail-2026-07").applicability.applicableForValue).toBe(true);
+    expect(hitById(hits, "stats-retail-2026-07").matchReasons).toContain("资料在该月份有记载（2026-06）");
+
+    // 阶段四已冻结的 CPI 检索结果不受新指标影响。
+    expect(searchSourceLibrary(CPI_QUERY).map((hit) => hit.document.id)).toEqual([
+      "stats-cpi-2025-12",
+      "stats-cpi-2026-08",
+      "stats-term-yoy-mom",
+    ]);
+    // 社零发布也不能给 CPI 主张当数值依据，反之亦然。
+    expect(
+      evaluateApplicability(CPI_QUERY, findSourceDocument("stats-retail-2026-07") as SourceDocument).applicableForValue,
+    ).toBe(false);
+    expect(
+      evaluateApplicability(RETAIL_QUERY, findSourceDocument("stats-cpi-2025-12") as SourceDocument).applicableForValue,
+    ).toBe(false);
+  });
+
+  it("引用被修订的发布时用修订后的值对照，并留下前后记录", () => {
+    const hits = searchSourceLibrary(RETAIL_QUERY);
+    const outcome = auditClaimsAgainstSources({
+      claims: [retailClaim({})],
+      citations: [{ sourceId: "stats-retail-2026-07", role: "value-basis", note: null }],
+      hits,
+    });
+
+    const conclusion = outcome.conclusions[0];
+    expect(conclusion.status).toBe("source-mismatch");
+    expect(conclusion.officialValue).toBe(0.4);
+    expect(conclusion.difference).toBe(0.05);
+    expect(conclusion.revisionReview).toMatchObject({
+      fromSourceId: "stats-retail-2026-07",
+      fromValue: 0.35,
+      toSourceId: "stats-retail-2026-08",
+      toValue: 0.4,
+      revisedAt: "2026-09-15",
+    });
+    expect(conclusion.revisionReview?.statement).toContain("季节调整模型自动修正");
+    expect(conclusion.summary).toContain("版本复查");
+    expect(conclusion.summary).toContain("修订为 0.4%");
+    expect(conclusion.reasons.join(" ")).toContain("修订声明");
+  });
+
+  it("写修订后的值时判为一致，并说明按修订后值对照", () => {
+    const hits = searchSourceLibrary(RETAIL_QUERY);
+    const outcome = auditClaimsAgainstSources({
+      claims: [retailClaim({ value: 0.4, claimText: "2026 年 6 月社会消费品零售总额环比增长 0.40%" })],
+      citations: [{ sourceId: "stats-retail-2026-07", role: "value-basis", note: null }],
+      hits,
+    });
+
+    const conclusion = outcome.conclusions[0];
+    expect(conclusion.status).toBe("source-match");
+    expect(conclusion.officialValue).toBe(0.4);
+    expect(conclusion.revisionReview).toMatchObject({ fromValue: 0.35, toValue: 0.4 });
+    expect(conclusion.summary).toContain("版本复查");
+  });
+
+  it("直接引用修订后的发布时没有可替代的旧值，不产生修订记录", () => {
+    const hits = searchSourceLibrary(RETAIL_QUERY);
+    const outcome = auditClaimsAgainstSources({
+      claims: [retailClaim({ value: 0.4, claimText: "2026 年 6 月社会消费品零售总额环比增长 0.40%" })],
+      citations: [{ sourceId: "stats-retail-2026-08", role: "value-basis", note: null }],
+      hits,
+    });
+
+    const conclusion = outcome.conclusions[0];
+    expect(conclusion.status).toBe("source-match");
+    expect(conclusion.officialValue).toBe(0.4);
+    expect(conclusion.revisionReview ?? null).toBeNull();
+  });
+
+  it("推断类主张也按修订后的值判方向：旧值 0.35 改成 0.40 后「下降」仍不成立", () => {
+    const hits = searchSourceLibrary(RETAIL_QUERY);
+    const outcome = auditClaimsAgainstSources({
+      claims: [retailClaim({
+        claimText: "2026 年 6 月社会消费品零售总额环比下降",
+        kind: "inference",
+        value: null,
+        direction: "down",
+      })],
+      citations: [{ sourceId: "stats-retail-2026-07", role: "value-basis", note: null }],
+      hits,
+    });
+
+    const conclusion = outcome.conclusions[0];
+    expect(conclusion.status).toBe("source-mismatch");
+    expect(conclusion.revisionReview).toMatchObject({ fromValue: 0.35, toValue: 0.4 });
+    expect(conclusion.summary).toContain("版本复查");
+  });
+});
+
