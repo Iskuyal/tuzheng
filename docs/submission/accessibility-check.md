@@ -14,6 +14,8 @@
 | 引用的公开来源链接 | 通过 | `curl -L` 实测三条资料库链接均返回 200（见第 2 节） | 无 |
 | 公网在线演示 | 本次不提供（决定与条件见第 4 节） | — | 不阻塞提交；若要提供需另做密钥与可用性方案 |
 
+> 同日复核（阶段五 05 可先行部分，2026-09-30）：三条国家统计局链接仍返回 200、技术 PDF 仍为 24/30 页、仓库仍为 `PRIVATE`、`docs/submission/assets/` 仍为 20 张替身响应截图——本表结论未变；仓库内链接（README 34 条相对链接）与密钥排查（`git ls-files` 只有 `.env.example`、`GET /api/settings` 只回 `hasApiKey` 布尔值）见 [issues/05 的可先行部分记录](../../.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md)。
+
 ## 2. 外部链接可达性实测（2026-09-30）
 
 ```powershell
