@@ -13,6 +13,8 @@ import {
 } from "./model-connection.js";
 import {
   FileModelSettingsStore,
+  InvalidModelSettingsError,
+  createDefaultModelSettings,
   MODEL_PROVIDERS,
   activeProviderConfig,
   toPublicModelSettings,
@@ -21,6 +23,7 @@ import {
   type ModelSettingsStore,
   type ProviderConfig,
 } from "./model-settings.js";
+import { isCompletedModelEndpoint, modelBaseUrlSchema } from "./model-base-url.js";
 import { parseVisionObservation } from "./observation.js";
 import { sampleCases } from "../shared/samples.js";
 import {
@@ -74,32 +77,9 @@ export interface AppOptions {
   sessionStore?: SourceSessionStore;
 }
 
-function isCompletedModelEndpoint(value: string): boolean {
-  try {
-    const path = decodeURIComponent(new URL(value).pathname).replace(/\/+$/, "").toLowerCase();
-    return ["/responses", "/chat/completions", "/completions", "/messages"]
-      .some((suffix) => path.endsWith(suffix));
-  } catch {
-    return false;
-  }
-}
-
 const settingsUpdateSchema = z.object({
   provider: z.enum(MODEL_PROVIDERS).optional(),
-  baseUrl: z.string().url().max(500).refine((value) => {
-    const url = new URL(value);
-    const localHost = url.hostname === "localhost"
-      || url.hostname.endsWith(".localhost")
-      || url.hostname === "[::1]"
-      || url.hostname.startsWith("127.");
-    const secureTransport = url.protocol === "https:" || (url.protocol === "http:" && localHost);
-    return secureTransport
-      && !url.username
-      && !url.password
-      && !url.search
-      && !url.hash
-      && !isCompletedModelEndpoint(value);
-  }),
+  baseUrl: modelBaseUrlSchema,
   model: z.string().trim().min(1).max(120),
   apiKey: z.string().max(1000).optional(),
   clearApiKey: z.boolean().optional(),
@@ -196,6 +176,14 @@ function sendInvestigationError(error: unknown, response: express.Response): voi
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
   const settingsStore = options.settingsStore ?? new FileModelSettingsStore();
+  async function settingsForSave(): Promise<ModelSettings> {
+    try {
+      return await settingsStore.read();
+    } catch (error) {
+      if (error instanceof InvalidModelSettingsError) return createDefaultModelSettings();
+      throw error;
+    }
+  }
   const sessionStore = options.sessionStore ?? new SourceSessionStore();
   const createVisionAdapter = options.visionAdapterFactory ?? ((settings: ModelSettings) => {
     const { provider, config } = activeProviderConfig(settings);
@@ -227,7 +215,7 @@ export function createApp(options: AppOptions = {}): Express {
       return;
     }
 
-    const settings = resolvedModelSettings(await settingsStore.read(), parsed.data);
+    const settings = resolvedModelSettings(await settingsForSave(), parsed.data);
     await settingsStore.write(settings);
     response.json({ settings: toPublicModelSettings(settings) });
   });
@@ -241,7 +229,7 @@ export function createApp(options: AppOptions = {}): Express {
       return;
     }
 
-    const settings = resolvedModelSettings(await settingsStore.read(), parsed.data);
+    const settings = resolvedModelSettings(await settingsForSave(), parsed.data);
     if (!settings.providers[settings.activeProvider].apiKey) {
       response.status(400).json({
         error: { code: "MODEL_NOT_CONFIGURED", message: "请填写 API Key，或先保存密钥后再测试连接。" },
@@ -542,6 +530,12 @@ export function createApp(options: AppOptions = {}): Express {
       return;
     }
 
+    if (!sessionStore.tryBeginResume(session.id)) {
+      response.status(409).json({
+        error: { code: "SESSION_BUSY", message: "这次调查正在处理另一份补充，请等待处理完成后再操作。" },
+      });
+      return;
+    }
     try {
       const investigation: SourceInvestigationResult = await runSourceInvestigation(session.driver, {
         caption,
@@ -554,10 +548,16 @@ export function createApp(options: AppOptions = {}): Express {
       response.json({ investigation });
     } catch (error) {
       sendInvestigationError(error, response);
+    } finally {
+      sessionStore.endResume(session.id);
     }
   });
 
   app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
+    if (error instanceof InvalidModelSettingsError) {
+      response.status(503).json({ error: { code: "INVALID_STORED_SETTINGS", message: error.message } });
+      return;
+    }
     if (error instanceof MulterError) {
       if (error.code === "LIMIT_FILE_SIZE") {
         response.status(413).json({

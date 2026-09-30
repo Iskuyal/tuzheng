@@ -12,6 +12,7 @@ import {
   type SourceHit,
 } from "../shared/source-audit.js";
 import { auditClaimsAgainstSources } from "../shared/source-audit.js";
+import { suggestionIndependenceProblems } from "../scripts/evaluate-source-audit.js";
 import {
   runSourceInvestigation,
   type SourceInvestigationDriver,
@@ -79,6 +80,37 @@ function contextOf(
 }
 
 describe("建议配文的生成规则", () => {
+  it("数字正确但推断方向相反时纠正方向，程序兜底也必须通过校验", () => {
+    const caption = "2025 年 12 月全国 CPI 环比上涨 0.2%，所以物价比上月下降。";
+    const claims = [claim({ claimText: caption, kind: "inference", basis: "month-on-month", value: 0.2, direction: "down" })];
+    const audit = auditOf({ caption, claims, citations: VALUE_CITATIONS });
+    expect(audit.conclusions[0].status).toBe("source-mismatch");
+    const suggestion = buildCaptionSuggestion({ caption, claims, conclusions: audit.conclusions, hits: cpiHits(), acceptedCitations: audit.acceptedCitations });
+    expect(suggestion.suggestedCaption).not.toContain("下降");
+    expect(validateCaptionChangeText(suggestion.changes[0].suggested, {
+      caption, claim: claims[0], conclusion: audit.conclusions[0], claims, hits: cpiHits(), acceptedCitations: audit.acceptedCitations,
+    }).ok).toBe(true);
+  });
+
+  it("只检索到旧发布时，版本替代的引用、摘要与模型建议均使用修订发布", () => {
+    const caption = "2026 年 6 月社会消费品零售总额环比增长 0.35%。";
+    const claims = [claim({ claimText: caption, metric: "社会消费品零售总额", period: "2026-06", basis: "month-on-month", value: 0.35 })];
+    const hits = searchSourceLibrary({ metric: claims[0].metric, period: claims[0].period, scope: "全国", terms: [] })
+      .filter((hit) => hit.document.id === "stats-retail-2026-07");
+    const audit = auditOf({ caption, claims, hits, citations: [{ sourceId: "stats-retail-2026-07", role: "value-basis", note: null }] });
+    expect(audit.conclusions[0].citedSourceIds).toEqual(["stats-retail-2026-08"]);
+    expect(audit.acceptedCitations).toContainEqual(expect.objectContaining({ sourceId: "stats-retail-2026-08", role: "value-basis" }));
+    const corrected = caption.replace("0.35", "0.40");
+    const suggestion = buildCaptionSuggestion({
+      caption, claims, conclusions: audit.conclusions, hits: audit.hits,
+      acceptedCitations: audit.acceptedCitations,
+      proposals: [{ claimText: caption, suggestedText: corrected, reason: "按官方修订发布改正" }],
+    });
+    expect(suggestion.changes[0]).toMatchObject({ origin: "model", sourceIds: ["stats-retail-2026-08"] });
+    expect(suggestion.rejectedProposals).toEqual([]);
+    expect(suggestion.suggestedCaption).toBe(corrected);
+  });
+
   it("与所引来源一致时保留原句，建议配文与原配文相同", () => {
     const caption = "12 月 CPI 同比上涨 0.8%。";
     const claims = [claim()];
@@ -625,7 +657,23 @@ describe("改写提议字段的容错解析", () => {
   });
 });
 
-describe("编排层贯通建议配文", () => {  it("汇总里的改写提议通过校验时被采用，逐处带理由与当前有效引用", async () => {
+describe("编排层贯通建议配文", () => {
+  it("从模型只检索旧发布到修订建议，完整结果通过评测侧独立复算", async () => {
+    const caption = "2026 年 6 月社会消费品零售总额环比增长 0.35%";
+    const retail = claim({ claimText: caption, metric: "社会消费品零售总额", period: "2026-06", value: 0.35, basis: "month-on-month" });
+    const driver = scriptedDriver([
+      toolReply([toolCall(SEARCH_TOOL_NAME, { metric: retail.metric, period: "2026-07", scope: "全国", terms: [] })]),
+      toolReply([reportCall({ claims: [retail], citations: [{ sourceId: "stats-retail-2026-07", role: "value-basis", note: null }] })]),
+    ]);
+    const result = await runSourceInvestigation(driver, { caption });
+    expect(result.captionSuggestion?.suggestedCaption).toContain("0.4%");
+    expect(result.conclusions[0].citedSourceIds).toEqual(["stats-retail-2026-08"]);
+    expect(result.acceptedCitations.find((entry) => entry.sourceId === "stats-retail-2026-08")?.note).toContain("程序版本复查");
+    expect(result.toolCallsUsed).toBe(1);
+    expect(suggestionIndependenceProblems(result, caption)).toEqual([]);
+  });
+
+  it("汇总里的改写提议通过校验时被采用，逐处带理由与当前有效引用", async () => {
     const driver = scriptedDriver([
       toolReply([SEARCH_CALL]),
       toolReply([reportCall({

@@ -65,6 +65,51 @@ function memorySettingsStore(
 }
 
 describe("单图审计 API", () => {
+  it.each(["http://127.0.0.1:3101/v1", "http://127.0.0.2:3101/v1", "http://localhost:3101/v1", "http://[::1]:3101/v1"])("真实回环地址 %s 仍可保存", async (baseUrl) => {
+    const store = memorySettingsStore("openai-responses");
+    await request(createApp({ settingsStore: store })).put("/api/settings").send({ baseUrl, model: "reader" }).expect(200);
+    expect((await store.read()).providers["openai-responses"].baseUrl).toBe(baseUrl);
+  });
+  it.each(["openai-responses", "anthropic"] as const)("%s 拒绝伪装成 127 回环的 HTTP 域名，保存与连接测试都不触发模型", async (provider) => {
+    let connections = 0;
+    const store = memorySettingsStore(provider);
+    const before = await store.read();
+    const app = createApp({ settingsStore: store, connectionTester: async () => { connections += 1; throw new Error("不应调用"); } });
+    for (const baseUrl of ["http://127.attacker.example/v1", "http://127.0.0.1.attacker.example/v1"]) {
+      const body = { provider, baseUrl, model: "reader", apiKey: "fake-secret" };
+      await request(app).put("/api/settings").send(body).expect(400);
+      await request(app).post("/api/settings/test-connection").send(body).expect(400);
+    }
+    expect(connections).toBe(0);
+    expect(await store.read()).toEqual(before);
+  });
+
+  it("损坏的本机设置可由合法保存恢复，I/O 错误仍阻止保存", async () => {
+    const { mkdtemp, writeFile, rm } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    const { tmpdir } = await import("node:os");
+    const { FileModelSettingsStore } = await import("../server/model-settings.js");
+    const directory = await mkdtemp(join(tmpdir(), "settings-recovery-"));
+    try {
+      const store = new FileModelSettingsStore(join(directory, "settings.json"));
+      await writeFile(store.filePath, "{broken", "utf8");
+      const unreadable = await request(createApp({ settingsStore: store })).get("/api/settings").expect(503);
+      expect(unreadable.body.error.code).toBe("INVALID_STORED_SETTINGS");
+      expect(unreadable.body.error.message).toContain("重新填写两种协议");
+      const response = await request(createApp({ settingsStore: store })).put("/api/settings")
+        .send({ provider: "anthropic", baseUrl: "https://example.com/v1", model: "reader", apiKey: "test-key" }).expect(200);
+      expect(response.body.settings.providers.anthropic.hasApiKey).toBe(true);
+      expect((await store.read()).providers.anthropic.model).toBe("reader");
+      let writes = 0;
+      await request(createApp({ settingsStore: {
+        read: async () => { throw new Error("EACCES"); }, write: async () => { writes += 1; },
+      } })).put("/api/settings").send({ baseUrl: "https://example.com/v1", model: "reader" }).expect(500);
+      expect(writes).toBe(0);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it("列出团队自制样例", async () => {
     const response = await request(createApp()).get("/api/samples").expect(200);
 
@@ -1085,6 +1130,51 @@ describe("补证恢复 API", () => {
       "report_source_finding",
     ]);
     expect(result.clarification).toBeNull(); // 追问次数已用完，恢复段不再产生新追问
+  });
+
+  it("同一调查在恢复期间拒绝第二份回答，结束后不能消费同一追问两次", async () => {
+    const { app, driver, investigation } = await initialInvestigation();
+    let entered!: () => void;
+    let release!: () => void;
+    const started = new Promise<void>((resolve) => { entered = resolve; });
+    const barrier = new Promise<void>((resolve) => { release = resolve; });
+    const originalResume = driver.resume.bind(driver);
+    driver.resume = async (message) => { entered(); await barrier; return originalResume(message); };
+    driver.replies.push(sourceReply({ calls: [REPORT_NO_BASIS] }));
+    const submit = (answer: string) => request(app).post("/api/source-audit/resume")
+      .field("caption", CAPTION).field("answer", answer).field("investigationId", investigation.investigationId)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" });
+    const first = submit("同比").then((response) => response);
+    await started;
+    try {
+      const second = await submit("环比").timeout({ response: 1_000 });
+      expect(second.status).toBe(409);
+      expect(second.body.error.code).toBe("SESSION_BUSY");
+    } finally {
+      release();
+      await first;
+    }
+    expect((await first).status).toBe(200);
+    expect(driver.resumedWith).toHaveLength(1);
+    await submit("环比").expect(409);
+  });
+
+  it("恢复失败会释放会话锁，下一次补充可继续处理", async () => {
+    const { app, driver, investigation } = await initialInvestigation();
+    const originalResume = driver.resume.bind(driver);
+    let attempt = 0;
+    driver.resume = async (message) => {
+      if (attempt++ === 0) throw new SourceInvestigationError("upstream");
+      return originalResume(message);
+    };
+    driver.replies.push(sourceReply({ calls: [REPORT_NO_BASIS] }));
+    const submit = () => request(app).post("/api/source-audit/resume")
+      .field("caption", CAPTION).field("answer", "同比").field("investigationId", investigation.investigationId)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" });
+    await submit().expect(502);
+    const response = await submit().expect(200);
+    expect(response.body.investigation.conclusions[0].status).toBe("source-match");
+    expect(driver.resumedWith).toHaveLength(1);
   });
 
   it("已过期或不存在的调查记录拒绝恢复", async () => {

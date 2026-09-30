@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { z } from "zod";
 import { MODEL_PROVIDERS, type ModelProvider } from "../shared/model-providers.js";
+import { modelBaseUrlSchema } from "./model-base-url.js";
 
 export { MODEL_PROVIDERS };
 export type { ModelProvider };
@@ -70,7 +71,7 @@ export function activeProviderConfig(settings: ModelSettings): {
 }
 
 const providerConfigSchema = z.object({
-  baseUrl: z.string().url().max(500),
+  baseUrl: modelBaseUrlSchema,
   model: z.string().trim().min(1).max(120),
   apiKey: z.string().max(1000),
 }).strict();
@@ -84,7 +85,7 @@ const storedSettingsSchema = z.object({
 }).strict();
 
 const legacyStoredSettingsSchema = z.object({
-  baseUrl: z.string().url().max(500),
+  baseUrl: modelBaseUrlSchema,
   model: z.string().trim().min(1).max(120),
   apiKey: z.string().max(1000),
 }).strict();
@@ -112,6 +113,13 @@ export function toPublicModelSettings(settings: ModelSettings): PublicModelSetti
   };
 }
 
+/** 仅格式/地址损坏可由设置页重建；文件权限与磁盘错误必须保留。 */
+export class InvalidModelSettingsError extends Error {
+  constructor(message = "本机模型设置文件格式无效或服务地址不安全。") {
+    super(`${message}请重新填写两种协议并保存，未重填的协议将恢复默认值。`);
+  }
+}
+
 export class FileModelSettingsStore implements ModelSettingsStore {
   constructor(readonly filePath = getDefaultSettingsPath()) {}
 
@@ -130,7 +138,7 @@ export class FileModelSettingsStore implements ModelSettingsStore {
     try {
       parsedJson = JSON.parse(contents) as unknown;
     } catch {
-      throw new Error("本机模型设置文件无法读取，请在设置页重新保存。");
+      throw new InvalidModelSettingsError("本机模型设置文件无法读取。");
     }
 
     const parsed = storedSettingsSchema.safeParse(parsedJson);
@@ -156,7 +164,7 @@ export class FileModelSettingsStore implements ModelSettingsStore {
       };
     }
 
-    throw new Error("本机模型设置文件格式无效，请在设置页重新保存。");
+    throw new InvalidModelSettingsError();
   }
 
   async write(settings: ModelSettings): Promise<void> {
