@@ -59,5 +59,7 @@ jobs:
         with:
           name: playwright-trace
           path: .cache/playwright/test-results/
+          # .cache 是隐藏目录；只开启上述测试产物范围，不上传整个缓存。
+          include-hidden-files: true
           retention-days: 7
           if-no-files-found: ignore

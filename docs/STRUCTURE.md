@@ -21,7 +21,7 @@
 
 根目录 `tsconfig.json` 只引用 `config/tsconfig.web.json`、`config/tsconfig.server.json` 与 `config/tsconfig.e2e.json`，让编辑器分别采用 DOM、Node 与浏览器测试所需的类型。`config/tsconfig.base.json` 保存共用选项，服务端编译配置独立保存在 `config/tsconfig.server.build.json`。
 
-Vite 与 Vitest 的项目根仍是仓库根；Vite 页面根为 `web/`。Playwright 的用例目录相对于配置文件为 `../e2e/`，产物在 `.cache/playwright/test-results/`，CI 从同一路径收集失败 trace。TypeScript 构建信息在 `.cache/typescript/`。原测试产物保存在 `.cache/playwright/previous-test-results/`，原构建信息以 `legacy-` 前缀保留在缓存目录。
+Vite 与 Vitest 的项目根仍是仓库根；Vite 页面根为 `web/`。Playwright 的用例目录相对于配置文件为 `../e2e/`，产物在 `.cache/playwright/test-results/`，CI 从同一路径收集失败 trace，并在这个狭窄路径内启用隐藏文件上传。TypeScript 构建信息在 `.cache/typescript/`。原测试产物保存在 `.cache/playwright/previous-test-results/`，原构建信息以 `legacy-` 前缀保留在缓存目录。
 
 前端构建输出 `dist/client/`，服务端入口输出 `dist/server/server/index.js`。`.env.example` 只记录可选 API 端口；API 与 Vite 代理均读取根目录 `.env` 的 `PORT`，启动进程中的同名变量优先。模型密钥仍由设置页与本机用户配置文件管理。
 

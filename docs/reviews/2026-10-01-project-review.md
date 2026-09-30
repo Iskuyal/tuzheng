@@ -45,6 +45,7 @@
 - 8 份工具/分层配置移到 `config/`；根 `tsconfig.json` 保持 IDE 入口，同步 npm 与 CI。
 - 赛事原文移到 `docs/competition/`，内容保持原样；计划、当前交接提示与任务中的路径同步。
 - Playwright 产物归入 `.cache/playwright/test-results/`，构建信息归入 `.cache/typescript/`；保留既有测试产物与本机编辑器/调研状态。
+- CI 在测试产物这一条路径上启用隐藏文件上传，避免 `.cache/` 被 Action 默认排除；依据 [upload-artifact v4 的参数定义](https://github.com/actions/upload-artifact/blob/v4/action.yml)。本轮未另行制造远端失败来实测 trace 上传，不把静态路径核对当作实际上传证据。
 - 新增 `npm run docs:check` 并纳入 CI，修复 issue 06 的候选资料失效链接。只证明本地文件存在，不证明网络/锚点/验收。
 - 保持旧的逐日验收与在线 JSON 原始证据；同步当前说明和技术 PDF 总结，明确本次修复未在线复验。PDF 保持字体大小、收紧段落行距与前两章间距，避免章末出处孤页；表格行不拆分，最终为 23 页。
 
