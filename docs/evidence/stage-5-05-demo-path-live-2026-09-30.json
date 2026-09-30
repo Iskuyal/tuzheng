@@ -1,0 +1,862 @@
+{
+  "generatedAt": "2026-09-30T16:10:51.402Z",
+  "arms": [
+    "retrieval"
+  ],
+  "runsPerArm": 1,
+  "provider": "anthropic",
+  "model": "deepseek-flash",
+  "baseUrl": "https://api.deepseek.com/anthropic/v1",
+  "questionCount": 20,
+  "records": [
+    {
+      "questionId": "q04-caption-yoy-value-as-mom",
+      "arm": "retrieval",
+      "run": 1,
+      "phase": "before",
+      "status": "ok",
+      "failureKind": null,
+      "failureMessage": null,
+      "latencyMs": 6849,
+      "rounds": 3,
+      "toolCallsUsed": 3,
+      "toolSequence": [
+        "search_source_library:ok",
+        "search_source_library:ok",
+        "compare_values:ok",
+        "report_source_finding:ok"
+      ],
+      "reportRejections": [],
+      "stopReason": "模型在看完工具结果后给出汇总。",
+      "clarification": null,
+      "supplement": null,
+      "conclusionChanges": null,
+      "noApplicableSourceReason": null,
+      "model": "deepseek-flash",
+      "usage": {
+        "inputTokens": 216,
+        "outputTokens": 868
+      },
+      "conclusions": [
+        {
+          "claimText": "比上月上涨 0.8%。",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": "month-on-month",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-mismatch",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）不一致：该发布记载环比 0.2%，主张写 0.8%，相差 0.6 个百分点。"
+        },
+        {
+          "claimText": "2025 年 12 月全国 CPI 上涨 0.8%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": true,
+          "basis": null,
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "来源待核对：主张没有写明比较方式，无法与具体数值对照。"
+        },
+        {
+          "claimText": "0.8%",
+          "kind": "direct",
+          "direction": null,
+          "fromImage": true,
+          "basis": null,
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "来源待核对：主张没有写明比较方式，无法与具体数值对照。"
+        }
+      ],
+      "acceptedCitations": [
+        "stats-cpi-2025-12|value-basis",
+        "stats-term-yoy-mom|term-explanation"
+      ],
+      "rejectedCitations": [],
+      "fabricatedCitations": [],
+      "recalledCitations": [],
+      "hitIds": [
+        "stats-cpi-2025-12",
+        "stats-cpi-2026-08",
+        "stats-term-yoy-mom"
+      ],
+      "excludedIds": [
+        "stats-cpi-2026-08",
+        "stats-term-yoy-mom"
+      ],
+      "omittedClaims": [],
+      "captionCoverage": 1,
+      "captionCoverageNote": null,
+      "suggestion": {
+        "suggestedCaption": "比上月上涨 0.2%。",
+        "changes": [
+          {
+            "claimText": "比上月上涨 0.8%。",
+            "kind": "replace-value",
+            "suggested": "比上月上涨 0.2%。",
+            "status": "source-mismatch",
+            "origin": "model",
+            "sourceIds": [
+              "stats-cpi-2025-12"
+            ]
+          }
+        ],
+        "rejectedProposals": [],
+        "notes": []
+      },
+      "judgment": {
+        "ok": true,
+        "problems": []
+      }
+    },
+    {
+      "questionId": "q05-caption-wrong-month-distractor",
+      "arm": "retrieval",
+      "run": 1,
+      "phase": "before",
+      "status": "ok",
+      "failureKind": null,
+      "failureMessage": null,
+      "latencyMs": 8194,
+      "rounds": 3,
+      "toolCallsUsed": 5,
+      "toolSequence": [
+        "search_source_library:ok",
+        "search_source_library:ok",
+        "compare_values:ok",
+        "compare_values:ok",
+        "compare_values:ok",
+        "report_source_finding:ok"
+      ],
+      "reportRejections": [],
+      "stopReason": "模型在看完工具结果后给出汇总。",
+      "clarification": null,
+      "supplement": null,
+      "conclusionChanges": null,
+      "noApplicableSourceReason": null,
+      "model": "deepseek-flash",
+      "usage": {
+        "inputTokens": 176,
+        "outputTokens": 1136
+      },
+      "conclusions": [
+        {
+          "claimText": "2026 年 8 月全国 CPI",
+          "kind": "direct",
+          "direction": null,
+          "fromImage": false,
+          "basis": null,
+          "period": "2026-08",
+          "scope": "全国",
+          "value": null,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2026-08"
+          ],
+          "summary": "来源待核对：主张没有写明比较方式，无法与具体数值对照。"
+        },
+        {
+          "claimText": "比上月上涨 0.8%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": "month-on-month",
+          "period": "2026-08",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-mismatch",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2026-08"
+          ],
+          "summary": "与所引国家统计局发布《2026年8月份居民消费价格同比上涨0.8%》（2026-09-09）不一致：该发布记载环比 0.4%，主张写 0.8%，相差 0.4 个百分点。"
+        },
+        {
+          "claimText": "2025 年 12 月全国 CPI 上涨 0.8%",
+          "kind": "direct",
+          "direction": null,
+          "fromImage": true,
+          "basis": null,
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "来源待核对：主张没有写明比较方式，无法与具体数值对照。"
+        }
+      ],
+      "acceptedCitations": [
+        "stats-cpi-2026-08|value-basis",
+        "stats-cpi-2025-12|value-basis",
+        "stats-term-yoy-mom|term-explanation"
+      ],
+      "rejectedCitations": [],
+      "fabricatedCitations": [],
+      "recalledCitations": [],
+      "hitIds": [
+        "stats-cpi-2026-08",
+        "stats-cpi-2025-12",
+        "stats-term-yoy-mom"
+      ],
+      "excludedIds": [
+        "stats-term-yoy-mom"
+      ],
+      "omittedClaims": [
+        {
+          "claimText": "0.8%",
+          "source": "other"
+        },
+        {
+          "claimText": "全国 · 2025 年 12 月",
+          "source": "other"
+        }
+      ],
+      "captionCoverage": 1,
+      "captionCoverageNote": "另有 2 处模型声明但没有展开的图上说明文字，一并保留原文，不计入配文覆盖。",
+      "suggestion": {
+        "suggestedCaption": "2026 年 8 月全国 CPI（暂未核实） 比上月（环比）上涨 0.4%。",
+        "changes": [
+          {
+            "claimText": "2026 年 8 月全国 CPI",
+            "kind": "keep-qualified",
+            "suggested": "2026 年 8 月全国 CPI（暂未核实）",
+            "status": "source-pending",
+            "origin": "program",
+            "sourceIds": [
+              "stats-cpi-2026-08"
+            ]
+          },
+          {
+            "claimText": "比上月上涨 0.8%",
+            "kind": "replace-value",
+            "suggested": "比上月（环比）上涨 0.4%",
+            "status": "source-mismatch",
+            "origin": "model",
+            "sourceIds": [
+              "stats-cpi-2026-08"
+            ]
+          }
+        ],
+        "rejectedProposals": [
+          {
+            "claimText": "2026 年 8 月全国 CPI",
+            "rejectedReason": "这条主张还没有得到适用来源支持：改写必须保留限定（例如「暂未核实」）或建议删除。"
+          }
+        ],
+        "notes": [
+          "另有 2 处模型声明但没有展开的图上说明文字，一并保留原文，不计入配文覆盖。"
+        ]
+      },
+      "judgment": {
+        "ok": true,
+        "problems": []
+      }
+    },
+    {
+      "questionId": "q13-inference-mom-contradicted",
+      "arm": "retrieval",
+      "run": 1,
+      "phase": "before",
+      "status": "ok",
+      "failureKind": null,
+      "failureMessage": null,
+      "latencyMs": 6917,
+      "rounds": 3,
+      "toolCallsUsed": 4,
+      "toolSequence": [
+        "search_source_library:ok",
+        "search_source_library:ok",
+        "compare_values:ok",
+        "compare_values:ok",
+        "report_source_finding:ok"
+      ],
+      "reportRejections": [],
+      "stopReason": "模型在看完工具结果后给出汇总。",
+      "clarification": null,
+      "supplement": null,
+      "conclusionChanges": null,
+      "noApplicableSourceReason": null,
+      "model": "deepseek-flash",
+      "usage": {
+        "inputTokens": 236,
+        "outputTokens": 736
+      },
+      "conclusions": [
+        {
+          "claimText": "8 月 CPI 比上月便宜。",
+          "kind": "inference",
+          "direction": "down",
+          "fromImage": false,
+          "basis": "month-on-month",
+          "period": "2026-08",
+          "scope": "全国",
+          "value": 0.4,
+          "status": "source-mismatch",
+          "parts": [
+            {
+              "label": "数字与口径",
+              "status": "supported"
+            },
+            {
+              "label": "推断结论",
+              "status": "contradicted"
+            }
+          ],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2026-08"
+          ],
+          "summary": "与所引国家统计局发布《2026年8月份居民消费价格同比上涨0.8%》（2026-09-09）不一致：该发布记载环比 0.4%，与主张中的数字一致；该发布记载环比 0.4%，方向为上涨，与这条推断断言的「下降」相反。"
+        },
+        {
+          "claimText": "2026 年 8 月 全国 CPI 同比上涨 0.8%",
+          "kind": "direct",
+          "direction": null,
+          "fromImage": true,
+          "basis": "year-on-year",
+          "period": "2026-08",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-match",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2026-08"
+          ],
+          "summary": "与所引国家统计局发布《2026年8月份居民消费价格同比上涨0.8%》（2026-09-09）记载的同比 0.8% 一致。"
+        },
+        {
+          "claimText": "2026 年 7 月 全国 CPI 同比上涨 1.0%",
+          "kind": "direct",
+          "direction": null,
+          "fromImage": true,
+          "basis": "year-on-year",
+          "period": "2026-07",
+          "scope": "全国",
+          "value": 1,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [],
+          "summary": "来源待核对：所引来源与主张口径不一致，不能作为数值依据。"
+        }
+      ],
+      "acceptedCitations": [
+        "stats-cpi-2026-08|value-basis",
+        "stats-term-yoy-mom|term-explanation"
+      ],
+      "rejectedCitations": [],
+      "fabricatedCitations": [],
+      "recalledCitations": [],
+      "hitIds": [
+        "stats-cpi-2026-08",
+        "stats-cpi-2025-12",
+        "stats-term-yoy-mom"
+      ],
+      "excludedIds": [
+        "stats-cpi-2025-12",
+        "stats-term-yoy-mom"
+      ],
+      "omittedClaims": [],
+      "captionCoverage": 1,
+      "captionCoverageNote": null,
+      "suggestion": {
+        "suggestedCaption": "8 月 CPI 比上月上涨 0.4%。",
+        "changes": [
+          {
+            "claimText": "8 月 CPI 比上月便宜。",
+            "kind": "replace-value",
+            "suggested": "8 月 CPI 比上月上涨 0.4%。",
+            "status": "source-mismatch",
+            "origin": "program",
+            "sourceIds": [
+              "stats-cpi-2026-08"
+            ]
+          }
+        ],
+        "rejectedProposals": [
+          {
+            "claimText": "8 月 CPI 比上月便宜。",
+            "rejectedReason": "建议仍保留了与来源不一致的数值 0.4%。"
+          }
+        ],
+        "notes": [
+          "模型提出的改写都没有通过逐处校验，建议由程序按当前结论生成。"
+        ]
+      },
+      "judgment": {
+        "ok": true,
+        "problems": []
+      }
+    },
+    {
+      "questionId": "q18-clarify-basis-resume",
+      "arm": "retrieval",
+      "run": 1,
+      "phase": "before",
+      "status": "ok",
+      "failureKind": null,
+      "failureMessage": null,
+      "latencyMs": 7619,
+      "rounds": 4,
+      "toolCallsUsed": 5,
+      "toolSequence": [
+        "search_source_library:ok",
+        "search_source_library:ok",
+        "compare_values:ok",
+        "compare_values:ok",
+        "request_clarification:ok",
+        "report_source_finding:ok"
+      ],
+      "reportRejections": [],
+      "stopReason": "模型在看完工具结果后给出汇总。",
+      "clarification": {
+        "question": "配文「12 月 CPI 上涨 0.8%」中的 0.8% 指的是同比（与 2024 年 12 月相比）还是环比（与 2025 年 11 月相比）？",
+        "purpose": "这决定该主张的 basis 与结论：国家统计局 2025-12 全国居民消费价格同比上涨 0.8%、环比上涨 0.2%。若为同比，配文数值与所引来源一致；若为环比，数值应为 0.2%，配文的 0.8% 不成立。",
+        "field": "basis",
+        "claimText": "12 月 CPI 上涨 0.8%。"
+      },
+      "supplement": null,
+      "conclusionChanges": null,
+      "noApplicableSourceReason": null,
+      "model": "deepseek-flash",
+      "usage": {
+        "inputTokens": 226,
+        "outputTokens": 739
+      },
+      "conclusions": [
+        {
+          "claimText": "12 月 CPI 上涨 0.8%。",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": null,
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "来源待核对：主张没有写明比较方式，无法与具体数值对照。"
+        },
+        {
+          "claimText": "2025 年 12 月全国 CPI 同比上涨 0.8%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": true,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-match",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）记载的同比 0.8% 一致。"
+        },
+        {
+          "claimText": "0.8%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": true,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-match",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）记载的同比 0.8% 一致。"
+        }
+      ],
+      "acceptedCitations": [
+        "stats-cpi-2025-12|value-basis",
+        "stats-term-yoy-mom|term-explanation"
+      ],
+      "rejectedCitations": [],
+      "fabricatedCitations": [],
+      "recalledCitations": [],
+      "hitIds": [
+        "stats-cpi-2025-12",
+        "stats-cpi-2026-08",
+        "stats-term-yoy-mom"
+      ],
+      "excludedIds": [
+        "stats-cpi-2026-08",
+        "stats-term-yoy-mom"
+      ],
+      "omittedClaims": [],
+      "captionCoverage": 1,
+      "captionCoverageNote": null,
+      "suggestion": {
+        "suggestedCaption": "12 月 CPI 上涨 0.8%。（暂未核实）。",
+        "changes": [
+          {
+            "claimText": "12 月 CPI 上涨 0.8%。",
+            "kind": "keep-qualified",
+            "suggested": "12 月 CPI 上涨 0.8%。（暂未核实）",
+            "status": "source-pending",
+            "origin": "program",
+            "sourceIds": [
+              "stats-cpi-2025-12"
+            ]
+          }
+        ],
+        "rejectedProposals": [
+          {
+            "claimText": "12 月 CPI 上涨 0.8%。",
+            "rejectedReason": "原文没有写明比较方式，建议不替它补一个口径（这正是需要用户确认的部分）。"
+          }
+        ],
+        "notes": [
+          "本次没有可以据以改正配文的适用来源，建议只保留限定表述或删除未核实内容。",
+          "模型提出的改写都没有通过逐处校验，建议由程序按当前结论生成。"
+        ]
+      },
+      "judgment": {
+        "ok": true,
+        "problems": []
+      }
+    },
+    {
+      "questionId": "q18-clarify-basis-resume",
+      "arm": "retrieval",
+      "run": 1,
+      "phase": "after",
+      "status": "ok",
+      "failureKind": null,
+      "failureMessage": null,
+      "latencyMs": 5850,
+      "rounds": 6,
+      "toolCallsUsed": 5,
+      "toolSequence": [
+        "search_source_library:ok",
+        "search_source_library:ok",
+        "compare_values:ok",
+        "compare_values:ok",
+        "request_clarification:ok",
+        "report_source_finding:ok",
+        "report_source_finding:ok"
+      ],
+      "reportRejections": [],
+      "stopReason": "轮次达到上限（含补证前的轮次）后汇总。",
+      "clarification": null,
+      "supplement": {
+        "question": "配文「12 月 CPI 上涨 0.8%」中的 0.8% 指的是同比（与 2024 年 12 月相比）还是环比（与 2025 年 11 月相比）？",
+        "purpose": "这决定该主张的 basis 与结论：国家统计局 2025-12 全国居民消费价格同比上涨 0.8%、环比上涨 0.2%。若为同比，配文数值与所引来源一致；若为环比，数值应为 0.2%，配文的 0.8% 不成立。",
+        "field": "basis",
+        "claimText": "12 月 CPI 上涨 0.8%。",
+        "answer": "同比",
+        "normalized": "year-on-year",
+        "applied": true,
+        "conflicts": [],
+        "parseNote": null,
+        "note": "比较方式由用户补充确定，标为用户提供（不是官方来源）。"
+      },
+      "conclusionChanges": [
+        {
+          "claimText": "12 月 CPI 上涨 0.8%。",
+          "before": "source-pending",
+          "after": "source-match",
+          "changed": true,
+          "reason": "用户补充确定了比较方式，据此重新核对。"
+        },
+        {
+          "claimText": "2025 年 12 月全国 CPI 同比上涨 0.8%",
+          "before": "source-match",
+          "after": "source-match",
+          "changed": false,
+          "reason": "补证后重新检索并核对，状态未变。"
+        },
+        {
+          "claimText": "0.8%",
+          "before": "source-match",
+          "after": "source-match",
+          "changed": false,
+          "reason": "补证后重新检索并核对，状态未变。"
+        }
+      ],
+      "noApplicableSourceReason": null,
+      "model": "deepseek-flash",
+      "usage": {
+        "inputTokens": 4590,
+        "outputTokens": 716
+      },
+      "conclusions": [
+        {
+          "claimText": "12 月 CPI 上涨 0.8%。",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-match",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）记载的同比 0.8% 一致。"
+        },
+        {
+          "claimText": "2025 年 12 月全国 CPI 同比上涨 0.8%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": true,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-match",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）记载的同比 0.8% 一致。"
+        },
+        {
+          "claimText": "0.8%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": true,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-match",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）记载的同比 0.8% 一致。"
+        }
+      ],
+      "acceptedCitations": [
+        "stats-cpi-2025-12|value-basis",
+        "stats-term-yoy-mom|term-explanation"
+      ],
+      "rejectedCitations": [],
+      "fabricatedCitations": [],
+      "recalledCitations": [],
+      "hitIds": [
+        "stats-cpi-2025-12",
+        "stats-cpi-2026-08",
+        "stats-term-yoy-mom"
+      ],
+      "excludedIds": [
+        "stats-cpi-2026-08",
+        "stats-term-yoy-mom"
+      ],
+      "omittedClaims": [],
+      "captionCoverage": 1,
+      "captionCoverageNote": null,
+      "suggestion": {
+        "suggestedCaption": "12 月 CPI 上涨 0.8%。",
+        "changes": [
+          {
+            "claimText": "12 月 CPI 上涨 0.8%。",
+            "kind": "unchanged",
+            "suggested": "12 月 CPI 上涨 0.8%。",
+            "status": "source-match",
+            "origin": "program",
+            "sourceIds": [
+              "stats-cpi-2025-12"
+            ]
+          }
+        ],
+        "rejectedProposals": [
+          {
+            "claimText": "12 月 CPI 上涨 0.8%。",
+            "rejectedReason": "这条主张与所引来源一致，建议保留原句；不采用改写提议。"
+          }
+        ],
+        "notes": [
+          "模型提出的改写都没有通过逐处校验，建议由程序按当前结论生成。"
+        ]
+      },
+      "judgment": {
+        "ok": true,
+        "problems": []
+      }
+    },
+    {
+      "questionId": "q20-rewrite-replace-and-qualify",
+      "arm": "retrieval",
+      "run": 1,
+      "phase": "before",
+      "status": "ok",
+      "failureKind": null,
+      "failureMessage": null,
+      "latencyMs": 6370,
+      "rounds": 2,
+      "toolCallsUsed": 2,
+      "toolSequence": [
+        "search_source_library:ok",
+        "search_source_library:ok",
+        "report_source_finding:ok"
+      ],
+      "reportRejections": [],
+      "stopReason": "模型在看完工具结果后给出汇总。",
+      "clarification": null,
+      "supplement": null,
+      "conclusionChanges": null,
+      "noApplicableSourceReason": "配文主张「2026 年 5 月 CPI 比上月上涨 0.1%」在本次检索中没有任何覆盖 2026-05 的材料（命中的是 2025-12 与 2026-08，月份均不匹配），因此该主张无可用数值依据，不能以其他月份的数值替代核对。",
+      "model": "deepseek-flash",
+      "usage": {
+        "inputTokens": 1614,
+        "outputTokens": 1371
+      },
+      "conclusions": [
+        {
+          "claimText": "2025 年 12 月 CPI 同比上涨 0.2%",
+          "kind": "direct",
+          "direction": null,
+          "fromImage": false,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.2,
+          "status": "source-mismatch",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）不一致：该发布记载同比 0.8%，主张写 0.2%，相差 0.6 个百分点。"
+        },
+        {
+          "claimText": "2026 年 5 月 CPI 比上月上涨 0.1%",
+          "kind": "direct",
+          "direction": null,
+          "fromImage": false,
+          "basis": "month-on-month",
+          "period": "2026-05",
+          "scope": "全国",
+          "value": 0.1,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [],
+          "summary": "来源待核对：所引来源与主张口径不一致，不能作为数值依据。"
+        },
+        {
+          "claimText": "2025 年 12 月全国 CPI 同比上涨 0.8%",
+          "kind": "direct",
+          "direction": null,
+          "fromImage": true,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-match",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）记载的同比 0.8% 一致。"
+        }
+      ],
+      "acceptedCitations": [
+        "stats-cpi-2025-12|value-basis",
+        "stats-term-yoy-mom|term-explanation"
+      ],
+      "rejectedCitations": [],
+      "fabricatedCitations": [],
+      "recalledCitations": [],
+      "hitIds": [
+        "stats-cpi-2025-12",
+        "stats-cpi-2026-08",
+        "stats-term-yoy-mom"
+      ],
+      "excludedIds": [
+        "stats-cpi-2026-08",
+        "stats-term-yoy-mom"
+      ],
+      "omittedClaims": [
+        {
+          "claimText": "全国 · 2025 年 12 月 · 同比　0.8%",
+          "source": "other"
+        },
+        {
+          "claimText": "本卡片标出比较方式：同比（比上年同月）。",
+          "source": "other"
+        }
+      ],
+      "captionCoverage": 1,
+      "captionCoverageNote": "另有 2 处模型声明但没有展开的图上说明文字，一并保留原文，不计入配文覆盖。",
+      "suggestion": {
+        "suggestedCaption": "2025 年 12 月 CPI 同比上涨 0.8%，2026 年 5 月 CPI 比上月上涨 0.1%（暂未核实）。",
+        "changes": [
+          {
+            "claimText": "2025 年 12 月 CPI 同比上涨 0.2%",
+            "kind": "replace-value",
+            "suggested": "2025 年 12 月 CPI 同比上涨 0.8%",
+            "status": "source-mismatch",
+            "origin": "model",
+            "sourceIds": [
+              "stats-cpi-2025-12"
+            ]
+          },
+          {
+            "claimText": "2026 年 5 月 CPI 比上月上涨 0.1%",
+            "kind": "keep-qualified",
+            "suggested": "2026 年 5 月 CPI 比上月上涨 0.1%（暂未核实）",
+            "status": "source-pending",
+            "origin": "model",
+            "sourceIds": []
+          }
+        ],
+        "rejectedProposals": [],
+        "notes": [
+          "另有 2 处模型声明但没有展开的图上说明文字，一并保留原文，不计入配文覆盖。"
+        ]
+      },
+      "judgment": {
+        "ok": true,
+        "problems": []
+      }
+    }
+  ]
+}
