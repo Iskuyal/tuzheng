@@ -551,15 +551,25 @@ function sourceReply(options: { calls?: Array<{ id: string; name: string; input:
 }
 
 function scriptedSourceDriver(
-  replies: Array<ReturnType<typeof sourceReply>>,
+  initialReplies: Array<ReturnType<typeof sourceReply>>,
   finalizeReply?: ReturnType<typeof sourceReply>,
 ) {
+  const replies = [...initialReplies];
   let index = 0;
+  const next = (): ReturnType<typeof sourceReply> => replies[index++] ?? sourceReply({});
   return {
     model: "stub-source-model",
-    async start() { return replies[index++] ?? sourceReply({}); },
-    async continue() { return replies[index++] ?? sourceReply({}); },
-    async finalize() { return finalizeReply ?? replies[index++] ?? sourceReply({}); },
+    /** 后续恢复段可继续追加脚本回复。 */
+    replies,
+    /** 记录恢复段收到的用户消息，便于断言补证确实注入了同一段对话。 */
+    resumedWith: [] as string[],
+    async start() { return next(); },
+    async resume(message: string) {
+      this.resumedWith.push(message);
+      return next();
+    },
+    async continue() { return next(); },
+    async finalize() { return finalizeReply ?? next(); },
   };
 }
 
@@ -948,6 +958,7 @@ describe("CPI 图文来源核验 API", () => {
       investigationDriverFactory: () => ({
         model: "stub-source-model",
         start: async () => { throw new SourceInvestigationError(kind); },
+        resume: async () => { throw new SourceInvestigationError(kind); },
         continue: async () => sourceReply({}),
         finalize: async () => sourceReply({}),
       }),
@@ -961,5 +972,272 @@ describe("CPI 图文来源核验 API", () => {
 
     expect(response.body.error.code).toBe(code);
     expect(response.body).not.toHaveProperty("investigation");
+  });
+});
+
+
+describe("补证恢复 API", () => {
+  const CAPTION = "12 月 CPI 上涨 0.8%";
+
+  const CLARIFY_CALL = {
+    id: "c1",
+    name: "request_clarification",
+    input: {
+      question: "配文没有写比较方式，0.8% 是同比还是环比？",
+      purpose: "比较方式决定用同比 0.8% 还是环比 0.2% 核对，结论会不同。",
+      field: "basis",
+      claimText: "12 月 CPI 上涨 0.8%",
+    },
+  };
+  const CLAIM_NO_BASIS = {
+    claimText: "12 月 CPI 上涨 0.8%",
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period: "2025-12",
+    value: 0.8,
+    basis: null,
+    kind: "direct",
+    direction: null,
+    fromImage: false,
+    imageExcerpt: null,
+  };
+  const REPORT_NO_BASIS = {
+    id: "r1",
+    name: "report_source_finding",
+    input: {
+      claims: [CLAIM_NO_BASIS],
+      citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+      noApplicableSourceReason: null,
+      unresolvedItems: ["需要确认比较方式才能继续核对。"],
+      omittedClaims: [],
+    },
+  };
+  const SEARCH_CALL = {
+    id: "s1",
+    name: "search_source_library",
+    input: { metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: [] },
+  };
+
+  /** 初查：检索 + 追问 + 汇总（口径留空），返回带 clarification 的结果。 */
+  async function initialInvestigation(
+    extra: { sessionStore?: import("../server/source-sessions.js").SourceSessionStore } = {},
+  ) {
+    const driver = scriptedSourceDriver([
+      sourceReply({ calls: [SEARCH_CALL, CLARIFY_CALL] }),
+      sourceReply({ calls: [REPORT_NO_BASIS] }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+      ...extra,
+    });
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", CAPTION)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+    return { app, driver, investigation: response.body.investigation };
+  }
+
+  it("追问后沿同一记录恢复，补充标为用户提供，预算与轨迹接续", async () => {
+    const { app, driver, investigation } = await initialInvestigation();
+    expect(investigation.clarification).toMatchObject({ field: "basis", claimText: "12 月 CPI 上涨 0.8%" });
+    expect(investigation.investigationId).toBeTruthy();
+    expect(investigation.inputFingerprint).toBeTruthy();
+    expect(investigation.toolCallsUsed).toBe(2); // 检索 + 追问
+    expect(investigation.conclusions[0].status).toBe("source-pending");
+
+    driver.replies.push(sourceReply({ calls: [REPORT_NO_BASIS] }));
+
+    const resumed = await request(app)
+      .post("/api/source-audit/resume")
+      .field("caption", CAPTION)
+      .field("answer", "同比")
+      .field("investigationId", investigation.investigationId)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const result = resumed.body.investigation;
+    // 同一记录 ID，补证前后关联。
+    expect(result.investigationId).toBe(investigation.investigationId);
+    // 用户回答注入了原对话，标明「用户提供」。
+    expect(driver.resumedWith).toHaveLength(1);
+    expect(driver.resumedWith[0]).toContain("用户提供");
+    // 预算接续：初查 2 次 + 恢复段 0 次新工具调用 = 2，不因恢复清零重算。
+    expect(result.toolCallsUsed).toBe(2);
+    expect(result.supplement).toMatchObject({ field: "basis", answer: "同比", applied: true, parseNote: null });
+    expect(result.conclusions[0].status).toBe("source-match");
+    expect(result.conclusions[0].reasons.join("")).toContain("由用户补充确定");
+    expect(result.conclusionChanges).toEqual([
+      expect.objectContaining({ before: "source-pending", after: "source-match", changed: true }),
+    ]);
+    // 轨迹含补证前的检索与追问事件 + 恢复段的汇总，同一记录能看到检索条件与全过程。
+    expect(result.trace.map((event: { tool: string }) => event.tool)).toEqual([
+      "search_source_library",
+      "request_clarification",
+      "report_source_finding",
+      "report_source_finding",
+    ]);
+    expect(result.clarification).toBeNull(); // 追问次数已用完，恢复段不再产生新追问
+  });
+
+  it("已过期或不存在的调查记录拒绝恢复", async () => {
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => scriptedSourceDriver([]),
+    });
+    const response = await request(app)
+      .post("/api/source-audit/resume")
+      .field("caption", CAPTION)
+      .field("answer", "同比")
+      .field("investigationId", "not-a-real-id")
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(410);
+    expect(response.body.error.code).toBe("SESSION_EXPIRED");
+    expect(response.body).not.toHaveProperty("investigation");
+  });
+
+  it("会话过期后不能靠恢复复活旧结论", async () => {
+    let now = 1_000;
+    const { SourceSessionStore } = await import("../server/source-sessions.js");
+    const store = new SourceSessionStore({ ttlMs: 60_000, now: () => now });
+    const { app, investigation } = await initialInvestigation({ sessionStore: store });
+
+    now += 60_001; // 越过 TTL
+
+    const response = await request(app)
+      .post("/api/source-audit/resume")
+      .field("caption", CAPTION)
+      .field("answer", "同比")
+      .field("investigationId", investigation.investigationId)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(410);
+    expect(response.body.error.code).toBe("SESSION_EXPIRED");
+    expect(response.body).not.toHaveProperty("investigation");
+  });
+
+  it("改动配文后旧结论失效，恢复被指纹校验拒绝", async () => {
+    const { app, investigation } = await initialInvestigation();
+    const response = await request(app)
+      .post("/api/source-audit/resume")
+      .field("caption", `${CAPTION}，创年内新高`) // 改动输入
+      .field("answer", "同比")
+      .field("investigationId", investigation.investigationId)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(409);
+    expect(response.body.error.code).toBe("INPUT_CHANGED");
+    expect(response.body.error.message).toContain("已失效");
+    expect(response.body).not.toHaveProperty("investigation");
+  });
+
+  it("初查没有追问时不能恢复", async () => {
+    const driver = scriptedSourceDriver([
+      sourceReply({ calls: [SEARCH_CALL] }),
+      sourceReply({ calls: [REPORT_NO_BASIS] }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+    const investigated = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", CAPTION)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const response = await request(app)
+      .post("/api/source-audit/resume")
+      .field("caption", CAPTION)
+      .field("answer", "同比")
+      .field("investigationId", investigated.body.investigation.investigationId)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(409);
+    expect(response.body.error.code).toBe("NO_PENDING_CLARIFICATION");
+    expect(response.body).not.toHaveProperty("investigation");
+  });
+
+  it("缺少回答或记录 ID 时在调用模型前拒绝", async () => {
+    const { app, driver, investigation } = await initialInvestigation();
+
+    const noAnswer = await request(app)
+      .post("/api/source-audit/resume")
+      .field("caption", CAPTION)
+      .field("investigationId", investigation.investigationId)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(400);
+    expect(noAnswer.body.error.code).toBe("ANSWER_REQUIRED");
+
+    const noId = await request(app)
+      .post("/api/source-audit/resume")
+      .field("caption", CAPTION)
+      .field("answer", "同比")
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(400);
+    expect(noId.body.error.code).toBe("INVESTIGATION_ID_REQUIRED");
+
+    expect(driver.resumedWith).toEqual([]);
+  });
+
+  it("用户补充与配文冲突时保留双方并保持待核对", async () => {
+    const captionMom = "12 月 CPI 比上月上涨 0.2%";
+    const claimMom = {
+      claimText: "12 月 CPI 比上月上涨 0.2%",
+      metric: "全国居民消费价格",
+      scope: "全国",
+      period: "2025-12",
+      value: 0.2,
+      basis: "month-on-month",
+      kind: "direct",
+      direction: null,
+      fromImage: false,
+      imageExcerpt: null,
+    };
+    const reportMom = {
+      id: "r1",
+      name: "report_source_finding",
+      input: {
+        claims: [claimMom],
+        citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+        noApplicableSourceReason: null,
+        unresolvedItems: [],
+        omittedClaims: [],
+      },
+    };
+    const clarifyMom = {
+      ...CLARIFY_CALL,
+      input: { ...CLARIFY_CALL.input, question: "配文这句的比较方式是什么？", claimText: claimMom.claimText },
+    };
+    const driver = scriptedSourceDriver([
+      sourceReply({ calls: [SEARCH_CALL, clarifyMom] }),
+      sourceReply({ calls: [reportMom] }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+    const investigated = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", captionMom)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+    expect(investigated.body.investigation.conclusions[0].status).toBe("source-match");
+
+    driver.replies.push(sourceReply({ calls: [reportMom] }));
+    const resumed = await request(app)
+      .post("/api/source-audit/resume")
+      .field("caption", captionMom)
+      .field("answer", "同比") // 与配文明写的环比冲突
+      .field("investigationId", investigated.body.investigation.investigationId)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const result = resumed.body.investigation;
+    expect(result.claims[0].basis).toBe("month-on-month");
+    expect(result.conclusions[0].status).toBe("source-pending");
+    expect(result.conclusions[0].reasons.join("")).toContain("图上／配文写明：环比");
+    expect(result.conclusions[0].reasons.join("")).toContain("用户补充：同比");
+    expect(result.supplement?.conflicts).toEqual([
+      { claimText: "12 月 CPI 比上月上涨 0.2%", field: "basis", fromImage: "环比", fromUser: "同比" },
+    ]);
   });
 });

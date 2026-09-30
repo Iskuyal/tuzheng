@@ -525,3 +525,201 @@ test("没有模型密钥时给出可操作提示，并列出固定资料库", as
   await expect(page.locator(".source-library-list")).toContainText("干扰项");
   await expectNoHorizontalOverflow(page);
 });
+
+test("追问 → 提交补充 → 沿同一记录恢复出新结论，旧结论转为历史", async ({ page }) => {
+  const CLARIFICATION_INVESTIGATION = {
+    ...FULL_INVESTIGATION,
+    investigationId: "inv-1",
+    inputFingerprint: "fp-1",
+    claims: [CAPTION_CLAIM],
+    conclusions: [FULL_INVESTIGATION.conclusions[1]],
+    clarification: {
+      question: "配文没有写比较方式，0.8% 是同比还是环比？",
+      purpose: "比较方式决定用同比 0.8% 还是环比 0.2% 核对，结论会不同。",
+      field: "basis",
+      claimText: CAPTION_CLAIM.claimText,
+    },
+    supplement: null,
+    conclusionChanges: null,
+  };
+  const RESUMED_INVESTIGATION = {
+    ...FULL_INVESTIGATION,
+    investigationId: "inv-1",
+    inputFingerprint: "fp-1",
+    claims: [{ ...CAPTION_CLAIM, basis: "year-on-year" }],
+    conclusions: [
+      {
+        ...FULL_INVESTIGATION.conclusions[1],
+        status: "source-match",
+        basisLabel: "同比",
+        summary: "与所引国家统计局发布一致：该发布记载同比 0.8%，与主张中的数字一致。",
+        officialValue: 0.8,
+        difference: 0,
+        parts: [{ label: "数字与口径", status: "supported", detail: "该发布记载同比 0.8%，与主张中的数字一致", sourceId: "stats-cpi-2025-12" }],
+        supplement: { field: "basis", raw: "同比", normalized: "year-on-year", applied: true, conflict: null },
+        reasons: ["依据原句：2025年12月份，全国居民消费价格同比上涨0.8%。", "比较方式「同比」由用户补充确定（用户提供，仅用于确定口径，不是官方来源）。"],
+        unresolved: [],
+      },
+    ],
+    clarification: null,
+    supplement: {
+      question: "配文没有写比较方式，0.8% 是同比还是环比？",
+      purpose: "比较方式决定用同比 0.8% 还是环比 0.2% 核对，结论会不同。",
+      field: "basis",
+      claimText: CAPTION_CLAIM.claimText,
+      answer: "同比",
+      normalized: "year-on-year",
+      applied: true,
+      conflicts: [],
+      parseNote: null,
+      note: "比较方式由用户补充确定，标为用户提供（不是官方来源）。",
+    },
+    conclusionChanges: [
+      {
+        claimText: CAPTION_CLAIM.claimText,
+        before: "source-mismatch",
+        after: "source-match",
+        changed: true,
+        reason: "用户补充确定了比较方式，据此重新核对。",
+      },
+    ],
+  };
+
+  await page.route("**/api/source-audit/investigate", async (route) => {
+    await route.fulfill({ status: 200, json: { investigation: CLARIFICATION_INVESTIGATION } });
+  });
+  await page.route("**/api/source-audit/resume", async (route) => {
+    const fields = route.request().postData() ?? "";
+    if (!fields.includes("answer")) throw new Error("恢复请求缺少回答");
+    await route.fulfill({ status: 200, json: { investigation: RESUMED_INVESTIGATION } });
+  });
+
+  await page.goto("/source-audit");
+  await page.getByTestId("load-source-sample").click();
+  await expect(page.locator(".source-image-stage img")).toBeVisible();
+  await page.getByTestId("run-source-audit").click();
+
+  // 追问与回答入口可见，追问指明影响哪条主张与哪项口径。
+  const clarify = page.getByTestId("clarification-block");
+  await expect(clarify).toContainText("同比还是环比");
+  await expect(clarify).toContainText("影响的主张");
+  await expect(clarify).toContainText(CAPTION_CLAIM.claimText);
+  await expect(clarify).toContainText("用户提供");
+
+  // 补证前的结论是「与来源不一致」。
+  const beforeCard = page.locator(".source-claim-card").filter({ hasText: CAPTION_CLAIM.claimText });
+  await expect(beforeCard.locator(".source-state-pill")).toHaveText("与来源不一致");
+
+  // 提交补充回答。
+  await page.getByTestId("clarification-answer").fill("同比");
+  await page.getByTestId("submit-clarification").click();
+
+  // 恢复段成为当前结果：补证记录标为用户提供，结论改判。
+  const supplement = page.getByTestId("supplement-block");
+  await expect(supplement).toContainText("用户回答（用户提供）：同比");
+  await expect(supplement).toContainText("标为用户提供（不是官方来源）");
+  const afterCard = page.locator(".source-claim-card").filter({ hasText: CAPTION_CLAIM.claimText });
+  await expect(afterCard.locator(".source-state-pill")).toHaveText("与来源一致");
+  await expect(afterCard).toContainText("由用户补充确定");
+
+  // 补证前后对照：结论为什么变。
+  const changes = page.getByTestId("conclusion-changes");
+  await expect(changes).toContainText(CAPTION_CLAIM.claimText);
+  await expect(changes).toContainText("与来源不一致");
+  await expect(changes).toContainText("与来源一致");
+  await expect(changes).toContainText("用户补充确定了比较方式");
+
+  // 补证前的结论只作历史展示。
+  const history = page.getByTestId("history-section");
+  await expect(history).toContainText("仅作历史展示");
+  await expect(history).toContainText("已由补证结果接续");
+  const entry = page.getByTestId("history-entry-0");
+  await entry.locator("summary").click();
+  await expect(entry).toContainText("历史");
+  await expect(entry).toContainText("与来源不一致");
+
+  await expectNoHorizontalOverflow(page);
+});
+
+test("现场改配文后旧结论立即失效转为历史，迟到响应不复活它", async ({ page }) => {
+  const releases: Array<() => void> = [];
+  let started = 0;
+  let settled = 0;
+  let responseNumber = 0;
+  await page.route("**/api/source-audit/investigate", async (route) => {
+    const number = ++responseNumber;
+    started += 1;
+    // 第 2 次请求挂起：制造「输入改动时响应仍在途」的窗口。
+    if (number === 2) {
+      await new Promise<void>((resolve) => { releases.push(resolve); });
+    }
+    try {
+      await route.fulfill({ status: 200, json: { investigation: FULL_INVESTIGATION } });
+    } catch {
+      // 客户端取消或作废后，浏览器可能已关闭这次请求。
+    } finally {
+      settled += 1;
+    }
+  });
+
+  await page.goto("/source-audit");
+  await page.getByTestId("load-source-sample").click();
+  await expect(page.locator(".source-image-stage img")).toBeVisible();
+  await page.getByTestId("run-source-audit").click();
+  await expect(page.getByTestId("stop-reason")).toBeVisible();
+
+  // 现场改配文（改范围／月份等口径都写在配文里）→ 当前结论立即失效。
+  await page.locator("#source-audit-caption").fill("全国城市 12 月 CPI 同比上涨 0.8%。");
+  await expect(page.locator(".source-result")).toHaveCount(0);
+  const history = page.getByTestId("history-section");
+  await expect(history).toContainText("配文已改动，结论已失效");
+  await expect(history).toContainText("仅作历史展示");
+
+  // 重新发起核验，让请求挂在途中，然后再次改配文作废它。
+  await page.getByTestId("run-source-audit").click();
+  await expect.poll(() => started).toBe(2);
+  await page.locator("#source-audit-caption").fill("12 月 CPI 上涨 0.8%，创年内新高。");
+  releases.shift()?.();
+  await expect.poll(() => settled).toBe(2);
+
+  // 迟到响应被丢弃：当前仍无结果，旧结论只在历史里。
+  await expect(page.locator(".source-result")).toHaveCount(0);
+  await expect(page.getByTestId("stop-reason")).toHaveCount(0);
+  await expect(page.getByTestId("history-section")).toContainText("仅作历史展示");
+
+  await expectNoHorizontalOverflow(page);
+});
+
+test("重新核验后取消，旧结论不复活且只作历史展示", async ({ page }) => {
+  const releases: Array<() => void> = [];
+  let started = 0;
+  await page.route("**/api/source-audit/investigate", async (route) => {
+    const number = (started += 1);
+    if (number === 2) {
+      await new Promise<void>((resolve) => { releases.push(resolve); });
+    }
+    try {
+      await route.fulfill({ status: 200, json: { investigation: FULL_INVESTIGATION } });
+    } catch {
+      // 取消后浏览器已关闭这次请求。
+    }
+  });
+
+  await page.goto("/source-audit");
+  await page.getByTestId("load-source-sample").click();
+  await expect(page.locator(".source-image-stage img")).toBeVisible();
+  await page.getByTestId("run-source-audit").click();
+  await expect(page.getByTestId("stop-reason")).toBeVisible();
+
+  // 重新核验：旧结论转历史；中途取消 → 不复活旧结论。
+  await page.getByTestId("run-source-audit").click();
+  await expect.poll(() => started).toBe(2);
+  await page.getByRole("button", { name: /取消核验/ }).click();
+  releases.shift()?.();
+
+  await expect(page.locator(".source-result")).toHaveCount(0);
+  await expect(page.getByTestId("history-section")).toContainText("重新核验，上一份结论已转为历史");
+  await expect(page.getByTestId("history-section")).toContainText("仅作历史展示");
+
+  await expectNoHorizontalOverflow(page);
+});

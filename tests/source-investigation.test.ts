@@ -16,17 +16,19 @@ import {
   SEARCH_TOOL_NAME,
 } from "../server/source-tools.js";
 import { SOURCE_INVESTIGATION_PROMPT, SOURCE_NO_RETRIEVAL_NOTE, sourceInvestigationPrompt } from "../server/source-prompt.js";
-import { CAPTION_COVERAGE_MIN, TOOL_CALLS_PER_INVESTIGATION, searchSourceLibrary, type SourceClaim } from "../shared/source-audit.js";
+import { CAPTION_COVERAGE_MIN, TOOL_CALLS_PER_INVESTIGATION, searchSourceLibrary, type SourceClaim, type SourceInvestigationResult } from "../shared/source-audit.js";
 
-/** 替身驱动器：按脚本依次返回模型回复，并记录实际回传的工具结果。 */
+/** 替身驱动器：按脚本依次返回模型回复，并记录实际回传的工具结果与恢复消息。 */
 function scriptedDriver(replies: ToolLoopReply[], finalizeReply?: ToolLoopReply): SourceInvestigationDriver & {
   continued: ToolResultPayload[][];
   finalizeReasons: string[];
+  resumedWith: string[];
 } {
   let index = 0;
   const state = {
     continued: [] as ToolResultPayload[][],
     finalizeReasons: [] as string[],
+    resumedWith: [] as string[],
   };
   const next = (): ToolLoopReply => replies[index++] ?? { model: "stub-model", usage: null, text: null, calls: [], truncated: false };
 
@@ -35,7 +37,12 @@ function scriptedDriver(replies: ToolLoopReply[], finalizeReply?: ToolLoopReply)
     ...state,
     get continued() { return state.continued; },
     get finalizeReasons() { return state.finalizeReasons; },
+    get resumedWith() { return state.resumedWith; },
     async start() { return next(); },
+    async resume(message: string) {
+      state.resumedWith.push(message);
+      return next();
+    },
     async continue(results: ToolResultPayload[]) {
       state.continued.push(results);
       return next();
@@ -44,7 +51,11 @@ function scriptedDriver(replies: ToolLoopReply[], finalizeReply?: ToolLoopReply)
       state.finalizeReasons.push(reason);
       return finalizeReply ?? next();
     },
-  } as SourceInvestigationDriver & { continued: ToolResultPayload[][]; finalizeReasons: string[] };
+  } as SourceInvestigationDriver & {
+    continued: ToolResultPayload[][];
+    finalizeReasons: string[];
+    resumedWith: string[];
+  };
 }
 
 function reply(options: {
@@ -139,6 +150,81 @@ describe("请求失败的分类", () => {
       stop_reason: "max_tokens",
     }));
     await expect(driver.start()).resolves.toMatchObject({ truncated: true, calls: [] });
+  });
+
+  it("恢复前补齐未回应工具调用的 tool_result，避免 Anthropic 拒绝整段对话", async () => {
+    const bodies: Array<{ messages: Array<{ role: string; content: Array<{ type: string; tool_use_id?: string }> }> }> = [];
+    const driver = new AnthropicSourceInvestigationDriver(config, image, "配文", "提示词", async (body) => {
+      bodies.push(body as unknown as { messages: Array<{ role: string; content: Array<{ type: string; tool_use_id?: string }> }> });
+      if (bodies.length === 1) {
+        // 初查：模型以汇总工具调用结束（编排层接收后不再回传结果）。
+        return {
+          content: [{ type: "tool_use", id: "call_report", name: "report_source_finding", input: {} }],
+          stop_reason: "tool_use",
+        };
+      }
+      return { content: [{ type: "text", text: "好的" }], stop_reason: "end_turn" };
+    });
+
+    await driver.start();
+    await driver.resume("用户已回答：同比");
+
+    const lastMessage = bodies[1].messages[bodies[1].messages.length - 1];
+    const kinds = lastMessage.content.map((block) => block.type);
+    // tool_use 后必须紧跟 tool_result，然后才是注入的用户文本。
+    expect(kinds).toEqual(["tool_result", "text"]);
+    expect(lastMessage.content[0].tool_use_id).toBe("call_report");
+  });
+
+  it("模型纯文本回复时不产生空 content 的 assistant 消息", async () => {
+    const bodies: Array<{ messages: Array<{ role: string; content: Array<{ type: string }> }> }> = [];
+    const driver = new AnthropicSourceInvestigationDriver(config, image, "配文", "提示词", async (body) => {
+      bodies.push(body as unknown as { messages: Array<{ role: string; content: Array<{ type: string }> }> });
+      if (bodies.length === 1) {
+        // 模型只回文本、不调用工具：assistant 消息必须保留文本，不能是空 content。
+        return { content: [{ type: "text", text: "先想一想。" }], stop_reason: "end_turn" };
+      }
+      return { content: [{ type: "text", text: "好的" }], stop_reason: "end_turn" };
+    });
+
+    await driver.start();
+    await driver.continue([]);
+
+    const assistantMessages = bodies[1].messages.filter((message) => message.role === "assistant");
+    expect(assistantMessages.length).toBeGreaterThan(0);
+    for (const message of assistantMessages) {
+      expect(message.content.length).toBeGreaterThan(0);
+    }
+    expect(assistantMessages[0].content[0]).toMatchObject({ type: "text", text: "先想一想。" });
+  });
+
+  it("同一轮被丢弃的调用在 continue 时也补齐配对的 tool_result", async () => {
+    const bodies: Array<{ messages: Array<{ role: string; content: Array<{ type: string; tool_use_id?: string }> }> }> = [];
+    const driver = new AnthropicSourceInvestigationDriver(config, image, "配文", "提示词", async (body) => {
+      bodies.push(body as unknown as { messages: Array<{ role: string; content: Array<{ type: string; tool_use_id?: string }> }> });
+      if (bodies.length === 1) {
+        // 首轮返回两个调用，但编排层只回传其中一个（另一个超限被丢）。
+        return {
+          content: [
+            { type: "tool_use", id: "call_kept", name: "search_source_library", input: {} },
+            { type: "tool_use", id: "call_dropped", name: "search_source_library", input: {} },
+          ],
+          stop_reason: "tool_use",
+        };
+      }
+      return { content: [{ type: "text", text: "好的" }], stop_reason: "end_turn" };
+    });
+
+    await driver.start();
+    await driver.continue([{ id: "call_kept", name: "search_source_library", output: "命中 1 条。", isError: false }]);
+
+    const lastMessage = bodies[1].messages[bodies[1].messages.length - 1];
+    const resultIds = lastMessage.content
+      .filter((block) => block.type === "tool_result")
+      .map((block) => block.tool_use_id);
+    // 两个 tool_use 都必须有配对结果，否则下一次请求会被 Anthropic 拒绝。
+    expect(resultIds).toContain("call_kept");
+    expect(resultIds).toContain("call_dropped");
   });
 });
 
@@ -345,7 +431,9 @@ describe("来源调查编排", () => {
 
     expect(result.claims).toEqual([]);
     expect(result.stopReason).toContain("汇总结构无效");
-    expect(driver.finalizeReasons).toEqual(["上一次汇总结构不符合要求，请重新汇总。"]);
+    expect(driver.finalizeReasons).toHaveLength(1);
+    expect(driver.finalizeReasons[0]).toContain("上一次汇总结构不符合要求");
+    expect(driver.finalizeReasons[0]).toContain("请修正后重新调用 report_source_finding 汇总");
     expect(result.trace.map((event) => event.status)).toContain("rejected");
   });
 
@@ -736,5 +824,321 @@ describe("无检索对照臂", () => {
     await driver.start();
 
     expect(bodies[0].tools.map((tool) => tool.name)).toEqual([COMPARE_TOOL_NAME, CLARIFY_TOOL_NAME, REPORT_TOOL_NAME]);
+  });
+});
+
+
+describe("补证恢复编排", () => {
+  const CAPTION_NO_BASIS = "12 月 CPI 上涨 0.8%";
+
+  function claimOf(overrides: Partial<SourceClaim> = {}): SourceClaim {
+    return {
+      claimText: CAPTION_NO_BASIS,
+      metric: "全国居民消费价格",
+      scope: "全国",
+      period: "2025-12",
+      value: 0.8,
+      basis: "month-on-month",
+      kind: "direct",
+      direction: null,
+      fromImage: false,
+      imageExcerpt: null,
+      ...overrides,
+    };
+  }
+
+  const CLAIM_NO_BASIS = claimOf({ claimText: CAPTION_NO_BASIS, basis: null });
+  const REPORT_NO_BASIS = call(REPORT_TOOL_NAME, {
+    claims: [CLAIM_NO_BASIS],
+    citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+    noApplicableSourceReason: null,
+    unresolvedItems: ["需要确认比较方式才能继续核对。"],
+    omittedClaims: [],
+  });
+  const CLARIFY_BASIS = call(CLARIFY_TOOL_NAME, {
+    question: "配文没有写比较方式，0.8% 是同比还是环比？",
+    purpose: "比较方式决定用发布里的同比 0.8% 还是环比 0.2% 核对，结论会不同。",
+    field: "basis",
+    claimText: CAPTION_NO_BASIS,
+  }, "c1");
+
+  /** 跑第一段：检索 + 追问 + 汇总（口径留空），得到带 clarification 的 prior 结果。 */
+  async function firstPhase(caption = CAPTION_NO_BASIS): Promise<SourceInvestigationResult> {
+    const driver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH, CLARIFY_BASIS] }),
+      reply({ calls: [REPORT_NO_BASIS] }),
+    ]);
+    return await runSourceInvestigation(driver, { caption });
+  }
+
+  it("恢复段把用户回答注入同一段对话，图文没写口径时填入并标为用户提供", async () => {
+    const prior = await firstPhase();
+    expect(prior.clarification).toMatchObject({ field: "basis", claimText: CAPTION_NO_BASIS });
+    expect(prior.conclusions[0].status).toBe("source-pending");
+
+    const driver = scriptedDriver([reply({ calls: [REPORT_NO_BASIS] })]);
+    const resumed = await runSourceInvestigation(driver, {
+      caption: CAPTION_NO_BASIS,
+      resume: { answer: "同比", prior },
+    });
+
+    // 用户回答确实注入了同一段对话，并标明「用户提供」不是官方来源。
+    expect(driver.resumedWith).toHaveLength(1);
+    expect(driver.resumedWith[0]).toContain("同比");
+    expect(driver.resumedWith[0]).toContain("用户提供");
+    expect(driver.resumedWith[0]).toContain("不是官方来源");
+
+    // 图文没写比较方式 → 填入 year-on-year，结论从待核对变为与来源一致。
+    expect(resumed.claims[0].basis).toBe("year-on-year");
+    expect(resumed.conclusions[0].status).toBe("source-match");
+    expect(resumed.conclusions[0].supplement).toMatchObject({ applied: true, conflict: null });
+    expect(resumed.conclusions[0].reasons.join("")).toContain("由用户补充确定");
+    expect(resumed.supplement).toMatchObject({ field: "basis", answer: "同比", applied: true, parseNote: null });
+
+    // 前后逐条对照：能看出结论为什么变。
+    expect(resumed.conclusionChanges).toEqual([
+      expect.objectContaining({
+        claimText: CAPTION_NO_BASIS,
+        before: "source-pending",
+        after: "source-match",
+        changed: true,
+        reason: expect.stringContaining("比较方式"),
+      }),
+    ]);
+  });
+
+  it("恢复段共享预算：调用数与轮次从补证前接续，追问次数也不清零", async () => {
+    const prior = await firstPhase();
+    expect(prior.toolCallsUsed).toBe(2); // 检索 + 追问
+    expect(prior.rounds).toBe(2);
+
+    const reportYoy = { id: "r2", name: REPORT_TOOL_NAME, input: {
+      claims: [claimOf({ claimText: CAPTION_NO_BASIS, basis: "year-on-year" })],
+      citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+      noApplicableSourceReason: null,
+      unresolvedItems: [],
+      omittedClaims: [],
+    } };
+    const driver = scriptedDriver([
+      reply({ calls: [call(SEARCH_TOOL_NAME, { metric: "全国居民消费价格", period: "2025-12", scope: "全国" }, "s2")] }),
+      reply({ calls: [call(COMPARE_TOOL_NAME, { left: 0.8, right: 0.2, unit: "%" }, "cmp")] }),
+      reply({ calls: [] }),
+    ], reply({ calls: [reportYoy] }));
+
+    const resumed = await runSourceInvestigation(driver, {
+      caption: CAPTION_NO_BASIS,
+      resume: { answer: "同比", prior },
+    });
+
+    // 预算接续：prior 用了 2 次，恢复段又用 2 次，累计 4 —— 而不是从 0 重新算。
+    expect(resumed.toolCallsUsed).toBe(4);
+    // 轮次接续：prior 2 轮起步，恢复段再走 2 轮。
+    expect(resumed.rounds).toBeGreaterThanOrEqual(4);
+
+    // 追问次数共享：prior 已用掉唯一一次追问，恢复段再追问会被拒绝。
+    const retryDriver = scriptedDriver([
+      reply({ calls: [call(CLARIFY_TOOL_NAME, { question: "再问一次？", purpose: "重复追问。", field: "basis" }, "c2")] }),
+      reply({ calls: [] }),
+    ], reply({ calls: [reportYoy] }));
+    const retry = await runSourceInvestigation(retryDriver, {
+      caption: CAPTION_NO_BASIS,
+      resume: { answer: "同比", prior },
+    });
+    // 只看恢复段的事件：prior 轨迹里带着第一段已执行的追问。
+    const rejectedClarify = retry.trace.find(
+      (event) => event.tool === CLARIFY_TOOL_NAME && event.round > prior.rounds,
+    );
+    expect(rejectedClarify?.status).toBe("rejected");
+    expect(rejectedClarify?.resultSummary).toContain("已经提过一次追问");
+    expect(retry.clarification).toBeNull();
+  });
+
+  it("轮次上限共享：补证前已用满轮次时恢复段不再执行工具，直接带补充强制汇总", async () => {
+    const prior = await firstPhase();
+    const exhausted = { ...prior, rounds: 4 };
+
+    const reportYoy = { id: "r4", name: REPORT_TOOL_NAME, input: {
+      claims: [claimOf({ claimText: CAPTION_NO_BASIS, basis: "year-on-year" })],
+      citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+      noApplicableSourceReason: null,
+      unresolvedItems: [],
+      omittedClaims: [],
+    } };
+    const driver = scriptedDriver(
+      [reply({ calls: [call(SEARCH_TOOL_NAME, { metric: "全国居民消费价格", period: "2025-12", scope: "全国" }, "s-late")] })],
+      reply({ calls: [reportYoy] }),
+    );
+
+    const resumed = await runSourceInvestigation(driver, {
+      caption: CAPTION_NO_BASIS,
+      resume: { answer: "同比", prior: exhausted },
+    });
+
+    // 恢复段发起的检索没有执行（记为未执行），直接强制汇总。
+    const lateSearch = resumed.trace.find((event) => event.tool === SEARCH_TOOL_NAME && event.round > exhausted.rounds);
+    expect(lateSearch?.status).toBe("rejected");
+    expect(lateSearch?.resultSummary).toContain("轮次上限");
+    expect(resumed.stopReason).toContain("轮次达到上限");
+    expect(driver.finalizeReasons.length).toBeGreaterThan(0);
+    // 即便工具没执行，补证仍套用到主张上，结论照常组合。
+    expect(resumed.conclusions[0].status).toBe("source-match");
+    expect(resumed.supplement).toMatchObject({ applied: true });
+  });
+
+  it("用户补充与图文写明的口径冲突时不覆盖，降为待核对并保留双方", async () => {
+    const captionMom = "12 月 CPI 比上月上涨 0.2%";
+    const claimMom = claimOf({ claimText: captionMom, basis: "month-on-month", value: 0.2 });
+    const reportMom = call(REPORT_TOOL_NAME, {
+      claims: [claimMom],
+      citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+      noApplicableSourceReason: null,
+      unresolvedItems: [],
+      omittedClaims: [],
+    });
+    const clarifyMom = call(CLARIFY_TOOL_NAME, {
+      question: "配文这句的比较方式是什么？",
+      purpose: "决定用哪个口径核对。",
+      field: "basis",
+      claimText: captionMom,
+    }, "c1");
+    const priorDriver = scriptedDriver([
+      reply({ calls: [CPI_SEARCH, clarifyMom] }),
+      reply({ calls: [reportMom] }),
+    ]);
+    const prior = await runSourceInvestigation(priorDriver, { caption: captionMom });
+    expect(prior.conclusions[0].status).toBe("source-match");
+
+    const resumeDriver = scriptedDriver([reply({ calls: [reportMom] })]);
+    const resumed = await runSourceInvestigation(resumeDriver, {
+      caption: captionMom,
+      resume: { answer: "同比", prior },
+    });
+
+    // 图文明确写了环比，回答同比 → 不覆盖，降为待核对，双方都保留。
+    expect(resumed.claims[0].basis).toBe("month-on-month");
+    expect(resumed.conclusions[0].status).toBe("source-pending");
+    expect(resumed.conclusions[0].summary).toContain("冲突");
+    expect(resumed.conclusions[0].reasons.join("")).toContain("图上／配文写明：环比");
+    expect(resumed.conclusions[0].reasons.join("")).toContain("用户补充：同比");
+    expect(resumed.conclusions[0].unresolved.join("")).toContain("更正");
+    expect(resumed.supplement?.conflicts).toEqual([
+      { claimText: captionMom, field: "basis", fromImage: "环比", fromUser: "同比" },
+    ]);
+    expect(resumed.conclusionChanges?.[0]).toMatchObject({ before: "source-match", after: "source-pending", changed: true });
+  });
+
+  it("恢复段沿用补证前的检索命中，引用不必重新检索也能通过校验", async () => {
+    const prior = await firstPhase();
+    expect(prior.hits.map((hit) => hit.document.id)).toContain("stats-cpi-2025-12");
+
+    let resumedSearches = 0;
+    const driver = scriptedDriver([reply({ calls: [REPORT_NO_BASIS] })]);
+    const resumed = await runSourceInvestigation(driver, {
+      caption: CAPTION_NO_BASIS,
+      resume: { answer: "同比", prior },
+      search: () => { resumedSearches += 1; return []; },
+    });
+
+    // 没有重新检索，但引用仍命中带入的资料 → 结论成立，不被降级。
+    expect(resumedSearches).toBe(0);
+    expect(resumed.acceptedCitations).toEqual([
+      { sourceId: "stats-cpi-2025-12", role: "value-basis", note: null },
+    ]);
+    expect(resumed.conclusions[0].status).toBe("source-match");
+    // 恢复段的轨迹包含补证前的事件，同一记录可看到检索条件。
+    expect(resumed.trace[0].tool).toBe(SEARCH_TOOL_NAME);
+  });
+
+  it("prior 没有待回答的追问时拒绝恢复，不静默开新调查", async () => {
+    const prior = await firstPhase();
+    const withoutClarification = { ...prior, clarification: null };
+    const driver = scriptedDriver([reply({ calls: [] })]);
+
+    await expect(runSourceInvestigation(driver, {
+      caption: CAPTION_NO_BASIS,
+      resume: { answer: "同比", prior: withoutClarification },
+    })).rejects.toThrow("恢复调查需要补证前存在一次待回答的追问");
+    expect(driver.resumedWith).toEqual([]);
+  });
+
+  it("回答无法解析为口径时不套用，补充记录写明原因", async () => {
+    const prior = await firstPhase();
+    const driver = scriptedDriver([reply({ calls: [REPORT_NO_BASIS] })]);
+
+    const resumed = await runSourceInvestigation(driver, {
+      caption: CAPTION_NO_BASIS,
+      resume: { answer: "大概三月份吧", prior },
+    });
+
+    expect(resumed.claims[0].basis).toBeNull();
+    expect(resumed.conclusions[0].status).toBe("source-pending");
+    expect(resumed.supplement).toMatchObject({ applied: false, normalized: null });
+    expect(resumed.supplement?.parseNote).toContain("同比还是环比");
+    expect(resumed.supplement?.note).toContain("补充未被采用");
+    expect(resumed.conclusionChanges?.[0]).toMatchObject({ before: "source-pending", after: "source-pending", changed: false });
+  });
+});
+
+describe("汇总结构非法的修复", () => {
+  function claimOf(overrides: Partial<SourceClaim> = {}): SourceClaim {
+    return {
+      claimText: "比上月上涨 0.8%",
+      metric: "全国居民消费价格",
+      scope: "全国",
+      period: "2025-12",
+      value: 0.8,
+      basis: "month-on-month",
+      kind: "direct",
+      direction: null,
+      fromImage: false,
+      imageExcerpt: null,
+      ...overrides,
+    };
+  }
+
+  it("重报指令带上具体错误，模型修正后被采用，不再盲目重报", async () => {
+    const tooManyOmitted = Array.from({ length: 31 }, (_, index) => `图上说明第 ${index + 1} 行`);
+    const reportInput = {
+      claims: [claimOf()],
+      citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+      noApplicableSourceReason: null,
+      unresolvedItems: [],
+      omittedClaims: tooManyOmitted,
+    };
+    const badReport = call(REPORT_TOOL_NAME, reportInput);
+    const goodReport = call(REPORT_TOOL_NAME, { ...reportInput, omittedClaims: tooManyOmitted.slice(0, 3) }, "r-good");
+
+    const driver = scriptedDriver([reply({ calls: [CPI_SEARCH] }), reply({ calls: [badReport] })], reply({ calls: [goodReport] }));
+
+    const result = await runSourceInvestigation(driver, { caption: "12 月 CPI 比上月上涨 0.2%" });
+
+    // 重报指令必须指出具体问题，否则模型只会重复同样的错误。
+    expect(driver.finalizeReasons[0]).toContain("omittedClaims 超出条数上限（最多 30 条）");
+    expect(driver.finalizeReasons[0]).toContain("请修正后重新调用 report_source_finding 汇总");
+    expect(result.stopReason).toContain("重新汇总后采用");
+    expect(result.conclusions.length).toBeGreaterThan(0);
+    // 轨迹里保留被拒原因，供证据复查。
+    const rejected = result.trace.find((event) => event.status === "rejected" && event.tool === REPORT_TOOL_NAME);
+    expect(rejected?.resultSummary).toContain("最多 30 条");
+  });
+
+  it("重报仍不合法时如实停止，不用预置结果顶替", async () => {
+    const badReport = call(REPORT_TOOL_NAME, {
+      claims: [claimOf()],
+      citations: [],
+      noApplicableSourceReason: null,
+      unresolvedItems: [],
+      omittedClaims: Array.from({ length: 40 }, (_, index) => `第 ${index} 行`),
+    });
+    const driver = scriptedDriver(
+      [reply({ calls: [CPI_SEARCH] }), reply({ calls: [badReport] })],
+      reply({ calls: [badReport] }),
+    );
+
+    const result = await runSourceInvestigation(driver, { caption: "12 月 CPI 比上月上涨 0.2%" });
+
+    expect(result.stopReason).toBe("模型给出的汇总结构无效，调查终止。");
+    expect(result.claims).toEqual([]);
+    expect(driver.finalizeReasons).toHaveLength(1);
   });
 });

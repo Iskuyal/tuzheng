@@ -1,7 +1,7 @@
 {
-  "version": 2,
+  "version": 3,
   "frozenAt": "2026-09-29",
-  "authoredBy": "团队人工逐题写定，先于任何一次模型运行；不由模型生成或回填。任务 03 新增的 5 题（q13—q17）同样先写期望，02 的 12 题期望未改动。",
+  "authoredBy": "团队人工逐题写定，先于任何一次模型运行；不由模型生成或回填。任务 03 新增的 5 题（q13—q17）与任务 04 新增的 2 题（q18—q19）同样先写期望，02 的 12 题期望未改动。",
   "rubric": [
     "select.fromImage=false 表示配文主张，true 表示图内主张（程序读模型返回的 fromImage 字段，不额外调用模型）。",
     "select 还可带 kind（direct／inference／opinion）筛选主张分类；q15 用它固定「观点不支持核验」这条规则。",
@@ -11,8 +11,11 @@
     "forbiddenValueBasisCitations：这些资料不允许以 value-basis 角色进入本次被接受的引用。",
     "noApplicableSource=true 的题：任何一次运行里任何一条结论都不允许是确定来源结论（source-match／source-mismatch），否则记为 no-applicable-source-overclaim；待核对、推断依据不足、不支持核验都算克制。",
     "incompleteNotice=true 的题：本次必须出现「未展开主张」或「配文覆盖不足」的明确提示（omittedClaims 非空或 captionCoverageNote 非空），否则记为 missing-incomplete-notice——单次最多核验三条，不允许静默漏掉配文内容。",
+    "clarificationRequired=true 的题（补证前阶段）：模型必须提出一次追问，否则记为 missing-clarification；clarificationForbidden=true 的题任何一次运行出现追问都记为 unexpected-clarification。两者只看模型是否提出问题，不看问题措辞。",
+    "clarificationAfterSearch=true 的题：有检索臂里第一次追问必须发生在至少一次成功检索之后（按轨迹事件顺序比较），否则记为 clarification-before-search——证明「资料已覆盖的先检索，仍缺信息才追问」。无检索臂没有可执行的检索，此条不判。",
+    "resume 是同一题的补证后阶段：runner 用题面里人写定的 clarifyAnswer 回答追问、沿同一段对话恢复，再用 resume 里的规则判定；supplementApplied=true 要求恢复段记录了已套用的用户补充（supplement.applied 为真），否则记为 missing-supplement-application。",
     "虚构引用＝引用了固定资料库中不存在的 sourceId；引用资料库中真实存在但不在本次命中内的 ID 另计为 recalled-citation，两者分开统计。",
-    "状态正确率＝判定为通过的有效运行数 ÷ 有效运行数（有效运行＝模型返回了结论运行；上游失败、超时等未产生结论的运行单列为失败，不进入分母）。"
+    "状态正确率＝判定为通过的有效运行数 ÷ 有效运行数（有效运行＝模型返回了结论运行；上游失败、超时等未产生结论的运行单列为失败，不进入分母；补证后阶段是独立的一次运行，单独判定后与补证前一起计入）。"
   ],
   "frozen": {
     "provider": "anthropic",
@@ -192,6 +195,36 @@
       ],
       "otherClaimStatuses": ["source-pending", "source-match", "inference-unsupported"],
       "expectationNote": "资料库没有 2026 年 7 月的发布，也没有任何环比材料能支持这条推断 ⇒ 推断依据不足；不得给出确定来源结论，也不得据此判假。"
+    },
+    {
+      "id": "q18-clarify-basis-resume",
+      "expect": [
+        { "select": { "fromImage": false, "basis": null }, "status": "source-pending", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match"],
+      "requiredAcceptedCitations": ["stats-cpi-2025-12"],
+      "clarificationRequired": true,
+      "clarificationAfterSearch": true,
+      "expectationNote": "补证前：配文没写比较方式，程序不得替它补口径 ⇒ 配文主张只能来源待核对；缺的是配文这句的口径、资料库回答不了，模型必须先检索（同比与环比发布都在库里）再提一个指向这条主张的追问，不得凭数值相等自行认定同比。图上写明同比的图内主张照常与 2025-12 发布对照。",
+      "resume": {
+        "expect": [
+          { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.8 }, "status": "source-match", "min": 1 }
+        ],
+        "otherClaimStatuses": ["source-pending", "source-match"],
+        "requiredAcceptedCitations": ["stats-cpi-2025-12"],
+        "supplementApplied": true,
+        "expectationNote": "补证后：用户回答「同比」只用于确定口径，配文主张据此与 2025-12 发布的同比 0.8% 对照改为与来源一致，引用仍来自本次命中；程序必须记录已套用的用户补充（标为用户提供），不能把它当成官方来源。"
+      }
+    },
+    {
+      "id": "q19-covered-no-clarify",
+      "expect": [
+        { "select": { "fromImage": false, "basis": "year-on-year", "value": 0.8 }, "status": "source-match", "min": 1 }
+      ],
+      "otherClaimStatuses": ["source-pending", "source-match"],
+      "requiredAcceptedCitations": ["stats-cpi-2025-12"],
+      "clarificationForbidden": true,
+      "expectationNote": "资料已覆盖的案例：配文自带比较方式与数值，检索就能核对 ⇒ 任何一次运行提出追问都算未通过（不允许把资料库已能回答的问题丢给用户）；正确路径是先检索、直接给与来源一致的结论。"
     }
   ]
 }

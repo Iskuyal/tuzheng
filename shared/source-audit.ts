@@ -604,6 +604,8 @@ export interface ClaimSourceConclusion {
   origin: ClaimOriginTrace;
   /** 配文只写月份、程序按图上标注补全年份时的说明。 */
   periodNote: string | null;
+  /** 这条主张的口径由用户补充确定时的记录；没有补充时为 null。展示时标为「用户提供」。 */
+  supplement: ClaimSupplementInfo | null;
 }
 
 export interface ClaimConclusionInput {
@@ -618,6 +620,8 @@ export interface ClaimConclusionInput {
   imageClaims?: readonly SourceClaim[];
   /** 编排层补全月份时的说明。 */
   periodNote?: string | null;
+  /** 这条主张的用户补证记录（编排层在审计前已按规则应用到 claim 上）。 */
+  supplement?: ClaimSupplementInfo | null;
 }
 
 function formatNumber(value: number): string {
@@ -706,6 +710,7 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
     parts: [] as ClaimEvidencePart[],
     origin,
     periodNote: input.periodNote ?? null,
+    supplement: input.supplement ?? null,
   };
   const missingBasis = claim.basis
     ? `需要 ${claim.period ?? "与该主张一致的月份"}的${BASIS_LABELS[claim.basis]}数据`
@@ -982,6 +987,8 @@ export interface SourceAuditInput {
   caption?: string | null;
   /** 与 claims 一一对应的月份补全说明。 */
   periodNotes?: readonly (string | null)[];
+  /** 与 claims 一一对应的用户补证记录；没有补证的主张为 null。 */
+  supplements?: readonly (ClaimSupplementInfo | null)[];
   /** 图上主张的完整集合（含因条数上限没有进入核验的那些），只用于配文主张的年份核对。 */
   imageClaimsContext?: readonly SourceClaim[];
 }
@@ -1011,15 +1018,19 @@ export function auditClaimsAgainstSources(input: SourceAuditInput): SourceAuditO
     else inapplicableCitations.push({ citation, reason: describeInapplicableSource(document, input.claims) });
   }
 
-  const conclusions = input.claims.map((claim, index) => concludeClaimSource({
-    claim,
-    citations: usableCitations,
-    hits: input.hits,
-    noApplicableSourceReason: input.noApplicableSourceReason,
-    caption: input.caption,
-    imageClaims: input.imageClaimsContext ?? input.claims.filter((entry) => entry.fromImage),
-    periodNote: input.periodNotes?.[index] ?? null,
-  }));
+  const conclusions = input.claims.map((claim, index) => applySupplementToConclusion(
+    concludeClaimSource({
+      claim,
+      citations: usableCitations,
+      hits: input.hits,
+      noApplicableSourceReason: input.noApplicableSourceReason,
+      caption: input.caption,
+      imageClaims: input.imageClaimsContext ?? input.claims.filter((entry) => entry.fromImage),
+      periodNote: input.periodNotes?.[index] ?? null,
+      supplement: input.supplements?.[index] ?? null,
+    }),
+    input.supplements?.[index] ?? null,
+  ));
 
   const excluded = input.hits
     .filter((hit) => !fitsClaimAsValueBasis(hit.document, input.claims))
@@ -1052,6 +1063,124 @@ function fieldLabel(field: string): string {
   return { metric: "指标", period: "月份", scope: "范围" }[field] ?? field;
 }
 
+/** 补证前后同一条主张的状态变化；claimText 与状态原样保留，供页面与记录展示「为什么变」。 */
+export interface ConclusionChange {
+  claimText: string;
+  /** 配不上对的一侧为 null；两侧都 null 不会出现。 */
+  before: ClaimSourceStatus | null;
+  after: ClaimSourceStatus | null;
+  /** 状态未变时为 false。 */
+  changed: boolean;
+  /** 变化原因的简短说明：补证套用、冲突降级、重新检索改判，或主张未再汇报／补证前没有对照。 */
+  reason: string;
+}
+
+/**
+ * 按主张原文配对补证前后的结论，逐条给出状态变化。
+ * 配不上对的主张也出行（一侧为 null 并说明原因）——对照表缺行本身就是信息，
+ * 不能把「模型换了个说法」或「新增/消失的主张」静默丢掉。
+ */
+export function diffConclusions(
+  before: readonly ClaimSourceConclusion[],
+  after: readonly ClaimSourceConclusion[],
+): ConclusionChange[] {
+  const changes: ConclusionChange[] = [];
+  const matchedAfter = new Set<number>();
+  for (const prior of before) {
+    const index = matchClaimIndex(after, prior.claimText);
+    if (index === null) {
+      changes.push({
+        claimText: prior.claimText,
+        before: prior.status,
+        after: null,
+        changed: true,
+        reason: "恢复后没有再汇报这条主张，无法给出对照后的状态。",
+      });
+      continue;
+    }
+    matchedAfter.add(index);
+    const current = after[index];
+    const changed = prior.status !== current.status;
+    let reason = "补证后重新检索并核对，状态未变。";
+    if (changed) {
+      if (current.supplement?.conflict) {
+        reason = `用户补充与图文写明的${CLARIFICATION_FIELD_LABELS[current.supplement.field]}冲突，降为待核对。`;
+      } else if (current.supplement?.applied) {
+        reason = `用户补充确定了${CLARIFICATION_FIELD_LABELS[current.supplement.field]}，据此重新核对。`;
+      } else {
+        reason = "补证后重新检索，命中材料变化导致状态改变。";
+      }
+    }
+    changes.push({
+      claimText: current.claimText,
+      before: prior.status,
+      after: current.status,
+      changed,
+      reason,
+    });
+  }
+  for (const [index, current] of after.entries()) {
+    if (matchedAfter.has(index)) continue;
+    changes.push({
+      claimText: current.claimText,
+      before: null,
+      after: current.status,
+      changed: true,
+      reason: "补证后新增的主张，补证前没有可对照的状态。",
+    });
+  }
+  return changes;
+}
+
+/**
+ * 把用户补证叠加到程序已组合出的结论上：
+ * 冲突时降为「来源待核对」并同时保留图上／配文侧与用户侧内容、请求更正；
+ * 填入口径时在依据里注明该口径来自用户补充，不改变其余结论逻辑。
+ * 观点类不受影响——补证不给观点引入真假判定。
+ */
+export function applySupplementToConclusion(
+  conclusion: ClaimSourceConclusion,
+  supplement: ClaimSupplementInfo | null,
+): ClaimSourceConclusion {
+  if (!supplement) return conclusion;
+  const fieldLabelText = CLARIFICATION_FIELD_LABELS[supplement.field];
+
+  if (supplement.conflict) {
+    const conflict = supplement.conflict;
+    if (conclusion.claimKind === "opinion") return { ...conclusion, supplement };
+    return {
+      ...conclusion,
+      supplement,
+      status: "source-pending",
+      summary: `来源待核对：用户补充的${fieldLabelText}与图上／配文写明的内容冲突，双方内容都已保留；请更正补充输入或确认以原文为准后再核验。`,
+      officialValue: null,
+      difference: null,
+      reasons: [
+        `图上／配文写明：${conflict.fromImage}`,
+        `用户补充：${conflict.fromUser}（用户提供，仅用于确定口径，不是官方来源）`,
+      ],
+      unresolved: [
+        ...conclusion.unresolved,
+        `用户补充的${fieldLabelText}与图文内容不一致，请更正补充输入或确认以原文为准。`,
+      ],
+    };
+  }
+
+  if (supplement.applied) {
+    return {
+      ...conclusion,
+      supplement,
+      reasons: [
+        ...conclusion.reasons,
+        `${fieldLabelText}「${displayFieldValue(supplement.field, supplement.normalized)}」由用户补充确定`
+        + "（用户提供，仅用于确定口径，不是官方来源）。",
+      ],
+    };
+  }
+
+  return { ...conclusion, supplement };
+}
+
 /** 确定性数值比较：只做相等与差异计算，不做现实数据判断。 */
 export function compareValues(
   left: number,
@@ -1081,10 +1210,260 @@ export interface ToolTraceEvent {
   durationMs: number;
 }
 
+/** 追问针对的口径字段；补证回答也按同一字段解析。 */
+export type ClarificationField = "period" | "scope" | "metric" | "basis" | "value";
+
+export const CLARIFICATION_FIELD_LABELS: Record<ClarificationField, string> = {
+  period: "月份",
+  scope: "范围",
+  metric: "指标",
+  basis: "比较方式",
+  value: "数值",
+};
+
 export interface ClarificationRequest {
   question: string;
   purpose: string;
-  field: string;
+  field: ClarificationField;
+  /** 这个问题影响哪条主张（配文或图上的原文）；模型没给出时为 null。 */
+  claimText: string | null;
+}
+
+/**
+ * 解析用户对追问的回答，得到可写入口径的规范值。
+ * 解析失败只意味着这次补充用不上，不能靠模糊匹配猜出一个口径。
+ */
+export type ParsedClarificationAnswer =
+  | { ok: true; field: ClarificationField; value: string }
+  | { ok: false; reason: string };
+
+export function parseClarificationAnswer(field: ClarificationField, raw: string): ParsedClarificationAnswer {
+  const text = raw.trim();
+  if (!text) return { ok: false, reason: "回答不能为空。" };
+  switch (field) {
+    case "period": {
+      const period = normalizeSourcePeriod(text);
+      if (!period) return { ok: false, reason: "无法从回答里读出完整的年月（需要形如 2026 年 5 月）。" };
+      return { ok: true, field, value: period };
+    }
+    case "basis": {
+      const normalized = normalizeText(text);
+      const isYoy = normalized.includes("同比") || normalized.includes("year-on-year");
+      const isMom = normalized.includes("环比") || normalized.includes("month-on-month") || normalized.includes("比上月");
+      // 同时出现两种口径时无法确定，猜一个会把结论建立在猜测上。
+      if (isYoy === isMom) return { ok: false, reason: "无法从回答里确定是比较同比还是环比。" };
+      return { ok: true, field, value: isYoy ? "year-on-year" : "month-on-month" };
+    }
+    case "value": {
+      const matched = text.match(/-?\d+(?:\.\d+)?/);
+      if (!matched) return { ok: false, reason: "无法从回答里读出数值。" };
+      return { ok: true, field, value: String(Number(matched[0])) };
+    }
+    case "scope":
+    case "metric":
+      if (text.length > 80) return { ok: false, reason: "回答过长，范围或指标请控制在 80 字以内。" };
+      return { ok: true, field, value: text };
+  }
+}
+
+/** 补证在单条主张上的落点：填入、无冲突一致，或与图文明确内容冲突。 */
+export interface ClaimSupplementInfo {
+  field: ClarificationField;
+  /** 用户回答的原话。 */
+  raw: string;
+  /** 解析后的口径值。 */
+  normalized: string;
+  /** true 表示图文没写这个口径、由用户补充填进了这条主张。 */
+  applied: boolean;
+  /** 与图上／配文明确写出的内容冲突时保留的双方取值；无冲突为 null。 */
+  conflict: { fromImage: string; fromUser: string } | null;
+}
+
+export interface SupplementConflict {
+  claimText: string;
+  field: ClarificationField;
+  fromImage: string;
+  fromUser: string;
+}
+
+/** 一次补证恢复的完整记录；随恢复段结果返回并展示。 */
+export interface SupplementRecord {
+  question: string;
+  purpose: string;
+  field: ClarificationField;
+  /** 追问指向的主张原文；模型没给出时为 null。 */
+  claimText: string | null;
+  /** 用户回答原话，展示时标为「用户提供」。 */
+  answer: string;
+  /** 解析后的口径值；无法解析时为 null（此时不应用到任何主张）。 */
+  normalized: string | null;
+  /** 至少有一条主张的口径由这次补充填入。 */
+  applied: boolean;
+  conflicts: SupplementConflict[];
+  /** 回答无法解析为该字段规范值时的原因；成功解析为 null。 */
+  parseNote: string | null;
+  /** 面向展示的一句说明。 */
+  note: string;
+}
+
+function displayFieldValue(field: ClarificationField, value: string): string {
+  if (field === "basis") return BASIS_LABELS[value as ComparisonBasis] ?? value;
+  return value;
+}
+
+function valuesEqual(field: ClarificationField, left: string | number | null | undefined, right: string): boolean {
+  if (left === null || left === undefined) return false;
+  if (field === "value") return Number(left) === Number(right);
+  if (field === "basis") return String(left) === right;
+  if (field === "period") {
+    const leftPeriod = normalizeSourcePeriod(String(left));
+    return leftPeriod ? leftPeriod === right : normalizeText(String(left)) === normalizeText(right);
+  }
+  return normalizeText(String(left)) === normalizeText(right);
+}
+
+/** 在主张列表里按原文找目标：先精确归一匹配，再退到较高的文字重合度。 */
+function matchClaimIndex(claims: readonly { claimText: string }[], text: string | null | undefined): number | null {
+  if (!text?.trim()) return null;
+  const target = normalizeClaimText(text);
+  if (!target) return null;
+  for (const [index, claim] of claims.entries()) {
+    if (normalizeClaimText(claim.claimText) === target) return index;
+  }
+  let bestIndex: number | null = null;
+  let bestCoverage = 0;
+  for (const [index, claim] of claims.entries()) {
+    const { coverage } = bigramCoverage(claim.claimText, text);
+    if (coverage > bestCoverage) {
+      bestCoverage = coverage;
+      bestIndex = index;
+    }
+  }
+  return bestCoverage >= 0.6 ? bestIndex : null;
+}
+
+/** 某条主张在该口径字段上是否有缺口（没写、或 basis 在原文里也没写明）。 */
+function hasFieldGap(claim: SourceClaim, field: ClarificationField, caption: string | null | undefined): boolean {
+  const value = claim[field as keyof SourceClaim];
+  if (value !== null && value !== undefined) return false;
+  if (field === "basis") {
+    const originText = claim.fromImage ? claim.imageExcerpt : caption;
+    return statedBasisIn(originText) === null;
+  }
+  return true;
+}
+
+/**
+ * 追问没带 claimText 时的目标回退：只在补证前的主张里恰好有一条存在该口径缺口时采用它；
+ * 多条缺口或没有缺口都不猜——猜错会把口径填到别的主张上。
+ */
+export function resolveSupplementTarget(
+  priorClaims: readonly SourceClaim[],
+  field: ClarificationField,
+  claimText: string | null | undefined,
+  caption?: string | null,
+): string | null {
+  if (claimText?.trim()) return claimText;
+  const gaps = priorClaims.filter((claim) => hasFieldGap(claim, field, caption));
+  return gaps.length === 1 ? gaps[0].claimText : null;
+}
+
+export interface ApplySupplementResult {
+  claims: SourceClaim[];
+  /** 与返回的 claims 一一对应；未受补证影响的主张为 null。 */
+  infos: Array<ClaimSupplementInfo | null>;
+  appliedClaimTexts: string[];
+  conflicts: SupplementConflict[];
+}
+
+export interface ApplySupplementOptions {
+  claims: readonly SourceClaim[];
+  /** 补证前那次调查读到的主张：它是「图文明确写没写这个口径」的依据。 */
+  priorClaims: readonly SourceClaim[];
+  field: ClarificationField;
+  rawAnswer: string;
+  /** parseClarificationAnswer 的结果；解析失败时不应用到任何主张。 */
+  normalized: string | null;
+  targetClaimText: string | null;
+  /** 配文原文；模型没填 basis 时用于识别配文明写的比较方式。 */
+  caption?: string | null;
+}
+
+/** 文本里明写的比较方式；同时出现两种或都没写时返回 null。 */
+function statedBasisIn(text: string | null | undefined): ComparisonBasis | null {
+  const isYoy = basisMentionedInImage(text, "year-on-year");
+  const isMom = basisMentionedInImage(text, "month-on-month");
+  return isYoy === isMom ? null : isYoy ? "year-on-year" : "month-on-month";
+}
+
+/**
+ * 把用户补充按字段应用到追问指向的那条主张：
+ * 图文没写 → 填入并标为用户提供；已写且一致 → 不改；已写但不同 → 不覆盖图文，保留双方并记为冲突。
+ * 「图文写没写」以补证前的读数为准；basis 还会回看配文／图上原文（模型可能漏填）。
+ * 拿不到补证前读数（无法匹配同一条主张）时不应用——没有依据判断哪边是图文内容。
+ */
+export function applySupplementToClaims(options: ApplySupplementOptions): ApplySupplementResult {
+  const infos: Array<ClaimSupplementInfo | null> = options.claims.map(() => null);
+  const claims = options.claims.map((claim) => ({ ...claim }));
+  if (!options.normalized) {
+    return { claims, infos, appliedClaimTexts: [], conflicts: [] };
+  }
+
+  const currentIndex = matchClaimIndex(claims, options.targetClaimText);
+  const priorIndex = matchClaimIndex(options.priorClaims, options.targetClaimText);
+  if (currentIndex === null || priorIndex === null) {
+    return { claims, infos, appliedClaimTexts: [], conflicts: [] };
+  }
+
+  const fieldKey = options.field as keyof SourceClaim;
+  const priorClaim = options.priorClaims[priorIndex];
+  const rawPriorValue = priorClaim[fieldKey] as string | number | null | undefined;
+  let priorValue = rawPriorValue;
+  if ((priorValue === null || priorValue === undefined) && options.field === "basis") {
+    // 模型可能没填 basis，但配文或图上抄录里明写了比较方式——那也算图文内容。
+    const originText = priorClaim.fromImage ? priorClaim.imageExcerpt : options.caption;
+    priorValue = statedBasisIn(originText);
+  }
+  const info: ClaimSupplementInfo = {
+    field: options.field,
+    raw: options.rawAnswer.trim(),
+    normalized: options.normalized,
+    applied: false,
+    conflict: null,
+  };
+
+  if (priorValue === null || priorValue === undefined) {
+    const claim = claims[currentIndex];
+    (claim as Record<string, unknown>)[fieldKey] = options.field === "value"
+      ? Number(options.normalized)
+      : options.normalized;
+    info.applied = true;
+    infos[currentIndex] = info;
+    return { claims, infos, appliedClaimTexts: [claim.claimText], conflicts: [] };
+  }
+
+  if (valuesEqual(options.field, priorValue, options.normalized)) {
+    infos[currentIndex] = info;
+    return { claims, infos, appliedClaimTexts: [], conflicts: [] };
+  }
+
+  // 冲突：不覆盖图文明确写出的值，把它恢复为补证前模型的读数，并保留双方。
+  claims[currentIndex][fieldKey] = rawPriorValue as never;
+  info.conflict = {
+    fromImage: displayFieldValue(options.field, String(priorValue)),
+    fromUser: displayFieldValue(options.field, options.normalized),
+  };
+  infos[currentIndex] = info;
+  return {
+    claims,
+    infos,
+    appliedClaimTexts: [],
+    conflicts: [{
+      claimText: claims[currentIndex].claimText,
+      field: options.field,
+      ...info.conflict,
+    }],
+  };
 }
 
 export interface ExcludedSource {
@@ -1132,6 +1511,14 @@ export interface SourceInvestigationResult {
   captionCoverage: number | null;
   /** 配文覆盖不足或存在未展开内容时的提示；没有问题时为 null。 */
   captionCoverageNote: string | null;
+  /** 本次调查的补证记录（问题、用户回答、解析与冲突）；没有补证时为 null。 */
+  supplement: SupplementRecord | null;
+  /** 补证恢复时与补证前结论的逐条对照；首次调查为 null。 */
+  conclusionChanges: ConclusionChange[] | null;
+  /** 本次结果所属的调查记录 ID（服务端签发，补证前后保持同一 ID）；纯编排测试为 null。 */
+  investigationId: string | null;
+  /** 输入指纹（图片+配文）；改动输入即失配，用于过期恢复校验。 */
+  inputFingerprint: string | null;
 }
 
 export interface PublicSourceLibraryEntry {
