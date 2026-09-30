@@ -99,6 +99,15 @@ const coverageText = computed(() => {
 
       <div v-if="conclusion" class="source-conclusion" :class="stateClass">
         <p class="source-conclusion-summary">{{ conclusion.summary }}</p>
+        <div v-if="conclusion.revisionReview" class="source-revision-review" data-testid="revision-review">
+          <strong>版本复查：</strong>
+          所引《<a :href="conclusion.revisionReview.fromUrl" target="_blank" rel="noreferrer noopener">{{ conclusion.revisionReview.fromTitle }}</a>》
+          （{{ conclusion.revisionReview.fromPublishedAt }}）记载 {{ conclusion.revisionReview.fromValue }}%，
+          已被《<a :href="conclusion.revisionReview.toUrl" target="_blank" rel="noreferrer noopener">{{ conclusion.revisionReview.toTitle }}</a>》
+          （{{ conclusion.revisionReview.toPublishedAt }}）按官方修订声明修订为
+          <strong>{{ conclusion.revisionReview.toValue }}%</strong>，本条按修订后值对照。
+          <span class="source-revision-statement">修订声明原文：「{{ conclusion.revisionReview.statement }}」</span>
+        </div>
         <ul v-if="conclusion.parts.length" class="source-part-list" data-testid="claim-parts">
           <li v-for="part in conclusion.parts" :key="part.label" :class="`part-${part.status}`">
             <strong>{{ part.label }} · {{ CLAIM_PART_STATUS_LABELS[part.status] }}</strong>：{{ part.detail }}
