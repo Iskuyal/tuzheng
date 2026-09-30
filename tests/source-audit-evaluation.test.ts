@@ -271,7 +271,7 @@ describe("任务 03 新增的推断与拆解题目", () => {
       .toBe("912cb87d7b6948d82626ebef108c5f2223394dd2caf6e644b6cbce52c773814a");
     expect(hash(["cpi-2025-12", "cpi-2025-12-yoy", "cpi-2025-12-mom", "cpi-2025-12-city", "cpi-2026-08-yoy"]
       .map((name) => questionsCatalog.images[name]))).toBe("f8c51b9aff8bd9ae8d0897aa962a8fd42daacefc2b80501b9ac9da5e26befe1f");
-    expect(questionsCatalog.questions.length).toBe(20);
+    expect(questionsCatalog.questions.length).toBe(22);
   });
 
   it("03 的 5 道推断与拆解题在任务 04 之后也保持原样", () => {
@@ -567,10 +567,10 @@ describe("有检索与无检索两臂的配对运行", () => {
 
 describe("任务 04 新增的补证与追问题", () => {
   it("19 题：02+03 的 17 题不动，q18/q19 有独立输入与成对的期望", () => {
-    // 任务 05 在其后追加了 q20，这里只核对 04 定下的前 19 题仍在原位。
+    // 任务 05 在其后追加了 q20、任务 06 追加了 q21/q22，这里只核对 04 定下的前 19 题仍在原位。
     expect(questionsCatalog.questions.slice(0, 19)).toHaveLength(19);
-    expect(questionsCatalog.questions.length).toBe(20);
-    expect(expectationsCatalog.questions.length).toBe(20);
+    expect(questionsCatalog.questions.length).toBe(22);
+    expect(expectationsCatalog.questions.length).toBe(22);
     const q18 = questionsCatalog.questions.find((question) => question.id === "q18-clarify-basis-resume");
     const e18 = expectationOf("q18-clarify-basis-resume");
     expect(q18?.clarifyAnswer).toBe("同比");
@@ -925,6 +925,7 @@ describe("任务 05 新增的改写期望题", () => {
       "q18-clarify-basis-resume",
       "q19-covered-no-clarify",
       "q20-rewrite-replace-and-qualify",
+      "q21-retail-value-superseded",
     ]);
     // 没有被追加改写规则的题保持原样（没有任何 suggestion 字段）。
     for (const id of ["q01-caption-yoy-match", "q16-caption-over-three-claims"]) {

@@ -169,8 +169,8 @@
   <div class="callout bad">
     <strong>以下能力未实现或未验收，本报告与演示视频都不作为能力声明：</strong>
     <ul style="margin-bottom:0">
-      <li>固定资料库内的<strong>反证与版本复查</strong>（同一口径的冲突／修订来源对）——规划为条件增强任务，缺经核对的来源对，状态 <span class="mono">needs-info</span>，未实现。</li>
-      <li><strong>开放网络检索／通用 RAG／任意网页抓取</strong>——运行时只查构建期写死的三条材料，不访问开放网络。</li>
+      <li>固定资料库内的<strong>「同口径冲突 → 来源存在分歧」</strong>（两份同口径发布数值不同、且无法用修订声明消解）——本轮在国家统计局公开发布里没有找到任何一对可核对的分歧材料，按纪律不做没有实测支撑的能力声明。<strong>版本修订／版本替代</strong>已实现并实测，见 7.1。</li>
+      <li><strong>开放网络检索／通用 RAG／任意网页抓取</strong>——运行时只查构建期写死的五条材料（CPI 三条＋社会消费品零售总额两条），不访问开放网络。</li>
       <li><strong>用户登录、协作、数据库、默认公网部署</strong>——本作品是 Windows 本机应用；公网演示为可选加分项，本报告记录决定与所需条件（见 6.4），本次不提供。</li>
       <li><strong>CSV／手填来源、MCP 协议集成</strong>——未实现。</li>
       <li><strong>Responses 协议下的工具循环在线验证</strong>——只有替身测试；在线验证使用 Anthropic Messages 协议。</li>
@@ -251,7 +251,7 @@
       <tr><td class="path">server/app.ts</td><td>HTTP 入口与端点；只监听 <code>127.0.0.1</code>。定义 <code>VisionAdapter</code> 与 <code>SourceInvestigationDriver</code> 两个窄接口。</td></tr>
       <tr><td class="path">server/source-investigation.ts</td><td>受限工具循环编排器：预算、轮次、工具参数校验、轨迹记录、补证恢复、建议生成。</td></tr>
       <tr><td class="path">shared/source-audit.ts</td><td>引用与结论校验、口径适配、原句追溯、主张分类、建议生成与逐处校验（约 2 200 行的纯逻辑）。</td></tr>
-      <tr><td class="path">shared/source-library.ts</td><td>固定资料库：三条材料的原始链接、发布机构、发布日期、适用口径、逐句摘录与内容指纹。</td></tr>
+      <tr><td class="path">shared/source-library.ts</td><td>固定资料库：五条材料的原始链接、发布机构、发布日期、适用口径、逐句摘录与内容指纹；多月份发布的逐行月份，以及带官方修订声明的发布所记的声明原句、修订日期与被修订发布。</td></tr>
       <tr><td class="path">scripts/</td><td>离线固定样例评测、在线配对评测入口、SVG→PNG 同源核对。</td></tr>
     </tbody>
   </table>
@@ -408,6 +408,9 @@
     <img src="assets/source-claims.png" alt="配文主张结论卡" />
     <figcaption>图 6　配文主张的结论卡（替身响应渲染）。展开后可见：模型拆出的指标／范围／月份／数值／比较方式、原文核对（这条主张能在配文原文里找到）、结论与依据原句、以及所引材料的角色。</figcaption>
   </figure>
+  <p>
+    <strong>版本复查：</strong>当所引发布的值已被同系列后续发布按<strong>官方修订声明</strong>改写时，程序改用修订后的值对照，并在结论卡上给出修订前后值、声明原句与两份发布的标题／日期／原始链接；修订关系由资料里的声明字段判定，不由模型判断（同一条规则的代码与数据见 <span class="path">shared/source-library.ts</span> 与 <span class="path">shared/source-audit.ts</span> 的 <span class="mono">applyRevision</span>）。
+  </p>
 
   <h4>（3）必要补证：把「回答不了的问题」交给用户</h4>
   <p>
@@ -432,10 +435,10 @@
   </figure>
 
   <h4>（5）无适用来源与证据不足时的表达</h4>
-  <p>资料库没有对应月份、或推断缺少必要依据时，结论保持「来源待核对／推断依据不足」，并明确写出「缺哪一项才能继续」「不代表结论为假」。数据边界同时显式声明：固定资料库共三条材料，干扰项与术语页会被排除并给出原因。</p>
+  <p>资料库没有对应月份、或推断缺少必要依据时，结论保持「来源待核对／推断依据不足」，并明确写出「缺哪一项才能继续」「不代表结论为假」。数据边界同时显式声明：固定资料库共五条材料（CPI 三条＋社会消费品零售总额两条，后者是同系列发布的逐月环比修订表），干扰项与术语页会被排除并给出原因。</p>
   <figure>
     <img src="assets/source-library.png" alt="固定资料库清单" />
-    <figcaption>图 10　固定资料库清单（替身响应渲染）：三条材料带链接、发布机构、发布日期、适用口径与内容指纹，干扰项明确标注。</figcaption>
+    <figcaption>图 10　固定资料库清单（替身响应渲染）：材料带链接、发布机构、发布日期、适用口径与内容指纹；多月份发布显示逐月行数，带修订声明的发布标明它修订了哪一份，干扰项明确标注。</figcaption>
   </figure>
 
   <h3>5.3 失败恢复</h3>
@@ -472,8 +475,8 @@
   <table>
     <thead><tr><th style="width:22%">层</th><th style="width:30%">命令</th><th style="width:14%">最近一次结果</th><th>覆盖与不覆盖</th></tr></thead>
     <tbody>
-      <tr><td>单元与 API 行为测试</td><td><code>npm test</code></td><td class="num">332/332</td><td>计算边界、结论分级、跨图口径、纵轴风险、双协议设置与连接测试、工具循环预算与参数校验、引用与口径、主张追溯、补证解析与冲突、恢复共享预算、建议生成与逐处校验、改写提议容错解析。不调用真实模型。</td></tr>
-      <tr><td>浏览器端到端</td><td><code>npm run test:e2e</code></td><td class="num">87/87</td><td>29 条用例 × 320／390／1280px，含无横向溢出断言与「主图载入期间跨图区禁用并说明原因、载入失败／取消后恢复」；来源核验用例用替身响应驱动页面，真实模型结果单列在证据记录里。</td></tr>
+      <tr><td>单元与 API 行为测试</td><td><code>npm test</code></td><td class="num">338/338</td><td>计算边界、结论分级、跨图口径、纵轴风险、双协议设置与连接测试、工具循环预算与参数校验、引用与口径、主张追溯、补证解析与冲突、恢复共享预算、建议生成与逐处校验、改写提议容错解析、资料库修订关系与版本替代。不调用真实模型。</td></tr>
+      <tr><td>浏览器端到端</td><td><code>npm run test:e2e</code></td><td class="num">90/90</td><td>30 条用例 × 320／390／1280px，含无横向溢出断言、「主图载入期间跨图区禁用并说明原因、载入失败／取消后恢复」与「版本复查区块展示修订前后值、官方声明原句与两份发布链接」；来源核验用例用替身响应驱动页面，真实模型结果单列在证据记录里。</td></tr>
       <tr><td>离线固定评测</td><td><code>npm run eval:samples</code></td><td class="num">23/23</td><td>18 张团队自制图的独立预期（观察值、增长率与公式、证据状态、轴范围、跨图待确认原因、纵轴提示）＋5 组跨图配对；改错结论、图中文字或待确认状态会报失败。</td></tr>
       <tr><td>图片同源核对</td><td><code>npm run verify:sample-renders</code></td><td class="num">18/18</td><td>用 Edge 把每张 SVG 重新栅格化并与同名 PNG 逐字节比对 SHA-256，保证页面展示图与上传用图是同一份内容。</td></tr>
       <tr><td>构建与类型</td><td><code>npm run build</code></td><td>通过</td><td>前端类型检查（vue-tsc）、服务端类型检查、Vite 打包与服务端编译。<strong>类型检查单独成步是实测教训</strong>：向 <span class="path">shared/axis-risk.ts</span> 注入类型错误后 <code>npm test</code> 仍全绿（vitest 走 esbuild，只剥离类型不做检查），只有 typecheck 能拦下。</td></tr>
@@ -499,12 +502,13 @@
       <tr><td>阶段四 03</td><td>17 题 ×2 臂 ×3 次 ×5 轮＝510 次尝试</td><td>97.2% ／ 90.3% ／ 100.0% ／ 96.8% ／ 92.6%（与提交代码一致的 E 轮 92.6%，25/27）</td><td>29.7% ／ 32.5% ／ 43.5% ／ 36.6% ／ 20.8%；上游失败 25%—50%，末尾确认是提供方余额耗尽（HTTP 402）</td></tr>
       <tr><td>阶段四 04</td><td>19 题整组一轮（计划 120 次请求，119 条记录）</td><td><strong>90.0%（54/60）</strong></td><td>无检索 30.5%（18/59）；上游失败 0</td></tr>
       <tr><td>阶段四 05</td><td>20 题整组一轮（计划 126 次请求，124 条记录）</td><td><strong>93.5%（58/62）</strong></td><td>无检索 30.6%（19/62）；配对差 62.9 个百分点；上游失败 0</td></tr>
+      <tr><td>阶段四 06</td><td>22 题整组一轮（计划 138 次请求，137 条记录；题集新增 q21／q22 两道版本修订题，资料库五条材料）</td><td><strong>89.7%（61/68）</strong></td><td>无检索 27.5%（19/69）；配对差 62.2 个百分点；上游失败 0；检索臂退化题 0；<strong>版本复查替代生效 5 次（修正 5／误改 0；额外模型调用 0 次、额外轮次 0 轮）</strong></td></tr>
     </tbody>
   </table>
   <p class="small">
     数据出处：<span class="path">docs/evidence/stage-4-source-audit-evaluation-2026-09-29.md</span>、<span class="path">-claim-reasoning-2026-09-29.md</span>、
-    <span class="path">-clarify-resume-2026-09-29.md</span>、<span class="path">-rewrite-2026-09-30.md</span>，逐次运行记录为同目录同名 <span class="mono">.json</span>。
-    取证不变量：虚构引用 0、无适用来源越界 0（各轮均如此）；阶段四 05 中模型 73 条改写提议里 31 条通过逐处校验被采用、42 条被拒并逐条留档；评测侧独立复算的「新事实不变量」在两臂 124 次有效运行里 0 次违规。
+    <span class="path">-clarify-resume-2026-09-29.md</span>、<span class="path">-rewrite-2026-09-30.md</span>、<span class="path">-eval-2026-10-01-revision.md</span>，逐次运行记录为同目录同名 <span class="mono">.json</span>。
+    取证不变量：虚构引用 0、无适用来源越界 0（各轮均如此）；阶段四 05 中模型 73 条改写提议里 31 条通过逐处校验被采用、42 条被拒并逐条留档；评测侧独立复算的「新事实不变量」在两臂 124 次有效运行里 0 次违规。阶段四 06 一轮里 61/68 通过、留了 7 次未通过（q06／q16／q18／q20 的模型漂移，逐题写在证据记录里，不删题、不并分母）。
   </p>
 
   <h3>6.4 部署与运行</h3>
@@ -538,7 +542,8 @@
       <tr><td>建议的采用与撤回</td><td>是（e2e 断言写入输入框、旧建议转历史）</td><td><strong>否</strong>：采用是页面行为，未做真实模型下的在线复验；服务端不记录用户是否采用</td><td>真实用户交互中的撤回体验未实测</td></tr>
       <tr><td>失败恢复与错误分类</td><td>是（替身与 e2e；失败不展示结论；主图载入在途时跨图区禁用并说明原因，载入失败／取消后恢复；语义与保留边界见 <span class="path">docs/adr/0001-disable-cross-picker-while-main-image-loads.md</span>）</td><td>部分：评测过程中出现过真实上游失败（阶段四 03 五轮 25%—50%，末尾确认 402 余额耗尽），页面与记录如实降级</td><td>真实故障下的窄屏体验、超时阈值边界未逐项复验；主图载入在途的跨图区锁定只在预置样例与 route 替身下验证，上传图的模型读取路径只有替身，无真实模型复验</td></tr>
       <tr><td>Responses 协议的工具循环</td><td>是（替身）</td><td><strong>否</strong></td><td>工具循环、恢复配对与建议提议在 Responses 协议下都只有替身测试</td></tr>
-      <tr><td>反证与版本复查（固定库内的冲突／修订来源对）</td><td colspan="2" style="text-align:center">未实现（<span class="mono">needs-info</span>：缺经核对的同口径来源对）</td><td>不进入任何能力声明</td></tr>
+      <tr><td>版本修订与版本替代（同系列发布的官方修订声明）</td><td>是（单测 6 条＋e2e 1 条 ×3 视口：引用被修订的发布时按修订后值对照，并把前后值与声明原句留在结论上）</td><td>是（整组一轮 22 题 ×2 臂 ×3 次＋恢复段：q21 写旧值 3/3 判「不一致」、q22 写修订后值 3/3 判「一致」；<strong>版本复查替代生效 5 次，修正 5／误改 0，额外模型调用 0 次、额外轮次 0 轮</strong>）</td><td>只覆盖「有官方修订声明」的修订；国家数据月度库被 WAF 拦（403），基期轮换后的月份级新旧值没核到，故未纳入</td></tr>
+      <tr><td>同口径冲突 → 来源存在分歧（无修订声明的同口径不同值）</td><td colspan="2" style="text-align:center">未实现（无材料：<span class="mono">needs-info</span>）</td><td>不进入任何能力声明</td></tr>
       <tr><td>公网在线演示</td><td colspan="2" style="text-align:center">本次不提供（见 6.4）</td><td>如需提供需另记服务可用性与密钥方案</td></tr>
     </tbody>
   </table>
@@ -654,8 +659,8 @@
   <table>
     <thead><tr><th style="width:34%">命令</th><th style="width:18%">最近结果</th><th>说明</th></tr></thead>
     <tbody>
-      <tr><td><code>npm test</code></td><td class="num">332/332（20 个测试文件）</td><td>单元与 API 行为测试</td></tr>
-      <tr><td><code>npm run test:e2e</code></td><td class="num">87/87（29 用例 ×3 视口）</td><td>浏览器端到端，使用系统自带 Edge</td></tr>
+      <tr><td><code>npm test</code></td><td class="num">338/338（20 个测试文件）</td><td>单元与 API 行为测试</td></tr>
+      <tr><td><code>npm run test:e2e</code></td><td class="num">90/90（30 用例 ×3 视口）</td><td>浏览器端到端，使用系统自带 Edge</td></tr>
       <tr><td><code>npm run build</code></td><td>通过</td><td>含 vue-tsc 与服务端 tsc 类型检查</td></tr>
       <tr><td><code>npm run eval:samples</code></td><td class="num">23/23</td><td>18 张固定样例 + 5 组跨图配对</td></tr>
       <tr><td><code>npm run verify:sample-renders</code></td><td class="num">18/18</td><td>SVG→PNG 逐字节同源核对</td></tr>
@@ -673,6 +678,9 @@
       <tr><td class="path">docs/evidence/stage-4-source-audit-clarify-resume-2026-09-29.md</td><td>阶段四 04：追问 → 补证 → 恢复，改动即失效</td></tr>
       <tr><td class="path">docs/evidence/stage-4-source-audit-rewrite-2026-09-30.md</td><td>阶段四 05：逐处有据的修改建议（本报告 7.1、7.2 的主要数字来源）</td></tr>
       <tr><td class="path">docs/evidence/stage-4-source-audit-eval-2026-09-30-rewrite.json</td><td>阶段四 05 的逐次运行记录（124 条）</td></tr>
+      <tr><td class="path">docs/evidence/stage-4-source-audit-eval-2026-10-01-revision.md</td><td>阶段四 06：版本修订／版本替代的整组真实模型评测（22 题 ×2 臂 ×3 次＋恢复段；有检索臂 89.7%，版本复查替代生效 5 次）</td></tr>
+      <tr><td class="path">docs/evidence/stage-4-source-audit-eval-2026-10-01-revision.json</td><td>阶段四 06 的逐次运行记录（137 条）</td></tr>
+      <tr><td class="path">docs/evidence/stage-5-05-demo-path-live-2026-09-30.md</td><td>阶段五 05：冻结演示路径的真实模型抽样（五条演示题 ×1 次检索臂，6/6）</td></tr>
       <tr><td class="path">docs/evidence/stage-3-live-vision-2026-09-27.md</td><td>跨图真实读取（25% 对 50%）</td></tr>
       <tr><td class="path">docs/evidence/anthropic-provider-2026-09-28.md</td><td>Anthropic 协议在线探测与兼容修复</td></tr>
       <tr><td class="path">docs/evidence/stage-5-connection-test-2026-09-27.md</td><td>「测试连接」真实点测记录</td></tr>

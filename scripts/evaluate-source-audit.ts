@@ -21,6 +21,7 @@ import {
   TOOL_CALLS_PER_ROUND,
   normalizeSourcePeriod,
   type ClaimSourceStatus,
+  type RevisionReview,
   type SourceClaim,
   type SourceInvestigationResult,
 } from "../shared/source-audit.js";
@@ -210,6 +211,8 @@ export interface JudgedConclusion {
   periodNote: string | null;
   citedSourceIds: string[];
   summary: string;
+  /** 版本复查：所引发布的值被官方修订声明改写时的前后记录；没有时为 null（阶段四 06）。 */
+  revisionReview: RevisionReview | null;
 }
 
 export interface RunRecord {
@@ -547,6 +550,7 @@ export function judgeRun(
       periodNote: conclusion.periodNote,
       citedSourceIds: conclusion.citedSourceIds,
       summary: conclusion.summary,
+      revisionReview: conclusion.revisionReview ?? null,
     };
   });
 
@@ -815,6 +819,15 @@ export interface ArmSummary {
   suggestionModelChanges: number;
   suggestionRejectedProposals: number;
   suggestionProblems: number;
+  /**
+   * 版本复查（阶段四 06）：程序按官方修订声明把「旧发布的旧值」替换为「后续发布的修订后值」。
+   * revisionAppliedRuns＝替代生效的运行数（等价于「修正数＋误改数」）；
+   * revisionHelpedRuns＝其中判定通过的（修正数）；revisionHurtRuns＝其中判定未通过的（误改数）。
+   * 替代是程序内同步完成的：不新增模型调用、不新增轮次，因此额外耗时为 0（见报告里的说明）。
+   */
+  revisionAppliedRuns: number;
+  revisionHelpedRuns: number;
+  revisionHurtRuns: number;
   averageLatencyMs: number | null;
   averageToolCalls: number | null;
 }
@@ -926,6 +939,12 @@ export function summarizeEvaluation(records: RunRecord[], expectations: SourceAu
         (total, record) => total + record.judgment.problems.filter((problem) => problem.kind.startsWith("suggestion-")).length,
         0,
       ),
+      revisionAppliedRuns: valid.filter((record) =>
+        record.conclusions.some((conclusion) => conclusion.revisionReview != null)).length,
+      revisionHelpedRuns: valid.filter((record) =>
+        record.judgment.ok && record.conclusions.some((conclusion) => conclusion.revisionReview != null)).length,
+      revisionHurtRuns: valid.filter((record) =>
+        !record.judgment.ok && record.conclusions.some((conclusion) => conclusion.revisionReview != null)).length,
       averageLatencyMs: latencies.length > 0 ? Math.round(latencies.reduce((total, value) => total + value, 0) / latencies.length) : null,
       averageToolCalls: toolCalls.length > 0
         ? Number((toolCalls.reduce((total, value) => total + value, 0) / toolCalls.length).toFixed(2))
@@ -1331,6 +1350,7 @@ export function printReport(
       + `平均 ${arm.averageLatencyMs ?? "—"} ms，平均调用 ${arm.averageToolCalls ?? "—"} 次；`
       + `追问 ${arm.clarifications} 次（时机问题 ${arm.clarificationProblems} 次）；补证后运行 ${arm.resumeRuns} 次、补充套用 ${arm.supplementAppliedRuns} 次；`
       + `建议配文 ${arm.suggestionRuns} 次（模型提议被采用 ${arm.suggestionModelChanges} 处、被拒 ${arm.suggestionRejectedProposals} 处、建议问题 ${arm.suggestionProblems} 次）；`
+      + `版本复查替代生效 ${arm.revisionAppliedRuns} 次（修正 ${arm.revisionHelpedRuns}／误改 ${arm.revisionHurtRuns}；额外模型调用 0 次、额外轮次 0 轮）；`
       + `无来源说明 ${arm.noApplicableSourceReasons} 次；越界结论 ${arm.noApplicableSourceOverclaims} 次`,
     );
   }

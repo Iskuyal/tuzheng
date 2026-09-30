@@ -9,12 +9,14 @@
 | --- | --- | --- | --- |
 | 代码仓库访问权限 | **不通过（当前为私有仓库）** | `gh repo view Iskuyal/web-match --json visibility` → `PRIVATE`；未登录访问 `https://github.com/Iskuyal/web-match` 返回 404 | **必须**：提交前设为 Public，或为评审开通只读访问权限（赛事要求「须设为 Public 或提供评审访问权限」） |
 | README（介绍／架构／安装／团队／材料索引） | 通过 | 文件存在、Markdown 链接逐一指向仓库内真实文件（见第 3 节） | 提交前补齐团队成员姓名与联系方式 |
-| 技术 PDF（≤30 页） | 通过 | `node docs/submission/build-report.mjs --check` 输出「页数：24 / 上限 30」；PDF 可被 Chrome/Edge 内置阅读器打开（人工用 DevTools 截图确认第 1 页渲染正常），文字可提取（`pypdf` 24 页） | 无 |
+| 技术 PDF（≤30 页） | 通过 | `node docs/submission/build-report.mjs --check` 输出「页数：25 / 上限 30」；PDF 可被 Chrome/Edge 内置阅读器打开（人工用 DevTools 截图确认第 1 页渲染正常），文字可提取（`pypdf` 25 页） | 无 |
 | 演示视频（5—8 分钟，1080p MP4） | **待录制** | 尚不存在 | **必须**：按 `docs/submission/demo-video-script.md` 录制，并把链接补进 README 的「提交材料索引」 |
 | 引用的公开来源链接 | 通过 | `curl -L` 实测三条资料库链接均返回 200（见第 2 节） | 无 |
 | 公网在线演示 | 本次不提供（决定与条件见第 4 节） | — | 不阻塞提交；若要提供需另做密钥与可用性方案 |
 
 > 同日复核（阶段五 05 可先行部分，2026-09-30）：三条国家统计局链接仍返回 200、技术 PDF 仍为 24/30 页、仓库仍为 `PRIVATE`、`docs/submission/assets/` 仍为 20 张替身响应截图——本表结论未变；仓库内链接（README 34 条相对链接）与密钥排查（`git ls-files` 只有 `.env.example`、`GET /api/settings` 只回 `hasApiKey` 布尔值）见 [issues/05 的可先行部分记录](../../.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md)。
+
+> 再次复核（阶段四 06 扩充材料后再重建，2026-10-01）：技术 PDF 由 **24/30 页变为 25/30 页**（`build-report.mjs` 与 `--check` 均输出 25），README 材料索引与本文件已同步；三条国家统计局链接仍 200、仓库仍 `PRIVATE`、`docs/submission/assets/` 仍为 20 张（其中 `source-library.png` 按新界面重放）。06 的实测与页数变化见[证据记录](../evidence/stage-4-source-audit-eval-2026-10-01-revision.md)。
 
 ## 2. 外部链接可达性实测（2026-09-30）
 
