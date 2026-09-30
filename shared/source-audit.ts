@@ -1184,7 +1184,13 @@ export function auditClaimsAgainstSources(input: SourceAuditInput): SourceAuditO
     }));
 
   const seen = new Set<string>();
-  const acceptedCitations = usableCitations.filter((citation) => {
+  const supersededIds = new Set(conclusions.flatMap((conclusion) => conclusion.revisionReview ? [conclusion.revisionReview.fromSourceId] : []));
+  const currentValueIds = new Set(conclusions.flatMap((conclusion) => conclusion.citedSourceIds));
+  const acceptedCitations = usableCitations.map((citation): ModelCitation =>
+    citation.role === "value-basis" && supersededIds.has(citation.sourceId) && !currentValueIds.has(citation.sourceId)
+      ? { ...citation, role: "context", note: "程序版本复查：该发布的数值已被修订，本次仅作历史背景；当前数值依据见修订发布。" }
+      : citation,
+  ).filter((citation) => {
     const key = `${citation.sourceId}|${citation.role}`;
     if (seen.has(key)) return false;
     seen.add(key);

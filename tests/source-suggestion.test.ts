@@ -100,6 +100,7 @@ describe("建议配文的生成规则", () => {
     const audit = auditOf({ caption, claims, hits, citations: [{ sourceId: "stats-retail-2026-07", role: "value-basis", note: null }] });
     expect(audit.conclusions[0].citedSourceIds).toEqual(["stats-retail-2026-08"]);
     expect(audit.acceptedCitations).toContainEqual(expect.objectContaining({ sourceId: "stats-retail-2026-08", role: "value-basis" }));
+    expect(audit.acceptedCitations.find((entry) => entry.sourceId === "stats-retail-2026-07")?.role).toBe("context");
     const corrected = caption.replace("0.35", "0.40");
     const suggestion = buildCaptionSuggestion({
       caption, claims, conclusions: audit.conclusions, hits: audit.hits,
