@@ -83,6 +83,10 @@ const pendingUpload = ref<File | null>(null);
 const errorMessage = ref("");
 const uploadErrorCode = ref("");
 const busyMessage = ref("");
+// 主图（重新）载入或模型读取在途。载入成功会走 setChartObservation → resetCrossImageSession，
+// 把跨图会话连同在途的对照图请求一起清掉；这段时间里跨图区会开始或改变配对的操作会被静默丢弃，
+// 因此跨图区据此禁用并给出说明（见 docs/adr/0001-disable-cross-picker-while-main-image-loads.md）。
+const mainImageLoading = ref(false);
 const modelRead = ref<ModelReadTrace | null>(null);
 const modelReadRegion = ref<"crop" | "full">("full");
 // 单主张路径（阶段一样例、或模型只读到一条主张）用自己的记录与会话快照，
@@ -310,6 +314,8 @@ function cancelImageRequest(): void {
   imageRequest?.abort();
   imageRequest = null;
   busyMessage.value = "";
+  // 唯一的解锁点：换图、重新框选、取消读取、离开页面都经过这里。
+  mainImageLoading.value = false;
 }
 
 function beginImageRequest(): AbortController {
@@ -392,6 +398,7 @@ function applySingleEdit(edit: ClaimWorkspaceEdit): void {
 
 async function loadSample(id: string): Promise<boolean> {
   const request = beginImageRequest();
+  mainImageLoading.value = true;
   busyMessage.value = "正在载入预置示例…";
   errorMessage.value = "";
   uploadErrorCode.value = "";
@@ -435,6 +442,7 @@ async function loadSample(id: string): Promise<boolean> {
     if (imageRequest === request) {
       imageRequest = null;
       busyMessage.value = "";
+      mainImageLoading.value = false;
     }
   }
 }
@@ -508,6 +516,7 @@ async function analyzePendingUpload(): Promise<void> {
   const crop = cropPreview.value;
   const request = beginImageRequest();
   const sentRegion: "crop" | "full" = crop ? "crop" : "full";
+  mainImageLoading.value = true;
   clearCurrentAudit();
   errorMessage.value = "";
   uploadErrorCode.value = "";
@@ -546,6 +555,7 @@ async function analyzePendingUpload(): Promise<void> {
     if (imageRequest === request) {
       imageRequest = null;
       busyMessage.value = "";
+      mainImageLoading.value = false;
     }
   }
 }
@@ -1838,24 +1848,28 @@ onBeforeUnmount(() => {
               <span v-if="referenceLabel" class="cross-reference-label">对照图：{{ referenceLabel }}</span>
             </div>
 
+            <p v-if="mainImageLoading" class="cross-lock-note" role="status">
+              主图还在载入，跨图区暂时不能操作；载入完成后才能选择或更换对照图。
+            </p>
+
             <div v-if="!referenceObservation" class="cross-empty">
               <p>放一张对照图，核对两张图对同一指标的说法是否一致。只有指标、时间、单位和范围都对齐的主张才会进入比较。</p>
               <div class="cross-picker-row">
                 <label class="cross-picker">
                   <span>选择对照图</span>
-                  <select :value="referenceSampleId ?? ''" @change="selectReferenceSample">
+                  <select :value="referenceSampleId ?? ''" :disabled="mainImageLoading" @change="selectReferenceSample">
                     <option value="" disabled>选一张样例</option>
                     <option v-for="sample in samples" :key="sample.id" :value="sample.id">{{ sample.name }}</option>
                   </select>
                 </label>
                 <label class="cross-picker cross-upload">
                   <span>或上传一张</span>
-                  <input type="file" accept="image/png,image/jpeg,image/webp" @change="prepareReferenceUpload" />
+                  <input type="file" accept="image/png,image/jpeg,image/webp" :disabled="mainImageLoading" @change="prepareReferenceUpload" />
                 </label>
               </div>
               <div v-if="referenceFile" class="cross-read-action">
                 <span>{{ referenceFile.name }}</span>
-                <button class="read-image-button" :disabled="referenceBusy" @click="readReferenceImage">
+                <button class="read-image-button" :disabled="referenceBusy || mainImageLoading" @click="readReferenceImage">
                   {{ referenceBusy ? "正在读取…" : referenceErrorCode ? "重试读取这张对照图" : "读取这张对照图" }}
                 </button>
               </div>
@@ -1870,7 +1884,7 @@ onBeforeUnmount(() => {
               <div class="cross-picker-row">
                 <label class="cross-picker">
                   <span>当前图主张</span>
-                  <select :value="crossCurrentClaimId ?? ''" @change="selectCurrentClaim">
+                  <select :value="crossCurrentClaimId ?? ''" :disabled="mainImageLoading" @change="selectCurrentClaim">
                     <option v-for="claim in chartObservation?.claims ?? []" :key="claim.id" :value="claim.id">
                       {{ claim.claimText || claim.id }}
                     </option>
@@ -1878,7 +1892,7 @@ onBeforeUnmount(() => {
                 </label>
                 <label class="cross-picker">
                   <span>对照图主张</span>
-                  <select :value="referenceClaimId ?? ''" @change="selectReferenceClaim">
+                  <select :value="referenceClaimId ?? ''" :disabled="mainImageLoading" @change="selectReferenceClaim">
                     <option value="" disabled>选择要比较的主张</option>
                     <option v-for="claim in referenceObservation.claims" :key="claim.id" :value="claim.id">
                       {{ claim.claimText || claim.id }}
@@ -1894,7 +1908,7 @@ onBeforeUnmount(() => {
               <p v-else class="cross-side-note">
                 <template v-if="!referenceConfirmed">
                   对照图的读数还没确认；未确认的读数不参与比较。
-                  <button class="cross-confirm-button" type="button" :disabled="referenceBusy" @click="confirmReferenceClaim">
+                  <button class="cross-confirm-button" type="button" :disabled="referenceBusy || mainImageLoading" @click="confirmReferenceClaim">
                     {{ referenceBusy ? "正在计算…" : "确认对照图读数" }}
                   </button>
                 </template>
@@ -1921,6 +1935,7 @@ onBeforeUnmount(() => {
                     v-if="element.state === 'missing'"
                     class="cross-confirm-button"
                     type="button"
+                    :disabled="mainImageLoading"
                     @click="confirmCrossElement(element.key)"
                   >
                     确认一致
@@ -1963,7 +1978,7 @@ onBeforeUnmount(() => {
               <div class="cross-actions">
                 <label class="cross-picker cross-swap">
                   <span>更换对照图</span>
-                  <select :value="referenceSampleId ?? ''" @change="selectReferenceSample">
+                  <select :value="referenceSampleId ?? ''" :disabled="mainImageLoading" @change="selectReferenceSample">
                     <option value="" disabled>选一张样例</option>
                     <option v-for="sample in samples" :key="sample.id" :value="sample.id">{{ sample.name }}</option>
                   </select>

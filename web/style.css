@@ -669,6 +669,9 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .cross-picker > span { color: #435d68; font-size: 12px; font-weight: 700; }
 .cross-picker select { min-height: 40px; padding: 0 8px; border: 1px solid #9fb6bb; border-radius: 0; color: #142b41; background: #fbfcf8; font-size: 13px; }
 .cross-upload input { padding: 8px 0; color: #52646b; font-size: 12px; }
+/* 主图载入在途时跨图区锁定：载入说明写在 .cross-lock-note，被锁的控件本身也要看得出不可用。 */
+.cross-lock-note { margin: 0 0 11px; padding: 8px 10px; border: 1px solid #d5e0da; border-left: 3px solid #7fae9f; background: #f4f8f6; color: #435d68; font-size: 13px; line-height: 1.5; }
+.cross-picker select:disabled, .cross-upload input:disabled { opacity: .6; cursor: not-allowed; }
 .cross-read-action { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
 .cross-read-action span { color: #52646b; font-size: 12px; overflow-wrap: anywhere; }
 .cross-body { display: flex; flex-direction: column; gap: 11px; }
