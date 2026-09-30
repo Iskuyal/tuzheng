@@ -79,6 +79,30 @@ const expectRuleSchema = z.object({
   min: z.number().int().min(0).optional(),
 }).strict();
 
+const captionChangeKindSchema = z.enum(["replace-value", "keep-qualified", "suggest-delete", "unchanged"]);
+
+/**
+ * 修改建议的独立期望：逐处改动按主张 select 匹配，再按内容检查建议配文。
+ * 只允许使用原配文、本次主张与所引来源里已有的数值／月份／范围（noNewFacts 侧由评测程序独立复算）。
+ */
+const suggestionRuleSchema = z.object({
+  expectChanges: z.array(z.object({
+    select: claimSelectSchema,
+    /** 允许出现的改动类型；改写由程序按结论兜底，类型基本由状态决定。 */
+    kinds: z.array(captionChangeKindSchema).min(1),
+    min: z.number().int().min(0).optional(),
+  }).strict()).optional(),
+  /** 建议配文里必须出现的数值（按数值比较，0.80 与 0.8 相同）。 */
+  requiredNumbers: z.array(z.number()).optional(),
+  /** 建议配文里不得出现的数值。 */
+  forbiddenNumbers: z.array(z.number()).optional(),
+  /** 建议配文里不得出现的字面表述（例如已被来源否定的方向词）。 */
+  forbiddenPhrases: z.array(z.string().min(1)).optional(),
+  /** 本次每处改动都必须是「保留原句」，即没有任何改写。 */
+  unchanged: z.boolean().optional(),
+  expectationNote: z.string().optional(),
+}).strict();
+
 const expectationSchema = z.object({
   id: z.string().min(1),
   expect: z.array(expectRuleSchema).min(1),
@@ -94,6 +118,8 @@ const expectationSchema = z.object({
   clarificationAfterSearch: z.boolean().optional(),
   /** 任何一次运行都不允许提出追问（资料已覆盖的案例）。 */
   clarificationForbidden: z.boolean().optional(),
+  /** 修改建议的期望；不写则不按逐题规则判定（新事实与覆盖仍做全量检查）。 */
+  suggestion: suggestionRuleSchema.optional(),
   /** 同一题的补证后阶段：用题面 clarifyAnswer 恢复后按这套规则判定。 */
   resume: z.object({
     expect: z.array(expectRuleSchema).min(1),
@@ -104,6 +130,7 @@ const expectationSchema = z.object({
     incompleteNotice: z.boolean().optional(),
     /** 恢复段必须记录已套用的用户补充。 */
     supplementApplied: z.boolean().optional(),
+    suggestion: suggestionRuleSchema.optional(),
     expectationNote: z.string().optional(),
   }).strict().optional(),
   expectationNote: z.string().optional(),
@@ -160,6 +187,7 @@ export const REQUIRED_CATEGORIES = [
   "主张拆解与覆盖",
   "补证与恢复",
   "无需追问",
+  "修改建议",
 ] as const;
 
 export interface JudgmentProblem {
@@ -197,6 +225,8 @@ export interface RunRecord {
   rounds: number | null;
   toolCallsUsed: number | null;
   toolSequence: string[];
+  /** 被程序拒绝的汇总结构及其原因（用于解释「没有结论」的运行）。 */
+  reportRejections: string[];
   stopReason: string | null;
   clarification: { question: string; purpose: string; field: string; claimText?: string | null } | null;
   /** 补证后阶段的补充记录（问题、回答、解析与冲突）；补证前阶段为 null。 */
@@ -216,6 +246,13 @@ export interface RunRecord {
   omittedClaims: Array<{ claimText: string; source: string }>;
   captionCoverage: number | null;
   captionCoverageNote: string | null;
+  /** 建议配文的逐处改动摘要（不含全文，全文在 suggestedCaption）。 */
+  suggestion: {
+    suggestedCaption: string;
+    changes: Array<{ claimText: string; kind: string; suggested: string; status: string; origin: string; sourceIds: string[] }>;
+    rejectedProposals: Array<{ claimText: string; rejectedReason: string }>;
+    notes: string[];
+  } | null;
   judgment: { ok: boolean; problems: JudgmentProblem[] };
 }
 
@@ -246,14 +283,231 @@ function selectLabel(select: ClaimSelect): string {
   return parts.join(" · ");
 }
 
-/** 判定上下文：arm 决定追问顺序检查是否生效，phase 区分补证前后两段。 */
+/** 判定上下文：arm 决定追问顺序检查是否生效，phase 区分补证前后两段；caption 是题面配文。 */
 export interface JudgeContext {
   arm?: Arm;
   phase?: "before" | "after";
+  caption?: string | null;
+}
+
+// —— 修改建议的独立复算：评测侧按原始载荷自己算一遍，不依赖服务端的校验实现 ——
+
+/** 评测侧的加强／因果表述清单（与服务端实现分别维护，避免同源失效）。 */
+const SUGGESTION_MARKERS = [
+  "导致", "造成", "引发", "使得", "说明", "表明", "意味着", "因为", "由于", "因此", "所以", "证明", "证实", "必然", "势必",
+  "创下", "新高", "新低", "最大", "最小", "最高", "最低", "首次", "史上", "明显", "大幅", "显著",
+];
+
+const SUGGESTION_SCOPE_CANDIDATES = ["全国城市", "全国农村", "农村", "城镇", "城市", "全国"];
+
+function suggestionNumbersIn(text: string | null | undefined): number[] {
+  return (text ?? "").match(/\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+}
+
+/** 完整月份写成 `YYYY-MM`，只写月份的写成 `M12` 这样的标记；两侧用同一函数保证可比。 */
+function suggestionMonthTokens(text: string | null | undefined): string[] {
+  const source = text ?? "";
+  const tokens: string[] = [];
+  for (const match of source.matchAll(/((?:19|20)\d{2})\s*(?:年\s*(0?[1-9]|1[0-2])\s*月|[-/.]\s*(0?[1-9]|1[0-2])?)/g)) {
+    const month = match[2] ?? match[3];
+    if (month) tokens.push(`${match[1]}-${month.padStart(2, "0")}`);
+  }
+  for (const match of source.matchAll(/(0?[1-9]|1[0-2])\s*月/g)) tokens.push(`M${match[1].padStart(2, "0")}`);
+  return tokens;
+}
+
+function suggestionScopesIn(text: string | null | undefined): string[] {
+  const normalized = (text ?? "").replace(/\s+/g, "");
+  return SUGGESTION_SCOPE_CANDIDATES.filter((candidate) => normalized.includes(candidate));
+}
+
+/** 中文数字写出的时间／倍数范围，例如「近三年」「两个月」。 */
+function suggestionChineseAmountsIn(text: string | null | undefined): string[] {
+  return [...(text ?? "").matchAll(/[一二三四五六七八九十百千万亿几]{1,6}\s*(?:年|个月|月|周|天|倍|成|个百分点)/g)]
+    .map((match) => match[0].trim());
+}
+
+function unique<T>(values: T[]): T[] {
+  return [...new Set(values)];
 }
 
 /**
- * 按人写的期望判定一次运行。判定只用程序可读的字段（fromImage／basis／value／period／状态／引用），
+ * 建议配文的全量不变量：逐处改动与拼好的建议文本都不得引入原配文、本次主张与所引来源之外的
+ * 数值、月份、范围或加强表述；未解决的主张必须保留限定或建议删除；每条配文主张都要有一处说明。
+ */
+export function suggestionIndependenceProblems(
+  result: SourceInvestigationResult,
+  caption: string | null | undefined,
+): JudgmentProblem[] {
+  const suggestion = result.captionSuggestion;
+  if (!suggestion) return [];
+  const problems: JudgmentProblem[] = [];
+  const expectedCaption = (caption ?? suggestion.caption ?? "").trim();
+  if (caption && suggestion.caption.trim() !== caption.trim()) {
+    problems.push({
+      kind: "suggestion-caption-mismatch",
+      detail: `建议配文依据的原文与题面配文不一致：期望「${caption}」，实际「${suggestion.caption}」。`,
+    });
+  }
+
+  const citedIds = new Set(result.acceptedCitations.map((citation) => citation.sourceId));
+  const citedDocuments = result.hits
+    .filter((hit) => citedIds.has(hit.document.id))
+    .map((hit) => hit.document);
+  const allowedNumbers = new Set<number>(suggestionNumbersIn(expectedCaption));
+  const allowedMonths = new Set<string>(suggestionMonthTokens(expectedCaption));
+  const allowedScopes = new Set<string>(suggestionScopesIn(expectedCaption));
+  for (const claim of result.claims) {
+    if (claim.value !== null && claim.value !== undefined) allowedNumbers.add(claim.value);
+    for (const text of [claim.claimText, claim.imageExcerpt, claim.period, claim.scope, claim.metric]) {
+      for (const value of suggestionNumbersIn(text)) allowedNumbers.add(value);
+      for (const token of suggestionMonthTokens(text)) allowedMonths.add(token);
+      for (const scope of suggestionScopesIn(text)) allowedScopes.add(scope);
+    }
+  }
+  for (const document of citedDocuments) {
+    for (const measure of document.measures) allowedNumbers.add(measure.value);
+    for (const text of [document.excerpt, document.title, document.basis.period, document.basis.scope]) {
+      for (const value of suggestionNumbersIn(text)) allowedNumbers.add(value);
+      for (const token of suggestionMonthTokens(text)) allowedMonths.add(token);
+      for (const scope of suggestionScopesIn(text)) allowedScopes.add(scope);
+    }
+  }
+
+  // 建议里的每个数字、月份、范围都必须在允许集合内；逐处文本与拼好的建议文本都查。
+  const texts = unique([
+    suggestion.suggestedCaption,
+    ...suggestion.changes.map((change) => change.suggested),
+  ]).filter((text) => text.trim().length > 0);
+  for (const text of texts) {
+    for (const value of unique(suggestionNumbersIn(text))) {
+      if (!allowedNumbers.has(value)) {
+        problems.push({ kind: "suggestion-new-number", detail: `建议里出现证据未覆盖的数值 ${value}：「${text}」` });
+      }
+    }
+    for (const token of unique(suggestionMonthTokens(text))) {
+      if (!allowedMonths.has(token)) {
+        problems.push({ kind: "suggestion-new-month", detail: `建议里出现证据未覆盖的月份 ${token}：「${text}」` });
+      }
+    }
+    for (const scope of suggestionScopesIn(text)) {
+      if (!allowedScopes.has(scope)) {
+        problems.push({ kind: "suggestion-new-scope", detail: `建议里出现证据未覆盖的范围「${scope}」：「${text}」` });
+      }
+    }
+    for (const marker of SUGGESTION_MARKERS) {
+      if (text.includes(marker) && !expectedCaption.includes(marker)) {
+        problems.push({ kind: "suggestion-new-wording", detail: `建议里出现原配文没有的因果或加强表述「${marker}」：「${text}」` });
+      }
+    }
+    for (const token of suggestionChineseAmountsIn(text)) {
+      if (!expectedCaption.includes(token)) {
+        problems.push({ kind: "suggestion-new-wording", detail: `建议里出现原配文没有的范围或倍数表述「${token}」：「${text}」` });
+      }
+    }
+  }
+
+  // 每条已核验的配文主张都要有一处改动说明；反过来，改动不能对应不存在的主张。
+  for (const claim of result.claims.filter((entry) => !entry.fromImage)) {
+    const matched = suggestion.changes.some((change) => change.claimText === claim.claimText);
+    if (!matched) {
+      problems.push({ kind: "suggestion-missing-change", detail: `配文主张「${claim.claimText}」没有对应的改动说明。` });
+    }
+  }
+  for (const change of suggestion.changes) {
+    if (!result.claims.some((claim) => claim.claimText === change.claimText)) {
+      problems.push({ kind: "suggestion-orphan-change", detail: `改动「${change.claimText}」不对应本次核验的任何主张。` });
+    }
+  }
+
+  // 未解决的主张必须保留限定或建议删除，不能原样当成确定表述。
+  for (const [index, conclusion] of result.conclusions.entries()) {
+    const claim = result.claims[index];
+    if (!claim || claim.fromImage) continue;
+    if (conclusion.status !== "source-pending" && conclusion.status !== "inference-unsupported") continue;
+    const change = suggestion.changes.find((entry) => entry.claimText === claim.claimText);
+    if (change && change.kind === "unchanged") {
+      problems.push({
+        kind: "suggestion-unresolved-unqualified",
+        detail: `未解决的主张「${claim.claimText}」在建议里原样保留，没有保留限定或建议删除。`,
+      });
+    }
+  }
+
+  return problems;
+}
+
+/** 逐题写定的修改建议期望：改动类型、必须／不得出现的数值与表述。 */
+function suggestionRuleProblems(
+  result: SourceInvestigationResult,
+  rules: z.infer<typeof suggestionRuleSchema>,
+): JudgmentProblem[] {
+  const problems: JudgmentProblem[] = [];
+  const suggestion = result.captionSuggestion;
+  if (!suggestion) {
+    problems.push({ kind: "missing-suggestion", detail: "期望里有修改建议规则，但本次没有生成建议配文。" });
+    return problems;
+  }
+
+  for (const rule of rules.expectChanges ?? []) {
+    const min = rule.min ?? 1;
+    const matched = result.claims
+      .map((claim, index) => ({ claim, index }))
+      .filter((entry) => selectMatches(entry.claim, rule.select))
+      .map((entry) => ({
+        claim: entry.claim,
+        change: suggestion.changes.find((change) => change.claimText === entry.claim.claimText) ?? null,
+      }))
+      .filter((entry) => entry.change !== null);
+    if (matched.length < min) {
+      problems.push({
+        kind: "no-matching-suggestion-change",
+        detail: `缺少符合「${selectLabel(rule.select)}」的改动说明：需要 ${min} 条，实际 ${matched.length} 条。`,
+      });
+      continue;
+    }
+    for (const entry of matched) {
+      const kind = entry.change?.kind ?? "";
+      if (!rule.kinds.includes(kind as z.infer<typeof captionChangeKindSchema>)) {
+        problems.push({
+          kind: "suggestion-wrong-kind",
+          detail: `「${entry.claim.claimText}」的改动类型是 ${kind}，期望 ${rule.kinds.join("／")}。`,
+        });
+      }
+    }
+  }
+
+  const captionText = suggestion.suggestedCaption;
+  for (const value of rules.requiredNumbers ?? []) {
+    if (!suggestionNumbersIn(captionText).includes(value)) {
+      problems.push({ kind: "suggestion-missing-number", detail: `建议配文里没有期望的正确数值 ${value}：「${captionText}」` });
+    }
+  }
+  for (const value of rules.forbiddenNumbers ?? []) {
+    if (suggestionNumbersIn(captionText).includes(value)) {
+      problems.push({ kind: "suggestion-forbidden-number", detail: `建议配文里仍出现不应有的数值 ${value}：「${captionText}」` });
+    }
+  }
+  for (const phrase of rules.forbiddenPhrases ?? []) {
+    if (captionText.includes(phrase)) {
+      problems.push({ kind: "suggestion-forbidden-phrase", detail: `建议配文里仍出现「${phrase}」：「${captionText}」` });
+    }
+  }
+  if (rules.unchanged) {
+    for (const change of suggestion.changes) {
+      if (change.kind !== "unchanged") {
+        problems.push({
+          kind: "suggestion-unexpected-change",
+          detail: `期望本次没有需要改写的内容，但「${change.claimText}」被改成了「${change.suggested}」（${change.kind}）。`,
+        });
+      }
+    }
+  }
+
+  return problems;
+}
+
+/** 按人写的期望判定一次运行。判定只用程序可读的字段（fromImage／basis／value／period／状态／引用），
  * 不让生成答案的模型给自己评分。phase="after" 时改用 expectation.resume 里的规则。
  */
 export function judgeRun(
@@ -273,9 +527,10 @@ export function judgeRun(
       forbiddenValueBasisCitations: expectation.resume!.forbiddenValueBasisCitations,
       noApplicableSource: expectation.resume!.noApplicableSource,
       incompleteNotice: expectation.resume!.incompleteNotice,
+      suggestion: expectation.resume!.suggestion,
     }
-    : expectation;
-  const problems: JudgmentProblem[] = [];
+    : { ...expectation, suggestion: expectation.suggestion };
+  const problems: JudgmentProblem[] = [...suggestionIndependenceProblems(result, context.caption)];
   const conclusions = result.conclusions.map((conclusion, index): JudgedConclusion => {
     const claim = result.claims[index];
     return {
@@ -418,6 +673,11 @@ export function judgeRun(
     }
   }
 
+  // —— 修改建议：逐题写定的内容期望（新事实与覆盖由上面的独立复算全量检查） ——
+  if (rules.suggestion) {
+    problems.push(...suggestionRuleProblems(result, rules.suggestion));
+  }
+
   return { ok: problems.length === 0, problems, conclusions };
 }
 
@@ -550,6 +810,11 @@ export interface ArmSummary {
   notVerifiable: number;
   omittedClaims: number;
   otherOmittedText: number;
+  /** 生成了建议配文的运行数、其中由模型提议被采用的改动数、被拒绝的提议数与建议相关问题数。 */
+  suggestionRuns: number;
+  suggestionModelChanges: number;
+  suggestionRejectedProposals: number;
+  suggestionProblems: number;
   averageLatencyMs: number | null;
   averageToolCalls: number | null;
 }
@@ -648,6 +913,19 @@ export function summarizeEvaluation(records: RunRecord[], expectations: SourceAu
         (total, record) => total + record.omittedClaims.filter((claim) => claim.source !== "caption").length,
         0,
       ),
+      suggestionRuns: valid.filter((record) => record.suggestion !== null).length,
+      suggestionModelChanges: valid.reduce(
+        (total, record) => total + (record.suggestion?.changes.filter((change) => change.origin === "model").length ?? 0),
+        0,
+      ),
+      suggestionRejectedProposals: valid.reduce(
+        (total, record) => total + (record.suggestion?.rejectedProposals.length ?? 0),
+        0,
+      ),
+      suggestionProblems: armRecords.reduce(
+        (total, record) => total + record.judgment.problems.filter((problem) => problem.kind.startsWith("suggestion-")).length,
+        0,
+      ),
       averageLatencyMs: latencies.length > 0 ? Math.round(latencies.reduce((total, value) => total + value, 0) / latencies.length) : null,
       averageToolCalls: toolCalls.length > 0
         ? Number((toolCalls.reduce((total, value) => total + value, 0) / toolCalls.length).toFixed(2))
@@ -731,12 +1009,13 @@ export async function runPairedEvaluation(
 
   /** 把一次成功的结果按阶段判定并落成记录。 */
   const recordSuccess = (
-    base: { questionId: string; arm: Arm; run: number; phase: "before" | "after" },
+    base: { questionId: string; arm: Arm; run: number; phase: "before" | "after"; caption: string },
     expectation: QuestionExpectation,
     result: SourceInvestigationResult,
   ): void => {
-    const judgment = judgeRun(expectation, result, { arm: base.arm, phase: base.phase });
+    const judgment = judgeRun(expectation, result, { arm: base.arm, phase: base.phase, caption: base.caption });
     const hitIds = new Set(result.hits.map((hit) => hit.document.id));
+    const suggestion = result.captionSuggestion;
     const record: RunRecord = {
       questionId: base.questionId,
       arm: base.arm,
@@ -749,6 +1028,9 @@ export async function runPairedEvaluation(
       rounds: result.rounds,
       toolCallsUsed: result.toolCallsUsed,
       toolSequence: result.trace.map((event) => `${event.tool}:${event.status}`),
+      reportRejections: result.trace
+        .filter((event) => event.tool === "report_source_finding" && event.status === "rejected")
+        .map((event) => event.resultSummary),
       stopReason: result.stopReason,
       clarification: result.clarification,
       supplement: result.supplement,
@@ -770,6 +1052,24 @@ export async function runPairedEvaluation(
       omittedClaims: result.omittedClaims.map((entry) => ({ claimText: entry.claimText, source: entry.source })),
       captionCoverage: result.captionCoverage,
       captionCoverageNote: result.captionCoverageNote,
+      suggestion: suggestion
+        ? {
+          suggestedCaption: suggestion.suggestedCaption,
+          changes: suggestion.changes.map((change) => ({
+            claimText: change.claimText,
+            kind: change.kind,
+            suggested: change.suggested,
+            status: change.status,
+            origin: change.origin,
+            sourceIds: change.sourceIds,
+          })),
+          rejectedProposals: suggestion.rejectedProposals.map((entry) => ({
+            claimText: entry.claimText,
+            rejectedReason: entry.rejectedReason,
+          })),
+          notes: suggestion.notes,
+        }
+        : null,
       judgment: { ok: judgment.ok, problems: judgment.problems },
     };
     records.push(record);
@@ -797,6 +1097,7 @@ export async function runPairedEvaluation(
       rounds: null,
       toolCallsUsed: null,
       toolSequence: [],
+      reportRejections: [],
       stopReason: null,
       clarification: null,
       supplement: null,
@@ -814,6 +1115,7 @@ export async function runPairedEvaluation(
       omittedClaims: [],
       captionCoverage: null,
       captionCoverageNote: null,
+      suggestion: null,
       judgment: { ok: false, problems: [{ kind: "run-failed", detail: failure.message }] },
     });
     log(`  ${base.questionId} [${base.arm}] #${base.run}${base.phase === "after" ? "（补证后）" : ""} 失败（${failure.kind}）：${failure.message}`);
@@ -825,7 +1127,7 @@ export async function runPairedEvaluation(
       if (!expectation) throw new Error(`题集与期望不一致：${question.id} 没有独立期望。`);
       for (let run = 1; run <= runs; run += 1) {
         const driver = options.driverFactory(question, arm);
-        const before = { questionId: question.id, arm, run, phase: "before" as const };
+        const before = { questionId: question.id, arm, run, phase: "before" as const, caption: question.caption };
         let result: SourceInvestigationResult | null = null;
         try {
           result = await runSourceInvestigation(driver, {
@@ -844,7 +1146,7 @@ export async function runPairedEvaluation(
           log(`  ${question.id} [${arm}] #${run} 初查未提出追问，补证后阶段无法运行（已在补证前判定 missing-clarification）。`);
           continue;
         }
-        const after = { questionId: question.id, arm, run, phase: "after" as const };
+        const after = { questionId: question.id, arm, run, phase: "after" as const, caption: question.caption };
         try {
           const resumed = await runSourceInvestigation(driver, {
             allowSearch: arm === "retrieval",
@@ -1028,6 +1330,7 @@ export function printReport(
       + `推断依据不足 ${arm.inferenceUnsupported} 条，不支持核验 ${arm.notVerifiable} 条，未展开配文内容 ${arm.omittedClaims} 条，模型声明的图上说明文字 ${arm.otherOmittedText} 条；`
       + `平均 ${arm.averageLatencyMs ?? "—"} ms，平均调用 ${arm.averageToolCalls ?? "—"} 次；`
       + `追问 ${arm.clarifications} 次（时机问题 ${arm.clarificationProblems} 次）；补证后运行 ${arm.resumeRuns} 次、补充套用 ${arm.supplementAppliedRuns} 次；`
+      + `建议配文 ${arm.suggestionRuns} 次（模型提议被采用 ${arm.suggestionModelChanges} 处、被拒 ${arm.suggestionRejectedProposals} 处、建议问题 ${arm.suggestionProblems} 次）；`
       + `无来源说明 ${arm.noApplicableSourceReasons} 次；越界结论 ${arm.noApplicableSourceOverclaims} 次`,
     );
   }

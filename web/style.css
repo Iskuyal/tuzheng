@@ -785,6 +785,28 @@ h2 { margin: 0; color: var(--ink); font-size: 22px; line-height: 1.25; letter-sp
 .source-history-claims { margin: 0 0 8px; padding: 0 13px 0 32px; color: #344e5b; font-size: 13px; line-height: 1.8; }
 .source-history-change { color: var(--quiet); }
 .source-history-supplement { margin: 0; padding: 0 13px 12px; color: #345c48; font-size: 12px; line-height: 1.6; }
+.source-history-badge.is-adopted { border-color: var(--teal); color: #1f5c3d; background: #e8f5ec; }
+.source-history-suggestion { margin: 0; padding: 0 13px 12px; color: #294d59; font-size: 12px; line-height: 1.6; }
+.source-history-suggestion-note { color: var(--quiet); }
+.source-adopted-notice { margin: 10px 0 0; padding: 9px 11px; border: 1px solid var(--teal); background: #eef7f1; color: #2f5b41; font-size: 13px; line-height: 1.6; }
+
+.source-suggestion { padding: 14px 15px; border: 1px solid var(--teal); background: #f6fbf8; }
+.source-suggestion-block { display: grid; gap: 4px; margin-bottom: 12px; }
+.source-suggestion-label { margin: 0; color: var(--quiet); font-size: 12px; font-weight: 700; letter-spacing: .06em; }
+.source-suggestion-caption { margin: 0; color: var(--ink); font-size: 14px; line-height: 1.6; }
+.source-suggestion-caption.is-suggested { padding: 9px 11px; border-left: 3px solid var(--teal); background: #fff; font-weight: 700; }
+.source-suggestion-changes { margin: 0 0 12px; padding: 0; list-style: none; }
+.source-suggestion-changes > li { margin-bottom: 10px; padding: 11px 12px; border: 1px solid var(--line); background: #fff; }
+.source-suggestion-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+.source-suggestion-kind { padding: 3px 8px; border: 1px solid var(--line-strong); background: #fff; color: #294d59; font-size: 12px; font-weight: 700; }
+.source-suggestion-origin { color: var(--quiet); font-size: 12px; }
+.source-suggestion-line { margin: 3px 0 0; color: #344e5b; font-size: 13px; line-height: 1.65; }
+.source-suggestion-line.is-warning { color: #8a5a12; font-weight: 700; }
+.source-suggestion-rejected { margin-bottom: 10px; padding: 10px 12px; border: 1px dashed var(--line-strong); background: #fdf7ef; }
+.source-suggestion-rejected h3 { margin: 0 0 6px; font-size: 13px; }
+.source-suggestion-rejected ul { margin: 0; padding-left: 18px; color: #6b4d16; font-size: 13px; line-height: 1.65; }
+.source-suggestion-notes { margin: 0 0 10px; padding-left: 18px; color: var(--quiet); font-size: 13px; line-height: 1.65; }
+.source-suggestion-fingerprint { margin: 0 0 10px; color: var(--quiet); font-size: 12px; }
 
 .source-section { margin-top: 30px; }
 .source-section-note { margin: -6px 0 13px; color: var(--quiet); font-size: 13px; line-height: 1.6; }

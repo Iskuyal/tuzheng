@@ -1241,3 +1241,199 @@ describe("补证恢复 API", () => {
     ]);
   });
 });
+
+describe("修改建议 API", () => {
+  const CAPTION = "比上月上涨 0.8%。";
+  const CLAIM = {
+    claimText: "比上月上涨 0.8%",
+    metric: "全国居民消费价格",
+    scope: "全国",
+    period: "2025-12",
+    value: 0.8,
+    basis: "month-on-month",
+    kind: "direct",
+    direction: null,
+    fromImage: false,
+    imageExcerpt: null,
+  };
+  const SEARCH_CALL = {
+    id: "s1",
+    name: "search_source_library",
+    input: { metric: "全国居民消费价格", period: "2025-12", scope: "全国", terms: ["环比"] },
+  };
+
+  function reportCall(rewrites?: unknown[]) {
+    return {
+      id: "r1",
+      name: "report_source_finding",
+      input: {
+        claims: [CLAIM],
+        citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+        noApplicableSourceReason: null,
+        unresolvedItems: [],
+        omittedClaims: [],
+        ...(rewrites ? { rewrites } : {}),
+      },
+    };
+  }
+
+  it("调查结果带回逐处有据的修改建议，不合格的提议不采用但保留原因", async () => {
+    const driver = scriptedSourceDriver([
+      sourceReply({ calls: [SEARCH_CALL] }),
+      sourceReply({
+        calls: [reportCall([
+          { claimText: "比上月上涨 0.8%", suggestedText: "比上月上涨 0.2%。", reason: "按所引发布改正环比数值。" },
+          { claimText: "配文里没有的这句", suggestedText: "另一句。", reason: "想多改一句。" },
+        ])],
+      }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", CAPTION)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const suggestion = response.body.investigation.captionSuggestion;
+    expect(suggestion.caption).toBe(CAPTION);
+    expect(suggestion.suggestedCaption).toBe("比上月上涨 0.2%。");
+    // 建议不写回配文：接口返回的仍是原配文，采用与否由用户在页面上决定。
+    expect(response.body.investigation.captionSuggestion.suggestedCaption).not.toBe(CAPTION);
+    expect(suggestion.changes).toEqual([
+      expect.objectContaining({
+        claimText: "比上月上涨 0.8%",
+        original: "比上月上涨 0.8%。",
+        suggested: "比上月上涨 0.2%。",
+        kind: "replace-value",
+        status: "source-mismatch",
+        sourceIds: ["stats-cpi-2025-12"],
+        origin: "model",
+        applied: true,
+      }),
+    ]);
+    expect(suggestion.changes[0].reason).toContain("环比数值");
+    // 对不上已核验主张的提议单列保留，不静默丢弃。
+    expect(suggestion.rejectedProposals).toHaveLength(1);
+    expect(suggestion.rejectedProposals[0].rejectedReason).toContain("没有对应的已核验配文主张");
+    expect(suggestion.fingerprint).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  it("不合格的改写提议退回程序兜底，并保留逐处拒绝原因", async () => {
+    const driver = scriptedSourceDriver([
+      sourceReply({ calls: [SEARCH_CALL] }),
+      sourceReply({
+        calls: [reportCall([
+          { claimText: "比上月上涨 0.8%", suggestedText: "比上月上涨 0.2%，创下近三年新高。", reason: "补充背景。" },
+        ])],
+      }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", CAPTION)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const suggestion = response.body.investigation.captionSuggestion;
+    expect(suggestion.suggestedCaption).toBe("比上月上涨 0.2%。");
+    expect(suggestion.changes[0]).toMatchObject({ origin: "program", kind: "replace-value" });
+    expect(suggestion.changes[0].rejectedReason).toContain("三年");
+    expect(suggestion.rejectedProposals).toHaveLength(1);
+    expect(suggestion.rejectedProposals[0].rejectedReason).toContain("创下");
+  });
+
+  it("模型没给改写提议时程序按结论兜底生成建议", async () => {
+    const driver = scriptedSourceDriver([
+      sourceReply({ calls: [SEARCH_CALL] }),
+      sourceReply({ calls: [reportCall()] }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+
+    const response = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", CAPTION)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const suggestion = response.body.investigation.captionSuggestion;
+    expect(suggestion.changes[0].origin).toBe("program");
+    expect(suggestion.suggestedCaption).toBe("比上月上涨 0.2%。");
+    expect(suggestion.rejectedProposals).toEqual([]);
+  });
+
+  it("补证恢复后按新结论重新生成建议，引用随本轮重新校验", async () => {
+    const caption = "12 月 CPI 上涨 0.8%。";
+    const claimNoBasis = { ...CLAIM, claimText: "12 月 CPI 上涨 0.8%", basis: null };
+    const clarify = {
+      id: "c1",
+      name: "request_clarification",
+      input: {
+        question: "配文这句的 0.8% 是同比还是环比？",
+        purpose: "确定比较方式后才能与发布对照。",
+        field: "basis",
+        claimText: "12 月 CPI 上涨 0.8%",
+      },
+    };
+    const report = (claim: typeof claimNoBasis, rewrites?: unknown[]) => ({
+      id: "r1",
+      name: "report_source_finding",
+      input: {
+        claims: [claim],
+        citations: [{ sourceId: "stats-cpi-2025-12", role: "value-basis", note: null }],
+        noApplicableSourceReason: null,
+        unresolvedItems: [],
+        omittedClaims: [],
+        ...(rewrites ? { rewrites } : {}),
+      },
+    });
+    const driver = scriptedSourceDriver([
+      sourceReply({ calls: [SEARCH_CALL, clarify] }),
+      sourceReply({ calls: [report(claimNoBasis)] }),
+    ]);
+    const app = createApp({
+      settingsStore: memorySettingsStore("anthropic", { apiKey: "sk-test" }),
+      investigationDriverFactory: () => driver,
+    });
+
+    const investigated = await request(app)
+      .post("/api/source-audit/investigate")
+      .field("caption", caption)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+    const before = investigated.body.investigation.captionSuggestion;
+    expect(before.changes[0].kind).toBe("keep-qualified");
+    expect(before.suggestedCaption).toContain("暂未核实");
+
+    // 恢复段：用户补上比较方式后主张改判为一致，建议改为保留原句；旧建议不再出现在新结果里。
+    driver.replies.push(sourceReply({
+      calls: [report(claimNoBasis, [
+        { claimText: "12 月 CPI 上涨 0.8%", suggestedText: "12 月 CPI 上涨 0.8%（暂未核实）。", reason: "保留限定。" },
+      ])],
+    }));
+    const resumed = await request(app)
+      .post("/api/source-audit/resume")
+      .field("caption", caption)
+      .field("answer", "同比")
+      .field("investigationId", investigated.body.investigation.investigationId)
+      .attach("image", PNG_HEADER, { filename: "cpi.png", contentType: "image/png" })
+      .expect(200);
+
+    const after = resumed.body.investigation.captionSuggestion;
+    expect(resumed.body.investigation.conclusions[0].status).toBe("source-match");
+    expect(after.changes[0].kind).toBe("unchanged");
+    expect(after.suggestedCaption).toBe(caption);
+    expect(after.fingerprint).not.toBe(before.fingerprint);
+    expect(after.rejectedProposals).toHaveLength(1); // 与来源一致后不再接受「暂未核实」的改写
+  });
+});

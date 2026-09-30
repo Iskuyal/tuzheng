@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import SiteHeader from "../components/SiteHeader.vue";
 import SourceClaimCard from "../components/SourceClaimCard.vue";
 import {
+  CAPTION_CHANGE_LABELS,
   CLAIM_STATUS_LABELS,
   CLARIFICATION_FIELD_LABELS,
   TOOL_LABELS,
@@ -32,6 +33,8 @@ interface ClaimRow {
 interface HistoryEntry {
   result: SourceInvestigationResult;
   reason: string;
+  /** 这条历史结果是被用户「采用建议」顶替的：历史里据此标明已采用。 */
+  adopted?: boolean;
 }
 
 const library = ref<PublicSourceLibraryEntry[]>([]);
@@ -44,6 +47,7 @@ const busy = ref(false);
 const elapsedSeconds = ref(0);
 const errorMessage = ref("");
 const errorCode = ref("");
+const adoptedNotice = ref("");
 const result = ref<SourceInvestigationResult | null>(null);
 const history = ref<HistoryEntry[]>([]);
 const clarificationAnswer = ref("");
@@ -57,6 +61,18 @@ function fieldLabel(field: string): string {
   return CLARIFICATION_FIELD_LABELS[field as keyof typeof CLARIFICATION_FIELD_LABELS] ?? field;
 }
 
+function statusClass(status: ClaimSourceStatus): string {
+  return status === "source-match" ? "source-state-ok"
+    : status === "source-mismatch" ? "source-state-conflict"
+      : status === "not-verifiable" ? "source-state-out-of-scope"
+        : "source-state-pending";
+}
+
+/** 引用只显示标题；找不到（理论上不该发生）时退回资料 ID。 */
+function sourceTitle(sourceId: string): string {
+  return result.value?.hits.find((hit) => hit.document.id === sourceId)?.document.title ?? sourceId;
+}
+
 /** 在历史条目的对照里按主张原文找补证前状态；配不上对或本来就没有对照时返回 null。 */
 function changeBefore(
   changes: SourceInvestigationResult["conclusionChanges"],
@@ -66,9 +82,9 @@ function changeBefore(
 }
 
 /** 把当前结论顶进历史并标记原因；历史只作展示，不参与当前判断。 */
-function retireCurrentResult(reason: string): void {
+function retireCurrentResult(reason: string, adopted = false): void {
   if (!result.value) return;
-  history.value.unshift({ result: result.value, reason });
+  history.value.unshift({ result: result.value, reason, adopted });
   result.value = null;
   clarificationAnswer.value = "";
 }
@@ -177,6 +193,7 @@ function onFileChange(event: Event): void {
   const file = input.files?.[0] ?? null;
   errorMessage.value = "";
   errorCode.value = "";
+  adoptedNotice.value = "";
   if (!file) {
     pendingFile.value = null;
     selectedFileName.value = "";
@@ -208,6 +225,7 @@ async function loadSampleImage(): Promise<void> {
   if (!sample.value) return;
   errorMessage.value = "";
   errorCode.value = "";
+  adoptedNotice.value = "";
   invalidateCurrentResult("已载入样例图片，旧结论已失效");
   try {
     const response = await fetch(sample.value.imageUrl);
@@ -302,6 +320,7 @@ function buildAuditForm(): FormData {
 async function runInvestigation(): Promise<void> {
   errorMessage.value = "";
   errorCode.value = "";
+  adoptedNotice.value = "";
   // 重新核验会顶替当前结果；旧结论进历史，即使本次失败也不复活。
   retireCurrentResult("重新核验，上一份结论已转为历史");
   if (!pendingFile.value) {
@@ -342,6 +361,20 @@ async function submitClarification(): Promise<void> {
   // 同一条记录的前后两段：补证前的结论转为历史，恢复段成为当前结果。
   retireCurrentResult("已由补证结果接续，本段转为历史");
   result.value = outcome.investigation;
+}
+
+/**
+ * 采用修改建议：只把建议文本写进配文输入框，不自动替换。
+ * 输入一改，旧结论与旧建议随即撤回并转入历史；采用记录留在历史里，提示重新核验。
+ */
+function adoptSuggestion(): void {
+  const suggestion = result.value?.captionSuggestion;
+  if (!suggestion) return;
+  retireCurrentResult("已采用修改建议：配文输入框改为建议文本，旧结论与旧建议撤回", true);
+  errorMessage.value = "";
+  errorCode.value = "";
+  caption.value = suggestion.suggestedCaption;
+  adoptedNotice.value = "已采用修改建议：建议文本已写入配文输入框，请重新核验后再使用。";
 }
 </script>
 
@@ -444,6 +477,7 @@ async function submitClarification(): Promise<void> {
               前往模型设置并测试连接
             </RouterLink>
           </p>
+          <p v-if="adoptedNotice" class="source-adopted-notice" data-testid="adopted-notice">{{ adoptedNotice }}</p>
         </div>
       </section>
 
@@ -565,6 +599,77 @@ async function submitClarification(): Promise<void> {
             :hits="result.hits"
             :accepted-citations="result.acceptedCitations"
           />
+        </div>
+
+        <div v-if="result.captionSuggestion" class="source-section source-suggestion" data-testid="caption-suggestion">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">建议</p>
+              <h2>修改建议（不自动替换原配文）</h2>
+            </div>
+          </div>
+          <p class="source-section-note">
+            每一处改动都关联原句、修改内容、理由与当前有效引用：与所引来源一致的保留原句，不一致的用所引来源里的正确数值改正，
+            没有适用来源或依据不足的保留限定或建议删除。采用前请逐处核对；采用后配文输入框会改动，需要重新核验。
+          </p>
+          <div class="source-suggestion-block">
+            <p class="source-suggestion-label">原配文</p>
+            <p class="source-suggestion-caption">{{ result.captionSuggestion.caption }}</p>
+            <p class="source-suggestion-label">建议配文</p>
+            <p class="source-suggestion-caption is-suggested" data-testid="suggested-caption">
+              {{ result.captionSuggestion.suggestedCaption }}
+            </p>
+          </div>
+          <ul class="source-suggestion-changes" data-testid="suggestion-changes">
+            <li v-for="(change, index) in result.captionSuggestion.changes" :key="`${change.claimText}-${index}`">
+              <div class="source-suggestion-head">
+                <span class="source-suggestion-kind">{{ CAPTION_CHANGE_LABELS[change.kind] }}</span>
+                <span class="source-state-pill" :class="statusClass(change.status)">{{ CLAIM_STATUS_LABELS[change.status] }}</span>
+                <span class="source-suggestion-origin">
+                  {{ change.origin === "model" ? "模型提议（已通过程序校验）" : "程序按结论生成" }}
+                </span>
+              </div>
+              <p class="source-suggestion-line">原句：{{ change.original ?? change.claimText }}</p>
+              <p class="source-suggestion-line">建议：{{ change.suggested || "（删除这句）" }}</p>
+              <p class="source-suggestion-line">理由：{{ change.reason }}</p>
+              <p v-if="change.sourceIds.length" class="source-suggestion-line">
+                引用：{{ change.sourceIds.map(sourceTitle).join("、") }}
+              </p>
+              <p v-if="!change.applied" class="source-suggestion-line is-warning">
+                这处改动没有并入建议配文，请按原句自行修改。
+              </p>
+            </li>
+          </ul>
+          <div
+            v-if="result.captionSuggestion.rejectedProposals.length"
+            class="source-suggestion-rejected"
+            data-testid="suggestion-rejected"
+          >
+            <h3>模型提议但未通过校验（不采用）</h3>
+            <ul>
+              <li v-for="(proposal, index) in result.captionSuggestion.rejectedProposals" :key="`${proposal.claimText}-${index}`">
+                「{{ proposal.claimText }}」→「{{ proposal.suggestedText || "（删除这句）" }}」：{{ proposal.rejectedReason }}
+              </li>
+            </ul>
+          </div>
+          <ul
+            v-if="result.captionSuggestion.notes.length"
+            class="source-suggestion-notes"
+            data-testid="suggestion-notes"
+          >
+            <li v-for="note in result.captionSuggestion.notes" :key="note">{{ note }}</li>
+          </ul>
+          <p class="source-suggestion-fingerprint">
+            依据快照指纹 {{ result.captionSuggestion.fingerprint }}：输入、补证或引用一变，这条建议即失效并转入历史。
+          </p>
+          <button
+            type="button"
+            class="read-image-button"
+            data-testid="adopt-suggestion"
+            @click="adoptSuggestion"
+          >
+            采用这条建议（写入配文输入框）
+          </button>
         </div>
 
         <div
@@ -700,7 +805,7 @@ async function submitClarification(): Promise<void> {
           </div>
         </div>
         <p class="source-section-note">
-          下列结论依赖的输入已改动或已被补证接续，只作历史查看，不代表当前结论。
+          下列结论与修改建议依赖的输入已改动或已被补证接续，只作历史查看，不代表当前结果；旧建议已随之撤回。
         </p>
         <details
           v-for="(entry, index) in history"
@@ -710,6 +815,7 @@ async function submitClarification(): Promise<void> {
         >
           <summary>
             <span class="source-history-badge">历史</span>
+            <span v-if="entry.adopted" class="source-history-badge is-adopted" data-testid="history-adopted">已采用建议</span>
             <span class="source-history-reason">{{ entry.reason }}</span>
             <span class="source-history-meta">模型：{{ entry.result.model }} · 停止原因：{{ entry.result.stopReason }}</span>
           </summary>
@@ -726,6 +832,10 @@ async function submitClarification(): Promise<void> {
           </ul>
           <p v-if="entry.result.supplement" class="source-history-supplement">
             补证：{{ entry.result.supplement.answer }}（用户提供）——{{ entry.result.supplement.note }}
+          </p>
+          <p v-if="entry.result.captionSuggestion" class="source-history-suggestion" data-testid="history-suggestion">
+            历史建议配文：{{ entry.result.captionSuggestion.suggestedCaption }}
+            <span class="source-history-suggestion-note">（依据快照 {{ entry.result.captionSuggestion.fingerprint }}，不代表当前结果）</span>
           </p>
         </details>
       </section>

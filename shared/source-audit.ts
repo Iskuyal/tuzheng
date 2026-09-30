@@ -1,5 +1,6 @@
 import {
   SOURCE_LIBRARY,
+  fnv1a64,
   type ComparisonBasis,
   type SourceDocument,
   type SourceMeasure,
@@ -1466,6 +1467,639 @@ export function applySupplementToClaims(options: ApplySupplementOptions): ApplyS
   };
 }
 
+// —— 修改建议：只基于当前有效主张与已采用的证据，逐处关联原句、修改内容、理由与引用 ——
+
+/** 建议配文里一处改动的类型。 */
+export type CaptionChangeKind = "replace-value" | "keep-qualified" | "suggest-delete" | "unchanged";
+
+export const CAPTION_CHANGE_LABELS: Record<CaptionChangeKind, string> = {
+  "replace-value": "替换数值",
+  "keep-qualified": "保留并限定",
+  "suggest-delete": "建议删除",
+  unchanged: "保留原句",
+};
+
+/** 未解决主张在建议里保留限定时追加的限定语。 */
+export const CAPTION_QUALIFIERS: Partial<Record<ClaimSourceStatus, string>> = {
+  "source-pending": "（暂未核实）",
+  "inference-unsupported": "（现有证据不足以支持这项推断）",
+};
+
+/** 与所引发布不一致、又无法机械改正时给出的限定语。 */
+export const CAPTION_MISMATCH_QUALIFIER = "（与所引发布不一致，需核对）";
+
+/** 出现这些词说明建议仍在做因果或加强断言；原配文里没有就不允许新增。 */
+const CAUSAL_MARKERS = [
+  "导致", "造成", "引发", "使得", "说明", "表明", "意味着", "因为", "由于", "因此", "所以", "证明", "证实", "必然", "势必",
+];
+
+/** 程度或规模的加强表述；原文没有就不允许新增（例如「创下新高」）。 */
+const STRENGTHENING_MARKERS = [
+  "创下", "新高", "新低", "最大", "最小", "最高", "最低", "首次", "史上", "明显", "大幅", "显著",
+];
+
+/** 中文数字写出的时间或倍数范围（例如「近三年」「两个月」「两倍」）；原配文里没有就不许引入。 */
+function introducedChineseAmounts(text: string, caption: string): string[] {
+  const found = new Set<string>();
+  for (const match of text.matchAll(/[一二三四五六七八九十百千万亿几]{1,6}\s*(?:年|个月|月|周|天|倍|成|个百分点)/g)) {
+    const token = match[0].trim();
+    if (!caption.includes(token)) found.add(token);
+  }
+  return [...found];
+}
+
+/** 保留限定时的限定词；未解决主张的改写必须带上其中之一。 */
+const HEDGE_MARKERS = [
+  "未核实", "待核实", "暂无法", "尚无", "不确定", "据图", "未注明", "无法核对", "仅供参考", "存疑", "未证实", "证据不足",
+];
+
+/** 断言方向在文本里的常见写法；用于检查建议没有保留与来源相反的方向。 */
+const DIRECTION_MARKERS: Record<ClaimDirection, string[]> = {
+  up: ["上涨", "上升", "走高", "变贵", "涨价", "增加", "更高"],
+  down: ["下降", "下跌", "走低", "便宜", "降价", "减少", "更低"],
+};
+
+/** 范围词的候选词表；按长度从长到短匹配，避免「全国城市」被拆成「全国」。 */
+const SCOPE_CANDIDATES = ["全国城市", "全国农村", "农村", "城镇", "城市", "全国"];
+
+/** 文本里的完整月份与只写月份的写法，用于检查建议没有引入未覆盖的月份。 */
+function monthTokensOf(text: string | null | undefined): { periods: Set<string>; months: Set<string> } {
+  const source = text ?? "";
+  const periods = new Set<string>();
+  const months = new Set<string>();
+  const covered: Array<[number, number]> = [];
+  const full = /((?:19|20)\d{2})\s*(?:年\s*(0?[1-9]|1[0-2])\s*月|[-/.]\s*(0?[1-9]|1[0-2])(?:\s*[-/.]\s*\d{1,2})?)/g;
+  for (const match of source.matchAll(full)) {
+    const month = (match[2] ?? match[3] ?? "").padStart(2, "0");
+    periods.add(`${match[1]}-${month}`);
+    months.add(month);
+    covered.push([match.index ?? 0, (match.index ?? 0) + match[0].length]);
+  }
+  for (const match of source.matchAll(/(0?[1-9]|1[0-2])\s*月/g)) {
+    const index = match.index ?? 0;
+    if (covered.some(([start, end]) => index >= start && index < end)) continue;
+    months.add(match[1].padStart(2, "0"));
+  }
+  return { periods, months };
+}
+
+/** 文本里出现的范围词；按候选表从长到短返回。 */
+function scopeTokensOf(text: string | null | undefined): string[] {
+  const normalized = normalizeText(text);
+  if (!normalized) return [];
+  return SCOPE_CANDIDATES.filter((candidate) => normalized.includes(normalizeText(candidate)));
+}
+
+/** 允许出现的范围词：原配文、本次主张与所引来源里写过的都算，其余视为新引入。 */
+function allowedScopesOf(caption: string, claims: readonly SourceClaim[], documents: readonly SourceDocument[]): string[] {
+  const allowed = new Set<string>();
+  const add = (text: string | null | undefined) => {
+    for (const scope of scopeTokensOf(text)) allowed.add(scope);
+  };
+  add(caption);
+  for (const claim of claims) {
+    add(claim.claimText);
+    add(claim.imageExcerpt);
+    add(claim.scope);
+    add(`${claim.metric ?? ""} ${claim.period ?? ""}`);
+  }
+  for (const document of documents) {
+    add(document.basis.scope);
+    add(document.title);
+    add(document.excerpt);
+  }
+  return [...allowed];
+}
+
+/** 建议里出现的、不在允许集合内的范围词。 */
+function introducedScopes(text: string, allowed: string[]): string[] {
+  const matched: string[] = [];
+  const introduced: string[] = [];
+  for (const scope of scopeTokensOf(text)) {
+    if (matched.some((entry) => entry.includes(scope))) continue;
+    matched.push(scope);
+    if (!allowed.includes(scope)) introduced.push(scope);
+  }
+  return introduced;
+}
+
+/** 该主张断言的涨跌方向在文本里对应哪些写法。 */
+function assertedDirectionMarkers(text: string, direction: ClaimDirection): string[] {
+  return DIRECTION_MARKERS[direction].filter((marker) => text.includes(marker));
+}
+
+/** 所引发布的方向：只在主张自己断言了方向、且所引发布有数值时给出。 */
+function sourceDirectionFor(claim: SourceClaim, conclusion: ClaimSourceConclusion): ClaimDirection | null {
+  if (!claim.direction || conclusion.officialValue === null) return null;
+  if (Math.abs(conclusion.officialValue) <= DIRECTION_EPSILON) return null;
+  return conclusion.officialValue > 0 ? "up" : "down";
+}
+
+/** 这条改动的校验上下文：当前主张、它的结论、配文与本次已采用的证据。 */
+export interface CaptionChangeContext {
+  caption: string;
+  claim: SourceClaim;
+  conclusion: ClaimSourceConclusion;
+  /** 本次核验的全部主张（图内主张的数值也属于已有内容）。 */
+  claims: readonly SourceClaim[];
+  hits: readonly SourceHit[];
+  acceptedCitations: readonly ModelCitation[];
+}
+
+function citedDocumentsOf(context: CaptionChangeContext): SourceDocument[] {
+  const acceptedIds = new Set(context.acceptedCitations.map((citation) => citation.sourceId));
+  return context.hits
+    .filter((hit) => acceptedIds.has(hit.document.id))
+    .map((hit) => hit.document);
+}
+
+/** 允许出现的数值：原配文、本次主张与所引来源里写过的值；其余都是未覆盖的新数值。 */
+function allowedNumbersOf(context: CaptionChangeContext): Set<number> {
+  const allowed = new Set<number>();
+  for (const value of numberValuesOf(context.caption)) allowed.add(value);
+  for (const claim of context.claims) {
+    for (const text of [claim.claimText, claim.imageExcerpt, claim.period, claim.scope, claim.metric]) {
+      for (const value of numberValuesOf(text)) allowed.add(value);
+    }
+    if (claim.value !== null && claim.value !== undefined) allowed.add(claim.value);
+  }
+  for (const document of citedDocumentsOf(context)) {
+    for (const measure of document.measures) allowed.add(measure.value);
+    for (const text of [document.excerpt, document.basis.period, document.title]) {
+      for (const value of numberValuesOf(text)) allowed.add(value);
+    }
+  }
+  return allowed;
+}
+
+export interface CaptionChangeValidation {
+  ok: boolean;
+  violations: string[];
+}
+
+/**
+ * 逐处校验一条改写：只允许使用原配文、本次主张与所引来源里已有的数值、月份与范围，
+ * 不允许新增因果或加强表述，也不允许把未解决的主张写成确定表述、把不一致的内容原样保留。
+ * 模型只提议，这里是程序把关；不通过就退回程序按结论生成的兜底建议。
+ */
+export function validateCaptionChangeText(text: string, context: CaptionChangeContext): CaptionChangeValidation {
+  const violations: string[] = [];
+  const { claim, conclusion, caption } = context;
+  const trimmed = text.trim();
+  const isDelete = trimmed.length === 0;
+  const sameAsClaim = !isDelete && normalizeClaimText(trimmed) === normalizeClaimText(claim.claimText);
+
+  if (!isDelete) {
+    const allowedNumbers = allowedNumbersOf(context);
+    const introducedNumbers = [...new Set(numberValuesOf(trimmed))].filter((value) => !allowedNumbers.has(value));
+    for (const value of introducedNumbers) {
+      violations.push(`建议里的数值 ${formatNumber(value)} 不在原配文、本次主张或所引来源里，不能引入证据未覆盖的数值。`);
+    }
+
+    const allowedMonths = monthTokensOf([
+      caption,
+      ...context.claims.map((entry) => [entry.claimText, entry.period, entry.imageExcerpt].join(" ")),
+      ...citedDocumentsOf(context).map((document) => [document.basis.period, document.title, document.excerpt].join(" ")),
+    ].join(" "));
+    const usedMonths = monthTokensOf(trimmed);
+    for (const period of usedMonths.periods) {
+      if (!allowedMonths.periods.has(period)) {
+        violations.push(`建议里的月份 ${period} 不在原配文、本次主张或所引来源里，不能引入证据未覆盖的月份。`);
+      }
+    }
+    for (const month of usedMonths.months) {
+      if (!allowedMonths.months.has(month)) {
+        violations.push(`建议里的「${Number(month)} 月」不在原配文、本次主张或所引来源里，不能引入证据未覆盖的月份。`);
+      }
+    }
+
+    for (const scope of introducedScopes(trimmed, allowedScopesOf(caption, context.claims, citedDocumentsOf(context)))) {
+      violations.push(`建议里的范围「${scope}」不在原配文、本次主张或所引来源里，不能引入证据未覆盖的范围。`);
+    }
+
+    for (const marker of CAUSAL_MARKERS) {
+      if (trimmed.includes(marker) && !caption.includes(marker)) {
+        violations.push(`建议新增了原配文没有的因果或加强表述「${marker}」。`);
+      }
+    }
+    for (const marker of STRENGTHENING_MARKERS) {
+      if (trimmed.includes(marker) && !caption.includes(marker)) {
+        violations.push(`建议新增了原配文没有的程度加强表述「${marker}」。`);
+      }
+    }
+    for (const token of introducedChineseAmounts(trimmed, caption)) {
+      violations.push(`建议新增了原配文没有的范围或倍数表述「${token}」。`);
+    }
+
+    const proposalBasis = statedBasisIn(trimmed);
+    if (proposalBasis && proposalBasis !== claim.basis) {
+      violations.push(claim.basis
+        ? `建议把比较方式改成了${BASIS_LABELS[proposalBasis]}，与原文的${BASIS_LABELS[claim.basis]}不同；改正错误值应保持在原口径内。`
+        : "原文没有写明比较方式，建议不替它补一个口径（这正是需要用户确认的部分）。");
+    }
+  }
+
+  if (conclusion.status === "source-match") {
+    if (!sameAsClaim) violations.push("这条主张与所引来源一致，建议保留原句；不采用改写提议。");
+  } else if (conclusion.status === "not-verifiable") {
+    if (!isDelete && !sameAsClaim) {
+      violations.push("观点或超出数据的判断不做真假改写，只能保留原句或建议删除。");
+    }
+  } else if (conclusion.status === "source-mismatch") {
+    if (!isDelete) {
+      if (sameAsClaim) {
+        violations.push("与所引发布不一致的内容不能原样保留，必须改正为所引来源的数值／方向，或建议删除。");
+      }
+      const official = conclusion.officialValue;
+      if (claim.value !== null && official !== null) {
+        if (numberValuesOf(trimmed).includes(claim.value)) {
+          violations.push(`建议仍保留了与来源不一致的数值 ${formatNumber(claim.value)}%。`);
+        }
+        if (!numberValuesOf(trimmed).includes(official)) {
+          violations.push(`建议没有用所引发布的正确数值 ${formatNumber(official)}% 替换原文错误值。`);
+        }
+      }
+      const sourceDirection = sourceDirectionFor(claim, conclusion);
+      if (sourceDirection) {
+        const wrongMarker = assertedDirectionMarkers(trimmed, sourceDirection === "up" ? "down" : "up")
+          .find((marker) => trimmed.includes(marker));
+        if (wrongMarker) {
+          violations.push(`建议仍保留了与所引发布相反的方向表述「${wrongMarker}」。`);
+        }
+        if (claim.value === null && official !== null) {
+          const hasCorrectDirection = assertedDirectionMarkers(trimmed, sourceDirection).length > 0;
+          if (!hasCorrectDirection && !numberValuesOf(trimmed).includes(official)) {
+            violations.push(`建议没有写出所引发布记载的方向或数值（${formatNumber(official)}%）。`);
+          }
+        }
+      }
+    }
+  } else if (!isDelete) {
+    // 未解决（来源待核对／推断依据不足）：必须保留限定或建议删除，不能原样当成确定表述。
+    const hedged = HEDGE_MARKERS.some((marker) => trimmed.includes(marker));
+    const alreadyHedged = HEDGE_MARKERS.some((marker) => claim.claimText.includes(marker));
+    if (!hedged && !(sameAsClaim && alreadyHedged)) {
+      violations.push("这条主张还没有得到适用来源支持：改写必须保留限定（例如「暂未核实」）或建议删除。");
+    }
+  }
+
+  return { ok: violations.length === 0, violations };
+}
+
+/** 模型在汇总里提出的一条改写提议；程序会逐条校验，不合格的不被采用。 */
+export interface CaptionRewriteProposal {
+  claimText: string;
+  suggestedText: string;
+  reason: string;
+}
+
+/** 建议配文里的一处改动：原句、建议、理由、当前有效引用与处理方式。 */
+export interface CaptionSuggestionChange {
+  /** 关联的主张原文。 */
+  claimText: string;
+  /** 原句在配文里的片段；定位不到时为 null。 */
+  original: string | null;
+  /** 建议文本；建议删除时为空字符串。 */
+  suggested: string;
+  kind: CaptionChangeKind;
+  reason: string;
+  /** 这条改动依据的当前有效引用（程序校验通过的 sourceId）。 */
+  sourceIds: string[];
+  status: ClaimSourceStatus;
+  /** 改动由模型提议还是程序按结论生成。 */
+  origin: "model" | "program";
+  /** 模型提议未通过校验时的原因；通过或由程序生成时为 null。 */
+  rejectedReason: string | null;
+  /** 是否已并入建议配文（定位不到或与别处重叠时不并入）。 */
+  applied: boolean;
+}
+
+export interface CaptionSuggestion {
+  /** 生成这条建议时的原配文快照。 */
+  caption: string;
+  suggestedCaption: string;
+  changes: CaptionSuggestionChange[];
+  /** 模型提出但未通过程序校验的改写提议，逐条保留原因。 */
+  rejectedProposals: Array<{ claimText: string; suggestedText: string; reason: string; rejectedReason: string }>;
+  /** 未改动但需要提醒的内容：未展开、覆盖不足、观点、定位失败等。 */
+  notes: string[];
+  /** 生成依据的快照指纹：配文、结论状态与有效引用一变即不同。 */
+  fingerprint: string;
+}
+
+export interface BuildCaptionSuggestionInput {
+  caption: string;
+  claims: readonly SourceClaim[];
+  /** 与 claims 一一对应的结论。 */
+  conclusions: readonly ClaimSourceConclusion[];
+  hits: readonly SourceHit[];
+  acceptedCitations: readonly ModelCitation[];
+  proposals?: readonly CaptionRewriteProposal[];
+  /** 编排层已有的边界提示（未展开内容、覆盖不足），原样并入建议说明。 */
+  notes?: readonly string[];
+}
+
+/** 建议依据的快照指纹；页面据此标明新旧，上游一变旧建议不再代表当前结果。 */
+export function captionSuggestionFingerprint(input: {
+  caption: string;
+  conclusions: readonly ClaimSourceConclusion[];
+  acceptedCitations: readonly ModelCitation[];
+}): string {
+  return fnv1a64(JSON.stringify([
+    input.caption,
+    input.conclusions.map((conclusion) => [conclusion.claimText, conclusion.status, conclusion.citedSourceIds]),
+    input.acceptedCitations.map((citation) => [citation.sourceId, citation.role]),
+  ]));
+}
+
+/** 替换原文片段时要求的位置匹配下限：只有几乎整句都能在配文里找到才敢替换。 */
+const CAPTION_SPAN_MIN_COVERAGE = 0.9;
+
+/**
+ * 在配文原文里定位一条主张对应的片段；定位不到时不猜位置。
+ * 这里是替换原文用的位置，匹配要求比「主张能否追溯」更严：部分重合（例如只共用一个「月 CPI」）
+ * 替换下去会把配文改成另一句话。
+ */
+export function locateCaptionSpan(caption: string, claimText: string): { start: number; end: number; matchedRun: string } | null {
+  const { text: normalized, map } = normalizeClaimTextWithMap(caption);
+  const claimNormalized = normalizeClaimText(claimText);
+  if (!normalized || !claimNormalized) return null;
+  const run = longestCommonRun(normalized, claimNormalized);
+  if (run.length === 0 || run.length / claimNormalized.length < CAPTION_SPAN_MIN_COVERAGE) return null;
+  const start = map[run.start];
+  const end = map[run.start + run.length - 1] + 1;
+  return { start, end, matchedRun: caption.slice(start, end) };
+}
+
+/** 片段后面紧跟的句末标点；替换时用它处理句号重复或删除整句。 */
+function sentenceTerminatorAfter(caption: string, end: number): string {
+  const character = caption.slice(end, end + 1);
+  return /[。！？]/.test(character) ? character : "";
+}
+
+/** 替换文本本身是否已经以句末标点收尾。 */
+function endsWithTerminator(text: string): boolean {
+  return /[。！？]$/.test(text.trim());
+}
+
+/** 程序按结论为一条主张生成的兜底改动。 */
+function programChangeFor(
+  claim: SourceClaim,
+  conclusion: ClaimSourceConclusion,
+): { text: string; kind: CaptionChangeKind; reason: string } {
+  const basisLabel = claim.basis ? BASIS_LABELS[claim.basis] : null;
+  const cited = conclusion.citedSourceIds.length > 0 ? conclusion.citedSourceIds.join("、") : null;
+
+  if (conclusion.status === "source-match") {
+    return {
+      text: claim.claimText,
+      kind: "unchanged",
+      reason: `所引来源与这条主张的口径和数值一致${cited ? `（引用：${cited}）` : ""}，保留原句。`,
+    };
+  }
+
+  if (conclusion.status === "not-verifiable") {
+    return {
+      text: claim.claimText,
+      kind: "unchanged",
+      reason: "观点或超出数据的判断不支持核验，保留原句，不做真假改写。",
+    };
+  }
+
+  if (conclusion.status === "source-mismatch") {
+    const official = conclusion.officialValue;
+    if (claim.value !== null && official !== null) {
+      // 用所引发布的同口径正确数值替换原文错误值；只替换第一个出现的该数值。
+      let replaced = false;
+      const text = claim.claimText.replace(/\d+(?:\.\d+)?/g, (token) => {
+        if (!replaced && Number(token) === claim.value) {
+          replaced = true;
+          return formatNumber(official);
+        }
+        return token;
+      });
+      if (replaced) {
+        return {
+          text,
+          kind: "replace-value",
+          reason: `所引发布记载${basisLabel ?? "该口径"} ${formatNumber(official)}%，原文写 ${formatNumber(claim.value)}%，建议改为 ${formatNumber(official)}%。`,
+        };
+      }
+    }
+    const sourceDirection = sourceDirectionFor(claim, conclusion);
+    if (claim.direction && sourceDirection && official !== null) {
+      const marker = assertedDirectionMarkers(claim.claimText, claim.direction)[0];
+      if (marker) {
+        return {
+          text: claim.claimText.replace(
+            marker,
+            `${DIRECTION_LABELS[sourceDirection]} ${formatNumber(official)}%`,
+          ),
+          kind: "replace-value",
+          reason: `所引发布记载${basisLabel ?? "该口径"} ${formatNumber(official)}%（${DIRECTION_LABELS[sourceDirection]}），与原文断言的「${DIRECTION_LABELS[claim.direction]}」相反，建议改为「${DIRECTION_LABELS[sourceDirection]} ${formatNumber(official)}%」。`,
+        };
+      }
+    }
+    return {
+      text: `${claim.claimText}${CAPTION_MISMATCH_QUALIFIER}`,
+      kind: "keep-qualified",
+      reason: "这条主张与所引发布不一致，但没有可以机械替换的数值或方向，建议核对后改写或删除。",
+    };
+  }
+
+  // source-pending / inference-unsupported：保留限定或建议删除，不能写成确定表述。
+  const qualifier = CAPTION_QUALIFIERS[conclusion.status] ?? "（暂未核实）";
+  const alreadyHedged = HEDGE_MARKERS.some((marker) => claim.claimText.includes(marker));
+  const detail = conclusion.unresolved[0] ?? conclusion.summary;
+  return {
+    text: alreadyHedged ? claim.claimText : `${claim.claimText}${qualifier}`,
+    kind: "keep-qualified",
+    reason: `${CLAIM_STATUS_LABELS[conclusion.status]}：${detail}建议保留限定或删除，不要按确定表述发布。`,
+  };
+}
+
+/** 改动类型：删除、原样保留、按来源改正，或保留并限定。 */
+function deriveChangeKind(text: string, claim: SourceClaim, conclusion: ClaimSourceConclusion): CaptionChangeKind {
+  const trimmed = text.trim();
+  if (!trimmed) return "suggest-delete";
+  if (normalizeClaimText(trimmed) === normalizeClaimText(claim.claimText)) {
+    // 未解决的主张即使原样保留也按「保留并限定」计，避免被读成确定表述。
+    return conclusion.status === "source-match" || conclusion.status === "not-verifiable"
+      ? "unchanged"
+      : "keep-qualified";
+  }
+  return conclusion.status === "source-mismatch" ? "replace-value" : "keep-qualified";
+}
+
+/**
+ * 生成一条建议配文：只处理本次已核验的配文主张，逐处关联原句、建议、理由与当前有效引用。
+ * 模型提议先过逐处校验，不合格的退回程序兜底并保留拒绝原因；
+ * 未解决的主张保留限定或建议删除；无法定位原句的改动不并入建议配文，单列说明。
+ */
+export function buildCaptionSuggestion(input: BuildCaptionSuggestionInput): CaptionSuggestion {
+  const caption = input.caption;
+  const proposals = [...(input.proposals ?? [])];
+  const notes: string[] = [...(input.notes ?? [])];
+  const rejectedProposals: CaptionSuggestion["rejectedProposals"] = [];
+  const changes: CaptionSuggestionChange[] = [];
+
+  const pairs = input.claims
+    .map((claim, index) => ({ claim, conclusion: input.conclusions[index] ?? null }))
+    .filter((entry): entry is { claim: SourceClaim; conclusion: ClaimSourceConclusion } =>
+      !entry.claim.fromImage && entry.conclusion !== null);
+
+  // 提议按主张原文归位：同一条主张只采用第一条，其余与对不上主张的提议都记进拒绝列表，不静默丢弃。
+  const proposalsByClaim = new Map<number, CaptionRewriteProposal[]>();
+  for (const proposal of proposals) {
+    if (!proposal.claimText.trim()) {
+      rejectedProposals.push({
+        claimText: proposal.claimText,
+        suggestedText: proposal.suggestedText,
+        reason: proposal.reason,
+        rejectedReason: "这条提议没有写清针对哪条主张，未采用。",
+      });
+      continue;
+    }
+    if (!proposal.reason.trim()) {
+      rejectedProposals.push({
+        claimText: proposal.claimText,
+        suggestedText: proposal.suggestedText,
+        reason: proposal.reason,
+        rejectedReason: "这条提议没有写理由，未采用。",
+      });
+      continue;
+    }
+    const target = matchClaimIndex(pairs.map((entry) => entry.claim), proposal.claimText);
+    if (target === null) {
+      rejectedProposals.push({
+        claimText: proposal.claimText,
+        suggestedText: proposal.suggestedText,
+        reason: proposal.reason,
+        rejectedReason: "这条提议没有对应的已核验配文主张（可能主张没有展开或原文对不上），未采用。",
+      });
+      continue;
+    }
+    proposalsByClaim.set(target, [...(proposalsByClaim.get(target) ?? []), proposal]);
+  }
+
+  for (const [pairIndex, { claim, conclusion }] of pairs.entries()) {
+    const fallback = programChangeFor(claim, conclusion);
+    let text = fallback.text;
+    let kind = fallback.kind;
+    let reason = fallback.reason;
+    let origin: CaptionSuggestionChange["origin"] = "program";
+    let rejectedReason: string | null = null;
+
+    const claimProposals = proposalsByClaim.get(pairIndex) ?? [];
+    const proposal = claimProposals[0] ?? null;
+    for (const duplicate of claimProposals.slice(1)) {
+      rejectedProposals.push({
+        claimText: duplicate.claimText,
+        suggestedText: duplicate.suggestedText,
+        reason: duplicate.reason,
+        rejectedReason: "同一条主张有多条改写提议，只采用第一条；这条未被采用。",
+      });
+    }
+    if (proposal) {
+      const validation = validateCaptionChangeText(proposal.suggestedText, {
+        caption,
+        claim,
+        conclusion,
+        claims: input.claims,
+        hits: input.hits,
+        acceptedCitations: input.acceptedCitations,
+      });
+      if (validation.ok) {
+        text = proposal.suggestedText.trim();
+        kind = deriveChangeKind(text, claim, conclusion);
+        reason = proposal.reason;
+        origin = "model";
+      } else {
+        rejectedReason = validation.violations.join(" ");
+        rejectedProposals.push({
+          claimText: proposal.claimText,
+          suggestedText: proposal.suggestedText,
+          reason: proposal.reason,
+          rejectedReason,
+        });
+      }
+    }
+
+    const span = locateCaptionSpan(caption, claim.claimText);
+    changes.push({
+      claimText: claim.claimText,
+      original: span ? `${span.matchedRun}${sentenceTerminatorAfter(caption, span.end)}` : null,
+      suggested: text,
+      kind,
+      reason,
+      sourceIds: [...conclusion.citedSourceIds],
+      status: conclusion.status,
+      origin,
+      rejectedReason,
+      applied: false,
+    });
+  }
+
+  // 逐处并回配文：按位置替换；定位不到或与别处重叠的改动不并入，改为在说明里列出。
+  const placements = changes
+    .flatMap((change) => {
+      const span = change.original ? locateCaptionSpan(caption, change.claimText) : null;
+      return span ? [{ change, span }] : [];
+    })
+    .sort((left, right) => left.span.start - right.span.start);
+
+  const unapplied: string[] = [];
+  let cursor = 0;
+  let suggestedCaption = "";
+  const overlapping = new Set<CaptionSuggestionChange>();
+  for (const placement of placements) {
+    if (overlapping.has(placement.change)) continue;
+    if (placement.span.start < cursor) {
+      overlapping.add(placement.change);
+      unapplied.push(`「${placement.change.claimText}」与别处的改动在配文里重叠，未并入建议配文。`);
+      continue;
+    }
+    const terminator = sentenceTerminatorAfter(caption, placement.span.end);
+    const replacement = placement.change.suggested.trim();
+    // 建议文本自带句末标点时吸收原文的标点，否则把原文标点接回去；删除整句时连标点一起删。
+    const text = replacement.length === 0 || endsWithTerminator(replacement)
+      ? replacement
+      : `${replacement}${terminator}`;
+    placement.change.applied = true;
+    suggestedCaption += caption.slice(cursor, placement.span.start) + text;
+    cursor = placement.span.end + terminator.length;
+  }
+  suggestedCaption += caption.slice(cursor);
+
+  for (const change of changes) {
+    if (change.applied || overlapping.has(change)) continue;
+    unapplied.push(`「${change.claimText}」在配文里定位不到原句，未并入建议配文；请自行在原文中修改。`);
+  }
+  if (unapplied.length > 0) notes.push(...unapplied);
+
+  const kinds = new Set(changes.map((change) => change.kind));
+  if (changes.length > 0 && !kinds.has("replace-value") && !kinds.has("unchanged")) {
+    notes.push("本次没有可以据以改正配文的适用来源，建议只保留限定表述或删除未核实内容。");
+  }
+  if (changes.length === 0) {
+    notes.push("本次没有从配文里拆出可核对的主张，建议配文保持原样；如需改写请先缩小配文范围。");
+  }
+  if (changes.some((change) => change.status === "not-verifiable")) {
+    notes.push("配文里的观点或超出数据的判断不在核验范围内，建议里保留原句，请自行取舍。");
+  }
+  if (proposals.length > 0 && changes.every((change) => change.origin === "program")) {
+    notes.push("模型提出的改写都没有通过逐处校验，建议由程序按当前结论生成。");
+  }
+
+  const fingerprint = captionSuggestionFingerprint({
+    caption,
+    conclusions: pairs.map((entry) => entry.conclusion),
+    acceptedCitations: input.acceptedCitations,
+  });
+
+  return { caption, suggestedCaption, changes, rejectedProposals, notes, fingerprint };
+}
+
 export interface ExcludedSource {
   sourceId: string;
   title: string;
@@ -1515,6 +2149,8 @@ export interface SourceInvestigationResult {
   supplement: SupplementRecord | null;
   /** 补证恢复时与补证前结论的逐条对照；首次调查为 null。 */
   conclusionChanges: ConclusionChange[] | null;
+  /** 核验结束后按当前结论生成的建议配文；无法生成时为 null（例如没有有效汇总）。 */
+  captionSuggestion: CaptionSuggestion | null;
   /** 本次结果所属的调查记录 ID（服务端签发，补证前后保持同一 ID）；纯编排测试为 null。 */
   investigationId: string | null;
   /** 输入指纹（图片+配文）；改动输入即失配，用于过期恢复校验。 */
