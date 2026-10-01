@@ -2,10 +2,13 @@
   "extends": "./tsconfig.server.json",
   "compilerOptions": {
     "noEmit": false,
-    "outDir": "dist/server",
-    "rootDir": ".",
+    "outDir": "../dist/server",
+    "rootDir": "..",
     "declaration": false,
     "sourceMap": true
   },
-  "exclude": ["tests/**/*.ts", "vitest.config.ts"]
+  "exclude": [
+    "../tests/**/*.ts",
+    "./vitest.config.ts"
+  ]
 }

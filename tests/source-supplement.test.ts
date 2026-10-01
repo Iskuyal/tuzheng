@@ -52,6 +52,20 @@ describe("追问回答的解析", () => {
 });
 
 describe("补证按规则应用到主张", () => {
+  it("目标主张缺比较方式时，不被另一句的同比阻止补入环比", () => {
+    const target = claim({ claimText: "2025 年 12 月全国 CPI 上涨 0.2%", value: 0.2 });
+    const other = claim({ claimText: "2026 年 8 月全国 CPI 同比上涨 0.8%", basis: "year-on-year", period: "2026-08" });
+    const result = applySupplementToClaims({
+      claims: [target, other], priorClaims: [target, other], field: "basis",
+      rawAnswer: "环比", normalized: "month-on-month", targetClaimText: target.claimText,
+      caption: `${target.claimText}。${other.claimText}。`,
+    });
+    expect(result.claims[0].basis).toBe("month-on-month");
+    expect(result.infos[0]).toMatchObject({ applied: true, conflict: null });
+    expect(result.claims[1]).toEqual(other);
+    expect(result.infos[1]).toBeNull();
+  });
+
   it("图文没写这个口径时填入，标为用户提供", () => {
     const result = applySupplementToClaims({
       claims: [claim({ basis: null })],

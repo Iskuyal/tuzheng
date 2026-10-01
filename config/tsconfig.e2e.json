@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "node"
+    ],
+    "tsBuildInfoFile": "../.cache/typescript/tsconfig.e2e.tsbuildinfo"
+  },
+  "include": [
+    "../e2e/**/*.ts",
+    "./playwright.config.ts"
+  ]
+}

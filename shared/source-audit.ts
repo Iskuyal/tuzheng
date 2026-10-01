@@ -979,7 +979,6 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
   // 推断类主张：数字与口径、推断结论分别核对，分别给出支持、矛盾或依据不足。
   if (claim.kind === "inference") {
     const citedMeasure = measureFor(document, claim.basis, claim.period);
-    const cite = `所引国家统计局发布《${document.title}》（${document.publishedAt}）`;
     if (!citedMeasure) {
       return unsupportedInference(`所引《${document.title}》没有记载${BASIS_LABELS[claim.basis]}数值，无法核对这条推断`, [
         `所引发布未记载${BASIS_LABELS[claim.basis]}口径的数值。`,
@@ -987,6 +986,8 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
     }
     const revision = applyRevision(document, citedMeasure, claim);
     const measure = revision?.measure ?? citedMeasure;
+    const effectiveDocument = revision?.document ?? document;
+    const cite = `所引国家统计局发布《${effectiveDocument.title}》（${effectiveDocument.publishedAt}）`;
     const parts: ClaimEvidencePart[] = [];
     if (claim.value !== null) {
       const difference = Number(Math.abs(claim.value - measure.value).toFixed(2));
@@ -996,7 +997,7 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
         detail: difference === 0
           ? `该发布记载${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}%，与主张中的数字一致`
           : `该发布记载${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}%，主张写 ${formatNumber(claim.value)}%，相差 ${formatNumber(difference)} 个百分点`,
-        sourceId: document.id,
+        sourceId: effectiveDocument.id,
       });
     }
     const direction = claim.direction ?? null;
@@ -1004,7 +1005,7 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
       parts.push({
         label: "推断结论",
         ...directionComparison(measure, direction, BASIS_LABELS[claim.basis]),
-        sourceId: document.id,
+        sourceId: effectiveDocument.id,
       });
     }
     const status = overallStatusOf(parts);
@@ -1019,7 +1020,7 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
         + (revision ? `版本复查：${revisionSentence(revision.review)}，本条按修订后值对照。` : ""),
       officialValue: measure.value,
       difference: claim.value === null ? null : Number(Math.abs(claim.value - measure.value).toFixed(2)),
-      citedSourceIds: [document.id],
+      citedSourceIds: [effectiveDocument.id],
       parts,
       reasons: revision
         ? [`依据原句：${measure.excerpt}`, `修订声明：${revision.review.statement}（《${revision.review.toTitle}》，${revision.review.revisedAt}）`]
@@ -1049,6 +1050,7 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
   }
   const revision = applyRevision(document, citedMeasure, claim);
   const measure = revision?.measure ?? citedMeasure;
+  const effectiveDocument = revision?.document ?? document;
   const revisionSuffix = revision ? `（版本复查：${revisionSentence(revision.review)}，本条按修订后值对照）` : "";
   const measureReasons = revision
     ? [`依据原句：${measure.excerpt}`, `修订声明：${revision.review.statement}（《${revision.review.toTitle}》，${revision.review.revisedAt}）`]
@@ -1060,11 +1062,11 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
       ...base,
       status: comparison.status === "contradicted" ? "source-mismatch" : "source-match",
       summary: (comparison.status === "contradicted"
-        ? `与所引国家统计局发布《${document.title}》（${document.publishedAt}）不一致：${comparison.detail}。`
-        : `与所引国家统计局发布《${document.title}》（${document.publishedAt}）一致：${comparison.detail}。`) + revisionSuffix,
+        ? `与所引国家统计局发布《${effectiveDocument.title}》（${effectiveDocument.publishedAt}）不一致：${comparison.detail}。`
+        : `与所引国家统计局发布《${effectiveDocument.title}》（${effectiveDocument.publishedAt}）一致：${comparison.detail}。`) + revisionSuffix,
       officialValue: measure.value,
       difference: null,
-      citedSourceIds: [document.id],
+      citedSourceIds: [effectiveDocument.id],
       reasons: measureReasons,
       ...(revision ? { revisionReview: revision.review } : {}),
       unresolved: comparison.status === "contradicted" ? ["需要复核配文使用的口径（同比／环比）与涨跌方向。"] : [],
@@ -1087,8 +1089,8 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
   const difference = Number(Math.abs(claim.value - measure.value).toFixed(2));
   const agrees = difference === 0;
   const comparison = agrees
-    ? `与所引国家统计局发布《${document.title}》（${document.publishedAt}）记载的${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}% 一致。${revisionSuffix}`
-    : `与所引国家统计局发布《${document.title}》（${document.publishedAt}）不一致：该发布记载${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}%，主张写 ${formatNumber(claim.value)}%，相差 ${formatNumber(difference)} 个百分点。${revisionSuffix}`;
+    ? `与所引国家统计局发布《${effectiveDocument.title}》（${effectiveDocument.publishedAt}）记载的${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}% 一致。${revisionSuffix}`
+    : `与所引国家统计局发布《${effectiveDocument.title}》（${effectiveDocument.publishedAt}）不一致：该发布记载${BASIS_LABELS[claim.basis]} ${formatNumber(measure.value)}%，主张写 ${formatNumber(claim.value)}%，相差 ${formatNumber(difference)} 个百分点。${revisionSuffix}`;
 
   return {
     ...base,
@@ -1096,7 +1098,7 @@ export function concludeClaimSource(input: ClaimConclusionInput): ClaimSourceCon
     summary: comparison,
     officialValue: measure.value,
     difference,
-    citedSourceIds: [document.id],
+    citedSourceIds: [effectiveDocument.id],
     reasons: measureReasons,
     ...(revision ? { revisionReview: revision.review } : {}),
     unresolved: [],
@@ -1120,6 +1122,8 @@ export interface SourceAuditInput {
 
 export interface SourceAuditOutcome {
   conclusions: ClaimSourceConclusion[];
+  /** 本次检索资料与按官方修订声明追加的有效发布；追加原因显式保留。 */
+  hits: SourceHit[];
   /** 通过校验、实际可作为依据的引用，按资料 ID 与角色去重。 */
   acceptedCitations: ModelCitation[];
   /** 检索命中里口径不适配的材料，逐条给出排除原因。 */
@@ -1157,6 +1161,20 @@ export function auditClaimsAgainstSources(input: SourceAuditInput): SourceAuditO
     input.supplements?.[index] ?? null,
   ));
 
+  // 只有已通过原引用与主张口径校验的修订才进入证据链；模型不能借此引用未检索的任意资料。
+  const hits = [...input.hits];
+  for (const [index, conclusion] of conclusions.entries()) {
+    const review = conclusion.revisionReview;
+    if (!review || !conclusion.citedSourceIds.includes(review.toSourceId)) continue;
+    const document = SOURCE_LIBRARY.find((entry) => entry.id === review.toSourceId);
+    if (!document) continue;
+    const note = `程序版本复查：依据《${document.title}》的官方修订声明，由 ${review.fromSourceId} 采用 ${review.toSourceId}。`;
+    if (!hits.some((hit) => hit.document.id === document.id)) {
+      hits.push({ document, score: 0, matchReasons: [note], applicability: evaluateApplicability(claimQueryOf(input.claims[index]), document) });
+    }
+    usableCitations.push({ sourceId: document.id, role: "value-basis", note });
+  }
+
   const excluded = input.hits
     .filter((hit) => !fitsClaimAsValueBasis(hit.document, input.claims))
     .map((hit) => ({
@@ -1166,7 +1184,13 @@ export function auditClaimsAgainstSources(input: SourceAuditInput): SourceAuditO
     }));
 
   const seen = new Set<string>();
-  const acceptedCitations = usableCitations.filter((citation) => {
+  const supersededIds = new Set(conclusions.flatMap((conclusion) => conclusion.revisionReview ? [conclusion.revisionReview.fromSourceId] : []));
+  const currentValueIds = new Set(conclusions.flatMap((conclusion) => conclusion.citedSourceIds));
+  const acceptedCitations = usableCitations.map((citation): ModelCitation =>
+    citation.role === "value-basis" && supersededIds.has(citation.sourceId) && !currentValueIds.has(citation.sourceId)
+      ? { ...citation, role: "context", note: "程序版本复查：该发布的数值已被修订，本次仅作历史背景；当前数值依据见修订发布。" }
+      : citation,
+  ).filter((citation) => {
     const key = `${citation.sourceId}|${citation.role}`;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -1175,6 +1199,7 @@ export function auditClaimsAgainstSources(input: SourceAuditInput): SourceAuditO
 
   return {
     conclusions,
+    hits,
     acceptedCitations,
     excluded,
     citationsRejected: [...validation.rejected, ...inapplicableCitations].map((entry) => ({
@@ -1472,7 +1497,7 @@ function hasFieldGap(claim: SourceClaim, field: ClarificationField, caption: str
   const value = claim[field as keyof SourceClaim];
   if (value !== null && value !== undefined) return false;
   if (field === "basis") {
-    const originText = claim.fromImage ? claim.imageExcerpt : caption;
+    const originText = supplementOriginText(claim, caption);
     return statedBasisIn(originText) === null;
   }
   return true;
@@ -1521,6 +1546,12 @@ function statedBasisIn(text: string | null | undefined): ComparisonBasis | null 
   return isYoy === isMom ? null : isYoy ? "year-on-year" : "month-on-month";
 }
 
+/** 回看目标主张自己的原文；其他句子的比较方式不能决定这条主张的补证。 */
+function supplementOriginText(claim: SourceClaim, caption: string | null | undefined): string | null | undefined {
+  if (claim.fromImage) return claim.imageExcerpt;
+  return caption ? locateCaptionSpan(caption, claim.claimText)?.matchedRun ?? claim.claimText : claim.claimText;
+}
+
 /**
  * 把用户补充按字段应用到追问指向的那条主张：
  * 图文没写 → 填入并标为用户提供；已写且一致 → 不改；已写但不同 → 不覆盖图文，保留双方并记为冲突。
@@ -1546,7 +1577,7 @@ export function applySupplementToClaims(options: ApplySupplementOptions): ApplyS
   let priorValue = rawPriorValue;
   if ((priorValue === null || priorValue === undefined) && options.field === "basis") {
     // 模型可能没填 basis，但配文或图上抄录里明写了比较方式——那也算图文内容。
-    const originText = priorClaim.fromImage ? priorClaim.imageExcerpt : options.caption;
+    const originText = supplementOriginText(priorClaim, options.caption);
     priorValue = statedBasisIn(originText);
   }
   const info: ClaimSupplementInfo = {
@@ -1835,7 +1866,7 @@ export function validateCaptionChangeText(text: string, context: CaptionChangeCo
         violations.push("与所引发布不一致的内容不能原样保留，必须改正为所引来源的数值／方向，或建议删除。");
       }
       const official = conclusion.officialValue;
-      if (claim.value !== null && official !== null) {
+      if (claim.value !== null && official !== null && claim.value !== official) {
         if (numberValuesOf(trimmed).includes(claim.value)) {
           violations.push(`建议仍保留了与来源不一致的数值 ${formatNumber(claim.value)}%。`);
         }
@@ -1992,7 +2023,7 @@ function programChangeFor(
 
   if (conclusion.status === "source-mismatch") {
     const official = conclusion.officialValue;
-    if (claim.value !== null && official !== null) {
+    if (claim.value !== null && official !== null && claim.value !== official) {
       // 用所引发布的同口径正确数值替换原文错误值；只替换第一个出现的该数值。
       let replaced = false;
       const text = claim.claimText.replace(/\d+(?:\.\d+)?/g, (token) => {
@@ -2011,7 +2042,7 @@ function programChangeFor(
       }
     }
     const sourceDirection = sourceDirectionFor(claim, conclusion);
-    if (claim.direction && sourceDirection && official !== null) {
+    if (claim.direction && sourceDirection && claim.direction !== sourceDirection && official !== null) {
       const marker = assertedDirectionMarkers(claim.claimText, claim.direction)[0];
       if (marker) {
         return {
@@ -2146,6 +2177,18 @@ export function buildCaptionSuggestion(input: BuildCaptionSuggestionInput): Capt
           reason: proposal.reason,
           rejectedReason,
         });
+      }
+    }
+
+    // 程序兜底也必须满足同一套事实与方向约束；无法机械修正时明确建议删除。
+    if (origin === "program") {
+      const validation = validateCaptionChangeText(text, {
+        caption, claim, conclusion, claims: input.claims, hits: input.hits, acceptedCitations: input.acceptedCitations,
+      });
+      if (!validation.ok) {
+        text = "";
+        kind = "suggest-delete";
+        reason = `无法在当前证据范围内安全改写，建议删除后人工重写。${validation.violations.join(" ")}`;
       }
     }
 

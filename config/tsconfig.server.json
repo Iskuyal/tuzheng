@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "node"
+    ],
+    "tsBuildInfoFile": "../.cache/typescript/tsconfig.server.tsbuildinfo"
+  },
+  "include": [
+    "../server/**/*.ts",
+    "../shared/**/*.ts",
+    "../scripts/**/*.ts",
+    "../tests/**/*.ts",
+    "./vitest.config.ts"
+  ]
+}

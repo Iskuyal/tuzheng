@@ -1,3 +1,4 @@
+import "dotenv/config";
 import vue from "@vitejs/plugin-vue";
 import { defineConfig } from "vite";
 
@@ -6,7 +7,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     proxy: {
-      "/api": "http://127.0.0.1:3001",
+      "/api": `http://127.0.0.1:${process.env.PORT ?? "3001"}`,
     },
   },
   build: {

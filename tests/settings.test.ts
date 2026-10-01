@@ -22,6 +22,16 @@ afterEach(async () => {
 });
 
 describe("本机模型设置存储", () => {
+  it.each(["legacy", "providers"])("%s 文件不能绕过远程 HTTPS 限制", async (format) => {
+    const store = await createTemporaryStore();
+    const unsafe = { baseUrl: "http://127.attacker.example/v1", model: "reader", apiKey: "fake-secret" };
+    const settings = format === "legacy" ? unsafe : {
+      activeProvider: "anthropic", providers: { anthropic: unsafe },
+    };
+    await writeFile(store.filePath, JSON.stringify(settings), "utf8");
+    await expect(store.read()).rejects.toThrow("设置文件");
+  });
+
   it("缺少本机配置文件时返回安全默认项", async () => {
     const store = await createTemporaryStore();
 

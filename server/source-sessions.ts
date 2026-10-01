@@ -36,6 +36,7 @@ export interface SourceSessionStoreOptions {
  */
 export class SourceSessionStore {
   private readonly sessions = new Map<string, SourceSession>();
+  private readonly resuming = new Set<string>();
   private readonly ttlMs: number;
   private readonly max: number;
   private readonly now: () => number;
@@ -81,6 +82,17 @@ export class SourceSessionStore {
   update(id: string, result: SourceInvestigationResult): void {
     const session = this.sessions.get(id);
     if (session) session.result = result;
+  }
+
+  /** 在任何 await 前占用这条调查，防止两个回答同时修改同一段模型对话与预算。 */
+  tryBeginResume(id: string): boolean {
+    if (!this.sessions.has(id) || this.resuming.has(id)) return false;
+    this.resuming.add(id);
+    return true;
+  }
+
+  endResume(id: string): void {
+    this.resuming.delete(id);
   }
 
   private sweep(): void {
