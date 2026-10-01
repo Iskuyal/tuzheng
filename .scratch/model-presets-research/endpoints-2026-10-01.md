@@ -16,7 +16,7 @@
 - **明确不能补**：只有 `/chat/completions` 的（腾讯混元等，探测 404）、有 `/responses` 路由但**没有图片输入证据**的（百度千帆）、以及一批 404 的第三方站点。
 - **还需人工盯的（2026-10-02 部分已推翻，见下条）**：火山方舟 Ark（文档是 JS 外壳、探测不可判定）、Groq / Together / xAI / Gemini（本机网络或 WAF 拦截，未核实）、硅基流动与 Kimi coding 的 Anthropic 面（路由存在但缺「这个面收图片」的原句）。**其中 Kimi coding 的 Anthropic 面 2026-10-02 已推翻**：官方《Model Configuration》写明该 API 同时支持 OpenAI 与 Anthropic 协议并给出两种 base，型号表把 `k3` 标为「Image, video」，已补进预设；硅基流动本轮未重查，仍按旧结论。
 - **另有 3 处现存预设需要人拍板**：OpenRouter 的 `sourceUrl` 已 404（现行链接见下）、DeepSeek Responses 的 baseUrl 与官方口径不一致、OpenAI `gpt-4.1-mini` 无法从官方页复核（见文末「现有预设核对」）。
-- **2026-10-02 收口**（细节见「未核实清单收口（2026-10-02）」与「2026-10-02 收口：逐条证据」）：原表的 **13 行**（第 10 行含 4 家，**合计 17 个对象**；其中第 7 行 StepFun 一行对应两侧 **2 个**预设）推进为 —— **4 项能补**：阶跃星辰 StepFun 的 Responses 面与 Anthropic 面、智谱开放平台 Response API、Kimi 编码套餐的 Anthropic 面，共 **4 个新预设**（含 StepFun 两侧）；**4 项确认不能收**：Together（兼容矩阵无 `responses`）、Gemini 的 OpenAI 兼容面（只有 `chat/completions`）、千帆 `/v2/responses`（官方写明只服务文本生成类模型）、ModelScope（0 个多模态型号）；**6 项仍不能补（缺一项硬证据）**：火山方舟（对照探测不可判定）、DeepInfra Anthropic 面、七牛云 Anthropic 面、Gitee AI、无问芯穹 Infini、AI-ML API；**3 项本机网络不可达**：Groq、Groq 视觉型号、xAI。4 + 4 + 6 + 3 = 17，与上表逐行对得上。本轮仍是 **0 次真实模型调用**，`documented → live` 升格按用户 2026-10-01 的决定**继续暂缓**。
+- **2026-10-02 收口（两轮）**：原表 **13 行**（第 10 行含 4 家，**共 16 个对象**）经「首轮收口 + 二轮深挖」推进为 —— **6 个对象补进预设，共 8 个新预设**：StepFun 两侧 2 条、智谱 Response API 1 条、Kimi 编码套餐 Anthropic 面 1 条（首轮 4 条）；七牛云 AI 两侧 2 条、DeepInfra Responses 面 1 条、AI-ML API Responses 面 1 条（二轮 4 条）。**3 个对象仍不能补**：火山方舟（对照探测不可判定——二轮已把官方文档原句补齐，只差一个「可判定」的探测）、Gitee AI、无问芯穹 Infini（二轮对 Gitee 文档站做了 191/191 全量普查、Infini 换了 API 参考与 `llms.txt` 等渠道，两家的图片证据仍然只在 chat 面）。**4 个对象确认不能收**：Together（兼容矩阵无 `responses`）、Gemini 的 OpenAI 兼容面（只有 `chat/completions`）、千帆 `/v2/responses`（官方写明只服务文本生成类模型）、ModelScope（0 个多模态型号）。**3 个对象本机网络不可达**：Groq、Groq 视觉型号、xAI。6 + 3 + 4 + 3 = 16。另有 **DeepInfra 的 Anthropic 面**单独记为「该面不能收（OpenAPI 里 messages 体是不透明对象、无 image schema），但同一家的 Responses 面本轮补进预设」。全程仍是 **0 次真实模型调用**，`documented → live` 升格按用户 2026-10-01 的决定**继续暂缓**。
 
 ---
 
@@ -162,21 +162,22 @@
 
 ## 未核实清单收口（2026-10-02）
 
-> 本节把原来 13 行「未核实／需人工确认」（第 10 行含 4 家，**合计 17 个对象**；第 7 行 StepFun 一行对应两侧 2 个预设）逐条推到结论：**能补 → 已补进预设／仍不能补（写清缺什么）／本机网络不可达无法判（给出可复核命令与替代路径）**。逐条原句、状态码与命令见下一节「2026-10-02 收口：逐条证据」。
+> 本节把原来 13 行「未核实／需人工确认」（第 10 行含 4 家，**共 16 个对象**；一行可能对应两侧多个预设）逐条推到结论：**能补 → 已补进预设／仍不能补（写清缺什么）／本机网络不可达无法判（给出可复核命令与替代路径）**。逐条原句、状态码与命令见下一节「2026-10-02 收口：逐条证据」与末节「2026-10-02 二轮深挖」。
+> 表内判定是**两轮合计**的结果（首轮 + 二轮深挖）；二轮新增的证据与逐条出处见「二轮深挖」一节。
 > 口径 4 从严执行：**对照探测两者同码 → 不可判定 → 不得据此下结论**，因此「官方文档写了路径、但本机探测不可判定」的条目仍不收（火山方舟），本轮只把它推进到「缺哪一步」写清楚。
 
 | # | 对象 | 本轮判定 | 本轮新证据（出处） | 一句话原因 |
 | --- | --- | --- | --- | --- |
-| 1 | 火山方舟 Volcengine Ark `https://ark.cn-beijing.volces.com/api/v3` | **仍不能补**（探测不可判定） | 目标路径与控制路径同码：`POST` `/responses`、`/messages`、`/__dsh_probe__` 全 401，换 GET／OPTIONS／DELETE／空体／坏 JSON／表单体也全 401；国际站 `ark.ap-southeast.bytepluses.com/api/v3` 同样全 401。文档站两页都是 JS 外壳（HTTP 200、正文 60 字符） | 口径 4：两者同码即不可判定；文档面也拿不到 base_url／图片原句 |
+| 1 | 火山方舟 Volcengine Ark `https://ark.cn-beijing.volces.com/api/v3` | **仍不能补**（对照探测不可判定；文档面二轮已补齐） | 目标路径与控制路径**同码同文**：`POST`/`GET`/`PUT`/`DELETE`/`HEAD` × 空体／坏 JSON／合法 JSON／含图片 JSON × 无鉴权／`Bearer bogus`／`X-Api-Key bogus`，以及 5 个不存在的控制/兄弟路径，**恒 401**；国际站 `ark.ap-southeast.bytepluses.com/api/v3` 同样。**二轮改由官方文档正文拿到原句**：`https://www.volcengine.com/api/doc/getDocDetail?LibraryID=82379&DocumentID=1569618` → 200，正文含 *"`POST https://ark.cn-beijing.volces.com/api/v3/responses`"*、*"输入给模型的图片内容。支持通过 file_id、image_url 或 Base64 编码传入。"*、*"取值固定为 `input_image`。"*、型号 *"doubao-seed-2.0-pro：全版本支持"*；国际站 `docs.byteplus.com` 同构 | 口径 4：两者同码即不可判定。现在**只差一个可判定的探测**（文档面已齐：端点 + 图片字段 + 型号）；带 key 打一次 `/api/v3/responses` 即可定案 |
 | 2 | Groq `https://api.groq.com/openai/v1` | **本机网络不可达无法判** | 本轮 `POST /responses`、`/messages`、`/__dsh_probe__` 全部 **403 `{"error":{"message":"Forbidden"}}`**（WAF，与 10-01 一致）；官方文档原句已拿到（见下节 G2） | 探测被 WAF 拦，无法做对照；文档面已具备，等可达网络复核 |
 | 3 | xAI `https://api.x.ai/v1` | **本机网络不可达无法判** | `api.x.ai:443` 连接超时（`000`，`Connect Timeout Error (attempted address: api.x.ai:443, timeout: 10000ms)`）；官方 `docs.x.ai/llms.txt` 给出 `base_url="https://api.x.ai/v1"` 与 `curl https://api.x.ai/v1/responses` | 路由有官方文档，但图片证据与对照探测都拿不到 |
 | 4 | Google Gemini OpenAI 兼容面 `…/v1beta/openai` | **确认不能收**（该兼容面未文档化 `/responses`）＋本机不可达 | 官方《OpenAI compatibility》只给 `base_url="https://generativelanguage.googleapis.com/v1beta/openai/"` + `chat.completions.create` + `curl …/v1beta/openai/chat/completions`；域名本机 `000` 超时 | 官方兼容面文档里没有 `/responses`，本应用要的正是它 |
 | 5 | Together AI `https://api.together.xyz/v1` | **确认不能收**（无 `/responses`） | 官方《OpenAI compatibility》的 Endpoint compatibility matrix 逐条列出 `chat/completions`（含 vision 输入）、`completions`、`embeddings`、`images`、`audio`、`models`，**没有 responses**；本机全部路径 403（Cloudflare） | 兼容矩阵里没有本应用要走的端点；vision 只走 `/v1/chat/completions` |
-| 6 | DeepInfra Anthropic 面 `https://api.deepinfra.com/anthropic/v1` | **仍不能补**（缺该面图片原句） | 复核：`POST /anthropic/v1/messages` → **401 `{"type":"error","error":{"type":"authentication_error","message":"missing API key"}}`**，控制路径 404，`/messagesx`、`/zzz_not_a_route`、`/a/b/c` 均 404 ⇒ 路由存在；但 `integrations/anthropic` 与 `api-reference/…/anthropic-messages` 两页正文里 `image` 只出现在左侧导航（Vision & OCR 等），且明说 *"Not all Anthropic-specific features may be supported."* | 路由有、图片证据没有；OpenAI 面的模态元数据不能外推到 Messages 面 |
+| 6 | DeepInfra：Anthropic 面 `https://api.deepinfra.com/anthropic/v1`／Responses 面 `https://api.deepinfra.com/v1` | **能补（Responses 面，已补）**；Anthropic 面仍不能收 | 复核：`POST /anthropic/v1/messages` → **401 `missing API key`**，控制路径与兄弟路径 404 ⇒ 路由存在。二轮拿到**官方 OpenAPI**：`https://api.deepinfra.com/openapi.json` → 200（140 条 path），`/v1/responses` 的 summary 是 *"Openai Responses"*、`servers` 指向 `https://api.deepinfra.com`，请求体经 `ResponsesIn.input` → `InputMessageItem.content` → **`InputImagePart`**（逐字：`"const":"input_image"` + `image_url` + `file_id` + `detail(auto|low|high)`）；型号元数据 `https://api.deepinfra.com/models/list` 给 `Qwen/Qwen3-VL-235B-A22B-Instruct` 的 tags 含 `multimodal`。探测：`POST /v1/responses` 401、控制与兄弟路径 404、坏 JSON 422 ⇒ 可判定 | 由「缺该面图片原句」推进为「Responses 面双证齐全已补」。**Anthropic 面仍不收**：同一份 OpenAPI 里 `/anthropic/v1/messages` 的 `messages` 是不透明对象（`additionalProperties: true`）、无 image schema，官方文档图片示例只在 chat 面 |
 | 7 | 阶跃星辰 StepFun | **能补（两侧，已补）** | Responses：官方《Responses API》*"## 请求地址 `POST https://api.stepfun.com/v1/responses`"*、*"当前支持 `step-5-preview` 和 `step-3.7-flash`"*、图片块 *"总为 `input_image`"*；Messages：官方《Messages API》*"以 Anthropic Messages API 兼容的格式调用 Step 模型，支持流式输出、工具调用、图片输入与思考深度配置。"*，普通 API 通道 base `https://api.stepfun.com` → `POST https://api.stepfun.com/v1/messages`，图片块 `type: image`（URL／base64）；探测 `https://api.stepfun.com/v1` 的 `/responses`、`/messages` 均 401、控制路径与三个兄弟路径均 404 | 两侧都满足：文档写出该面的图片字段 + 该面型号 + 对照探测 |
 | 8 | Kimi 编码端点 `https://api.kimi.com/coding/v1` | **能补（Anthropic 面，已补）**；Responses 面仍不收 | 官方《Model Configuration》*"Kimi Code API supports both OpenAI and Anthropic protocols. Base URLs: … Anthropic compatible China `https://api.kimi.com/coding/` …"*，型号表 `k3` 的多模态输入是 *"Image, video"*；探测 `https://api.kimi.com/coding/v1/{messages,responses,chat/completions}` 均 401、控制路径与兄弟路径 404 | Anthropic 面：文档点名该协议面 + 型号表写出图片输入 + 对照探测；Responses 面官方只写「OpenAI compatible」、未点名 `/responses`，本轮不收 |
-| 9 | 七牛云 AI `https://api.qnaigc.com/v1` | **仍不能补**（缺该面图片原句） | 官方《实时推理请求 API 接入说明》*"七牛云AI大模型推理 API…兼容 OpenAI API 和 Anthropic API 接口格式"*、接入域名 `https://api.qnaigc.com/v1`、接口表 *"/v1/messages 兼容Anthropic API格式"*，但图片说明挂在 **`/v1/chat/completions`** 那一行（*"支持图片文字识别、文件识别 图片格式：支持 JPG、JPEG、PNG、BMP、PDF"*）；探测 `/v1/messages` 401、控制路径与兄弟路径 404 ⇒ 路由存在 | `/responses` 本就没有（404）；Anthropic 面缺「收图」原句与型号对应 |
-| 10 | Gitee AI／无问芯穹 Infini／AI-ML API／ModelScope | 前三家 **仍不能补**；ModelScope **确认不能收** | 三家的 `/responses`、`/messages` 均 401、控制路径与兄弟路径 404 ⇒ 路由存在；但 Gitee 模型页是 JS 壳（正文 369 字符）、Infini 的 `docs.infini-ai.com/gen-studio/api/maas.html` 已 404、AI-ML API 的 Responses 端点文档明说 *"This endpoint is currently used only with OpenAI models."* 且图片示例全在 `/v1/chat/completions` 面；ModelScope 在 models.dev 里 **0 个** vision 型号（`/responses` 400 `Invalid model id`） | 前三家缺「某型号在该面收图」的证据；ModelScope 缺多模态型号 |
+| 9 | 七牛云 AI `https://api.qnaigc.com` | **能补（两侧各 1 条，已补）** | 二轮找到官方 API 文档站（七牛官方文档页页脚以「AI接口文档」互链 `https://apidocs.qnaigc.com/`）：① `https://apidocs.qnaigc.com/432088078e0.md` 写明 `POST /bypass/anthropic/v1/messages`、*"目前支持模型： claude-opus-4-6 claude-sonnet-4-6 claude-haiku-4-5-20251001"*，内容块 `type` 的 enum 含 `image`、`source` 是 *"'[image/document] 文件/图片来源（Base64 或 URL）。'"* 且 `type: enum - base64 - url`、含 `media_type`／`data`／`url`；② `https://apidocs.qnaigc.com/432091837e0.md` 写明 `POST /bypass/openai/v1/responses`（`summary: bypass Responses协议`、`servers: https://api.qnaigc.com`），*"当前支持模型: openai/gpt-5 openai/gpt-5.2 …"*（13 个），内容类型含 `input_image`。探测：两条路径均 401、控制与兄弟路径 404 ⇒ 可判定 | 由「缺该面图片原句」推进为「两侧双证齐全已补」。**不收裸 `/v1/messages` 那条**：官方那页的「图片理解」示例用 OpenAI 风格 `type: image_url`，与本应用发出的 Anthropic 原生 `source` 块不一致；裸 `/v1/responses` 探测 404（不存在） |
+| 10 | Gitee AI／无问芯穹 Infini／AI-ML API／ModelScope | AI-ML API **能补（已补）**；Gitee 与 Infini **仍不能补**；ModelScope **确认不能收** | **AI-ML API**：逐型号官方文档的 `## POST /v1/responses` 段给出 `servers: [{"url":"https://api.aimlapi.com"}]`、`model` enum 为 `openai/gpt-6-sol`、图片块 `type: input_image`（*"Always input_image."*）+ `image_url`（*"A fully qualified URL or base64 encoded image in a data URL."*）+ `detail(high|low|auto)`；探测 `/v1/responses` 401、控制与兄弟路径 404、坏 JSON 400 ⇒ 可判定。**Gitee AI**：二轮把官方文档站 `sitemap.xml` 的 **191/191 页全部抓完**（全 200），`/v1/responses` 与 `/v1/messages` 命中 **0**；图片只写在 chat 面（`images-vision/visions` 的 `base_url = "https://ai.gitee.com/v1"` + `client.chat.completions.create` + `image_url`，型号 `InternVL3-78B`）。**Infini**：`llms.txt`／`sitemap.xml`(185 条)／`reference/maas.html`(171 KB)／`v1-redoc.html`／`tutorial-vision.md` 全抓过，`/v1/responses` 没有对应文档页、`input_image` 命中 **0**，图片只写在 chat 面。**ModelScope**：models.dev 里 0 个 vision 型号（`/responses` 400 `Invalid model id`） | AI-ML API 原先的「该端点只用于 OpenAI 模型、图片示例都在 chat 面」被逐型号文档里的 `/v1/responses` + `input_image` schema 取代（该预设立的正是 OpenAI 型号）；Gitee／Infini 穷尽官方文档后仍无面级图片证据 |
 | 11 | 智谱 Responses 面 | **能补（已补）** | 官方《Response API 兼容》：*"Response API 的基址是 https://open.bigmodel.cn/api/v1，不是对话补全使用的 https://open.bigmodel.cn/api/paas/v4"*、*"工具与多模态 支持文本、图片、文件输入"*、接口一览 *"Base URL： https://open.bigmodel.cn/api/v1 … POST /responses 创建 Response"*，并有 `model = "glm-5.3"` + `{"type": "input_image", "image_url": "https://cdn.bigmodel.cn/static/logo/register.png"}` 的图像理解示例；探测该 base 的 `POST /responses` 返回缺鉴权（HTTP 200 + `code 1001`），控制路径与 `/responsesx` 返回 `code 500 "404 NOT_FOUND"`，`GET /responses/{id}` 返回缺鉴权 | 原先探的 `/api/paas/v4` 是对话补全基址；官方文档给出独立的 `/api/v1` |
 | 12 | 千帆 `/v2/responses` 的图片支持 | **确认不能收** | 官方《创建模型响应》*"POST https://qianfan.baidubce.com/v2/responses"* 的「支持模型列表」写明 *"支持文本生成类模型，详细模型列表请参见 Responses API 使用指南-支持模型"*，而「视觉理解」在文档目录里是**独立端点**；探测 `/v2/responses` 401、控制路径与兄弟路径 404 ⇒ 路由存在 | 该面官方口径只服务文本生成类模型，图片走另一个端点 |
 | 13 | Groq 视觉型号 | **本机网络不可达无法判** | 与 #2 同一 WAF 阻塞；models.dev `groq` 仍标 `qwen/qwen3.8-27b`、`qwen/qwen3.6-27b` 的输入含 image | 与 #2 合并复核：网络可达后一条命令即可判定 |
@@ -376,8 +377,53 @@ done
 | `https://api.z.ai/api/v1` | 200 / `code 500 404 NOT_FOUND` | **200 / `code 1001`（缺鉴权）** | 401 | 200 / `404 NOT_FOUND` |
 | `https://open.bigmodel.cn/api/paas/v4` | 401 | 401 | 401 | 401（不可判定） |
 | `https://qianfan.baidubce.com/v2` | 404 | **401** | 404 | 404 |
+| `https://api.deepinfra.com/v1`（二轮） | 404 | **401** | 404 | 404（坏 JSON 422） |
+| `https://api.qnaigc.com/bypass/anthropic/v1`（二轮） | 404 | 404 | **401** | 404 |
+| `https://api.qnaigc.com/bypass/openai/v1`（二轮） | 404 | **401** | — | 404 |
+| `https://api.qnaigc.com/v1/responses`（二轮） | — | 404（**不存在**） | — | — |
 
 **文档 URL 状态码（2026-10-02）**：`docs.bigmodel.cn/cn/guide/develop/responses/introduction` 200；`platform.stepfun.com/docs/zh/api-reference/{responses/responses-create.md,chat/messages-create.md}` 200；`www.kimi.com/code/docs/en/kimi-code/models.html` 200；`cloud.baidu.com/doc/qianfan-api/s/vmhejnuy8`（创建模型响应）200；`developer-doc.qiniu.com/products/aitokenapi/inference-api/1-real-time-ai-interface-api` 200；`docs.deepinfra.com` 两页 200；`docs.aimlapi.com` 两页 200；`docs.together.ai/docs/openai-api-compatibility` 200（第三方渲染）；`ai.google.dev/gemini-api/docs/openai` 200（第三方渲染）；`docs.x.ai/llms.txt` 200（第三方渲染）；`console.groq.com/docs/responses-api` 403（第三方渲染可读）；`docs.volcengine.com/docs/ark/*`、`www.volcengine.com/docs/82379/1569618`、`docs.byteplus.com/en/docs/modelark/create-model-responses-api` 200 但为 JS 外壳；`docs.infini-ai.com/gen-studio/api/maas.html` 404；`moark.com/hf-models/*/api` 200 但为 JS 外壳。
+
+---
+
+## 2026-10-02 二轮深挖：追加证据（改写了第 1、6、9、10 行的判定）
+
+上一节是第一轮收口。二轮又跑了两个只读 agent 活（复核整改提交 / 对第一轮「仍缺证据」的对象做穷尽式深挖），深挖线索**由我逐条复核**（自己用 Node `fetch` 重跑关键请求、重新数对象）后才写进本文件。方法不变：**0 次真实模型调用**、无 API Key、未发图片。
+
+**先说对象计数更正**：上表 13 行、第 10 行含 4 家，所以是 **16 个对象**（13 − 1 + 4）。第一轮草稿里写的「17 个对象 / 4+4+6+3=17」把 StepFun 的两个协议面当成了两个对象，重复计了 1；最终按对象记：**能补 6（8 个预设）、仍不能补 3、确认不能收 4、本机不可达 3，合计 16**。
+
+### 6.1 火山方舟 Ark —— 文档面补齐，对照探测仍不可判定
+
+- 找到文档站的**数据接口**（未鉴权可读）：`https://www.volcengine.com/api/doc/getDocDetail?LibraryID=82379&DocumentID=1569618` → **200**，返回 `MDContent`（91,367 字符）。正文原句：*"`POST https://ark.cn-beijing.volces.com/api/v3/responses`"*、*"输入给模型的图片内容。支持通过 file_id、image_url 或 Base64 编码传入。"*、*"取值固定为 `input_image`。"*、*"**doubao-seed-2.0-pro**：全版本支持"*（同类还有 `doubao-seed-2.0-lite`、`doubao-seed-2.0-mini`）。
+- 国际站 `https://docs.byteplus.com/en/docs/ModelArk/create-model-responses-api` → 200（SSR 页内嵌同一份文档），原句 *"`POST https://ark.ap-southeast.bytepluses.com/api/v3/responses`"*、*"The value is fixed as `input_image`."*、*"**Dola Seed 2.0 Pro series**: all versions."*
+- **对照探测仍然不可判定**：POST／GET／PUT／DELETE／HEAD × 空体／坏 JSON／合法 JSON／含图片 JSON × 无鉴权／`Authorization: Bearer bogus`／`X-Api-Key: bogus`，目标路径与 5 个不存在的控制/兄弟路径**恒 401 且文案相同**。唯一出现差异的 OPTIONS **不可采信**：CN 上 `/responses` 与**不存在的** `/responses-nope` 预检同为 200，而真实存在的 `/messages`、`/models` 却 404；国际站连 `/__nope__` 预检都是 200 —— 这是 CDN/WAF 的泛匹配，不是路由证据。
+- **判定：仍不收**。文档面（端点 + 图片字段 + 型号）已经齐了，**只差一个可判定的探测**。是否把「官方文档写出完整路径」也算作 criterion 1/4 的路由证据，属于**口径决定**，留给用户拍板；本轮从严（口径 4：两者同码不得下结论）。
+
+### 6.2 七牛云 AI —— 两侧都拿到原句（含原生 Anthropic `source` 块）
+
+- 出处是官方 API 文档站 `https://apidocs.qnaigc.com/`：七牛官方文档页页脚以「AI接口文档」互链它（实测 `https://developer-doc.qiniu.com/faq/aitokenapi/other/13462-aitoken-use-faq` → 200 内含该链接）。
+- Anthropic 面：`https://apidocs.qnaigc.com/432088078e0.md` → 200，`paths: /bypass/anthropic/v1/messages: post:`，*"目前支持模型： claude-opus-4-6 claude-sonnet-4-6 claude-haiku-4-5-20251001"*；内容块 `type` 的 enum 是 `text / image / document / tool_use / tool_result`，`source` 的说明是 *"'[image/document] 文件/图片来源（Base64 或 URL）。'"*，其 `type` enum 为 `base64 / url`，并有 `media_type`（*"媒体类型，例如 image/jpeg, application/pdf 等。"*）与 `data`。**这与本应用实际发出的图片块（`type: "image"` + `source: {type:"base64", media_type, data}`，见 `server/anthropic-messages.ts`）形状一致。**
+- Responses 面：`https://apidocs.qnaigc.com/432091837e0.md` → 200，`summary: bypass Responses协议`、`servers: https://api.qnaigc.com`，*"当前支持模型: openai/gpt-5 openai/gpt-5.2 openai/gpt-5.4 …"*（13 个），内容类型说明含 `input_text`／`input_image`／`input_file`，`include` 的 enum 含 `message.input_image.image_url`。
+- 探测：`/bypass/anthropic/v1/messages` 与 `/bypass/openai/v1/responses` 均 **401**，控制与兄弟路径均 **404** ⇒ 可判定。**裸 `https://api.qnaigc.com/v1/responses` 是 404（不存在）**，所以 baseUrl 必须带 `/bypass/...`。
+- **不收裸 `/v1/messages` 那条**：官方另一页（`413432574e0.md`）的「图片理解」示例用的是 OpenAI 风格 `type: image_url`，与本应用序列化不一致。
+
+### 6.3 DeepInfra —— Responses 面拿到 OpenAPI 级证据（Anthropic 面仍不收）
+
+- `https://api.deepinfra.com/openapi.json` → 200（349,410 B、140 条 path），含 `/v1/responses`（`summary: "Openai Responses"`、`servers: [{"url":"https://api.deepinfra.com"}]`）；请求体 `ResponsesIn.input` → `InputMessageItem.content` → **`InputImagePart`**，逐字 `{"type":{"const":"input_image"},"image_url":…,"file_id":…,"detail":{"enum":["auto","low","high"]}}`。
+- 型号元数据 `https://api.deepinfra.com/models/list` → 200（386 条），`Qwen/Qwen3-VL-235B-A22B-Instruct` 的 tags 含 `multimodal`（另有 `Qwen/Qwen3-VL-4B-Instruct`、`Qwen/Qwen3-VL-30B-A3B-Thinking` 等）。
+- 探测：`POST /v1/responses` **401 `missing API key`**、控制与兄弟路径 **404**、坏 JSON **422** ⇒ 可判定。
+- **Anthropic 面仍不收**：同一份 OpenAPI 里 `/anthropic/v1/messages` 的 `messages` 是不透明对象（`additionalProperties: true`），没有 image schema；官方文档的图片示例都在 chat 面。
+
+### 6.4 AI-ML API —— Responses 面拿到逐型号 OpenAPI 段
+
+- `https://docs.aimlapi.com/api-references/text-models-llm/openai/gpt-6-sol.md` → 200（529,148 字符），含 `## POST /v1/responses` 段：`servers: [{"url":"https://api.aimlapi.com"}]`、`model` 的 enum 固定为 `openai/gpt-6-sol`、图片块 `{"type":{"enum":["input_image"],"description":"The type of the input item. Always input_image."},"detail":{"enum":["high","low","auto"]},"image_url":{"description":"The URL of the image to be sent to the model. A fully qualified URL or base64 encoded image in a data URL."}}`。
+- 探测：`POST /v1/responses` **401**、控制与兄弟路径 **404**、坏 JSON **400** ⇒ 可判定。
+- 第一轮的顾虑（「该端点目前只用于 OpenAI 模型」+ 图片示例都在 chat 面）被这份**逐型号**文档取代：预设挑的正是 OpenAI 型号 `openai/gpt-6-sol`，而该型号页的 `/v1/responses` 段本身带 `input_image`。
+
+### 6.5 Gitee AI／无问芯穹 Infini —— 穷尽官方文档后仍无面级图片证据
+
+- **Gitee AI**：`https://ai.gitee.com/docs/sitemap.xml` → 200（191 条），**191/191 页全部抓取（全 200）**，`/v1/responses` 与 `/v1/messages` 命中 **0**。图片证据只在 chat 面：`https://ai.gitee.com/docs/products/apis/images-vision/visions` → 200，逐字 `base_url = "https://ai.gitee.com/v1"` + `client.chat.completions.create(...)` + `{"type": "image_url", "image_url": {"url": …}}` + `model = "InternVL3-78B"`。另据其 Claude Code 接入页，官方 Anthropic base 写作 `https://ai.gitee.com/anthropic`（要填 `…/anthropic/v1` 才等于本应用拼出的端点），**但同样没有图片原句**。`/v1/models` 未鉴权 200（224 个型号，含 `Qwen3-VL-32B-Instruct`、`InternVL3-78B`）只证明型号多模态，不证明面收图。
+- **无问芯穹 Infini**：`llms.txt`(200)、`sitemap.xml`(200/185)、`gen-studio/api/reference/maas.html`(200/171 KB)、`gen-studio/api/reference/v1-redoc.html`(200)、`_copy/gen-studio/api/multimodal/tutorial-vision.md`(200) 都抓过：`/v1/responses` **没有对应文档页**，`input_image` 命中 **0**；图片只写在 `/v1/chat/completions` 面（逐字 *"GenStudio API 服务提供一个实现 OpenAI 的 `/v1/chat/completions` 的 API 接口。"*，型号 `kimi-k2.6`、`kimi-k3`、`qwen3.6-27b` 等）。官方 Anthropic base 写作 `https://cloud.infini-ai.com/maas`（Claude Code 接入页，`/v1/messages`），要填 `…/maas/v1`；**仍无图片证据**。
 
 ---
 

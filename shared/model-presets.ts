@@ -120,6 +120,16 @@ export const MODEL_PRESETS: ModelPreset[] = [
     sourceUrl: "https://www.kimi.com/code/docs/en/kimi-code/models.html",
     verification: "documented",
   },
+  {
+    id: "qiniu-anthropic-claude",
+    label: "七牛云 AI · Claude Opus 4.6 多模态（Anthropic 面）",
+    protocol: "anthropic",
+    baseUrl: "https://api.qnaigc.com/bypass/anthropic/v1",
+    model: "claude-opus-4-6",
+    note: "七牛云 AI 的 Anthropic 协议面（官方 API 文档站 https://apidocs.qnaigc.com/ ，由七牛官方文档页页脚以「AI接口文档」互链）写明 `POST /bypass/anthropic/v1/messages` 走 Anthropic Claude Messages API，`目前支持模型：claude-opus-4-6 claude-sonnet-4-6 claude-haiku-4-5-20251001`，内容块 `type` 的 enum 含 `image`、`source` 支持 `{type: base64|url, media_type, data|url}`——与本应用实际发出的图片块（`type: \"image\"` + `source: {type:\"base64\", media_type, data}`）形状一致。未鉴权探测：该路径 401、控制路径与兄弟路径 404，说明路由存在。**不收裸 `/v1/messages` 那条**：官方那页的「图片理解」示例用的是 OpenAI 风格的 `type: image_url`，与本应用序列化不一致。未做真实调用。",
+    sourceUrl: "https://apidocs.qnaigc.com/432088078e0.md",
+    verification: "documented",
+  },
 
   // OpenAI Responses 兼容协议
   {
@@ -230,6 +240,36 @@ export const MODEL_PRESETS: ModelPreset[] = [
     model: "step-3.7-flash",
     note: "官方 Responses API 文档写明「该接口兼容 OpenAI Responses API 的请求与响应格式」、请求地址 POST https://api.stepfun.com/v1/responses、当前支持 step-5-preview 与 step-3.7-flash，并给出图片块 type=input_image 的 image_url 字段；概览页写「阶跃星辰的旗舰多模态推理模型。基于 198B 总参数 / 11B 激活参数的稀疏 MoE 架构，原生支持图片和视频理解。」，快速上手的输入能力表把 step-3.7-flash 标为「文本、图片、视频」并写明「Step 5 Preview 和 Step 3.7 Flash 支持图片输入。」。未鉴权探测：/v1/responses 返回 401、控制路径与兄弟路径均 404。未做真实调用。",
     sourceUrl: "https://platform.stepfun.com/docs/zh/api-reference/responses/responses-create.md",
+    verification: "documented",
+  },
+  {
+    id: "deepinfra-responses-qwen-vl",
+    label: "DeepInfra · Qwen3-VL 235B 多模态（Responses 面）",
+    protocol: "openai-responses",
+    baseUrl: "https://api.deepinfra.com/v1",
+    model: "Qwen/Qwen3-VL-235B-A22B-Instruct",
+    note: "DeepInfra 官方 OpenAPI（https://api.deepinfra.com/openapi.json ，349 KB、140 条 path）里 `/v1/responses` 的 summary 是「Openai Responses」、servers 指向 https://api.deepinfra.com，请求体的 `ResponsesIn.input` 经 `InputMessageItem.content` 引用 `InputImagePart`，该 schema 逐字为 `input_image` + `image_url` + `file_id` + `detail(auto|low|high)`；型号元数据（https://api.deepinfra.com/models/list ，官方接口）给 `Qwen/Qwen3-VL-235B-A22B-Instruct` 打的 tags 含 `multimodal`。未鉴权探测：/v1/responses 返回 401「missing API key」、控制路径与兄弟路径 404（坏 JSON 是 422），说明路由存在。**只收 Responses 面**：同一份 OpenAPI 里 `/anthropic/v1/messages` 的请求体是不透明对象、没有 image schema，官方文档的图片示例也都在 chat 面。未做真实调用。",
+    sourceUrl: "https://api.deepinfra.com/openapi.json",
+    verification: "documented",
+  },
+  {
+    id: "qiniu-responses-gpt",
+    label: "七牛云 AI · GPT-5 多模态（Responses 面）",
+    protocol: "openai-responses",
+    baseUrl: "https://api.qnaigc.com/bypass/openai/v1",
+    model: "openai/gpt-5",
+    note: "七牛云 AI 官方 API 文档写明 `POST /bypass/openai/v1/responses`（`summary: bypass Responses协议`、`servers: https://api.qnaigc.com`），`当前支持模型` 列出 openai/gpt-5、gpt-5.2、gpt-5.4、gpt-5-pro 等 13 个，内容类型说明含 `input_text`／`input_image`／`input_file`，`include` 的 enum 含 `message.input_image.image_url`。未鉴权探测：该路径 401、控制路径与兄弟路径 404，说明路由存在。**baseUrl 必须带 `/bypass/openai/v1`**：裸 `https://api.qnaigc.com/v1/responses` 探测是 404（该服务商没有裸 `/v1/responses` 面）。未做真实调用。",
+    sourceUrl: "https://apidocs.qnaigc.com/432091837e0.md",
+    verification: "documented",
+  },
+  {
+    id: "aimlapi-responses-gpt-sol",
+    label: "AI-ML API · GPT-6 Sol 多模态",
+    protocol: "openai-responses",
+    baseUrl: "https://api.aimlapi.com/v1",
+    model: "openai/gpt-6-sol",
+    note: "AI-ML API 官方逐型号文档（https://docs.aimlapi.com/api-references/text-models-llm/openai/gpt-6-sol.md ）的 `## POST /v1/responses` 段里给出 `servers: [{url: https://api.aimlapi.com}]`、`model` 的 enum 固定为 `openai/gpt-6-sol`，请求体的图片块逐字为 `type: input_image` + `image_url`（“A fully qualified URL or base64 encoded image in a data URL”）+ `detail(high|low|auto)`，父级说明是「Text, image, or audio input to the model」。未鉴权探测：/v1/responses 返回 401、控制路径与兄弟路径 404（坏 JSON 400），说明路由存在。未做真实调用。",
+    sourceUrl: "https://docs.aimlapi.com/api-references/text-models-llm/openai/gpt-6-sol.md",
     verification: "documented",
   },
 ];

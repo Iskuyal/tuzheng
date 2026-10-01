@@ -122,6 +122,13 @@ test("模型预设按协议过滤，选取后填入地址与型号", async ({ pa
     .toHaveText("智谱开放平台 · GLM-5.3 多模态（Response API）（官方文档）");
   await expect(presetSelect.locator('option[value="stepfun-responses-step-flash"]'))
     .toHaveText("阶跃星辰 StepFun · Step 3.7 Flash 多模态（Responses 面）（官方文档）");
+  // 2026-10-02 二轮深挖：DeepInfra / 七牛云 / AI-ML API 的 Responses 面。
+  await expect(presetSelect.locator('option[value="deepinfra-responses-qwen-vl"]'))
+    .toHaveText("DeepInfra · Qwen3-VL 235B 多模态（Responses 面）（官方文档）");
+  await expect(presetSelect.locator('option[value="qiniu-responses-gpt"]'))
+    .toHaveText("七牛云 AI · GPT-5 多模态（Responses 面）（官方文档）");
+  await expect(presetSelect.locator('option[value="aimlapi-responses-gpt-sol"]'))
+    .toHaveText("AI-ML API · GPT-6 Sol 多模态（官方文档）");
   // 多模态要求与「两侧预设为什么不同」写在页面上（桌面走侧栏说明、窄屏走移动端说明），不是只写在 README 里。
   await expect(page.locator("li", { hasText: "所配模型必须支持图片输入（多模态）" }).first()).toBeAttached();
   await expect(page.locator("small", { hasText: "同一家服务商只在支持该协议的端点上出现" }).first()).toBeAttached();
@@ -140,6 +147,8 @@ test("模型预设按协议过滤，选取后填入地址与型号", async ({ pa
     .toHaveText("阶跃星辰 StepFun · Step 3.7 Flash 多模态（Anthropic 面）（官方文档）");
   await expect(presetSelect.locator('option[value="kimi-coding-anthropic-k3"]'))
     .toHaveText("Kimi 编码套餐 · K3 多模态（Anthropic 面）（官方文档）");
+  await expect(presetSelect.locator('option[value="qiniu-anthropic-claude"]'))
+    .toHaveText("七牛云 AI · Claude Opus 4.6 多模态（Anthropic 面）（官方文档）");
 
   await presetSelect.selectOption("deepseek-anthropic-flash");
   await expect(baseUrl).toHaveValue("https://api.deepseek.com/anthropic/v1");
