@@ -15,10 +15,11 @@
    - `git pull` 取到本任务提交；确认工作区干净。
    - 先清掉可能残留的开发进程（反复 `npm run dev` 会累积孤儿进程，占用 3001／5173 端口会让页面报错）：
      ```powershell
+     npm run dev:ports                        # 启动前预检：哪一端被占用就直接报出来
      netstat -ano | findstr ":3001 :5173"     # 有 LISTENING 就记下 PID
      taskkill /F /PID <PID>
      ```
-   - `npm install` 后 `npm run dev`，确认 <http://127.0.0.1:5173> 可打开，`http://127.0.0.1:3001/api/samples` 返回 200。
+   - `npm install` 后 `npm run dev`，确认 <http://127.0.0.1:5173> 可打开，`http://127.0.0.1:3001/api/samples` 返回 200。端口被占用时 `npm run dev` 会直接失败并给出上面的清理命令，不会自动换端口。
 2. **模型配置**：设置页 →「接口协议」选 **Anthropic Messages** → 地址 `https://api.deepseek.com/anthropic/v1` → 模型 `deepseek-flash` → 填入 Key → 保存 → 点「测试连接」确认成功（约 1 秒）。**截图/录像里出现的密钥输入框要提前填好，录制时不要再输入密钥字符。**
 3. **费用**：本片约 10—15 次真实请求（含重试），按实测单价不到 0.2 元。开跑整组评测不是本片内容，**不要跑 `npm run eval:source-audit` 整组**。
 4. **窗口与画面**
