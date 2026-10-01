@@ -74,6 +74,59 @@ describe("常用模型预设", () => {
     }
   });
 
+  it("2026-10-02 未核实清单收口新增的 4 条：StepFun 两侧、智谱 Response API、Kimi 编码套餐 Anthropic 面", () => {
+    const expected = [
+      ["stepfun-anthropic-step-flash", "anthropic", "https://api.stepfun.com/v1", "step-3.7-flash"],
+      ["kimi-coding-anthropic-k3", "anthropic", "https://api.kimi.com/coding/v1", "k3"],
+      ["zhipu-responses-glm", "openai-responses", "https://open.bigmodel.cn/api/v1", "glm-5.3"],
+      ["stepfun-responses-step-flash", "openai-responses", "https://api.stepfun.com/v1", "step-3.7-flash"],
+    ] as const;
+    for (const [id, protocol, baseUrl, model] of expected) {
+      expect(MODEL_PRESETS.find((preset) => preset.id === id)).toMatchObject({ protocol, baseUrl, model, verification: "documented" });
+    }
+
+    // 阶跃星辰两侧都能落：同一 baseUrl 在两个协议里各一条，且 label 要能分辨是哪个协议面。
+    for (const protocol of MODEL_PROVIDERS) {
+      const presets = presetsFor(protocol);
+      expect(presets.some((preset) => preset.baseUrl === "https://api.stepfun.com/v1")).toBe(true);
+      expect(presets.some((preset) => preset.model === "step-3.7-flash")).toBe(true);
+    }
+    expect(MODEL_PRESETS.find((preset) => preset.id === "stepfun-anthropic-step-flash")?.label).toContain("Anthropic 面");
+    expect(MODEL_PRESETS.find((preset) => preset.id === "stepfun-responses-step-flash")?.label).toContain("Responses 面");
+
+    // 智谱的 Response API 基址与 Anthropic 面／对话补全面不同，别填混。
+    const zhipuResponses = MODEL_PRESETS.find((preset) => preset.id === "zhipu-responses-glm");
+    expect(zhipuResponses?.baseUrl).not.toBe("https://open.bigmodel.cn/api/paas/v4");
+    expect(zhipuResponses?.baseUrl).not.toBe("https://open.bigmodel.cn/api/anthropic/v1");
+
+    // 本轮收口后两侧各自的条目数：README／PHASES 里承诺的就是这个数，涨了要一起改。
+    expect(presetsFor("anthropic").length).toBe(11);
+    expect(presetsFor("openai-responses").length).toBe(14);
+  });
+
+  it("2026-10-02 二轮深挖补进来的 4 条：七牛云两侧、DeepInfra Responses 面、AI-ML API Responses 面", () => {
+    const expected = [
+      ["qiniu-anthropic-claude", "anthropic", "https://api.qnaigc.com/bypass/anthropic/v1", "claude-opus-4-6"],
+      ["deepinfra-responses-qwen-vl", "openai-responses", "https://api.deepinfra.com/v1", "Qwen/Qwen3-VL-235B-A22B-Instruct"],
+      ["qiniu-responses-gpt", "openai-responses", "https://api.qnaigc.com/bypass/openai/v1", "openai/gpt-5"],
+      ["aimlapi-responses-gpt-sol", "openai-responses", "https://api.aimlapi.com/v1", "openai/gpt-6-sol"],
+    ] as const;
+    for (const [id, protocol, baseUrl, model] of expected) {
+      expect(MODEL_PRESETS.find((preset) => preset.id === id)).toMatchObject({ protocol, baseUrl, model, verification: "documented" });
+    }
+
+    // 七牛云两侧的 baseUrl 都必须带 /bypass/...（裸 /v1/responses 是 404），且两条不是同一个面。
+    for (const id of ["qiniu-anthropic-claude", "qiniu-responses-gpt"]) {
+      const preset = MODEL_PRESETS.find((item) => item.id === id);
+      expect(preset?.baseUrl.startsWith("https://api.qnaigc.com/bypass/")).toBe(true);
+      expect(preset?.baseUrl).not.toBe("https://api.qnaigc.com/v1");
+    }
+
+    // DeepInfra 与 AI-ML API 只收 Responses 面：不得出现这两家的 Anthropic 预设。
+    expect(MODEL_PRESETS.some((preset) => preset.protocol === "anthropic" && preset.baseUrl.startsWith("https://api.deepinfra.com"))).toBe(false);
+    expect(MODEL_PRESETS.some((preset) => preset.protocol === "anthropic" && preset.baseUrl.startsWith("https://api.aimlapi.com"))).toBe(false);
+  });
+
   it("未做真实验证的预设必须在说明里写明，避免把「按文档」读成「已实测」", () => {
     for (const preset of MODEL_PRESETS) {
       if (preset.verification === "documented") expect(preset.note).toContain("未做");

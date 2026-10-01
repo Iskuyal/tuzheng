@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>图证 · 赛事技术报告</title>
+<style>
+:root{--ink:#19343c;--muted:#536a72;--teal:#087e83;--soft:#edf6f5;--line:#c9dcdf;--orange:#b96324;--paper:#fff;--navy:#12323b}
+*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;font-size:10pt;line-height:1.6;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@page{size:A4;margin:16mm 15mm}
+.sheet{break-before:page;page-break-before:always}.sheet:first-child{break-before:auto;page-break-before:auto}
+h1,h2,h3{line-height:1.3;margin:0 0 4mm}h1{font-size:42pt;letter-spacing:3px}h2{font-size:22pt;letter-spacing:.3px}h3{font-size:12pt;margin-top:5mm;color:var(--teal)}p{margin:0 0 3mm}strong{font-weight:700}a{color:var(--teal);text-decoration:none;overflow-wrap:anywhere}
+.kicker{font-size:9pt;letter-spacing:2px;color:var(--teal);font-weight:700;margin-bottom:4mm}.rule{width:19mm;height:1.5mm;background:var(--teal);margin:0 0 6mm}.lead{font-size:12pt;line-height:1.65}.muted,.small,figcaption{color:var(--muted)}.small,figcaption{font-size:8.2pt;line-height:1.5}.source{font-size:8pt;color:var(--muted);border-top:1px solid var(--line);padding-top:3mm;margin-top:5mm}
+.box{border:1px solid var(--line);background:var(--soft);border-radius:3mm;padding:4mm 5mm;margin:4mm 0;break-inside:avoid}.box.dark{background:var(--navy);color:white;border:0}.box.warn{background:#fff6ed;border-color:#ead0b8}.grid{display:grid;grid-template-columns:1fr 1fr;gap:5mm}.grid.three{grid-template-columns:1fr 1fr 1fr}.grid p:last-child{margin-bottom:0}.stat{font-size:25pt;font-weight:700;color:var(--teal);line-height:1.3}.tag{font-size:8pt;color:var(--teal);border-bottom:1px solid var(--teal);padding:1mm 0;display:inline-block;margin-bottom:2mm}
+table{width:100%;border-collapse:collapse;font-size:9pt;line-height:1.55;margin:4mm 0}th,td{border-bottom:1px solid var(--line);padding:3mm 2.5mm;text-align:left;vertical-align:top}th{background:var(--soft);font-weight:700}tr{break-inside:avoid}thead{display:table-header-group}td:first-child{font-weight:600}ul,ol{padding-left:5mm;margin:2mm 0 4mm}li{margin-bottom:2mm}code,pre{font-family:Consolas,monospace;font-size:8.5pt}code{background:#eff3f4;padding:0 1mm}pre{white-space:pre-wrap;background:#eff3f4;border-left:1mm solid var(--teal);padding:4mm;margin:4mm 0;line-height:1.6}
+figure{margin:4mm 0;break-inside:avoid}figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:2mm}figcaption{margin-top:2mm}figure.narrow img{width:60mm;margin:0 auto}.diagram{border:1px solid var(--line);padding:5mm;margin:4mm 0;background:#fbfdfd;border-radius:3mm;break-inside:avoid}.flow{display:flex;align-items:stretch;gap:2mm}.flow>div{flex:1;border:1px solid var(--line);padding:3mm 2mm;background:var(--soft);font-size:9pt;text-align:center;border-radius:2mm}.arrow{display:block;text-align:center;color:var(--teal);font-weight:700;margin:2mm 0}.layer{border-left:1.5mm solid var(--teal);padding:3mm 4mm;background:var(--soft)}.layer strong{display:block;margin-bottom:1mm}.layer+ .layer{margin-top:4mm}.bar-row{display:flex;align-items:center;gap:3mm;margin:4mm 0}.bar-label{width:29mm;font-size:9pt}.bar-track{flex:1;background:#e8eff0;height:9mm;border-radius:1mm}.bar{background:var(--teal);height:100%;border-radius:1mm}.bar.secondary{background:#8da7ae}.bar-value{width:23mm;font-weight:700}.toc{display:grid;grid-template-columns:1fr 1fr;gap:2mm 8mm;font-size:9pt}.toc div{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:2mm 0}.cover{padding-top:15mm}.cover .subtitle{font-size:21pt;margin-top:3mm;font-weight:600}.cover .promise{font-size:16pt;line-height:1.7;margin:9mm 0}.cover .meta{font-size:9pt;color:var(--muted);margin-top:8mm}.hero{margin:10mm 0 8mm;padding:7mm;background:var(--navy);color:white;border-radius:4mm}.hero .equation{font-size:30pt;font-weight:700;letter-spacing:1px;margin:5mm 0}.hero .caption{font-size:9pt;color:#cfdfdf}.cover .pill{display:inline-block;color:var(--teal);font-size:9pt;background:var(--soft);border:1px solid var(--line);padding:2mm 4mm;border-radius:10mm;margin-right:2mm}.compact table{font-size:8.7pt}.compact th,.compact td{padding:2.5mm}.compact{font-size:9.5pt}
+/* A4 印刷密度：正文保持可读，缩短表格与重复提示间距，避免章末孤页。 */
+body{font-size:9.6pt;line-height:1.5}
+th,td{padding:2mm 2.5mm}table{font-size:8.8pt;line-height:1.5;margin:3mm 0}
+h3{margin-top:4mm}.box{padding:3.5mm 4mm;margin:3mm 0}
+figure{margin:3mm 0}figure.narrow img{width:50mm}
+.source{margin-top:4mm;padding-top:2mm}.compact th,.compact td{padding:1.8mm 2mm}
+.compact{font-size:9.2pt}.compact table{font-size:8.5pt}
+.collaboration img[src$="source-suggestion.png"]{max-height:72mm;object-fit:contain}
+.collaboration img[src$="source-clarify.png"]{max-height:32mm;object-fit:contain}
+</style>
+</head>
+<body>
+
+<section class="sheet cover">
+<div class="kicker">AI WEB 网页开发挑战赛 · 作品技术报告</div>
+<div class="rule"></div>
+<h1>图证</h1>
+<p class="subtitle">图表证据审计台</p>
+<p class="promise">从一张截图，走到一条<br>有计算、有来源、可复查的结论。</p>
+<div><span class="pill">多模态读取</span><span class="pill">受限工具调查</span><span class="pill">引用与口径校验</span></div>
+<div class="hero">
+<div class="caption">一个看起来相同、含义却不同的数字</div>
+<div class="equation">同值 ≠ 同口径</div>
+<p>同比与环比、不同月份、不同范围，<br>不能因为数字相等就视为同一条证据。</p>
+<div class="caption">图证让 AI 找出需要核查的主张，由程序校验依据与计算。</div>
+</div>
+<div class="grid three">
+<div><div class="stat">22</div><p class="small">固定开发评测题<br>两臂、每题三次</p></div>
+<div><div class="stat">89.7%</div><p class="small">历史检索臂运行通过率<br>61 / 68，非泛化准确率</p></div>
+<div><div class="stat">361</div><p class="small">本次本地行为 / API 测试<br>90 次浏览器测试另计</p></div>
+</div>
+<div class="meta">Vue 3 · TypeScript · Node.js / Express<br>Windows 本机 Web 应用 · 固定国家统计局资料库<br>材料核对日期：2026-10-01 · 代码参考：__COMMIT__</div>
+<p class="small" style="margin-top:5mm">在线数字来自既有真实模型记录；本次材料核查未重新调用模型。图内一致只说明截图自洽，来源一致只说明与所引发布一致。</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">01 / 项目概述</div><h2>让每个结论都能复查</h2><div class="rule"></div>
+<p class="lead">图证面向只有图表截图的普通读者，把“这张图是否说得通”拆成图内计算与来源核验两类问题，展示每条结论的依据和适用范围。</p>
+<div class="grid">
+<div class="box"><strong>只有截图</strong><p>模型抄录图上数字，读者确认或更正，程序计算涨幅、核对跨图口径，并提示纵轴呈现风险。</p></div>
+<div class="box"><strong>具有可查来源</strong><p>图文主张进入固定官方资料库调查；检索、推断检查、关键补证和修改建议都保留过程与引用。</p></div>
+</div>
+<h3>评审阅读导航</h3>
+<div class="toc">
+<div>项目概述与需求 <b>2-3</b></div><div>系统架构 <b>4</b></div>
+<div>AI 选型与结构化读取 <b>5</b></div><div>工具调查与检索校验 <b>6-7</b></div>
+<div>核心案例与人机协作 <b>8-10</b></div><div>前端工程与交互 <b>11</b></div>
+<div>评测设计与实际结果 <b>12-13</b></div><div>测试、运行与部署 <b>14</b></div>
+<div>创新、局限与展望 <b>15</b></div><div>证据与复现索引 <b>16</b></div>
+</div>
+<h3>与官网评分维度的对应</h3>
+<table><thead><tr><th>维度 / 权重</th><th>本报告展示的核心内容</th><th>页码</th></tr></thead><tbody>
+<tr><td>AI 技术深度 / 35%</td><td>多模态结构化输出、模型自选工具、检索增益、引用与改写校验</td><td>5-10、12-13</td></tr>
+<tr><td>创新性 / 25%</td><td>结论按证据分级，必要补证与失效机制，官方修订贯通建议</td><td>3、8-10、15</td></tr>
+<tr><td>前端工程质量 / 10%</td><td>类型约束、按路由拆包、请求隔离、三视口自动化</td><td>4、11、14</td></tr>
+<tr><td>实用性 / 10%</td><td>从算术矛盾到同比 / 环比误读的可操作案例</td><td>3、8-10</td></tr>
+<tr><td>用户体验 / 10%</td><td>逐条确认、补证说明、历史结论、失败恢复</td><td>9、11</td></tr>
+<tr><td>社会价值与商业潜力 / 10%</td><td>数据素养与信息阅读场景；应用方向与验证条件</td><td>15</td></tr>
+</tbody></table>
+<p class="source">评分权重于 2026-10-01 读取<a href="https://www.boxuegu.com/matchTrack/detail/?id=10037">官网赛道详情</a>核实。这里只映射材料与评分项，不预测赛事得分。</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">02 / 需求分析</div><h2>先回答读者能核查什么</h2><div class="rule"></div>
+<p>读者通常拿不到原始表格。直接让大模型判断“真假”，容易把看不清的标签、口径缺失或模型记忆包装成确定结论。图证把每一步需要的依据显示出来。</p>
+<table><thead><tr><th>用户需要</th><th>产品行为</th><th>验收观察点</th></tr></thead><tbody>
+<tr><td>核对标题涨幅</td><td>确认图上两值后用程序复算</td><td>80 → 100 得到 25%，与标题 40% 矛盾</td></tr>
+<tr><td>比较两张图</td><td>逐项核对指标、范围、时间、单位</td><td>口径不一致时先提示冲突</td></tr>
+<tr><td>理解纵轴风险</td><td>并列原轴与从零起点的柱高对照</td><td>提示视觉风险，不将其直接判为造假</td></tr>
+<tr><td>核查配文依据</td><td>拆解主张并检索适用官方发布</td><td>错月份、错范围及术语页引用不被当作数值依据</td></tr>
+<tr><td>补足关键口径</td><td>只问会改变结论的一个问题</td><td>用户补充与官方依据分别标识</td></tr>
+<tr><td>修改错误配文</td><td>逐处给出有引用的建议，由用户采用</td><td>输入改动后旧建议立即失效</td></tr>
+</tbody></table>
+<div class="grid" style="grid-template-columns:1.25fr 1fr">
+<div>
+<h3>图内审计的完整路径</h3>
+<p>图片 / 样例 → 模型观察 → 人工确认 → 确定性计算 → 证据卡。</p>
+<div class="box dark"><strong>增长率公式</strong><p style="font-size:13pt;margin-top:3mm">(100 - 80) / 80 × 100 = 25%</p><p>标题声称 40%，相差 15 个百分点。</p></div>
+<p>数值不清、单位不一致、时间顺序错误或基数为零时，保持“需要确认”。用户更正读数后重新计算，原始模型观察仍可复查。</p>
+<p class="small">预置样例与实时模型读取在页面上分别标注；离线样例可复现计算，但不证明模型读图质量。</p>
+</div>
+<figure class="narrow"><img src="assets/audit-workbench.png" alt="图内审计工作台"><figcaption>图 1 · 逐条确认与证据卡。预置样例界面截图，不是实时模型输出。</figcaption></figure>
+</div>
+<p class="source">实现：shared/audit.ts、shared/cross-image.ts、shared/axis-risk.ts；验证：tests/audit.test.ts、tests/cross-image.test.ts、e2e/reader-workbench.spec.ts。[E1]</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">03 / 系统架构</div><h2>模型负责理解，程序负责校验</h2><div class="rule"></div>
+<p class="lead">将多模态与语言判断放在模型接口之后，将计算、引用、口径和输入版本绑定放在可重复测试的领域层。</p>
+<div class="diagram">
+<div class="layer"><strong>浏览器 · Vue 3</strong>图片与配文输入 / 逐条确认 / 证据卡 / 工具轨迹 / 历史结果 / 模型设置</div>
+<span class="arrow">↓ HTTP / 本机 API ↑</span>
+<div class="layer"><strong>本机服务 · Express + TypeScript</strong>图片格式与大小验证 / 模型协议适配 / 调查循环 / 会话恢复 / 设置存储</div>
+<span class="arrow">↓ 结构化观察与工具结果 ↑</span>
+<div class="layer"><strong>共享领域逻辑 · shared/</strong>增长率 / 跨图口径 / 纵轴风险 / 固定资料库检索 / 来源适用性 / 修改建议校验</div>
+</div>
+<table><thead><tr><th>接口</th><th>输入与输出</th><th>作用</th></tr></thead><tbody>
+<tr><td>VisionAdapter</td><td>图片 → 观察值、模型与读取追踪</td><td>页面与领域计算不依赖具体模型厂商</td></tr>
+<tr><td>SourceInvestigationDriver</td><td>start / continue / resume / finalize</td><td>双协议共用调查编排与判定规则</td></tr>
+<tr><td>SourceSessionStore</td><td>调查 ID、输入指纹、驱动器与既有结果</td><td>恢复同一调查，防止并发消费或错图接续</td></tr>
+</tbody></table>
+<h3>数据从哪里来，保留在哪里</h3>
+<div class="grid">
+<div><p><strong>图片与配文：</strong>上传图片先进入服务端内存，调用模型时发送给已配置的远程服务。可恢复对话可在本机内存保留至过期或淘汰。</p><p><strong>调查会话：</strong>最多保留 16 条，默认有效期 30 分钟；图片与配文的 SHA-256 指纹约束恢复请求。</p></div>
+<div><p><strong>公开资料：</strong>五条国家统计局材料随代码保存，包含链接、发布日期、摘录与内容指纹；运行时只检索此固定集合。</p><p><strong>密钥：</strong>设置页提交给回环 API，保存在当前 Windows 用户配置目录；页面只接收“是否已配置”。</p></div>
+</div>
+<div class="box warn">本机存储不代表所有数据都留在本机：上传图文会发送给用户选择的模型提供方；可恢复对话也不是在请求结束时立即清空。</div>
+<p class="source">代码：server/app.ts、server/source-sessions.ts、server/model-settings.ts；领域与接口职责见 docs/STRUCTURE.md、CONTEXT.md。[E1]</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">04 / AI 技术方案 · 选型与读取</div><h2>把可变输出收敛为可检查结构</h2><div class="rule"></div>
+<h3>模型与协议的选择</h3>
+<table><thead><tr><th>选择</th><th>理由与集成方式</th><th>验证边界</th></tr></thead><tbody>
+<tr><td>云端多模态模型</td><td>读取截图中的文字、数值与主张，同时理解配文，避免另建 OCR 与语言分析两条分离路径</td><td>模糊标签仍需人工确认；不是像素级自动测量工具</td></tr>
+<tr><td>Anthropic Messages</td><td>使用 image + text 输入、tool_use / tool_result 对话，来源调查实测采用 deepseek-flash 兼容端点</td><td>既有来源调查的整组在线证据对应此协议与模型</td></tr>
+<tr><td>OpenAI Responses</td><td>视觉读取用 JSON Schema；来源调查用 function calling，统一映射到共享驱动器接口</td><td>视觉路径有历史在线记录；工具调查仅有本地替身证据</td></tr>
+<tr><td>可配置提供方</td><td>协议、地址、型号和密钥分别保存，预设区分在线实测与文档依据</td><td>预设存在或连接成功，不证明图片与完整工具循环可用</td></tr>
+</tbody></table>
+<h3>提示词与输出约束</h3>
+<div class="flow"><div><strong>逐字抄录</strong><br>不补图上没有的信息</div><div><strong>主张拆解</strong><br>原句与图上摘录分开</div><div><strong>类型标记</strong><br>陈述 / 推断 / 观点</div><div><strong>字段校验</strong><br>Zod 与来源规则</div></div>
+<pre>主张结构示意
+{ claimText, fromImage, imageExcerpt,
+  kind, metric, period, scope, basis, value, direction }
+
+保留原文；缺失字段保持空值；
+比较方式不明确时不从数值相等反推口径。</pre>
+<p>直接陈述可以对照同口径数值。推断需要单独检查所需比较方式与方向，例如“同比涨幅回落”不能直接推出“比上月便宜”。观点、动机或未来预测显示为不支持核验。</p>
+<h3>兼容与失败处理</h3>
+<p>模型返回结构错误时，调查汇总可获得一次带具体字段错误的重报机会；仍不合法则如实停止。图片读取超时、上游失败和无效结构有独立错误提示，不填入猜测值或预置结果。</p>
+<div class="box">工程优化针对可观察行为：结构化输出约束格式，原文追溯限制信息补全，确定性计算降低算术漂移，引用校验限制证据使用；模型兼容回退与重报仍可能产生额外请求。</div>
+<p class="source">server/vision-prompt.ts、server/vision-schema.ts、server/observation.ts、server/source-prompt.ts；协议实测见 [E2]、[E5]。</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">04 / AI 技术方案 · 受限工具循环</div><h2>行动可选择，执行有边界</h2><div class="rule"></div>
+<p>模型依据图文决定下一步要检索、比较、追问还是汇总。服务端逐个校验工具与参数，执行后把结果回送模型，再按最终结构组合结论。</p>
+<div class="flow"><div>图文输入</div><div>模型选择工具</div><div>服务端校验执行</div><div>结果回送 / 汇总</div></div>
+<table><thead><tr><th>工具</th><th>职责</th><th>服务端限制</th></tr></thead><tbody>
+<tr><td>search_source_library</td><td>按指标、月份、范围与关键词检索</td><td>只读固定集合；结果标注适用与排除原因</td></tr>
+<tr><td>compare_values</td><td>比较有限数值、返回差值</td><td>程序确定性计算，拒绝无效参数</td></tr>
+<tr><td>request_clarification</td><td>指出缺少哪一项口径、影响哪条主张</td><td>最多一次；补充标为“用户提供”</td></tr>
+<tr><td>report_source_finding</td><td>提交主张、引用、未解决项与改写提议</td><td>按 schema 接收，引用与结论由程序再校验</td></tr>
+</tbody></table>
+<div class="grid three"><div class="box"><strong>3 次 / 轮</strong><p class="small">检索、比较、追问<br>总计最多 6 次</p></div><div class="box"><strong>4 个工具轮</strong><p class="small">强制汇总与结构修复<br>可能增加模型轮次</p></div><div class="box"><strong>150 秒检查阈值</strong><p class="small">循环边界检查<br>单个模型请求超时 60 秒</p></div></div>
+<p class="small">上述工具预算不包含汇总调用，也不等于最多六次模型 HTTP 请求。150 秒是循环停止检查阈值，不能当作所有在途请求的严格总耗时上限。</p>
+<figure><img src="assets/source-trace.png" alt="工具轨迹"><figcaption>图 2 · 每次调用展示工具、简短行动理由、输入摘要、状态与耗时。替身响应界面截图；真实调用轨迹见逐次 JSON。[E3]</figcaption></figure>
+<p>未知工具、超预算调用与“工具结果还未返回就汇总”会被拒绝并记录。补证恢复继承既有调用数与工具轮预算，不通过恢复重新获得额度。</p>
+<p class="source">server/source-investigation.ts、server/source-tools.ts、shared/source-audit.ts；tests/source-investigation.test.ts 覆盖预算、无检索、恢复与非法汇总。[E1]</p>
+</section>
+
+<section class="sheet compact">
+<div class="kicker">04 / AI 技术方案 · 检索与引用</div><h2>命中资料，还要匹配口径</h2><div class="rule"></div>
+<p>采用固定领域资料的检索增强工作流：先按指标与别名筛选，再按月份、范围和词项匹配排序；命中结果携带适用性。五条材料的规模适合确定性检索，无需引入向量数据库。</p>
+<table><thead><tr><th>资料</th><th>用途</th><th>不能支持什么</th></tr></thead><tbody>
+<tr><td>2025-12 CPI 发布</td><td>全国同比 0.8%、环比 0.2%</td><td>其他月份、城市范围的主张</td></tr>
+<tr><td>同比 / 环比解释页</td><td>解释比较方式</td><td>任何具体月份的数值结论</td></tr>
+<tr><td>2026-08 CPI 发布</td><td>同比同为 0.8%、环比 0.4%；验证错月份干扰</td><td>用“同值”替代时间匹配</td></tr>
+<tr><td>零售总额 2026-08-17 发布</td><td>逐月环比表中的旧值</td><td>无视后续官方修订的最终值</td></tr>
+<tr><td>零售总额 2026-09-15 发布</td><td>官方修订声明与更新后的逐月环比值</td><td>没有修订声明的跨来源争议</td></tr>
+</tbody></table>
+<div class="diagram"><div class="flow"><div>本次命中<br>sourceId 合法</div><div>指标 / 月份 / 范围<br>匹配当前主张</div><div>比较方式与引用角色<br>支持当前判断</div></div><span class="arrow">↓ 任一环节不满足</span><p style="text-align:center;margin:0"><strong>保持来源待核对，并显示拒绝或排除原因</strong></p></div>
+<figure><img src="assets/source-library.png" alt="固定官方资料库"><figcaption>图 3 · 固定官方资料库显示发布者、链接、发布日期与口径。界面展示截图，不是运行时抓取页面。</figcaption></figure>
+<h3>可复查的来源记录</h3>
+<p>每条记录保存短摘录、数值与适用月份；FNV-1a 内容指纹发现集合内容变动，但不是防篡改签名。模型只能引用本次命中的 ID，术语、背景与数值依据分开显示。</p>
+<p class="small">能力范围限于固定资料，未实现开放搜索、向量索引或 MCP 服务。</p>
+<p class="source">shared/source-library.ts、shared/source-audit.ts；资料原始页面 [S1]-[S5]，评测原始记录 [E3]。</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">05 / 核心案例 · CPI</div><h2>同样的 0.8%，不是同样的结论</h2><div class="rule"></div>
+<p class="lead">输入团队自制 CPI 图，配文写“比上月上涨 0.8%”。模型需要分开识别图上读数与配文的比较方式，再检索适用来源。</p>
+<div class="grid" style="grid-template-columns:1fr 1.1fr;align-items:start">
+<figure><img src="../../web/public/samples/cpi-2025-12.png" alt="团队自制 CPI 样例"><figcaption>图 4 · 团队自制样例，依据公开数值绘制；不是国家统计局原图。其缺失的比较方式不能由 AI 猜补。</figcaption></figure>
+<div>
+<div class="tag">配文主张</div><p>“比上月上涨 0.8%” → 比较方式是环比。</p>
+<div class="tag">适用来源</div><p>2025 年 12 月官方发布：同比 0.8%，环比 0.2%。</p>
+<div class="box dark"><strong>与所引来源不一致</strong><p>0.8% - 0.2% = 0.6 个百分点</p><p class="small" style="color:#d4e4e5">只说明配文与此发布不一致，不评价作者动机。</p></div>
+</div>
+</div>
+<table><thead><tr><th>检查对象</th><th>程序处理</th><th>用户看到什么</th></tr></thead><tbody>
+<tr><td>配文的环比主张</td><td>匹配 2025-12、全国、CPI、环比</td><td>不一致、正确值 0.2% 与引用</td></tr>
+<tr><td>图上缺比较方式的数值</td><td>不能从同值推断同比</td><td>来源待核对、缺失口径说明</td></tr>
+<tr><td>2026-08 同比 0.8% 的命中</td><td>与当前主张月份不一致</td><td>排除原因，不用作当前数值依据</td></tr>
+<tr><td>配文明确写 2026-08 环比</td><td>按配文自己的月份重新匹配</td><td>与该月环比 0.4% 核对，不沿用图上的月份</td></tr>
+</tbody></table>
+<figure><img src="assets/source-claims.png" alt="分主张结论卡"><figcaption>图 5 · 主张逐条展示结论、原文与依据。替身响应界面截图；真实案例 q04 / q05 的逐次结果见 [E3]、[E4]。</figcaption></figure>
+<p class="source">案例 q04 / q05；samples/source-audit-questions.json、samples/source-audit-expectations.json。最新整组记录 q05 三次均按 2026-08 得到配文不一致。[E3]</p>
+</section>
+
+<section class="sheet compact collaboration">
+<div class="kicker">05 / 核心案例 · 必要补证与修改建议</div><h2>让用户补口径，让证据约束改写</h2><div class="rule"></div>
+<p>配文仅写“12 月 CPI 上涨 0.8%”时，同值不足以确定同比还是环比。先检索资料，再询问缺少的比较方式；回答以“用户提供”进入当前主张。</p>
+<figure><img src="assets/source-clarify.png" alt="必要补证问题"><figcaption>图 6 · 问题说明答案影响哪条主张。替身响应界面截图。</figcaption></figure>
+<p>补证沿同一个调查 ID 和模型对话恢复，继承既有检索命中与预算。回答不能覆盖图文已明确写出的口径；冲突或无法解析时保留待核对。</p>
+<h3>每处修改都有依据</h3>
+<table><thead><tr><th>原结论</th><th>建议处理</th><th>校验依据</th></tr></thead><tbody>
+<tr><td>与来源一致</td><td>保留原句</td><td>不因为模型换说法而新增事实</td></tr>
+<tr><td>与来源不一致</td><td>替换为适用来源中的正确值 / 方向</td><td>数值、月份、范围与当前引用</td></tr>
+<tr><td>待核对 / 推断依据不足</td><td>保留限定或建议删除</td><td>不把未解决项写成已证实</td></tr>
+</tbody></table>
+<figure><img src="assets/source-suggestion.png" alt="逐处修改建议"><figcaption>图 7 · 原句、建议、理由与引用并列，用户显式采用。替身响应界面截图。</figcaption></figure>
+<p>模型只提出建议，程序逐处验证；不合格提议保留拒绝原因并使用程序兜底。采用后写入配文，旧结论转入历史；更换输入或重新调查使旧建议失效。</p>
+<p class="source">实现：shared/source-audit.ts、server/source-sessions.ts；q18 / q20 在线记录 [E3][E4][E6]，页面测试 [E1]。</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">05 / 核心案例 · 官方修订与结论失效</div><h2>依据变了，结论和建议一起更新</h2><div class="rule"></div>
+<p>“社会消费品零售总额”的两份官方发布带有明确修订声明。系统据此识别旧发布被替代的逐月环比值，保存修订前后值与两份发布链接。</p>
+<div class="diagram"><div class="flow"><div><strong>旧发布</strong><br>2026-08-17<br>2026-06 环比 0.35%</div><div><strong>官方修订声明</strong><br>2026-09-15 发布<br>建立明确替代关系</div><div><strong>有效依据</strong><br>2026-06 环比 0.40%<br>用于结论与修改建议</div></div></div>
+<table><thead><tr><th>案例</th><th>依据处理与结果</th><th>历史实测</th></tr></thead><tbody>
+<tr><td>q21 配文使用旧值</td><td>按修订后 0.40% 核对，旧值 0.35% 判为不一致</td><td>检索臂 3/3 通过</td></tr>
+<tr><td>q22 配文使用修订后值</td><td>配文与来源一致；图中旧值仍不一致</td><td>检索臂 3/3 通过</td></tr>
+</tbody></table>
+<div class="box"><strong>5 次运行发生版本替代，5 次通过判定</strong><p>按运行计数，不按主张计数。复查由程序同步完成，不新增模型调用、不增加检索轮次；不声称程序计算本身耗时为零。</p></div>
+<p>仅有数值差异、没有官方修订声明时，不能使用这条规则。现有能力覆盖官方声明明确的替代关系；“同口径来源存在分歧”尚无实现与验收证据。</p>
+<h3>输入改变时怎样阻止旧结论复活</h3>
+<div class="flow"><div>当前输入 A<br>得到结论 A</div><div>修改图 / 配文<br>请求序号失效</div><div>旧结果转历史<br>迟到响应丢弃</div><div>重新核验 B<br>建立新依据</div></div>
+<figure><img src="assets/source-history.png" alt="历史结论"><figcaption>图 8 · 历史结论注明失效原因，仅作复查。替身响应界面截图。</figcaption></figure>
+<p>服务端恢复时检查图片字节与配文指纹，拒绝过期、错输入和并发恢复；前端 AbortController 与请求序号一起阻止迟到结果覆盖新输入。浏览器取消不等于已发送的上游调用立即停止计费。</p>
+<p class="source">资料 [S4]-[S5]；版本复查记录 [E3]，本地引用贯通验证 [E1]。本地修复之后尚未重新在线验证。[E7]</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">06 / 前端工程与体验</div><h2>长耗时 AI 任务也要可操作</h2><div class="rule"></div>
+<div class="grid" style="grid-template-columns:1.2fr 1fr">
+<div>
+<h3>清晰的任务页面</h3><p>首页、图内工作台、来源核验和设置页各有明确职责。按路由懒加载；共享证据卡组件与 TypeScript 领域结果减少前后端语义偏差。</p>
+<h3>防止半完成状态</h3><p>读取图片前清除旧结论；取消、换图、框选和离页会使在途结果失效。主图载入期间禁用跨图选择并说明原因，完成或失败后恢复操作。</p>
+<h3>面向复查的层级</h3><p>先展示当前状态，再展开主张原文、依据、排除资料和调用轨迹；超出核验上限的原文单独列出，避免读者以为全文都已核查。</p>
+<h3>加载与错误反馈</h3><p>显示等待时间、取消入口与分类错误，提供配置、重试、缩图和框选路径。当前轨迹在调查返回后展示，尚未实现 SSE 流式工具事件。</p>
+</div>
+<figure class="narrow"><img src="assets/source-mobile-claims.png" alt="移动视口主张卡"><figcaption>图 9 · 390px 视口的主张卡。替身响应界面截图。</figcaption></figure>
+</div>
+<table><thead><tr><th>工程证据</th><th>本次结果</th><th>证明范围</th></tr></thead><tbody>
+<tr><td>三视口端到端</td><td>30 用例 ×3 视口 = 90/90</td><td>320、390、1280px 的路径、竞态与溢出检查</td></tr>
+<tr><td>类型检查与构建</td><td>Vue、服务端、e2e 配置均通过</td><td>本地类型与打包成功</td></tr>
+<tr><td>前端构建产物</td><td>主 JS gzip 37.43 kB；样式 gzip 13.23 kB</td><td>资源体积；不等于首屏速度或 Core Web Vitals</td></tr>
+</tbody></table>
+<div class="box warn">界面路径自动化采用预置数据和替身响应。它证明交互与状态处理，不能代替真实模型体验、辅助技术测试或陌生用户可用性研究。</div>
+<p class="source">web/router.ts、web/pages/、web/components/；三视口测试 [E1]。本次构建记录与评估见 [E7]。</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">07 / 测试与评测设计</div><h2>检索有没有用，要保留对照</h2><div class="rule"></div>
+<p class="lead">同一模型、图片、配文、参数和预算设置两条臂，只改变检索工具可用性及其必要说明，再依据独立期望判定每次运行。</p>
+<div class="grid"><div class="box"><strong>有检索臂</strong><p>模型可搜索固定资料库，引用本次命中材料，并接受程序口径校验。</p></div><div class="box"><strong>无检索臂</strong><p>不声明检索工具，拒绝检索请求；命中集合为空，不允许用模型记忆替代来源。</p></div></div>
+<table><thead><tr><th>控制项</th><th>设计</th></tr></thead><tbody>
+<tr><td>模型与协议</td><td>deepseek-flash；Anthropic Messages 兼容端点</td></tr>
+<tr><td>题集</td><td>22 道团队自制开发题，每题每臂三次；含错数值、错月份、错范围、推断、观点、补证与版本修订</td></tr>
+<tr><td>独立期望</td><td>题目与期望分文件保存；运行前核对图片、资料库指纹与预算冻结配置</td></tr>
+<tr><td>恢复段</td><td>只有模型提出追问时才运行，初查与恢复分别判定；缺追问不伪造恢复记录</td></tr>
+<tr><td>失败记录</td><td>上游或结构失败单列，不用样例顶替，不从数据集中删除</td></tr>
+<tr><td>建议判定</td><td>独立复算数值、月份、范围、加强表述及未解决项限定规则</td></tr>
+</tbody></table>
+<h3>指标的准确含义</h3>
+<pre>运行通过率 = judgment.ok 为 true 的有效运行数
+             / status 为 ok 的有效运行数
+
+一次运行可能包含多个主张，
+判定同时涉及状态、引用、追问、补证或建议要求。</pre>
+<p>旧记录将此指标称为“主张状态正确率”。按评测实现，它是<strong>整次运行通过率</strong>，不是逐条主张准确率；本报告据此统一表述，保留原始数据。</p>
+<div class="box warn">无检索臂受同样的“有依据才能下结论”规则约束。因此对照说明来源支撑工作流的价值，不能声称相对普通聊天模型提升了通用事实判断准确率。题集均为开发题，尚无独立预留集。</div>
+<p class="source">samples/source-audit-questions.json、samples/source-audit-expectations.json；scripts/evaluate-source-audit.ts 的 judgeRun / summarizeEvaluation。[E3]</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">07 / 实际评测结果</div><h2>展示结果，也保留失败</h2><div class="rule"></div>
+<p>最新存档整组评测：22 题 ×2 臂 ×3 次，外加条件触发的补证恢复段。计划最多 138 次，实际记录 137 次；模型没有追问的一次恢复未发生。</p>
+<div class="bar-row"><div class="bar-label">有检索</div><div class="bar-track"><div class="bar" style="width:89.7059%"></div></div><div class="bar-value">89.7%</div></div>
+<div class="bar-row"><div class="bar-label">无检索</div><div class="bar-track"><div class="bar secondary" style="width:27.5362%"></div></div><div class="bar-value">27.5%</div></div>
+<table><thead><tr><th>指标</th><th>有检索</th><th>无检索</th></tr></thead><tbody>
+<tr><td>有效运行 / 通过运行</td><td>68 / 61</td><td>69 / 19</td></tr>
+<tr><td>上游 / 结构失败</td><td>0</td><td>0</td></tr>
+<tr><td>接受引用 / 被拒引用</td><td>145 / 2</td><td>0 / 0</td></tr>
+<tr><td>虚构引用 / 无适用来源越界</td><td>0 / 0</td><td>0 / 0</td></tr>
+<tr><td>平均耗时</td><td>6,723 ms</td><td>5,472 ms</td></tr>
+</tbody></table>
+<p class="small">两臂汇总差约 62.2 个百分点，分母因条件恢复不同而不相等。零违规是此有限题集的观察，不是对所有输入的安全保证。[E3]</p>
+<h3>检索臂的七次未通过</h3>
+<table><thead><tr><th>题型</th><th>未通过数</th><th>实际问题</th></tr></thead><tbody>
+<tr><td>q06 范围错配</td><td>2</td><td>未产出可匹配的配文主张，含无结论运行</td></tr>
+<tr><td>q16 超过三条</td><td>1</td><td>整轮无结论</td></tr>
+<tr><td>q18 补证恢复</td><td>3</td><td>追问漂移、未套用用户补充等</td></tr>
+<tr><td>q20 混合改写</td><td>1</td><td>建议数值不满足期望</td></tr>
+</tbody></table>
+<p>此前 20 题版本为 58/62（93.5%）；题集、资料库和运行轮次不同，不能合并成一个准确率，也不能仅凭下降推断新增功能导致退化。五道演示题的一次抽样为 6/6，仅说明该次配置下通过。[E4][E6]</p>
+<div class="box warn">这些在线记录早于后续来源引用、方向改写与补证隔离修复。当前代码已通过本地回归；修复后的真实模型稳定性尚未复验。[E7]</div>
+<p class="source">本次按原始 JSON 重新汇总 137 条记录，结果与分臂分母、通过数及平均耗时相符。[E3]</p>
+</section>
+
+<section class="sheet compact">
+<div class="kicker">08 / 测试、运行与部署</div><h2>可复现的本机 Web 应用</h2><div class="rule"></div>
+<h3>本次本地验证（2026-10-01）</h3>
+<table><thead><tr><th>检查</th><th>结果</th><th>证明范围</th></tr></thead><tbody>
+<tr><td>npm test</td><td>361/361，21 个文件</td><td>行为、API、结构与边界回归；不调用真实模型</td></tr>
+<tr><td>npm run test:e2e</td><td>90/90，30 用例 ×3 视口</td><td>替身 / 预置数据下的浏览器路径</td></tr>
+<tr><td>npm run build</td><td>通过</td><td>Web、服务端与 e2e 类型检查及产物构建</td></tr>
+<tr><td>npm run eval:samples</td><td>23/23</td><td>18 张固定图与五组跨图的独立期望</td></tr>
+<tr><td>npm run verify:sample-renders</td><td>18/18</td><td>本机 Edge 下 SVG 与 PNG 字节同源</td></tr>
+<tr><td>npm run docs:check</td><td>无缺失链接</td><td>本地文件链接存在；不验证网络与内容</td></tr>
+</tbody></table>
+<h3>评审复现方式</h3>
+<pre># Windows，Node 22.12+ 的 22.x 或 24.x，Edge
+npm ci
+npm run dev
+# 网页 http://127.0.0.1:5173
+# API  http://127.0.0.1:3001</pre>
+<p>网页与 API 端口在 <code>.env</code> 配置（WEB_PORT、PORT）。启动先预检端口，被占用时直接提示；不静默更换端口。模型密钥在设置页配置，离线样例、计算和固定样例评测不需要密钥。</p>
+<h3>CI 与部署状态</h3>
+<p>GitHub Actions 使用 Windows + Node 24，执行文档链接、类型、构建、行为测试和三视口浏览器测试；失败上传 trace。图片字节同源步骤受 Edge 栅格化差异影响，属于允许失败的信号，不能由 CI 总绿推断其通过。</p>
+<p>已验证的交付形态是本机运行。公网部署尚无上线或可用性证据，反向代理方案也不等于已部署；公共演示是赛事可选项，需另做访问、密钥隔离与额度管理。</p>
+<div class="box warn"><strong>密钥配置与赛事要求的差异</strong><p>官网要求 API 密钥通过环境变量配置。本项目按本机使用设计保存在用户配置文件，不读取模型密钥环境变量。防止密钥进入仓库的目标已有实现，但配置方式尚未满足这项文字要求，应在正式提交前完成适配或取得组委会认可。</p></div>
+<p class="source">本地命令、基线与 GitHub CI 核对见 [E7]；本机密钥实现 server/model-settings.ts；官网 [R1]。</p>
+</section>
+
+<section class="sheet">
+<div class="kicker">09 / 创新、局限与展望</div><h2>把 AI 的判断变成有依据的操作</h2><div class="rule"></div>
+<table><thead><tr><th>创新点</th><th>用户获得的价值</th><th>工程落点</th></tr></thead><tbody>
+<tr><td>按证据分级的图表阅读</td><td>知道哪一部分能核查，哪一部分仍不确定</td><td>图内、来源、推断与观点分别判定</td></tr>
+<tr><td>受控的模型调查</td><td>可查看行动理由、工具结果和停止原因</td><td>共享编排器、参数校验与调用预算</td></tr>
+<tr><td>有来源的局部改写</td><td>知道改哪里、为什么改、依据在哪里</td><td>原句与引用绑定，提议逐处验证</td></tr>
+<tr><td>补证与输入失效联动</td><td>旧判断不会伪装成新输入的结果</td><td>用户补充标记、指纹、请求序号与历史区</td></tr>
+<tr><td>官方版本替代贯通</td><td>复查旧数值，同时保持结论与建议依据一致</td><td>明确修订声明、有效来源与版本记录</td></tr>
+</tbody></table>
+<h3>社会价值与应用方向</h3>
+<p>图证将算术、统计口径和来源辨识变成可操作的读图过程，可用于数据素养教学、资讯阅读和编辑自查。商业方向可探索教学案例工具或编辑辅助模块；目前没有付费用户、市场规模或节省时间的实测，不能据此声称商业模式成立。</p>
+<h3>已经知道的局限</h3>
+<ul>
+<li>资料库只有五条材料、两类指标，图表与评测题均为团队开发样例，没有独立预留集。</li>
+<li>主张分类、追问时机和改写仍有模型漂移；固定词表与数值规则无法覆盖全部语言表达。</li>
+<li>来源一致不是事实真实性保证；同口径来源分歧、开放检索与通用知识库尚未实现。</li>
+<li>完整工具循环在线证据只覆盖指定 Messages 配置；换协议、端点或模型需重新验证。</li>
+<li>没有真实用户可用性研究、生产部署压测或长期可用性承诺；实时工具流式展示尚未实现。</li>
+</ul>
+<h3>总结与下一步</h3>
+<p>当前已形成截图确认、工具检索、引用核对、必要补证与修改建议的完整路径。继续验证时，应先补齐当前代码的在线复验和独立预留题，再按有适用来源的场景扩展资料库；用户研究与公共演示以各自实测为完成条件。</p>
+<div class="box dark"><strong>核心成果</strong><p>AI 将图文转换成可调查的主张；程序把来源、口径和计算组合为可复查结论；用户决定是否补充与采用修改。</p></div>
+<p class="source">能力与验证范围交叉核对 PLAN.md、CONTEXT.md、docs/PHASES.md、代码、测试及 [E1]-[E7]。创新点描述产品机制，不声称算法首创。</p>
+</section>
+
+<section class="sheet compact">
+<div class="kicker">附录 / 证据与复现索引</div><h2>每个数字都有出处</h2><div class="rule"></div>
+<p class="small">在线数据采用仓库原始记录，指标口径按评测实现说明；本次材料核查不新增模型请求。截图用于展示界面，图注区分预置、替身与资料库展示。</p>
+<table><thead><tr><th style="width:12%">编号</th><th style="width:38%">材料 / 入口</th><th>对应内容</th></tr></thead><tbody>
+<tr><td>E1</td><td><a href="../../package.json">npm 脚本</a>、<a href="../../tests/">tests/</a>、<a href="../../e2e/">e2e/</a></td><td>本地行为、API 与三视口浏览器验证</td></tr>
+<tr><td>E2</td><td><a href="../evidence/anthropic-provider-2026-09-28.md">模型协议在线记录</a></td><td>连接、图片读取、结构漂移与超时的历史证据</td></tr>
+<tr><td>E3</td><td><a href="../evidence/stage-4-source-audit-eval-2026-10-01-revision.md">22 题整组说明</a> / <a href="../evidence/stage-4-source-audit-eval-2026-10-01-revision.json">原始 JSON</a></td><td>137 条记录；检索 61/68、无检索 19/69；版本替代 5 次</td></tr>
+<tr><td>E4</td><td><a href="../evidence/stage-4-source-audit-rewrite-2026-09-30.md">20 题改写评测</a> / <a href="../evidence/stage-4-source-audit-eval-2026-09-30-rewrite.json">原始 JSON</a></td><td>58/62；73 条模型提议中 31 采用、42 拒绝；124 次有效运行的独立不变量复算</td></tr>
+<tr><td>E5</td><td><a href="../STAGE-1.md">单图视觉记录</a>、<a href="../evidence/stage-3-live-vision-2026-09-27.md">跨图在线记录</a></td><td>视觉路径的历史验收；与工具循环分开计数</td></tr>
+<tr><td>E6</td><td><a href="../evidence/stage-5-05-demo-path-live-2026-09-30.md">五题演示路径抽样</a></td><td>检索臂一次抽样 6/6，不代替整组或当前版本复验</td></tr>
+<tr><td>E7</td><td><a href="../reviews/2026-10-01-competition-assessment.md">本次完整项目评估</a><br><span class="small">docs/reviews/2026-10-01-competition-assessment.md</span></td><td>本地 361/361、90/90，GitHub 状态、材料核查、尚缺证据</td></tr>
+<tr><td>R1</td><td><a href="https://www.boxuegu.com/matchTrack/detail/?id=10037">官网赛道详情</a> / <a href="../competition/official-rules-verification-2026-10-01.md">核对记录</a></td><td>评分权重、PDF ≤30 页、视频 5-8 分钟 / 1080p、评审访问及密钥配置要求</td></tr>
+</tbody></table>
+<h3>固定官方资料的原始链接</h3>
+<table><thead><tr><th>编号</th><th>发布</th><th>引用入口</th></tr></thead><tbody>
+<tr><td>S1</td><td>2025 年 12 月 CPI</td><td><a href="https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html">国家统计局 · 2026-01-09</a></td></tr>
+<tr><td>S2</td><td>同比与环比解释</td><td><a href="https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912960.html">国家统计局 · 术语说明</a></td></tr>
+<tr><td>S3</td><td>2026 年 8 月 CPI</td><td><a href="https://www.stats.gov.cn/sj/zxfb/202609/t20260909_1965263.html">国家统计局 · 2026-09-09</a></td></tr>
+<tr><td>S4 / S5</td><td>零售总额旧发布与修订发布</td><td>国家统计局 · <a href="https://www.stats.gov.cn/sj/zxfb/202608/t20260817_1965052.html">2026-08-17</a> / <a href="https://www.stats.gov.cn/sj/zxfb/202609/t20260915_1965311.html">2026-09-15</a></td></tr>
+</tbody></table>
+<p>资料录入包含原始链接、发布者、日期、短摘录、适用口径与指纹。本次未重新核对五条统计发布的完整页面，不把文件链接存在等同于来源再次验收。</p>
+<p class="small">源码与完整证据：<a href="https://github.com/Iskuyal/web-match">github.com/Iskuyal/web-match</a>。复现配置与安装步骤见仓库 README；赛事版生成命令为 <code>node docs/submission/build-report.mjs --competition</code>。</p>
+<p class="source">本文不包含密钥、真实用户数据、任务日志或开发待办。团队报名信息与视频、仓库访问权限在提交材料入口核对，不能由本 PDF 生成结果代替。</p>
+</section>
+</body>
+</html>

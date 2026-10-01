@@ -3,6 +3,8 @@
 **检查日期：2026-09-30（阶段五任务 04）。** 本文件记录「评审能不能打开材料」这项检查的实测结果与仍需人工处理的事项。
 检查方法都是可复现的命令，不依赖人工目测。
 
+> **当前赛事入口（2026-10-01 本次复核）**：[web-match-competition-report.pdf](web-match-competition-report.pdf)，**16/30 页**；源文件 [competition-report.html](competition-report.html)，重建命令 `node docs/submission/build-report.mjs --competition`，现有产物检查 `--competition --check`。原开发 PDF 实际为 23 页，保留归档，下文 24 / 25 页等属于历史轮次。新 PDF 的逐页视觉与文本 QA、本地 361 / 90 项测试及 GitHub 复核见[完整评估](../reviews/2026-10-01-competition-assessment.md)。官网评分与材料要求已[重新核对](../competition/official-rules-verification-2026-10-01.md)；仓库仍 PRIVATE，视频与团队信息仍待补，公网部署尚无验收证据；密钥本机配置方式与官网环境变量要求存在差异。历史外部来源链接的 HTTP 结果未在本轮重跑。
+
 ## 1. 结论速览
 
 | 材料 | 状态 | 检查方式 | 需要人工处理 |

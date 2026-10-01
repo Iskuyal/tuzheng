@@ -1,0 +1,386 @@
+# ============================================================
+# nginx 配置文件（Windows）—— 最终版，可整份替换
+#
+# 【nginx 目录】C:\Users\Administrator\Desktop\web\Nginx-1.30.3
+#   ⚠ Windows 版 nginx 用【当前工作目录】当 prefix，不是 exe 所在目录。
+#     所以所有命令必须先 cd 进去，否则它去找 <当前目录>\conf\nginx.conf 而报
+#     "configuration file ... test failed" —— 命令看着执行了，实际作用在空气上：
+#       cd C:\Users\Administrator\Desktop\web\Nginx-1.30.3
+#       .\nginx.exe -t
+#       .\nginx.exe -s reload
+#
+# 【域名清单（服务器实际状态）】
+#   monitor.yuuuu.cyou → 127.0.0.1:5000  Monitor-Server2（jar）
+#   cloud.yuuuu.cyou   → 127.0.0.1:5212  Cloudreve 网盘
+#   img.yuuuu.cyou     → 127.0.0.1:3000  image-hosting 图床（jar）
+#   money.yuuuu.cyou   → 127.0.0.1:8080  CoinTrace 钱迹（jar + 前端静态）
+#   kebiao.yuuuu.cyou  → 127.0.0.1:8090  EasySchedule 课程表
+#   tuzheng.yuuuu.cyou → Node.js 图证：前端 WEB-Match/dist/client 静态托管
+#                        + /api/ 反代 127.0.0.1:3001
+#   （旅游攻略＝原 C:\Users\Administrator\Desktop\web\dist 静态站，已废弃，
+#     本配置不含它的任何块或 root，所以它不会再被服务。）
+#
+# 【本版相对上一版修掉的 4 个问题】
+#   1. default_server 兜底：未匹配的请求一律 404，不再落到第一个站点
+#   2. 删掉 web/dist 静态站 → 不再有 try_files 内部重定向死循环（那个 500）
+#   3. 删掉 location /api/settings/test-connection { deny all; }（它会把
+#      "测试连接"按钮打成 403，且缺 proxy_pass 放行时会变成 404）
+#   4. 删掉 limit_except GET { deny all; }（它把"保存设置"打成 403）
+#
+# 【替换步骤】
+#   Copy-Item .\conf\nginx.conf .\conf\nginx.conf.bak-20261001
+#   nginx -t  →  nginx -s reload        （永远不要 stop：会带停所有站点）
+# ============================================================
+
+worker_processes  auto;          # nginx/Windows 实际只用 1 个 worker，保持原样不影响功能
+
+#error_log  logs/error.log;
+pid        logs/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    tcp_nopush      on;
+    keepalive_timeout  65;
+
+    # ============================================================
+    # gzip 压缩（全局生效）
+    # gzip_proxied any：默认 off，不加则 /api/ 代理的 JSON 不被压缩
+    # ============================================================
+    gzip              on;
+    gzip_vary         on;
+    gzip_min_length   1024;
+    gzip_comp_level   6;
+    gzip_proxied      any;
+    gzip_types        text/plain text/css application/javascript application/json application/xml image/svg+xml text/calendar application/manifest+json;
+
+    # ============================================================
+    # 限流（仅图证站点的 /api/ 使用）
+    # 每次模型请求都是一次真实扣费。120r/m + burst 30 对正常浏览完全无感
+    # （一次页面加载最多几条请求），但能挡住脚本级刷量。
+    # 万一演示当天出现 503 Service Temporarily Unavailable，把 tuzheng 块里
+    # 那句 limit_req 注释掉、reload 即可。
+    # ============================================================
+    limit_req_zone $binary_remote_addr zone=tuzhengapi:10m rate=120r/m;
+
+    # ============================================================
+    # 兜底 server —— 必须保留，全文件只能有一个 default_server
+    # 未匹配任何 server_name 的请求（按 IP 访问、已下线域名、扫描器）一律 404，
+    # 绝不会再落到某个真实站点上。想更彻底可改成 return 444（直接断开）。
+    # ============================================================
+    server {
+        listen       80 default_server;
+        server_name  _;
+        return       404;
+    }
+
+    # ============================================================
+    # monitor.yuuuu.cyou —— Monitor-Server2（jar，:5000）
+    # 全量反代：Monitor2 自身生成 /admin /parent 等根路径，不能挂在子路径下。
+    # ============================================================
+    server {
+        listen       80;
+        server_name  monitor.yuuuu.cyou;
+
+        charset utf-8;
+        client_max_body_size 10m;
+
+        location / {
+            proxy_pass http://127.0.0.1:5000;
+
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-Host $host;
+
+            proxy_connect_timeout 10s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html { root html; }
+    }
+
+    # ============================================================
+    # cloud.yuuuu.cyou —— Cloudreve 网盘（:5212）
+    # ⚠ 网盘专用参数，别照抄别的站点：
+    #   client_max_body_size 0        不限请求体大小，否则大文件上传 413
+    #   proxy_request_buffering off   上传不先缓冲整个请求体（大文件必开）
+    #   超时长，避免长时间上传/下载被掐断
+    # ============================================================
+    server {
+        listen       80;
+        server_name  cloud.yuuuu.cyou;
+
+        charset utf-8;
+        client_max_body_size 0;
+
+        location / {
+            proxy_pass http://127.0.0.1:5212;
+
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-Host $host;
+
+            proxy_request_buffering off;
+            proxy_connect_timeout 15s;
+            proxy_send_timeout 3600s;
+            proxy_read_timeout 3600s;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html { root html; }
+    }
+
+    # ============================================================
+    # img.yuuuu.cyou —— 图床 image-hosting（jar，:3000）
+    # ⚠ 20m 必须 ≥ 图床上限（10MB）+ 余量，否则大图被 nginx 先拦掉
+    # ============================================================
+    server {
+        listen       80;
+        server_name  img.yuuuu.cyou;
+
+        charset utf-8;
+        client_max_body_size 20m;
+
+        location / {
+            proxy_pass http://127.0.0.1:3000;
+
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-Host $host;
+
+            proxy_connect_timeout 10s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html { root html; }
+    }
+
+    # ============================================================
+    # money.yuuuu.cyou —— CoinTrace 钱迹（jar :8080 + 前端静态）
+    # 保持你原有的结构：静态前端由 nginx 托管，/api/ 与 swagger 反代到 jar。
+    # ⚠ 如果 money 的前端其实是由 jar 自己返回的（即 :8080 直接能出页面），
+    #   就把下面 location / 换成：proxy_pass http://127.0.0.1:8080;（含同样的
+    #   proxy_set_header 几行）
+    # ============================================================
+    server {
+        listen       80;
+        server_name  money.yuuuu.cyou;
+
+        charset utf-8;
+        client_max_body_size 10m;
+
+        # 带内容 hash 的静态资源：长缓存 + immutable
+        location ~* \.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?)$ {
+            root   C:/Users/Administrator/Desktop/web/CoinTrace/frontend;
+            expires 1y;
+            add_header Cache-Control "public, max-age=31536000, immutable";
+        }
+
+        # SPA 入口不缓存：新版本即时生效
+        location = /index.html {
+            root   C:/Users/Administrator/Desktop/web/CoinTrace/frontend;
+            add_header Cache-Control "no-cache";
+        }
+
+        # SPA 其余路径
+        location / {
+            root   C:/Users/Administrator/Desktop/web/CoinTrace/frontend;
+            index  index.html index.htm;
+            try_files $uri $uri/ /index.html;
+        }
+
+        # CoinTrace 后端 API（JSON 由全局 gzip_proxied any 压缩）
+        location /api/ {
+            proxy_pass http://127.0.0.1:8080;
+
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-Host $host;
+
+            proxy_connect_timeout 15s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        # Swagger 接口文档
+        location ~ ^/(swagger-ui|v3/api-docs|swagger-ui.html)(?:/|$) {
+            proxy_pass http://127.0.0.1:8080;
+
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-Host $host;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html { root html; }
+    }
+
+    # ============================================================
+    # kebiao.yuuuu.cyou —— EasySchedule 课程表（:8090）
+    # 本次域名清单未提及，为免误伤保留。不要了就整块删掉。
+    # ============================================================
+    server {
+        listen       80;
+        server_name  kebiao.yuuuu.cyou;
+
+        charset utf-8;
+        client_max_body_size 12m;
+
+        location = /sw.js {
+            root   C:/Users/Administrator/Desktop/web/schedule/dist;
+            add_header Cache-Control "no-cache";
+        }
+        location = /manifest.webmanifest {
+            root   C:/Users/Administrator/Desktop/web/schedule/dist;
+            types { } default_type application/manifest+json;
+            add_header Cache-Control "no-cache";
+        }
+        location ^~ /assets/ {
+            root   C:/Users/Administrator/Desktop/web/schedule/dist;
+            expires 1y;
+            add_header Cache-Control "public, max-age=31536000, immutable";
+        }
+        # /ical/ 必须单独反代：日历 App 免登录拉课表，不能被 SPA 兜底吞掉
+        location /ical/ {
+            proxy_pass http://127.0.0.1:8090;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-Proto https;
+        }
+        location /api/ {
+            proxy_pass http://127.0.0.1:8090;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+        }
+        location / {
+            root   C:/Users/Administrator/Desktop/web/schedule/dist;
+            index  index.html;
+            try_files $uri $uri/ /index.html;
+            add_header Cache-Control "no-cache";
+        }
+    }
+
+    # ============================================================
+    # tuzheng.yuuuu.cyou —— 图证（Node.js，后端只监听 127.0.0.1:3001）
+    # 前端：WEB-Match/dist/client 静态托管
+    # 后端：窗口化临时演示，非常驻服务。启动方式：
+    #       cd C:\Users\Administrator\Desktop\web\WEB-Match
+    #       node dist\server\server\index.js
+    # ⚠ 超时 90s：应用自身超时 45s（读图）/ 60s（来源核验），
+    #   必须 >60s 让应用先返回可读错误，又必须 <100s 以免被 Cloudflare 的
+    #   免费版 100 秒上限抢先返回 524。
+    # ============================================================
+    server {
+        listen       80;
+        server_name  tuzheng.yuuuu.cyou;
+
+        charset utf-8;
+        client_max_body_size 8m;   # 应用自身上限 5MB；不写这行会被 nginx 默认 1m 拦掉
+
+        # 带内容 hash 的构建产物：长缓存
+        location ^~ /assets/ {
+            root   C:/Users/Administrator/Desktop/web/WEB-Match/dist/client;
+            expires 1y;
+            add_header Cache-Control "public, max-age=31536000, immutable";
+        }
+
+        # SPA 入口不缓存
+        location = /index.html {
+            root   C:/Users/Administrator/Desktop/web/WEB-Match/dist/client;
+            add_header Cache-Control "no-cache";
+        }
+
+        # 模型设置：GET 任何人可读（只返回地址/模型名/密钥是否已配置，不回传密钥）；
+        # PUT（保存）与连接测试一并放行，保存设置不再 403。
+        # ⚠ 不要在这里加只有 deny 没有 proxy_pass 的块 —— 那会把"测试连接"打成 403。
+        location /api/settings {
+            proxy_pass http://127.0.0.1:3001;
+
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # 后端 API。★ 必须写 127.0.0.1，不能写 localhost
+        #   （服务端只监听 IPv4 回环，localhost 可能先解析到 ::1 → 502）
+        location /api/ {
+            proxy_pass http://127.0.0.1:3001;
+
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-Host $host;
+
+            proxy_connect_timeout 10s;
+            proxy_send_timeout    90s;
+            proxy_read_timeout    90s;
+
+            # 审计结果与调查记录绝不进 Cloudflare 缓存
+            add_header Cache-Control "no-store" always;
+
+            # 万一演示当天出现 503，把这一行注释掉再 reload
+            limit_req zone=tuzhengapi burst=30 nodelay;
+        }
+
+        # SPA 其余路径。★ 缺 try_files 回退 → 刷新 /source-audit 会 404
+        location / {
+            root   C:/Users/Administrator/Desktop/web/WEB-Match/dist/client;
+            index  index.html;
+            try_files $uri $uri/ /index.html;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html { root html; }
+    }
+
+    # ============================================================
+    # 【可选】给图证加口令保护 —— 现在没有开，开之前先看清前置条件
+    #
+    # 现状：tuzheng.yuuuu.cyou 目前**不需要口令**，知道域名的人就能打开，
+    #       也就能消耗你配置的模型额度（读接口不回传密钥，PUT 不带 apiKey
+    #       时会保留现有密钥，所以密钥本身不会被读走）。
+    #
+    # 要开启，两步，顺序不能反：
+    #   1) 先在 nginx 目录下建口令文件（{PLAIN} 前缀在 Windows 上可用）：
+    #      Set-Content 'C:\Users\Administrator\Desktop\web\Nginx-1.30.3\conf\.htpasswd' `
+    #                  -Value 'demo:{PLAIN}你的口令' -Encoding ASCII
+    #   2) 把下面两行**移到** tuzheng 的 server 块里（例如放在 charset utf-8; 之后），
+    #      然后 cd 进 nginx 目录 → .\nginx.exe -t → .\nginx.exe -s reload
+    #
+    #   auth_basic           "TuZheng Demo";
+    #   auth_basic_user_file C:/Users/Administrator/Desktop/web/Nginx-1.30.3/conf/.htpasswd;
+    #
+    # ⚠ 口令文件路径写错或缺文件时，nginx 会直接 500 / 403 —— 先建文件再 reload。
+    # ============================================================
+}
