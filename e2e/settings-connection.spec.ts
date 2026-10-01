@@ -112,6 +112,11 @@ test("模型预设按协议过滤，选取后填入地址与型号", async ({ pa
   // 名称按官方写法（Command Code），并带「本项目已实测」标注。
   await expect(presetSelect.locator('option[value="commandcode-responses-deepseek"]'))
     .toHaveText("Command Code 网关 · DeepSeek V4.1 Flash（本项目已实测）");
+  // 2026-10-01 按端点核实扩充的条目：百炼补上了「只有 Anthropic 面」的不对称。
+  await expect(presetSelect.locator('option[value="dashscope-responses-qwen-flash"]'))
+    .toHaveText("阿里云百炼 · Qwen3.8 Flash 多模态（官方文档）");
+  await expect(presetSelect.locator('option[value="moonshot-responses-kimi-k3"]'))
+    .toHaveText("Moonshot 官方 · Kimi K3 多模态（官方文档）");
   // 多模态要求与「两侧预设为什么不同」写在页面上（桌面走侧栏说明、窄屏走移动端说明），不是只写在 README 里。
   await expect(page.locator("li", { hasText: "所配模型必须支持图片输入（多模态）" }).first()).toBeAttached();
   await expect(page.locator("small", { hasText: "同一家服务商只在支持该协议的端点上出现" }).first()).toBeAttached();
@@ -122,6 +127,10 @@ test("模型预设按协议过滤，选取后填入地址与型号", async ({ pa
     "阿里云百炼 · Qwen3.8 Flash 多模态",
     "智谱开放平台 · GLM-5.3-Flash 原生多模态",
   ]);
+  await expect(presetSelect.locator('option[value="minimax-anthropic-m3-flash"]'))
+    .toHaveText("MiniMax 官方 · M3.1 Flash 多模态（官方文档）");
+  await expect(presetSelect.locator('option[value="fireworks-anthropic-kimi-k3"]'))
+    .toHaveText("Fireworks AI · Kimi K3 多模态（官方文档）");
 
   await presetSelect.selectOption("deepseek-anthropic-flash");
   await expect(baseUrl).toHaveValue("https://api.deepseek.com/anthropic/v1");

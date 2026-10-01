@@ -2,7 +2,7 @@
 
 **状态（2026-10-01 第六次更新）：** 阶段四任务 01—05 全部实现并通过在线验收，**06 的「版本修订／版本替代」已于 2026-10-01 实现并完成整组实测**（整组一轮 22 题 ×2 臂 ×3 次：有检索臂 89.7%，版本复查替代生效 5 次、修正 5／误改 0；「同口径冲突 → 来源存在分歧」仍为 `needs-info`）；证据索引见 [PHASES.md](PHASES.md) 阶段四一节。阶段五 01／02／03／06／07／08 已完成：07 的人为变红验证已补齐（类型错误 [run 36723291466](https://github.com/Iskuyal/web-match/actions/runs/36723291466)、断言失败 [run 36723673814](https://github.com/Iskuyal/web-match/actions/runs/36723673814)，回退后 main 绿 [run 36724007809](https://github.com/Iskuyal/web-match/actions/runs/36724007809)）；08（主图载入期间选择对照图被静默取消）已改为「载入在途时跨图区禁用并说明原因」，语义见 [ADR 0001](adr/0001-disable-cross-picker-while-main-image-loads.md)，已合并于 PR #17。**04 的仓库侧材料已完成（PR #14 冻结）并在 2026-09-30 与 08／07 的实测同步**：README 材料索引与冻结演示路径、技术 PDF（2026-10-01 为 **25/30 页**）、演示脚本与逐条走查清单、访问检查记录、20 张替身响应截图；材料里的 e2e 条数已改为 **90/90（30 用例 ×3 视口）**、`npm test` **338/338**、固定资料库 **5 条**、题集 **22 题**，`docs/submission/` 下不再有 78/78 与「26 用例」（其余出现都在 PHASES、本文件的历史提示词与 docs/evidence 的当时记录里，属快照）。
 
-**阶段四 06 已于 2026-10-01 完成「版本修订／版本替代」这一支**（全量调研 → 用户批准把资料库扩到「社会消费品零售总额」→ 实现 → 整组实测：有检索臂 **89.7%（61/68）**、虚构引用 0、越界 0、退化题 0，q21／q22 各 3/3，**版本复查替代生效 5 次、修正 5／误改 0**；PDF 重建为 25/30 页）；**「同口径冲突 → 来源存在分歧」仍因没有可核对材料停在 `needs-info`，不进入任何能力声明**。**现在剩下的都是人工步骤**：录制 5—8 分钟视频、把仓库从私有改为评审可访问、补齐团队信息、赛事提交——它们阻塞阶段五 05 的整体通过（其中「另一台 Windows 环境复跑」已由用户 2026-09-30 决定交团队在服务器上执行）。**下一片 = 阶段五 05 收尾，提示词就在下面**。不要动：阶段五 04／05 的验收状态、这些人工事项。
+**阶段四 06 已于 2026-10-01 完成「版本修订／版本替代」这一支**（全量调研 → 用户批准把资料库扩到「社会消费品零售总额」→ 实现 → 整组实测：有检索臂 **89.7%（61/68）**、虚构引用 0、越界 0、退化题 0，q21／q22 各 3/3，**版本复查替代生效 5 次、修正 5／误改 0**；PDF 重建为 25/30 页）；**「同口径冲突 → 来源存在分歧」仍因没有可核对材料停在 `needs-info`，不进入任何能力声明**。**另按用户要求做了预设端点核实与补齐（C7，2026-10-01）**：新增 6 条 documented 预设（Anthropic 侧 MiniMax、Fireworks；Responses 侧百炼、Moonshot、MiniMax、Nebius），修掉 OpenRouter 两条失效出处链接，把「路由存在 ≠ 能读图」和未核实项如实写明；提示词与结果见下方 details。**现在剩下的都是人工步骤**：录制 5—8 分钟视频、把仓库从私有改为评审可访问、补齐团队信息、赛事提交——它们阻塞阶段五 05 的整体通过（其中「另一台 Windows 环境复跑」已由用户 2026-09-30 决定交团队在服务器上执行）。**下一片 = 阶段五 05 收尾，提示词就在下面**。不要动：阶段五 04／05 的验收状态、这些人工事项。
 
 <details>
 <summary>已执行的提示词：阶段四 06（调研＋实现；已执行 2026-10-01，明细见 PHASES 阶段四 06 记录与证据记录）</summary>
@@ -33,6 +33,40 @@
 ```
 
 执行结果（2026-10-01）：调研结论是 **CPI 口径下一对都没有**（490 条发布列表系统性排除），唯一可用的是**非 CPI** 的社零环比修订对；用户据此批准把资料库扩到「社会消费品零售总额」。随后实现「版本修订／版本替代」（资料库 3→5 条、程序侧 `applyRevision`、结论卡「版本复查」区块、题集 20→22 题），并跑完整组一轮：有检索臂 **89.7%（61/68）**、虚构引用 0、越界 0、退化题 0，**版本复查替代生效 5 次（修正 5／误改 0；额外模型调用 0 次、额外轮次 0 轮）**；PDF 重建为 **25/30 页**。明细见 [PHASES.md](PHASES.md) 阶段四「任务 06 实现记录」、[ADR 0002](adr/0002-revision-substitution-in-source-library.md) 与[证据记录](evidence/stage-4-source-audit-eval-2026-10-01-revision.md)；「同口径冲突 → 来源存在分歧」仍停在 `needs-info`。
+
+</details>
+
+<details>
+<summary>已执行的提示词：预设端点核实与补齐（C7；已执行 2026-10-01）</summary>
+
+```text
+[$implement](C:\Users\dusta\.agents\skills\implement\SKILL.md)
+
+请在 F:\VibeCoding\web-match 做「常用模型预设」的端点核实与补齐（用户反馈：两个协议的服务商预设不同，且有的条目依据不足）。开始前记录当前 HEAD 作为代码审查对照点、检查工作区，并阅读 AGENTS.md、docs/STRUCTURE.md、shared/model-presets.ts、docs/evidence/anthropic-provider-2026-09-28.md、README 的「模型设置」一节。
+
+先说明理解与判定标准。这一片要证明的是：**每一条进预设的服务商与型号都有「它支持该协议的端点」和「型号支持图片输入」两类证据；证据不足的不进预设，宁少勿假。**
+
+## 判定标准（缺一不可）
+1. 该服务商确实提供本应用实际调用的端点：OpenAI 协议走 `<baseUrl>/responses`（不是 /chat/completions），Anthropic 协议走 `<baseUrl>/messages`。
+2. 该端点下的型号有**图片输入**证据（官方文档含 image 字段或示例，或 models.dev、OpenRouter 的模态元数据）。
+3. baseUrl 填到版本段（应用自行追加 /messages 或 /responses），不得以 /messages、/responses、/chat/completions 结尾。
+4. 路由存在性要有**对照探测**：未鉴权 POST 目标路径，同时 POST 一个不存在的控制路径；控制 404 而目标 401/400 → 路由存在；两者同码 → 不可判定，不得据此下结论。
+5. 每条写清出处链接与 verification（live／documented）；documented 的说明里必须写明「未做…」，不允许把「按文档」读成「已实测」。
+
+## 交付范围
+1. 逐家核实现有预设与候选补充（阿里云百炼、智谱、OpenCode Zen、OpenRouter、DeepSeek、Command Code、Anthropic、OpenAI，以及 Moonshot／Kimi、MiniMax、Fireworks、Nebius、SiliconFlow、火山方舟、DeepInfra、Groq、Together、xAI、Gemini、StepFun、七牛、Gitee AI、Infini、AI-ML API、ModelScope 等），产出 `.scratch/model-presets-research/endpoints-<日期>.md`：逐条给 protocol、label、baseUrl、model、证据原句、探测状态码、verification、还需人确认什么；分「建议补」「可以但没必要」「不能收及原因」「未核实」四档。
+2. 按结论改 `shared/model-presets.ts`：补齐两边覆盖、修失效出处链接、如实保留口径差异说明；不改产品逻辑。
+3. 测试：`tests/model-presets.test.ts` 增加新条目的协议／地址／型号断言、两侧共同覆盖的服务商断言，以及「documented 必须在说明里写明未做真实验证」的守护；e2e 设置页补按 `option[value=…]` 的精确断言。
+4. 文档：README 的预设清单与「两侧为什么不同」、docs/PHASES.md 的预设记录同步。
+5. 分支 + PR + CI；中文报告：补了哪些、依据是什么、哪些明确不能收、还需人工确认什么。
+
+## 纪律与预算
+- **0 次真实模型请求**：全程不调用模型、不发图片、不跑 `npm run eval:source-audit`；只做未鉴权路由探测、抓官方文档与第三方模态元数据。
+- 不改产品逻辑与既有能力声明；不把「路由存在」说成「读图可用」。
+- 网络不可达或被 WAF 拦的（本机实测 403／000）如实列入「未核实」，不算证据。
+```
+
+执行结果（2026-10-01）：新增 **6 条** documented 预设——Anthropic 侧 MiniMax 官方（`https://api.minimax.cn/anthropic/v1` + `MiniMax-M3.1-Flash-Preview`）与 Fireworks AI（`https://api.fireworks.ai/inference/v1` + Kimi K3）；Responses 侧阿里云百炼（`compatible-mode/v1`，补上「只有 Anthropic 面」的不对称）、Moonshot 官方（`kimi-k3`，其 `/messages` 实测 404）、MiniMax 官方、Nebius Token Factory。同轮修 OpenRouter 两条失效出处链接，给 DeepSeek Responses 的 baseUrl 口径差异与 OpenAI 官方页 403 留下如实说明；每条 documented 都在说明里写明「未做真实调用」，并加单元测试守护。方法为「未鉴权路由探测（带对照路径）＋官方文档原句＋models.dev／OpenRouter 模态元数据」，逐条证据与状态码见 [`.scratch/model-presets-research/endpoints-2026-10-01.md`](../.scratch/model-presets-research/endpoints-2026-10-01.md)。**未核实（如实保留）**：火山方舟 Ark（JS 外壳文档、探测不可判定）、Groq／Together（403 WAF）、xAI／Gemini／Mistral／Perplexity（000 不可达）、智谱 Responses 面、硅基流动 Anthropic 面图片证据、DeepInfra Anthropic 面图片原句、StepFun 的 base 口径差一步、千帆 `/v2/responses` 的图片字段。
 
 </details>
 
