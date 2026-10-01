@@ -12,13 +12,15 @@
 | --- | --- | --- |
 | 代码仓库 | <https://github.com/Iskuyal/web-match> | **当前为私有仓库**：评审访问前须设为 Public 或开通访问权限，见[访问检查记录](docs/submission/accessibility-check.md) |
 | README（介绍、架构、安装、团队） | 本文件 | 就绪 |
-| 技术文档（PDF，≤30 页） | [web-match-technical-report.pdf](docs/submission/web-match-technical-report.pdf) | 就绪（重建：`node docs/submission/build-report.mjs`；源文件 [technical-report.html](docs/submission/technical-report.html)） |
+| 赛事技术文档（PDF，≤30 页） | [web-match-competition-report.pdf](docs/submission/web-match-competition-report.pdf) | **16 页赛事阅读版**，按官网评分重点组织，突出技术链、案例和验证边界；重建：`node docs/submission/build-report.mjs --competition`；源文件 [competition-report.html](docs/submission/competition-report.html) |
 | 演示视频（5—8 分钟，1080p MP4） | 待补链接 | **待团队人工录制**；脚本、分镜与逐条走查清单见 [demo-video-script.md](docs/submission/demo-video-script.md) |
 | 材料访问检查记录 | [accessibility-check.md](docs/submission/accessibility-check.md) | 就绪（含仓库可见性、链接可达性与公网演示决定） |
 | 真实模型证据索引 | [docs/evidence/](docs/evidence/) 与[路线图](docs/PHASES.md) | 就绪 |
 
 **界面截图（用于 PDF 与材料说明）**：`docs/submission/assets/` 下的 20 张 PNG，由 `node e2e/submission-screenshots.mjs` 生成（先 `npm run dev`）。
 这些截图用**替身响应**渲染界面结构，不调用真实模型，只用于说明界面；真实模型输出以 [docs/evidence/](docs/evidence/) 的逐次运行记录为准。
+
+**赛事材料与开发记录**：原 [开发技术报告](docs/submission/web-match-technical-report.pdf) 和 [HTML 源](docs/submission/technical-report.html) 保留作历史归档；赛事提交使用上表的独立版本。[全项目评估](docs/reviews/2026-10-01-competition-assessment.md)记录本次 361/361 行为/API、90/90 浏览器测试、GitHub 主线与未合并 PR、尚缺的在线复验与人工材料；[官网核对](docs/competition/official-rules-verification-2026-10-01.md)记录评分权重与材料要求。**官网要求模型密钥通过环境变量配置，目前项目采用本机设置文件，两者方式不一致，正式提交前须完成兼容或获得组委会认可。** 新赛事版没有将历史在线结果写成当前修复代码已经在线复验。
 
 ### 冻结的演示路径
 

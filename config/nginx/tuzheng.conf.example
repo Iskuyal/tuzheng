@@ -1,0 +1,139 @@
+# ============================================================
+# tuzheng.yuuuu.cyou —— 图证（图表证据审计台）
+# 可直接粘贴进 C:\nginx\conf\nginx.conf 的 http { } 里
+#
+# 拓扑（与原 nginx.conf 保持一致）：
+#   前端：Vite 产物 dist/client，由 nginx 静态托管
+#   后端：Node + Express，只监听 127.0.0.1:3001（窗口化临时演示，非常驻服务）
+#   HTTPS：在 Cloudflare 处终止，源站只监听 80
+#
+# 与同机其他站点的端口占用核对：3000 图床 / 5000 Monitor2 / 8080 CoinTrace
+#   / 8090 EasySchedule —— 3001 空闲，图证沿用应用默认端口。
+#
+# ------------------------------------------------------------
+# 上机前要做的 3 件事
+# ------------------------------------------------------------
+# 1) Cloudflare DNS：加一条 tuzheng 的 A/CNAME 记录指向本服务器，橙色云开启
+#    （和你 img / money / kebiao 三个站点的做法一致）
+#
+# 2) 建口令文件 C:\nginx\conf\.htpasswd，一行：
+#       demo:{PLAIN}换成一个足够长的口令
+#    Windows 版 nginx 支持 {PLAIN} 前缀（nginx 核心 src/core/ngx_crypt.c 里的纯 C 实现，
+#    跨平台生效），不需要 htpasswd 工具。想存哈希就用 openssl passwd -apr1 的输出。
+#    注意：Windows 版 nginx 对 bare crypt() 是空实现（src/os/win32/ngx_user.c 的 STUB），
+#    所以不要写不带 {PLAIN}/$apr1$ 前缀的明文。
+#
+# 3) 刷新配置：
+#       C:\nginx\nginx.exe -t
+#       C:\nginx\nginx.exe -s reload
+#
+# ------------------------------------------------------------
+# 超时为什么是 90s（有实测依据，别随手改小）
+# ------------------------------------------------------------
+#   图片读取（/api/audit/image）应用自身超时 45s   server/openai-vision.ts:12
+#   来源核验与补证（/api/source-audit/*）应用自身 60s server/source-investigation.ts:70
+#   → nginx 必须 > 60s，否则 nginx 会先掐断，用户只看到 504 而不是应用的可读错误
+#   → 同时必须 < 100s，因为 Cloudflare 免费版超过 100 秒返回 524（错误页是 CF 的，查不出原因）
+#   90s 同时满足两边。
+#
+# ------------------------------------------------------------
+# 安全边界（如实说明）
+# ------------------------------------------------------------
+#   本块加了 Basic Auth，但 HTTPS 是在 Cloudflare 终止的：浏览器 → CF 是加密的，
+#   CF → 源站这一段的 HTTP 是明文，口令会在这一跳以明文经过公网。
+#   临时演示给指导老师用可以接受（口令设长、演示完就停）；
+#   要长期开放就换成 Cloudflare Tunnel，或给 nginx 配 Origin Certificate 监听 443
+#   并把 CF 的 SSL 模式改成 Full (strict)。
+# ============================================================
+
+    # ------------------------------------------------------------
+    # 【可选】限流：每个模型请求都是一次真实扣费，加一层防误刷。
+    # 这一行必须放在 http { } 里（与下面 server 块同级），zones 是 http 级指令。
+    # 不想要限流就整段删掉，同时删掉 server 块里那句 limit_req。
+    # ------------------------------------------------------------
+    limit_req_zone $binary_remote_addr zone=tuzhengapi:10m rate=30r/m;
+
+    server {
+        listen       80;
+        server_name  tuzheng.yuuuu.cyou;
+
+        charset utf-8;
+
+        # 应用自己的上传上限是 5MB（server/app.ts 的 multer 配置），这里给余量。
+        # 不写这行 → nginx 按默认 1m 拦截，传图直接 413，看起来像应用坏了。
+        client_max_body_size 8m;
+
+        # 口令保护：整站生效，静态文件与 /api/ 都要求登录。
+        # 路径改成你的 nginx conf 目录（本文件里其他路径按你的既有习惯用了绝对路径）。
+        auth_basic           "TuZheng Demo";
+        auth_basic_user_file C:/nginx/conf/.htpasswd;
+
+        # 带内容 hash 的构建产物，文件名改版即换名 → 长缓存安全
+        location ^~ /assets/ {
+            root   C:/Users/Administrator/Desktop/web/tuzheng/dist/client;
+            expires 1y;
+            add_header Cache-Control "public, max-age=31536000, immutable";
+        }
+
+        # SPA 入口不缓存：重新构建后刷新即可看到新版本
+        location = /index.html {
+            root   C:/Users/Administrator/Desktop/web/tuzheng/dist/client;
+            add_header Cache-Control "no-cache";
+        }
+
+        # 模型设置页只读：老师不需要改模型配置，而这个接口能覆盖你的密钥。
+        # 必须放在 /api/ 之前无意义——nginx 按最长前缀匹配，/api/settings 优先于 /api/。
+        location /api/settings {
+            limit_except GET { deny all; }
+            proxy_pass http://127.0.0.1:3001;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+        }
+
+        # 连接测试接口一并封掉（它会带着表单参数去请求模型）
+        location /api/settings/test-connection {
+            deny all;
+        }
+
+        # 后端 API
+        location /api/ {
+            # ★ 必须写 127.0.0.1，不要写 localhost：
+            #   服务端只监听 IPv4 回环（server/index.ts 里写死 "127.0.0.1"），
+            #   localhost 在部分 Windows 解析顺序下会先走 ::1，结果是 502。
+            proxy_pass http://127.0.0.1:3001;
+
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+            # 与原 nginx.conf 其他站点一致：HTTPS 已在 Cloudflare 终止
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-Host $host;
+
+            proxy_connect_timeout 10s;
+            proxy_send_timeout    90s;
+            proxy_read_timeout    90s;
+
+            # 审计结果与调查记录绝不进 Cloudflare 缓存
+            add_header Cache-Control "no-store" always;
+
+            # 【可选】配合上面的 limit_req_zone；删掉限流段时把这句一并删掉
+            limit_req zone=tuzhengapi burst=5 nodelay;
+        }
+
+        # SPA 其余路径。
+        # ★ 缺 try_files 回退 → 老师直接打开或刷新 /source-audit 会 404
+        #   （前端用的是 createWebHistory，web/router.ts:4）
+        location / {
+            root   C:/Users/Administrator/Desktop/web/tuzheng/dist/client;
+            index  index.html;
+            try_files $uri $uri/ /index.html;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+
+        location = /50x.html {
+            root html;
+        }
+    }

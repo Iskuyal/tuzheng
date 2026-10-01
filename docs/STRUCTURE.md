@@ -29,6 +29,8 @@ Vite 与 Vitest 的项目根仍是仓库根；Vite 页面根为 `web/`。Playwri
 
 ## 查阅入口
 
+赛事提交入口为 `docs/submission/web-match-competition-report.pdf`（16 页），源文件 `competition-report.html`，使用 `node docs/submission/build-report.mjs --competition` 重建。`--competition --check` 只检查已保存 PDF 的页数。旧 `technical-report.html` 与 `web-match-technical-report.pdf` 保留为开发技术记录，原不带 `--competition` 的生成命令继续可用。官网核对记录在 `docs/competition/`，完整评估在 `docs/reviews/2026-10-01-competition-assessment.md`。
+
 阶段进度以 [PHASES.md](PHASES.md) 为准；架构决定在 [adr/](adr/)；在线记录在 [evidence/](evidence/)；技术 PDF 与演示脚本在 [submission/](submission/)；维护结论在 [reviews/](reviews/)。历史实测中的旧路径表示当时的结构，后续操作使用本文件与 npm 脚本中的现行路径。
 
 本次根目录已跟踪文件从 **18 个降到 9 个**。运行 `npm run docs:check` 检查 Markdown 与提交 HTML 中的本地文件链接；它只检查文件存在，不证明网络可达、锚点存在或内容通过验收。
