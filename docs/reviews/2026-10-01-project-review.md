@@ -99,3 +99,33 @@
 - 合并提交：`043bf1cbdb5426d69f48beca76311eb26ae905ef`，提交标题为「merge: 合并项目审查修复与目录整理（PR #27）」。
 - 本地已切换到 `main` 并 fast-forward 至远端合并结果；同步时 ahead/behind 为 `0/0`、工作区干净。审查分支保留。
 - [合并后 CI 36800666098](https://github.com/Iskuyal/web-match/actions/runs/36800666098) 已触发；记录时正在运行，不能据此声称合并后检查通过。本次只补充交付状态，不修改产品代码或历史在线证据。
+
+## 端口稳定性修复（2026-10-01，用户反馈：从编辑器启动时端口会变）
+
+**现象**：反复从 WebStorm 启动 `npm run dev` 时页面地址会从 5173 变成 5174／5175；API 侧还会打印「图证服务端已启动：http://127.0.0.1:3001」，但该实例其实没有在监听。
+
+**复现与根因（本机实测）**：
+
+- 起第一个 `npm run dev`：3001＋5173 正常。
+- 再起第二个：Vite 打印「Port 5173 is in use, trying another one…」后**静默改用 5174**；API 仍打印启动成功，但 `netstat` 里只有第一个实例的 PID——**僵尸「已启动」**。
+- 根因三处：① `config/vite.config.ts` 没有 `strictPort`，Vite 默认在端口被占时自动 +1；② `server/index.ts` 把「启动成功」日志写进 `app.listen` 回调，而 **Express 5 的 `app.listen` 会把回调同时注册成 `error` 处理器**（`node_modules/express/lib/application.js:598-606`），端口被占时回调照样执行；③ `tsx watch` 没有「子进程退出即退出」的开关，只让服务端 `process.exit(1)` 会留下 supervisor 继续挂着（半个环境）。
+
+**修复**：
+
+- `shared/ports.ts`（新增）：`resolvePort`（默认／自定义／非法值校验）与 `portInUseHint`（带 `netstat`／`taskkill` 的清理命令）。
+- `config/vite.config.ts`：`host`／`port` 固定（`WEB_PORT`，默认 5173）＋ **`strictPort: true`**；`/api` 代理继续读 `PORT`。
+- `server/index.ts`：启动日志改挂 `server.on("listening")`；`EADDRINUSE` 给出可照做的提示并 `exit(1)`；非法 `PORT` 先报错再退出（不再打印假的已启动）。
+- `scripts/check-ports.ts`（新增）＋ `npm run dev:ports`：`npm run dev` 启动前预检两个端口，忙就整条命令失败，避免「API 已退出、命令还挂着、页面继续跑」。
+- `.env.example` 增加 `WEB_PORT=5173`；README、STRUCTURE、演示脚本的启动/清进程段落同步。
+
+**实测（本机，四种情形）**：
+
+1. 空闲：`npm run dev:ports` → `[dev] 端口检查通过：API 3001、网页 5173`（退出 0）；`npm run dev` 后 3001／5173 均 LISTENING，`/api/samples`、`/`、`/api` 代理均 200。
+2. 已运行时再启动：预检直接列出「API 端口 3001 已被占用…」与「网页端口 5173 已被占用…」并退出 1；**没有出现 5174**，也没有第二个实例。
+3. 自定义：`PORT=3456 WEB_PORT=5200 npm run dev` → 3456 与 5200 LISTENING；`3456/api/samples` 200、`5200/` 200、`5200/api/samples`（经代理）200。
+4. 非法：`PORT=abc` → 预检报「API 端口（PORT） 必须是 1—65535 的整数，当前值是「abc」。」并退出 1，不再挂住。
+
+`tests/ports.test.ts` 覆盖默认／自定义／边界／非法／提示文案；本机 `npm test` 357/357、`npm run build` 通过。
+
+**未验证**：验证都在本机 Windows；编辑器侧只按「它执行 npm 脚本」这条路径解释，未实测 WebStorm 的运行配置本身。预检与真正绑定之间有极小的竞争窗口，服务端与 Vite 各自保留兜底。CI 以本次 PR 为准。
+

@@ -10,7 +10,7 @@
 | `web/`、`server/`、`shared/` | Vue 页面、本机 API 与模型适配、共享领域逻辑 |
 | `tests/`、`e2e/` | 单元/API 行为测试、浏览器测试与界面截图脚本 |
 | `samples/`、`web/public/samples/` | 独立期望与图片指纹、团队自制图片 |
-| `scripts/` | 评测、图片同源核对、文档链接检查 |
+| `scripts/` | 评测、图片同源核对、文档链接检查、启动前端口预检 |
 | `docs/` | 路线图、阶段交接、ADR、证据、审查报告与提交材料 |
 | `docs/competition/` | [赛事要求原文](competition/AI-WEB网页开发挑战赛文档.md) |
 | `.scratch/` | 仓库内功能规格与任务，按功能目录管理 |
@@ -23,7 +23,7 @@
 
 Vite 与 Vitest 的项目根仍是仓库根；Vite 页面根为 `web/`。Playwright 的用例目录相对于配置文件为 `../e2e/`，产物在 `.cache/playwright/test-results/`，CI 从同一路径收集失败 trace，并在这个狭窄路径内启用隐藏文件上传。TypeScript 构建信息在 `.cache/typescript/`。原测试产物保存在 `.cache/playwright/previous-test-results/`，原构建信息以 `legacy-` 前缀保留在缓存目录。
 
-前端构建输出 `dist/client/`，服务端入口输出 `dist/server/server/index.js`。`.env.example` 只记录可选 API 端口；API 与 Vite 代理均读取根目录 `.env` 的 `PORT`，启动进程中的同名变量优先。模型密钥仍由设置页与本机用户配置文件管理。
+前端构建输出 `dist/client/`，服务端入口输出 `dist/server/server/index.js`。`.env.example` 记录可选的 API 端口 `PORT`（默认 3001）与网页端口 `WEB_PORT`（默认 5173）；API 与 Vite 代理均读取根目录 `.env` 的 `PORT`，启动进程中的同名变量优先。**网页端口固定、`strictPort: true`**：被占用时直接失败而不是静默换到 5174。`npm run dev` 会先执行 `npm run dev:ports`（`scripts/check-ports.ts`）做启动前预检——为什么需要它：`tsx watch` 在子进程退出后仍会守着不退出，只靠服务端自己的 `EADDRINUSE` 处理会留下「API 已退出、命令还挂着、页面继续跑」的半启动状态；服务端与 Vite 各自也保留了兜底处理。模型密钥仍由设置页与本机用户配置文件管理。
 
 `.idea/`、`.zcode/` 是忽略的编辑器状态，`.firecrawl/` 是忽略的调研缓存。它们属于本机工具，不进入 Git；维护时保留已有内容，避免丢失本机工作状态。源码、测试与规格已有各自职责，本次维持这些目录以减少路径变更。
 
