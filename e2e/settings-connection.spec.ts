@@ -121,7 +121,7 @@ test("模型预设按协议过滤，选取后填入地址与型号", async ({ pa
   await expect(presetSelect.locator('option[value="zhipu-responses-glm"]'))
     .toHaveText("智谱开放平台 · GLM-5.3 多模态（Response API）（官方文档）");
   await expect(presetSelect.locator('option[value="stepfun-responses-step-flash"]'))
-    .toHaveText("阶跃星辰 StepFun · Step 3.7 Flash 多模态（官方文档）");
+    .toHaveText("阶跃星辰 StepFun · Step 3.7 Flash 多模态（Responses 面）（官方文档）");
   // 多模态要求与「两侧预设为什么不同」写在页面上（桌面走侧栏说明、窄屏走移动端说明），不是只写在 README 里。
   await expect(page.locator("li", { hasText: "所配模型必须支持图片输入（多模态）" }).first()).toBeAttached();
   await expect(page.locator("small", { hasText: "同一家服务商只在支持该协议的端点上出现" }).first()).toBeAttached();
@@ -137,7 +137,7 @@ test("模型预设按协议过滤，选取后填入地址与型号", async ({ pa
   await expect(presetSelect.locator('option[value="fireworks-anthropic-kimi-k3"]'))
     .toHaveText("Fireworks AI · Kimi K3 多模态（官方文档）");
   await expect(presetSelect.locator('option[value="stepfun-anthropic-step-flash"]'))
-    .toHaveText("阶跃星辰 StepFun · Step 3.7 Flash 多模态（官方文档）");
+    .toHaveText("阶跃星辰 StepFun · Step 3.7 Flash 多模态（Anthropic 面）（官方文档）");
   await expect(presetSelect.locator('option[value="kimi-coding-anthropic-k3"]'))
     .toHaveText("Kimi 编码套餐 · K3 多模态（Anthropic 面）（官方文档）");
 

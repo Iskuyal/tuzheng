@@ -85,21 +85,23 @@ describe("常用模型预设", () => {
       expect(MODEL_PRESETS.find((preset) => preset.id === id)).toMatchObject({ protocol, baseUrl, model, verification: "documented" });
     }
 
-    // 阶跃星辰两侧都能落：同一 baseUrl 在两个协议里各一条。
+    // 阶跃星辰两侧都能落：同一 baseUrl 在两个协议里各一条，且 label 要能分辨是哪个协议面。
     for (const protocol of MODEL_PROVIDERS) {
       const presets = presetsFor(protocol);
       expect(presets.some((preset) => preset.baseUrl === "https://api.stepfun.com/v1")).toBe(true);
       expect(presets.some((preset) => preset.model === "step-3.7-flash")).toBe(true);
     }
+    expect(MODEL_PRESETS.find((preset) => preset.id === "stepfun-anthropic-step-flash")?.label).toContain("Anthropic 面");
+    expect(MODEL_PRESETS.find((preset) => preset.id === "stepfun-responses-step-flash")?.label).toContain("Responses 面");
 
     // 智谱的 Response API 基址与 Anthropic 面／对话补全面不同，别填混。
     const zhipuResponses = MODEL_PRESETS.find((preset) => preset.id === "zhipu-responses-glm");
     expect(zhipuResponses?.baseUrl).not.toBe("https://open.bigmodel.cn/api/paas/v4");
     expect(zhipuResponses?.baseUrl).not.toBe("https://open.bigmodel.cn/api/anthropic/v1");
 
-    // 本轮收口后两侧各自的条目数（含 StepFun 两侧共同覆盖）。
-    expect(presetsFor("anthropic").length).toBeGreaterThanOrEqual(10);
-    expect(presetsFor("openai-responses").length).toBeGreaterThanOrEqual(11);
+    // 本轮收口后两侧各自的条目数：README／PHASES 里承诺的就是这个数，涨了要一起改。
+    expect(presetsFor("anthropic").length).toBe(10);
+    expect(presetsFor("openai-responses").length).toBe(11);
   });
 
   it("未做真实验证的预设必须在说明里写明，避免把「按文档」读成「已实测」", () => {

@@ -14,9 +14,9 @@
 - **OpenAI Responses 侧**本次新查出 4 家「路由 + 官方文档多模态」双证齐全、值得补进预设：阿里云百炼 `compatible-mode/v1`（`qwen3.8-flash`）、Moonshot 官方（`kimi-k3`）、MiniMax 官方（`MiniMax-M3.1-Flash-Preview`）、Nebius Token Factory（`deepseek-ai/DeepSeek-V4.1-Flash`）。
 - **Anthropic Messages 侧**新查出 2 家双证齐全：MiniMax 官方 `https://api.minimax.cn/anthropic/v1`（`MiniMax-M3.1-Flash-Preview`，官方文档有图片理解示例）、Fireworks AI `https://api.fireworks.ai/inference/v1`（Kimi K3，官方 API 参考写明 messages 可含 image content）。
 - **明确不能补**：只有 `/chat/completions` 的（腾讯混元等，探测 404）、有 `/responses` 路由但**没有图片输入证据**的（百度千帆）、以及一批 404 的第三方站点。
-- **还需人工盯的**：火山方舟 Ark（文档是 JS 外壳、探测不可判定）、Groq / Together / xAI / Gemini（本机网络或 WAF 拦截，未核实）、硅基流动与 Kimi coding 的 Anthropic 面（路由存在但缺「这个面收图片」的原句）。
+- **还需人工盯的（2026-10-02 部分已推翻，见下条）**：火山方舟 Ark（文档是 JS 外壳、探测不可判定）、Groq / Together / xAI / Gemini（本机网络或 WAF 拦截，未核实）、硅基流动与 Kimi coding 的 Anthropic 面（路由存在但缺「这个面收图片」的原句）。**其中 Kimi coding 的 Anthropic 面 2026-10-02 已推翻**：官方《Model Configuration》写明该 API 同时支持 OpenAI 与 Anthropic 协议并给出两种 base，型号表把 `k3` 标为「Image, video」，已补进预设；硅基流动本轮未重查，仍按旧结论。
 - **另有 3 处现存预设需要人拍板**：OpenRouter 的 `sourceUrl` 已 404（现行链接见下）、DeepSeek Responses 的 baseUrl 与官方口径不一致、OpenAI `gpt-4.1-mini` 无法从官方页复核（见文末「现有预设核对」）。
-- **2026-10-02 收口**（细节见「未核实清单收口（2026-10-02）」与「2026-10-02 收口：逐条证据」）：13 行未核实项（第 10 行含 4 家）推进为 —— **4 项能补**：阶跃星辰 StepFun 的 Responses 面与 Anthropic 面、智谱开放平台 Response API、Kimi 编码套餐的 Anthropic 面，共 **4 个新预设**（含 StepFun 两侧）；**4 项确认不能收**：Together（兼容矩阵无 `responses`）、Gemini 的 OpenAI 兼容面（只有 `chat/completions`）、千帆 `/v2/responses`（官方写明只服务文本生成类模型）、ModelScope（0 个多模态型号）；**6 项仍不能补（缺一项硬证据）**：火山方舟（对照探测不可判定）、DeepInfra Anthropic 面、七牛云 Anthropic 面、Gitee AI、无问芯穹 Infini、AI-ML API；**3 项本机网络不可达**：Groq、Groq 视觉型号、xAI。本轮仍是 **0 次真实模型调用**，`documented → live` 升格按用户 2026-10-01 的决定**继续暂缓**。
+- **2026-10-02 收口**（细节见「未核实清单收口（2026-10-02）」与「2026-10-02 收口：逐条证据」）：原表的 **13 行**（第 10 行含 4 家，**合计 17 个对象**；其中第 7 行 StepFun 一行对应两侧 **2 个**预设）推进为 —— **4 项能补**：阶跃星辰 StepFun 的 Responses 面与 Anthropic 面、智谱开放平台 Response API、Kimi 编码套餐的 Anthropic 面，共 **4 个新预设**（含 StepFun 两侧）；**4 项确认不能收**：Together（兼容矩阵无 `responses`）、Gemini 的 OpenAI 兼容面（只有 `chat/completions`）、千帆 `/v2/responses`（官方写明只服务文本生成类模型）、ModelScope（0 个多模态型号）；**6 项仍不能补（缺一项硬证据）**：火山方舟（对照探测不可判定）、DeepInfra Anthropic 面、七牛云 Anthropic 面、Gitee AI、无问芯穹 Infini、AI-ML API；**3 项本机网络不可达**：Groq、Groq 视觉型号、xAI。4 + 4 + 6 + 3 = 17，与上表逐行对得上。本轮仍是 **0 次真实模型调用**，`documented → live` 升格按用户 2026-10-01 的决定**继续暂缓**。
 
 ---
 
@@ -155,7 +155,7 @@
 | 商汤 SenseNova `https://api.sensenova.cn/compatible-mode/v1` | 两者 404（控制 404） | 同上 |
 | 零一万物 `https://api.lingyiwanwu.com/v1` | `/responses` 404；`/messages` 400（控制 404） | `/messages` 返回 400 但响应体为空、语义不明，证据冲突，宁少勿假 |
 | 百度千帆 `https://qianfan.baidubce.com/v2` | `/responses` **401**（控制 404）⇒ 路由存在；`/messages` 404 | **缺图片证据**：千帆 API 索引里「视觉理解」是**独立端点**，`/v2/responses` 的文档（https://cloud.baidu.com/doc/qianfan-api/s/omiznmtb2 ）只演示文本；无法证明应用把图发到 `/responses` 能被吃下 |
-| 智谱 Responses 面 `https://open.bigmodel.cn/api/paas/v4` | `/responses`、`/messages`、控制路径**全部 401** | 该网关先鉴权后路由，**不可判定**；官方只文档化 Anthropic 兼容面与 OpenAI Chat 兼容面，故给智谱保留 Anthropic 一条即可 |
+| 智谱 Responses 面 `https://open.bigmodel.cn/api/paas/v4` | `/responses`、`/messages`、控制路径**全部 401** | 该网关先鉴权后路由，**不可判定**；官方只文档化 Anthropic 兼容面与 OpenAI Chat 兼容面，故给智谱保留 Anthropic 一条即可。**2026-10-02 已推翻**：官方《Response API 兼容》给出**独立的** Responses 基址 `https://open.bigmodel.cn/api/v1`（不是这里探的 `/api/paas/v4`），该基址对照探测可判定，已补进预设 |
 | 硅基流动 Anthropic 面 `https://api.siliconflow.cn/v1/messages` | `/messages` **401**（控制 404）⇒ 路由存在；`/responses` 404 | **缺图片证据**：官方 Messages 文档（https://docs.siliconflow.com/cn/api-reference/chat-completions/messages ）示例模型是 `moonshotai/Kimi-K2-Instruct` 纯文本调用，全文未出现图片字段；平台虽有 VL 型号（`Qwen/Qwen3.5-27B` 等在 models.dev 标记含 image），但不能假定 Messages 面收图 |
 | OpenCode Zen 的 `/chat/completions` 面 | 官方 issue：`gpt-5.6-luna` 在 `chat/completions` 上**所有图片输入 400** | 这是「预设必须落在正确端点」的反例：luna 必须走 `/responses`（维护者已确认），现有 Zen Responses 预设正确 |
 | Mistral / Perplexity / aihubmix | 本机 curl `000`（DNS 通、连接超时） | 网络不可达，未核实，不作为可收条目 |
@@ -235,7 +235,8 @@ done
 
 - **官方原句**：*"调用 Responses API，获取模型生成的响应数据。该接口兼容 OpenAI Responses API 的请求与响应格式。"*；*"## 请求地址 `POST https://api.stepfun.com/v1/responses`"*；*"`model` … 当前支持 `step-5-preview` 和 `step-3.7-flash`"*；图片块 *"`type` `string` 总为 `input_image`"*、*"`image_url` … 推荐使用 base64 data URL"*；示例 `base_url="https://api.stepfun.com/v1"`。
 - **接口实测**：`POST https://api.stepfun.com/v1/responses` → **401 `{"error":{"message":"Incorrect API key provided","type":"invalid_api_key"}}`**；控制路径 `/v1/__dsh_probe__` → **404**；兄弟路径 `/v1/responsesx`、`/v1/zzz_not_a_route`、`/v1/a/b/c` → **404**。⇒ 路由存在。
-- **型号多模态证据**：官方模型总览把 `step-3.7-flash` 描述为 *"高速推理 + 原生多模态 + 工具调用 · 阶跃星辰旗舰多模态推理模型"*，快速上手页写 *"快速学会使用 Step 3.7 Flash 的原生多模态能力：图片理解和视频理解"*（https://platform.stepfun.com/docs/zh/guides/models/step-3.7-flash.md 、https://platform.stepfun.com/docs/zh/guides/models/step-3.7-flash-quickstart.md ）；models.dev `stepfun` 给 `step-3.7-flash` 标 `input=[text,image,video]`。
+- **型号多模态证据**（2026-10-02 逐字复核过的两页）：概览页（https://platform.stepfun.com/docs/zh/guides/models/step-3.7-flash.md ）*"阶跃星辰的旗舰多模态推理模型。基于 198B 总参数 / 11B 激活参数的稀疏 MoE 架构，原生支持图片和视频理解。"*、关键信息栏 *"高速推理 + 原生多模态"*；快速上手页（https://platform.stepfun.com/docs/zh/guides/models/step-3.7-flash-quickstart.md ）的输入能力表 *"| Step 3.7 Flash | `step-3.7-flash` | 文本、图片、视频 |"*，并写明 *"Step 5 Preview 和 Step 3.7 Flash 支持图片输入。Step 3.5 Flash 不支持图片输入，请改用支持图片的模型。"*；models.dev `stepfun` 给 `step-3.7-flash` 标 `input=[text,image,video]`。
+  - **更正说明**：本节初稿把这两页写成了「快速学会使用 Step 3.7 Flash 的原生多模态能力：图片理解和视频理解」「高速推理 + 原生多模态 + 工具调用 · 阶跃星辰旗舰多模态推理模型」。独立审查复核时这两句在**当时的线上页面里逐字不存在**（那是我从第三方渲染的文档索引缓存里读到的描述），已按上面逐字复核过的原文替换。结论不变，但「引号里必须是线上原句」这条口径要守住。
 - **baseUrl 口径**：应用自行追加 `/responses`，故填 `…/v1`（官方示例也是这个 base）。
 
 #### S7-b. 阶跃星辰 StepFun · Anthropic Messages 面（`anthropic`）
@@ -301,9 +302,9 @@ done
 - models.dev `modelscope`（`api=https://api-inference.modelscope.cn/v1`）共 7 个型号、**vision 型号 0 个** —— criterion 2 无解。
 - 结论：确认不收（缺「该端点下的型号有图片输入」这一条硬证据）。
 
-### 3. 仍不能补（缺指定的一项证据，5 条）
+### 3. 仍不能补（缺指定的一项证据：6 个对象，分 4 小节）
 
-#### A1. 火山方舟 Volcengine Ark —— 路由探测不可判定，文档取不到原句
+#### AK1. 火山方舟 Volcengine Ark —— 路由探测不可判定，文档取不到原句
 
 - CN 基址 `https://ark.cn-beijing.volces.com/api/v3`：`POST /responses`、`/messages`、`/__dsh_probe__` **全部 401 `AuthenticationError`**（同一个错误体、带 request id）。换成国际站 `https://ark.ap-southeast.bytepluses.com/api/v3` 同样全 401。
 - 报文形态差异也没有用：GET／OPTIONS／DELETE、空体、坏 JSON（`{`）、表单体（`application/x-www-form-urlencoded`）在三个路径上仍然同码（401；个别 OPTIONS 是 404，但控制路径也是 404，说明不了目标路径）。
@@ -315,6 +316,7 @@ done
 
 - 复核 `POST https://api.deepinfra.com/anthropic/v1/messages` → **401 `{"type":"error","error":{"type":"authentication_error","message":"missing API key"}}`**（Anthropic 形态错误体）；控制路径 → **404 `{"detail":"Not Found"}`**；兄弟路径 `/messagesx`、`/zzz_not_a_route`、`/a/b/c` → **404**；`/anthropic/v1/responses` → 404。⇒ `/messages` 路由存在。
 - 但 `https://docs.deepinfra.com/integrations/anthropic` 与 `https://docs.deepinfra.com/api-reference/chat-completions/anthropic-messages` 两页正文里，`image` 只出现在左侧导航条目（Vision & OCR、LoRA for Image Generation、Image Generation），集成页还明说 *"Not all Anthropic-specific features may be supported. Standard message creation, streaming, and token counting work as expected."*
+- **10-01 已核到、本轮沿用（原本随旧「未核实」表删除，这里补回）**：集成页原句 *"Point the client at the DeepInfra endpoint … `base_url="https://api.deepinfra.com/anthropic"`"*，端点表 *"POST /anthropic/v1/messages Create a message (chat completion)"*；OpenAI 面 `https://api.deepinfra.com/v1/openai` 的 `/responses` 也探测到存在（401，控制 404），但**同样是「有路由、没图片原句」**。本轮的 401 与 10-01 的 400 差异见文末附二该行的说明。
 - 结论：**仍不能补** —— 缺「该面收 `image` 块」的原句或示例；Kimi K3 的 vision 标记来自 OpenAI 面元数据，不能外推到 Messages 面。
 
 #### N9. 七牛云 AI —— `/v1/messages` 存在，但图片说明挂在 chat 面
@@ -420,7 +422,7 @@ done
 | `https://api.siliconflow.cn/v1` | 404 | 404 | **401** |
 | `https://ark.cn-beijing.volces.com/api/v3` | 401 | 401 | 401 |
 | `https://api.deepinfra.com/v1/openai` | 404 | **401** | 404 |
-| `https://api.deepinfra.com/anthropic/v1` | 404 | 404 | **400** |
+| `https://api.deepinfra.com/anthropic/v1` | 404 | 404 | **400**（10-01 用 curl 空体／JSON decode error；10-02 用 Node fetch 带合法 JSON 体复测为 **401 `missing API key`**，两轮结论一致：路由存在、缺鉴权。见「2026-10-02 原始探测状态码」表同一行） |
 | `https://api.groq.com/openai/v1` | 403 | 403 | 403 |
 | `https://api.together.xyz/v1` | 403 | 403 | 403 |
 | `https://api.cerebras.ai/v1` | 403 | 403 | 403 |
