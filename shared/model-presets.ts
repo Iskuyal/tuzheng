@@ -100,6 +100,26 @@ export const MODEL_PRESETS: ModelPreset[] = [
     sourceUrl: "https://docs.fireworks.ai/tools-sdks/anthropic-compatibility",
     verification: "documented",
   },
+  {
+    id: "stepfun-anthropic-step-flash",
+    label: "阶跃星辰 StepFun · Step 3.7 Flash 多模态",
+    protocol: "anthropic",
+    baseUrl: "https://api.stepfun.com/v1",
+    model: "step-3.7-flash",
+    note: "官方 Messages API 文档写明「以 Anthropic Messages API 兼容的格式调用 Step 模型，支持流式输出、工具调用、图片输入与思考深度配置。」；普通 API 通道 base 是 https://api.stepfun.com、完整地址 POST /v1/messages（客户端自动追加 /v1），本应用只追加 /messages 故填到 …/v1；文档给出图片块 type=image 的 URL 与 Base64 两种写法。未鉴权探测：/v1/messages 返回 401、控制路径与三个兄弟路径均 404，说明路由存在（填 …/step_plan 会 404，必须填 …/v1 或 …/step_plan/v1）。未做真实调用。",
+    sourceUrl: "https://platform.stepfun.com/docs/zh/api-reference/chat/messages-create.md",
+    verification: "documented",
+  },
+  {
+    id: "kimi-coding-anthropic-k3",
+    label: "Kimi 编码套餐 · K3 多模态（Anthropic 面）",
+    protocol: "anthropic",
+    baseUrl: "https://api.kimi.com/coding/v1",
+    model: "k3",
+    note: "官方文档写明「Kimi Code API supports both OpenAI and Anthropic protocols」，Anthropic 兼容 base 是 https://api.kimi.com/coding/（客户端自动拼 /v1/messages），本应用只追加 /messages 故填到 …/coding/v1；型号表把 k3 的多模态输入标为「Image, video」。未鉴权探测：该 base 的 /v1/messages 返回 401、控制路径与兄弟路径均 404，而少了 /v1 的 /coding/messages 是 404。注意这是编码套餐端点：官方 FAQ 写明「权益不足时服务器返回 401」，所以 401 也可能表示套餐不足而非密钥错误。未做真实调用。",
+    sourceUrl: "https://www.kimi.com/code/docs/en/kimi-code/models.html",
+    verification: "documented",
+  },
 
   // OpenAI Responses 兼容协议
   {
@@ -190,6 +210,26 @@ export const MODEL_PRESETS: ModelPreset[] = [
     model: "deepseek-ai/DeepSeek-V4.1-Flash",
     note: "官方 API 参考给出 POST /v1/responses，schema 里含 message.input_image.image_url。未鉴权探测：/v1/responses 401、控制路径 404。型号的图片输入来自 models.dev 模态元数据。未做真实调用。",
     sourceUrl: "https://docs.tokenfactory.nebius.com/api-reference/inference/create-a-response",
+    verification: "documented",
+  },
+  {
+    id: "zhipu-responses-glm",
+    label: "智谱开放平台 · GLM-5.3 多模态（Response API）",
+    protocol: "openai-responses",
+    baseUrl: "https://open.bigmodel.cn/api/v1",
+    model: "glm-5.3",
+    note: "官方《Response API 兼容》写明「Response API 的基址是 https://open.bigmodel.cn/api/v1，不是对话补全使用的 https://open.bigmodel.cn/api/paas/v4」，接口一览为 POST /responses，并写明「工具与多模态 支持文本、图片、文件输入」，图像理解示例用 model=glm-5.3 与 type=input_image；这个基址与智谱的 Anthropic 面、对话补全面都不同，别填错。未鉴权探测：POST /responses 返回缺鉴权（HTTP 200 + 业务码 1001）、控制路径与兄弟路径返回业务码 500「404 NOT_FOUND」、GET /responses/{id} 也返回缺鉴权，与文档路径一致。未做真实调用。",
+    sourceUrl: "https://docs.bigmodel.cn/cn/guide/develop/responses/introduction",
+    verification: "documented",
+  },
+  {
+    id: "stepfun-responses-step-flash",
+    label: "阶跃星辰 StepFun · Step 3.7 Flash 多模态",
+    protocol: "openai-responses",
+    baseUrl: "https://api.stepfun.com/v1",
+    model: "step-3.7-flash",
+    note: "官方 Responses API 文档写明「该接口兼容 OpenAI Responses API 的请求与响应格式」、请求地址 POST https://api.stepfun.com/v1/responses、当前支持 step-5-preview 与 step-3.7-flash，并给出图片块 type=input_image 的 image_url 字段；官方模型页把 step-3.7-flash 描述为「原生多模态」、快速上手写「图片理解和视频理解」。未鉴权探测：/v1/responses 返回 401、控制路径与兄弟路径均 404。未做真实调用。",
+    sourceUrl: "https://platform.stepfun.com/docs/zh/api-reference/responses/responses-create.md",
     verification: "documented",
   },
 ];

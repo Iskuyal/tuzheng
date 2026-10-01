@@ -74,6 +74,34 @@ describe("常用模型预设", () => {
     }
   });
 
+  it("2026-10-02 未核实清单收口新增的 4 条：StepFun 两侧、智谱 Response API、Kimi 编码套餐 Anthropic 面", () => {
+    const expected = [
+      ["stepfun-anthropic-step-flash", "anthropic", "https://api.stepfun.com/v1", "step-3.7-flash"],
+      ["kimi-coding-anthropic-k3", "anthropic", "https://api.kimi.com/coding/v1", "k3"],
+      ["zhipu-responses-glm", "openai-responses", "https://open.bigmodel.cn/api/v1", "glm-5.3"],
+      ["stepfun-responses-step-flash", "openai-responses", "https://api.stepfun.com/v1", "step-3.7-flash"],
+    ] as const;
+    for (const [id, protocol, baseUrl, model] of expected) {
+      expect(MODEL_PRESETS.find((preset) => preset.id === id)).toMatchObject({ protocol, baseUrl, model, verification: "documented" });
+    }
+
+    // 阶跃星辰两侧都能落：同一 baseUrl 在两个协议里各一条。
+    for (const protocol of MODEL_PROVIDERS) {
+      const presets = presetsFor(protocol);
+      expect(presets.some((preset) => preset.baseUrl === "https://api.stepfun.com/v1")).toBe(true);
+      expect(presets.some((preset) => preset.model === "step-3.7-flash")).toBe(true);
+    }
+
+    // 智谱的 Response API 基址与 Anthropic 面／对话补全面不同，别填混。
+    const zhipuResponses = MODEL_PRESETS.find((preset) => preset.id === "zhipu-responses-glm");
+    expect(zhipuResponses?.baseUrl).not.toBe("https://open.bigmodel.cn/api/paas/v4");
+    expect(zhipuResponses?.baseUrl).not.toBe("https://open.bigmodel.cn/api/anthropic/v1");
+
+    // 本轮收口后两侧各自的条目数（含 StepFun 两侧共同覆盖）。
+    expect(presetsFor("anthropic").length).toBeGreaterThanOrEqual(10);
+    expect(presetsFor("openai-responses").length).toBeGreaterThanOrEqual(11);
+  });
+
   it("未做真实验证的预设必须在说明里写明，避免把「按文档」读成「已实测」", () => {
     for (const preset of MODEL_PRESETS) {
       if (preset.verification === "documented") expect(preset.note).toContain("未做");

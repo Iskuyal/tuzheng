@@ -101,6 +101,8 @@
 - 不改业务逻辑（`shared/model-presets.ts` 的数据除外）、不动固定题集与资料库；403／000 的如实列为「本机网络不可达」，不算证据。
 ```
 
+执行结果（2026-10-02）：13 项「未核实」全部给出本轮判定——**新补 4 条** documented 预设（Anthropic 面：阶跃星辰 StepFun `https://api.stepfun.com/v1` + `step-3.7-flash`、Kimi 编码套餐 `https://api.kimi.com/coding/v1` + `k3`；Responses 面：智谱开放平台 `https://open.bigmodel.cn/api/v1` + `glm-5.3`、阶跃星辰 StepFun `https://api.stepfun.com/v1` + `step-3.7-flash`），两侧条目数变为 Anthropic 10 条、Responses 11 条，StepFun 成为第三家两侧同时覆盖的服务商；**确认不能收 4 项**（Together 的兼容矩阵没有 `responses`、Gemini 的 OpenAI 兼容面只有 `chat/completions`、千帆 `/v2/responses` 官方写明只服务文本生成类模型、ModelScope 无多模态型号）；**仍不能补 6 项**（火山方舟对照探测不可判定、DeepInfra 与七牛云的 Anthropic 面缺「该面收图」原句、Gitee AI／无问芯穹 Infini／AI-ML API 缺面级证据）；**本机网络不可达 3 项**（Groq、Groq 视觉型号、xAI，其中 Groq 的官方文档原句已拿到）。全程 **0 次真实模型调用**，`documented → live` **未升格**。本机 `curl.exe` 因 `schannel SEC_E_NO_CREDENTIALS` 对任何 HTTPS 都返回 `000`，探测改用 Node `fetch` 并新增**反向对照**（除控制路径外再打 `<目标>x`、`/zzz_not_a_route`、`/a/b/c`，确认 401 不是兜底路由）。测试：`npm test` **360/360**、`npm run test:e2e` **90/90**（30 用例 ×3 视口）、`npm run build` 通过、`npm run docs:check` **71 份文档／164 条本地链接 0 缺失**。
+
 <details>
 <summary>已排队的提示词：阶段五 05 收尾（等两项人工步骤就绪后再复制）</summary>
 
@@ -233,8 +235,8 @@
 
 1. **阶段五 04 的两项人工步骤**（阻塞 05 的整体通过，助手不代做）：录制 5—8 分钟 1080p 视频（脚本见 [submission/demo-video-script.md](submission/demo-video-script.md)）并把链接补进 README；把仓库从 `PRIVATE` 改为 Public 或为评审开通访问权限（见 [submission/accessibility-check.md](submission/accessibility-check.md) 第 1 节）。另需补齐团队成员姓名、学校／单位与联系方式。
 2. **阶段五 05 收尾（等人）**：视频与仓库权限两项检查 ＋ 团队信息 ＋ 赛事提交；「另一台 Windows 环境复跑」已由用户 2026-09-30 决定交团队在服务器上执行（仓库内没有该环境的实测输出，拿到回执后补记录），真实模型抽样已于 2026-09-30 补跑。人工步骤就绪后复制本文件 `<details>` 里排队的 05 提示词跑完，并更新 05 的 Status 与勾选项。
-3. **预设「未核实」清单收口（下一片，0 次真实模型请求）**：把 `.scratch/model-presets-research/endpoints-2026-10-01.md` 里 13 项「未核实／需人工确认」逐条推进到「有证据 → 补进预设」或「确认不能收 → 写清原因」。提示词见本文件顶部。
-4. **documented → live 升格：暂缓（用户 2026-10-01 决定先不做）**：本机模型设置里只有 Command Code（Responses 槽）与 DeepSeek 官方（Anthropic 槽）两把密钥，而 `commandcode-responses-deepseek` 与 `deepseek-anthropic-flash` **已经是 `live`**；其余 9 条 documented 条目要各自的密钥才能实测。不借别的协议槽的密钥（应用刻意不这么做）。以后本机存好目标服务商的密钥，可单独开一片做「一次连接测试 + 一次真实读图」的升格并记账。
+3. **预设「未核实」清单收口（2026-10-02 已完成，0 次真实模型请求）**：`.scratch/model-presets-research/endpoints-2026-10-01.md` 里 13 项「未核实／需人工确认」已逐条推进——4 项补进预设（StepFun 两侧、智谱 Response API、Kimi 编码套餐 Anthropic 面）、4 项确认不能收（Together、Gemini 兼容面、千帆 `/v2/responses`、ModelScope）、6 项仍缺一项硬证据（火山方舟、DeepInfra／七牛云的 Anthropic 面、Gitee AI／Infini／AI-ML API）、3 项本机网络不可达（Groq 含其视觉型号、xAI）。结论、原句、状态码与可复核命令见该文件「2026-10-02 收口」一节，进度见 [PHASES.md](PHASES.md) 任务 03 续。提示词见本文件顶部。
+4. **documented → live 升格：暂缓（用户 2026-10-01 决定先不做）**：本机模型设置里只有 Command Code（Responses 槽）与 DeepSeek 官方（Anthropic 槽）两把密钥，而 `commandcode-responses-deepseek` 与 `deepseek-anthropic-flash` **已经是 `live`**；其余 19 条 documented 条目要各自的密钥才能实测。不借别的协议槽的密钥（应用刻意不这么做）。以后本机存好目标服务商的密钥，可单独开一片做「一次连接测试 + 一次真实读图」的升格并记账。
 5. **阶段四 06（已实现「版本修订／版本替代」；剩余部分等人）**：实现与整组实测见 [PHASES.md](PHASES.md) 阶段四「任务 06 实现记录」与[证据记录](evidence/stage-4-source-audit-eval-2026-10-01-revision.md)。**「同口径冲突 → 来源存在分歧」仍为 `needs-info`**：缺经人工核对的同口径分歧材料，找到之前不实现、不声明。
 6. **阶段四 06 未验证的边界**：只覆盖「有官方修订声明」的修订；国家数据月度库被 WAF 拦（403），基期轮换后的月份级新旧值未核到；整组一轮里有 7 次未通过，全部是既有模型漂移（q06／q16／q18／q20），已逐题记录、不删题。
 7. **仍成立的局限（不删题、不外推）**：q14 一次未填推断方向、q16 两次汇总缺必填 `claims`、q18 追问率有漂移（05 轮 2/3、06 轮 2/5）；加强表述靠固定词表（「略贵」这类不会被拦）；采用／撤回未做真实模型下的在线复验；Responses 协议工具循环只有替身测试；题型全是开发题、没有预留题；08 的载入在途锁定在上传图模型读取路径上只有替身验证。
