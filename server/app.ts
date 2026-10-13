@@ -12,7 +12,10 @@ import {
   type ModelConnectionResult,
 } from "./model-connection.js";
 import {
-  FileModelSettingsStore,
+  createModelSettingsStore,
+  EnvironmentModelSettingsError,
+  ReadOnlyModelSettingsError,
+  settingsSource,
   InvalidModelSettingsError,
   createDefaultModelSettings,
   MODEL_PROVIDERS,
@@ -167,7 +170,7 @@ function sendInvestigationError(error: unknown, response: express.Response): voi
     });
     return;
   }
-  console.warn("来源调查请求失败。", error instanceof Error ? error.message : error);
+  console.warn("来源调查请求失败。");
   response.status(502).json({
     error: { code: "SOURCE_INVESTIGATION_FAILED", message: "暂时无法完成来源调查，请稍后重试。" },
   });
@@ -175,7 +178,8 @@ function sendInvestigationError(error: unknown, response: express.Response): voi
 
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
-  const settingsStore = options.settingsStore ?? new FileModelSettingsStore();
+  const settingsStore = options.settingsStore ?? createModelSettingsStore();
+  const configuration = settingsSource(settingsStore);
   async function settingsForSave(): Promise<ModelSettings> {
     try {
       return await settingsStore.read();
@@ -200,10 +204,11 @@ export function createApp(options: AppOptions = {}): Express {
 
   app.get("/api/settings", async (_request, response) => {
     const settings = await settingsStore.read();
-    response.json({ settings: toPublicModelSettings(settings) });
+    response.json({ settings: toPublicModelSettings(settings), configuration });
   });
 
   app.put("/api/settings", async (request, response) => {
+    if (configuration.readOnly) throw new ReadOnlyModelSettingsError();
     const parsed = settingsUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({
@@ -217,19 +222,25 @@ export function createApp(options: AppOptions = {}): Express {
 
     const settings = resolvedModelSettings(await settingsForSave(), parsed.data);
     await settingsStore.write(settings);
-    response.json({ settings: toPublicModelSettings(settings) });
+    response.json({ settings: toPublicModelSettings(settings), configuration });
   });
 
   app.post("/api/settings/test-connection", async (request, response) => {
-    const parsed = settingsUpdateSchema.safeParse(request.body);
+    const parsed = configuration.readOnly
+      ? z.object({}).strict().safeParse(request.body ?? {})
+      : settingsUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({
-        error: { code: "INVALID_SETTINGS", message: settingsValidationMessage(request.body) },
+        error: { code: "INVALID_SETTINGS", message: configuration.readOnly
+          ? "环境配置为只读；连接测试只接受空对象，不接受表单覆盖。"
+          : settingsValidationMessage(request.body) },
       });
       return;
     }
 
-    const settings = resolvedModelSettings(await settingsForSave(), parsed.data);
+    const settings = configuration.readOnly
+      ? await settingsStore.read()
+      : resolvedModelSettings(await settingsForSave(), parsed.data as z.infer<typeof settingsUpdateSchema>);
     if (!settings.providers[settings.activeProvider].apiKey) {
       response.status(400).json({
         error: { code: "MODEL_NOT_CONFIGURED", message: "请填写 API Key，或先保存密钥后再测试连接。" },
@@ -554,8 +565,15 @@ export function createApp(options: AppOptions = {}): Express {
   });
 
   app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
+    if (error instanceof EnvironmentModelSettingsError || error instanceof ReadOnlyModelSettingsError) {
+      response.status(error instanceof ReadOnlyModelSettingsError ? 409 : 503).json({
+        error: { code: error instanceof ReadOnlyModelSettingsError ? "SETTINGS_READ_ONLY" : "INVALID_ENV_SETTINGS", message: error.message },
+        configuration,
+      });
+      return;
+    }
     if (error instanceof InvalidModelSettingsError) {
-      response.status(503).json({ error: { code: "INVALID_STORED_SETTINGS", message: error.message } });
+      response.status(503).json({ error: { code: "INVALID_STORED_SETTINGS", message: error.message }, configuration });
       return;
     }
     if (error instanceof MulterError) {

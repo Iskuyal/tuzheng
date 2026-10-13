@@ -31,6 +31,7 @@ export interface PublicModelSettings {
 }
 
 export interface ModelSettingsStore {
+  readonly source?: "file" | "env";
   read(): Promise<ModelSettings>;
   write(settings: ModelSettings): Promise<void>;
 }
@@ -121,6 +122,7 @@ export class InvalidModelSettingsError extends Error {
 }
 
 export class FileModelSettingsStore implements ModelSettingsStore {
+  readonly source = "file";
   constructor(readonly filePath = getDefaultSettingsPath()) {}
 
   async read(): Promise<ModelSettings> {
@@ -175,4 +177,69 @@ export class FileModelSettingsStore implements ModelSettingsStore {
       mode: 0o600,
     });
   }
+}
+
+/** 消息只包含变量名和规则，绝不附带输入值或校验器的原始错误。 */
+export class EnvironmentModelSettingsError extends Error {}
+
+export class ReadOnlyModelSettingsError extends Error {
+  constructor() {
+    super("当前使用服务端环境配置，设置为只读。请修改服务端环境变量并重启服务。");
+  }
+}
+
+export function settingsSource(store: ModelSettingsStore): { source: "file" | "env"; readOnly: boolean } {
+  const source = store.source ?? "file";
+  return { source, readOnly: source === "env" };
+}
+
+/** 进程创建配置源时一次快照四项；env 从不读取或写入本机配置文件。 */
+export class EnvironmentModelSettingsStore implements ModelSettingsStore {
+  readonly source = "env";
+  private readonly snapshot: Record<string, string | undefined>;
+
+  constructor(environment: NodeJS.ProcessEnv = process.env) {
+    this.snapshot = Object.fromEntries(
+      ["MODEL_PROVIDER", "MODEL_BASE_URL", "MODEL_NAME", "MODEL_API_KEY"]
+        .map((name) => [name, environment[name]?.trim()]),
+    );
+  }
+
+  async read(): Promise<ModelSettings> {
+    const missing = Object.keys(this.snapshot).filter((name) => !this.snapshot[name]);
+    if (missing.length) {
+      throw new EnvironmentModelSettingsError(`服务端环境配置缺少：${missing.join("、")}。请补齐后重启服务；不会回退本机配置。`);
+    }
+    const provider = z.enum(MODEL_PROVIDERS).safeParse(this.snapshot.MODEL_PROVIDER);
+    if (!provider.success) {
+      throw new EnvironmentModelSettingsError("MODEL_PROVIDER 只支持 openai-responses 或 anthropic。");
+    }
+    const config = providerConfigSchema.safeParse({
+      baseUrl: this.snapshot.MODEL_BASE_URL,
+      model: this.snapshot.MODEL_NAME,
+      apiKey: this.snapshot.MODEL_API_KEY,
+    });
+    if (!config.success) {
+      throw new EnvironmentModelSettingsError("服务端环境配置无效：MODEL_BASE_URL 必须是 HTTPS 或 HTTP 回环根地址，无凭据、查询参数或片段，不能包含 /responses、/messages 或 /chat/completions 等完整接口路径；MODEL_NAME 最长 120 字符，MODEL_API_KEY 最长 1000 字符。");
+    }
+    // 未启用的协议保持空配置，不能从默认值或本机文件拼入任何字段。
+    const providers: Record<ModelProvider, ProviderConfig> = {
+      "openai-responses": { baseUrl: "", model: "", apiKey: "" },
+      anthropic: { baseUrl: "", model: "", apiKey: "" },
+    };
+    providers[provider.data] = { ...config.data, baseUrl: config.data.baseUrl.replace(/\/$/, "") };
+    return { activeProvider: provider.data, providers };
+  }
+
+  async write(_settings: ModelSettings): Promise<void> {
+    throw new ReadOnlyModelSettingsError();
+  }
+}
+
+/** 唯一配置源选择入口；省略选择器保持原有文件行为。 */
+export function createModelSettingsStore(environment: NodeJS.ProcessEnv = process.env): ModelSettingsStore {
+  const source = environment.MODEL_CONFIG_SOURCE?.trim() || "file";
+  if (source === "file") return new FileModelSettingsStore(getDefaultSettingsPath(environment));
+  if (source === "env") return new EnvironmentModelSettingsStore(environment);
+  throw new EnvironmentModelSettingsError("MODEL_CONFIG_SOURCE 只支持 file 或 env。");
 }

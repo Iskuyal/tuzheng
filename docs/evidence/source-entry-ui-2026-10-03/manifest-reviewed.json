@@ -1,0 +1,193 @@
+{
+  "version": "ui-20261003-1aab2c7512db808c",
+  "generatedAt": "2026-10-03T04:39:36.426Z",
+  "sources": {
+    "web/App.vue": "eda2216bd9efab41f5e75387659f42bf0c5ca612fcc44041fa5a56057edae588",
+    "web/audit-record-rows.ts": "aff29cccd16effa62d9e7b04b424e972f9cce7a9b588606ccd44c143181ab8cc",
+    "web/components/AuditRecordList.vue": "bd5dcae8daa48ff84f03a8cfca7b39c9325b5c80afc5f8649352aabe582b5425",
+    "web/components/AuditSessionBar.vue": "9a3efba9fcd504f46eb1a0cba8c9a0f941b769549b18858db48f5d98caa2ced1",
+    "web/components/SiteHeader.vue": "ca585e9867357edd71f0621511e04598e1148e7fb0ecc1d2113340064c54899f",
+    "web/components/SourceClaimCard.vue": "a78631f563a4460e1ef7a8759b1c0580db8bbb9daf67336ef5b7aece60a391b1",
+    "web/cross-image-view.ts": "20499a347fc09308c400f739354406125e14b8fc0cc8ad01c37d6645e2d53951",
+    "web/env.d.ts": "383abd6899f05f7952c3ff41dc51cf2134b6cd3942c6e8675968a256697dbcfb",
+    "web/index.html": "44b77a0992c199f5728b3c6017a963dac35a473a292b029b613ea9a2d5761c82",
+    "web/main.ts": "9375592ade51b1a2cadece8b2e6119a66e5c165bd48d5c6bb479e6696865106d",
+    "web/pages/AuditPage.vue": "f956f233e0e0b7a14c16d0aa4a503a2fcf11dc3be459b49ee3030d182f7f281a",
+    "web/pages/LandingPage.vue": "2ccc4b2e8516b51b534f7e14d23ebcfa385036f97893c9baa29c2cc6605675db",
+    "web/pages/SettingsPage.vue": "c39d6e1ebd03241a48fc7cf0d84f83a2918ec04b9357c1fe6f630bde809d71fa",
+    "web/pages/SourceAuditPage.vue": "e2e28682c223171c0e1e0be3941c27e36d3ec3bc1746290d0a08ce625caee27b",
+    "web/public/samples/axis-truncated.png": "e249cdc93bed92f33353697a54ce84776a724ff9683e6c3c9767b4273b2109ae",
+    "web/public/samples/axis-truncated.svg": "68fe88759cc8300baa2a1dc9c847e2290da17094ef62a4de1cb08fff3844b5d2",
+    "web/public/samples/axis-unknown-start.png": "23af33a71a704b3c3aa89e0fe4f9f49a13fc94783fe48a556704ecb4076dd82c",
+    "web/public/samples/axis-unknown-start.svg": "7b9a3892efa151cfefef44f0b5d2ca339ffed5833ffbe2a5be1d02856f50dba8",
+    "web/public/samples/axis-zero-based.png": "f91b8eb7a3ed5e35a879321dd7a30158493a146d1d03f476bcb2238fcac73b0f",
+    "web/public/samples/axis-zero-based.svg": "3f3f15e5447eb1d4e0fb9a5dd487da2b8df849ee83ed54077c14e722ce5990a1",
+    "web/public/samples/conflict.png": "cb68c39d73b6e4642dfb94921eda1756938a1b0dd9b2e5c0f0b961c193030380",
+    "web/public/samples/conflict.svg": "c134cbb2e57a7c3bc1aba663d87e71fc5e5a6f7081ae72c9380640fab6146f11",
+    "web/public/samples/consistent.png": "ae7cddd18e8de8a3c4450543ecb7052f3889c138f818b231fba6bffe61eecfe7",
+    "web/public/samples/consistent.svg": "9e112710f9b9f38637001619b01b9546bad1d20f5d0b73e4c066945b61ab26ef",
+    "web/public/samples/cpi-2025-12-city.png": "351fe5d8091c9e76096aeb0df88b874e5e4e45b3abf22cd93227d20955c7dd1b",
+    "web/public/samples/cpi-2025-12-city.svg": "431948a5c45b28bacec143e1d4f1f9c5026faea84115e1912de55d43e028adf5",
+    "web/public/samples/cpi-2025-12-mom.png": "1cffbe1a8b82fbb025250dfdce8ea769d79d0c667176cd2d9f35a488c35aee43",
+    "web/public/samples/cpi-2025-12-mom.svg": "94552fbddd4183d3e73cd7c3519ef1423bcab0e0d1ad6c6b0bcfcab99b7d51d7",
+    "web/public/samples/cpi-2025-12-yoy.png": "568de51008c4bc7d2e62ff6385d7418239c2aede616023bb61d7885a5a2ed2b4",
+    "web/public/samples/cpi-2025-12-yoy.svg": "d4a5d98827786fa63edd8da6c4e796f997dc31b3030ff01924111c167d1befe9",
+    "web/public/samples/cpi-2025-12.png": "302708110302488f72fad8650ba0cbf6a9791c3675226c404b2190cbf18f1c77",
+    "web/public/samples/cpi-2025-12.svg": "c6b2df3c94c209f10d2afa73e7e35ac633a75830e12da32d892954d1be33caf0",
+    "web/public/samples/cpi-2026-07-08-yoy-trend.png": "38d550e29f4650c6bdfe1b8fc581d67cf48435a996e508ebd3ed6db9bcfa4e03",
+    "web/public/samples/cpi-2026-07-08-yoy-trend.svg": "a059a5689c7bca6cb35662db814bf7402a3c520fd9722bb41a77e3f19195dc94",
+    "web/public/samples/cpi-2026-08-yoy.png": "74225b518dbaf0b9a7c25b5dc72739b62f92654f7ddb6b45321ce7782af9136b",
+    "web/public/samples/cpi-2026-08-yoy.svg": "1a5eaa08a07198d49e2094b3b700b21880d7523b8e4416ca7de2ae527c8293c3",
+    "web/public/samples/cross-a-revenue.png": "c906120d96928f5a0049c8da7732bd63f1e04a05b66a1e7fabaa59f86d63a99d",
+    "web/public/samples/cross-a-revenue.svg": "c86d6a182cf01dfe13b0225d3bd049e807929865984484d8943c329eb99ff067",
+    "web/public/samples/cross-b-conflict.png": "24d74743f128d67ce8052e85f207d23e50e7180db86357da086a5ab7859643db",
+    "web/public/samples/cross-b-conflict.svg": "3f87b23e216a6dd59357b13a3dff8c8ad9c23d42475474eabc82fffe1b0e4506",
+    "web/public/samples/cross-b-consistent.png": "5f89b66d580b7befd765c1deb755fc8c0ff55d82421efca09654752faab79e1c",
+    "web/public/samples/cross-b-consistent.svg": "e1f2b51f6cb59aa7d7d1b2f39d38b752fcc520a90c3b1e575bfcb49ebd6cf92b",
+    "web/public/samples/cross-b-scope-mismatch.png": "74cf863a6ad4de1d67de7e30e5d71136deedb473e967f32a1308667b1e1d9c88",
+    "web/public/samples/cross-b-scope-mismatch.svg": "0b30d45d52c45f5bcab4e56fdaf475e082b07b0f12dcd3137bb0d1ad11fd9f7e",
+    "web/public/samples/eval-axis-below-zero.png": "2445b7cb4f0f01dd3b4995de8747f9e0c299644ae8c1495dd5dd9d7b647292bc",
+    "web/public/samples/eval-axis-below-zero.svg": "4cb8f4779be52777b25e95f4ee2037aa291a292cb835846ef8d17d5a38ad3757",
+    "web/public/samples/eval-cross-period-mismatch.png": "4b15db79ed00a082bf37b844b0ba1121a09ce74faf47a2a469b3e5dc4729b9f6",
+    "web/public/samples/eval-cross-period-mismatch.svg": "5a09df77867ccd390965259e472da70d5534e73b66efcd115088578beaf04db1",
+    "web/public/samples/eval-cross-unit-mismatch.png": "26756f59631a222d96a7acef1971a5eb9e80355c1955640d65ecc6bfa897134c",
+    "web/public/samples/eval-cross-unit-mismatch.svg": "e36f7e47248405b1cab8bd2b6c7c60da0e679072a0628fabe8eca8f99c46ed8d",
+    "web/public/samples/eval-decline.png": "bdb5b346d8cc3d27b18688ac86c923b307e62b35d272c7657daa7861f5e56eb3",
+    "web/public/samples/eval-decline.svg": "a0dc30835d00d4d12ed20f40973238547017e921a3771aacdb77bfc4eb402afb",
+    "web/public/samples/eval-reversed-period.png": "a5180f14de5169cfb4571b8f5ef3f20d04c8f1ca1e086871c289598e6308ee73",
+    "web/public/samples/eval-reversed-period.svg": "db27c1d4e9aca39a54837428892f387d284c9ac4c966cdb5db535607005fd3aa",
+    "web/public/samples/eval-rounding.png": "4aa85ccadb4845ec153b79f737f392a89bebe7f385b1f2da4b005a592b6fcfde",
+    "web/public/samples/eval-rounding.svg": "4dfcb411109233a4275e177ce3bc42376173314fb758d8f441cac3d2cc297bd3",
+    "web/public/samples/eval-zero-base.png": "4658deeee529d054d110e1f7b814d892da840020f411bf31178e126f7db85716",
+    "web/public/samples/eval-zero-base.svg": "82a54bac7167736e04066d095975d461cded11d000728ea56a751f372f868963",
+    "web/public/samples/multi-claims.png": "6402f882392b21d9b32152a38ade018bd5fc8f2fb3de635c19188cb0aa08fa9b",
+    "web/public/samples/multi-claims.svg": "cf139b2b41f6b5936e13d812553eec4fe41de459ba960e59baa274b236d9c774",
+    "web/public/samples/retail-2026-06.png": "98e8a36e2ef22c037b3a5c508a79727184b1f6c0c09c1a76b6fd569bfbc01943",
+    "web/public/samples/retail-2026-06.svg": "34de6f27df164a42c89979c2932fd53084e1d2e80ea92b2850f359404e026df8",
+    "web/public/samples/unclear.png": "02d54eecca3747b66d440a98ac593742a94b61649794c66faa80946bd7f85eac",
+    "web/public/samples/unclear.svg": "34cc340c0cc0d3d23ef32bd90ab636da4e3ae2f48c8314194762b0e45cffa8fb",
+    "web/router.ts": "cbf925a400ea47540e001f980287b4090482057f729f073176ff5ff0489ee637",
+    "web/style.css": "d56c9797917d956ef802127dfe4d70989f18ea1def2cb45f5e2a68834bebdcc1",
+    "web/upload-transfer.ts": "1a4a6fb185bce175077ae6ad92ca143ebeb0da09505acb75ed0e52514869ca77",
+    "shared/audit.ts": "651cefa7bd10433d802ab838bb98a07a6ea968d8136bc6fceed723f823a489da",
+    "shared/axis-risk.ts": "4d57fbaa7b3f01b854e0955f8c6a2e7d594689bb13588e16764bee1e78557c14",
+    "shared/claim-workspace.ts": "5b8fb09098d79d25574767e7951d6363f8f4aa87db9e85d813b012f4dd7a51bd",
+    "shared/cpi-sample.ts": "73a646a6b9008d79750f2d7b2f957f64b25f2487f765102cedaecc80ae402810",
+    "shared/cross-image.ts": "6629bb32a36b36344c9b479369272fe79bb7f4907d74c956b46299900502233e",
+    "shared/model-presets.ts": "a01a3c22f402e971eaf4b1090d27a7b5225ba51235a24ff0569bf3d3e9d91fdd",
+    "shared/model-providers.ts": "6a8dd4cc7507868e2a8d045ea9709e6195626ab47270a409a676e8a1a6e3eccd",
+    "shared/ports.ts": "3e906e5caf730bf7062a67e9be20be3b351d6f105da1d8d1fb45737bab12e94d",
+    "shared/samples.ts": "4de6ba04dc8f5da86bae7327cf95449dad8290e55c2bd8fe70758627ccca7079",
+    "shared/source-audit.ts": "669b10f2f90d842b09d5e3ca03acebb25a977f7105313545f944397aa28a34f6",
+    "shared/source-library.ts": "168c32bb9c2504c4909d872c1a30c3b2d4747f559af557a05f6a8e986a7e41cb",
+    "config/vite.config.ts": "b160a98f07d37a9e1ba62eedb0ae6c5526e4bb1e878b7793ce189a65cb1a0601",
+    "e2e/source-audit.spec.ts": "e27698784b88a507d24fd07b2675d09a7a866143f44adcc4451bf834ef994c74",
+    "e2e/source-entry.spec.ts": "eb5fab3c1dcc06130f2d8e2cde9d021e2174f0f191e5e81846941360ad57ea3c",
+    "e2e/keyboard.ts": "2afb31ba53184be1c82f321e19cd88feb6e4ff6467844d4ac41f1dec78eaf1e9",
+    "scripts/verify-source-ui.mjs": "b8ee5cfbd10a69a7c443b66ed0f30539b34e588fec39f31bcb7032fe4f4ead1b"
+  },
+  "productionBuild": {
+    "dist/client/index.html": "98cca0c37c3d9dcfac3f990ca7113aec43ce67732c02588950db9762487c81d6",
+    "dist/client/assets/AuditPage-9Z-ofckJ.js": "322d1ce0e3b8691654b2f315f0e7be7778cbac2a01d6ee08febddf2a7f8399e7",
+    "dist/client/assets/LandingPage-BPcEcjH9.js": "7a44bd0d228e3eb649225923a52785b144b7be8edb01793e38cd6f5bd8c67e73",
+    "dist/client/assets/SettingsPage-4OjXTtFE.js": "0295fff7e4e0cab5b71e9a0787d43e2c89cd60195a4d33741d1055b149f71a5d",
+    "dist/client/assets/SiteHeader.vue_vue_type_script_setup_true_lang-CsSBkvzg.js": "3044386518cc0ab1be2726a0d885d90bef00ad4bf1812ca65765d0d3111ad0ec",
+    "dist/client/assets/SourceAuditPage-D8V1XFMx.js": "d0a50afce402332b46ffadd83c69d90ddc6d41e2fc3d34c9464188f6f2e714c0",
+    "dist/client/assets/index-JmXApKM4.css": "c9acc846d42d9332bf16a00a70aa86d0ab18e4853dd8b8d98aebd9cb330b656f",
+    "dist/client/assets/index-etrbcSrN.js": "d8c9273247394463562afae49262c3abb3dd34f3d01af646e30fe2972fb285be",
+    "dist/client/assets/upload-transfer-BYcStQMc.js": "0ad08cfee02ac5e3da1a810e73671223d9796c2bf15cfc30c5e0dbab87c58461"
+  },
+  "indexSha256": "98cca0c37c3d9dcfac3f990ca7113aec43ce67732c02588950db9762487c81d6",
+  "screenshots": [
+    {
+      "file": "after-review/home-1280.png",
+      "width": 1280,
+      "state": "首页／静态自制 CPI 示意",
+      "sha256": "0da8b84cc4852313c104740a9b88575793892b7fddbb3ef5f2eafcae4aec33e5"
+    },
+    {
+      "file": "after-review/home-320.png",
+      "width": 320,
+      "state": "首页／静态自制 CPI 示意",
+      "sha256": "4f22cb29fe45b0909fa929c0cbfe4350f7112086494151df9de15f1a20e06e58"
+    },
+    {
+      "file": "after-review/home-390.png",
+      "width": 390,
+      "state": "首页／静态自制 CPI 示意",
+      "sha256": "60bdb38e1a9ed76c1019e54b9028588d1238fce99bed8e9b0f2168dba5c091c1"
+    },
+    {
+      "file": "after-review/result-full-stub-1280.png",
+      "width": 1280,
+      "state": "来源结果／浏览器路由替身／不证明真实模型",
+      "sha256": "8beea65e549a16035179ed873df2b7e6a4d4cac2ced704f44e0ac890d7c62a36"
+    },
+    {
+      "file": "after-review/result-full-stub-320.png",
+      "width": 320,
+      "state": "来源结果／浏览器路由替身／不证明真实模型",
+      "sha256": "7fcf50405a038b67bf09dfe57eefa931ce6cb660588768bd4471b7af3e80b86b"
+    },
+    {
+      "file": "after-review/result-full-stub-390.png",
+      "width": 390,
+      "state": "来源结果／浏览器路由替身／不证明真实模型",
+      "sha256": "f9dff71a77b29cae0f03ae9683a5d15d481ff34e008313001769f5d6341ec6c0"
+    },
+    {
+      "file": "after-review/result-stub-1280.png",
+      "width": 1280,
+      "state": "来源结果／浏览器路由替身／不证明真实模型",
+      "sha256": "7ca3985439a0a31d12a55a96e80b1494c63b7f24434890ed097a32419ed1c3df"
+    },
+    {
+      "file": "after-review/result-stub-320.png",
+      "width": 320,
+      "state": "来源结果／浏览器路由替身／不证明真实模型",
+      "sha256": "73a7c9dd3c31f3c55be7e186c5cf984c48abe8724e598fd341a1a998b3e568db"
+    },
+    {
+      "file": "after-review/result-stub-390.png",
+      "width": 390,
+      "state": "来源结果／浏览器路由替身／不证明真实模型",
+      "sha256": "49335ccb3450c8002b598e4af995c6b2c58cd0ca298af66177c9f7a1783a67f3"
+    },
+    {
+      "file": "after-review/settings-1280.png",
+      "width": 1280,
+      "state": "内存默认配置／无密钥／未测试连接",
+      "sha256": "17f0d7ab3399792fb26395ed965976f266eabd74014fc4271a09219f799194e3"
+    },
+    {
+      "file": "after-review/settings-320.png",
+      "width": 320,
+      "state": "内存默认配置／无密钥／未测试连接",
+      "sha256": "7cc3707830275ac06f876ceb1ce01b9fdb3b91f4ecf6c9f727f6fae4a92f8110"
+    },
+    {
+      "file": "after-review/settings-390.png",
+      "width": 390,
+      "state": "内存默认配置／无密钥／未测试连接",
+      "sha256": "a2292d374e99f0600895ca25ba02444cff3e2f55be23e89ea350b276639a2dc0"
+    },
+    {
+      "file": "after-review/source-1280.png",
+      "width": 1280,
+      "state": "CPI 自制样例输入／未开始核验",
+      "sha256": "4d6306777fe39e68156923363ab2db0801543c1deb1498e5dd42c4fa86fc77be"
+    },
+    {
+      "file": "after-review/source-320.png",
+      "width": 320,
+      "state": "CPI 自制样例输入／未开始核验",
+      "sha256": "b008d710c446a9ed222774b628c77a5548ce6744cf61531d783b99f71df823ea"
+    },
+    {
+      "file": "after-review/source-390.png",
+      "width": 390,
+      "state": "CPI 自制样例输入／未开始核验",
+      "sha256": "e8cd4a6d1f3dbe3d5663c620424c924931a84c5bab4cdbe067ea9f3ecac7cb05"
+    }
+  ]
+}

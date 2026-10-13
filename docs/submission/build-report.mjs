@@ -43,7 +43,7 @@ if (competition) {
     const repoPath = relative(resolve("."), localPath).replaceAll("\\", "/");
     const kind = /\.[^/]+$/.test(repoPath) ? "blob" : "tree";
     if (kind === "blob" && !committedFiles.has(repoPath)) return `title="配套仓库材料：${repoPath}"`;
-    return `href="https://github.com/Iskuyal/web-match/${kind}/${shortCommit}/${repoPath.split("/").map(encodeURIComponent).join("/")}"`;
+    return `href="https://github.com/Iskuyal/tuzheng/${kind}/${shortCommit}/${repoPath.split("/").map(encodeURIComponent).join("/")}"`;
   });
 }
 

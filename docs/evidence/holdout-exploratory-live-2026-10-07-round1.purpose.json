@@ -1,0 +1,30 @@
+{
+  "userAuthorization": "允许真实模型调用 做吧",
+  "userDelegation": "你自主决定",
+  "selectedByAgent": {
+    "finalDemo": {
+      "questions": 5,
+      "repeats": 3,
+      "arm": "retrieval",
+      "maxActualHttpRequests": 80
+    },
+    "holdoutExploratory": {
+      "questions": 12,
+      "repeats": 3,
+      "arms": [
+        "A-direct",
+        "B-full-context",
+        "C-tools"
+      ],
+      "maxActualHttpRequests": 360
+    }
+  },
+  "ownerReviewStatus": "pending",
+  "purpose": "当前候选五题复验；未盲审三臂探索，不是正式独立盲审验证",
+  "amountCap": null,
+  "amountNote": "按实际HTTP次数限制，金额未知；上限由代理在用户委托下选择，不能称用户给定的金额额度",
+  "candidateLock": "docs/evidence/final-candidate-2026-10-07-round2.json",
+  "candidateHash": "9cf0bc57c3fec2b54b9cc21dd8f42163c6749aa9838689e69d5fcb5f585bf526",
+  "entrypointSha256": "265c2a892918fb01b1979c069caf7ee537068504236b431a257ff71b172f809b",
+  "entrypoint": ".cache/run-exploratory-holdout.ts"
+}

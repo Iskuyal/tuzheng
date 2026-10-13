@@ -1,0 +1,11 @@
+{
+  "durationWallSeconds": 138.02163779999682,
+  "viewport": [
+    1280,
+    720
+  ],
+  "recording": "actual-product-uncut.webm",
+  "noResponseFixtures": true,
+  "sourceHttpStatus": 200,
+  "visionHttpStatus": 502
+}

@@ -1566,13 +1566,14 @@ export function applySupplementToClaims(options: ApplySupplementOptions): ApplyS
   }
 
   const currentIndex = matchClaimIndex(claims, options.targetClaimText);
-  const priorIndex = matchClaimIndex(options.priorClaims, options.targetClaimText);
+  const priorCandidates = options.priorClaims.filter((claim) => currentIndex !== null && claim.fromImage === claims[currentIndex].fromImage);
+  const priorIndex = matchClaimIndex(priorCandidates, options.targetClaimText);
   if (currentIndex === null || priorIndex === null) {
     return { claims, infos, appliedClaimTexts: [], conflicts: [] };
   }
-
   const fieldKey = options.field as keyof SourceClaim;
-  const priorClaim = options.priorClaims[priorIndex];
+  // 相同／相似文字不代表同一证据对象；只回看与当前主张来源相同的初查读数。
+  const priorClaim = priorCandidates[priorIndex];
   const rawPriorValue = priorClaim[fieldKey] as string | number | null | undefined;
   let priorValue = rawPriorValue;
   if ((priorValue === null || priorValue === undefined) && options.field === "basis") {

@@ -1,0 +1,27 @@
+{
+  "mode": "actual-product-live-recording",
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "frames": 2700,
+    "duration": 90
+  },
+  "sha256": "799485cfbeeac359dbd4ac9eed3d3be592cdcbb98a771d2929cdce3e7bd14472",
+  "bytes": 13457181,
+  "fullDecode": "passed",
+  "originalSha256": "8493008215734c0b7812db47013054211b47312b53f05e81082c4a0a4b13944f",
+  "originalDuration": 138.72,
+  "waitingSpeed": 2.0741687979539645,
+  "originalViewport": [
+    1280,
+    720
+  ],
+  "actualHttpRequests": 4,
+  "inputTokens": 14271,
+  "outputTokens": 10730,
+  "visionProductHttpStatus": 502,
+  "sourceProductHttpStatus": 200,
+  "cost": null,
+  "feeRate": null
+}

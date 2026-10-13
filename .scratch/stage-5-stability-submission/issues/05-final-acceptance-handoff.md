@@ -30,7 +30,7 @@
 
 | 检查 | 命令／依据 | 结果 |
 | --- | --- | --- |
-| 仓库可见性 | `gh repo view Iskuyal/web-match --json visibility`；未登录 `curl -L` 作品仓库地址 | **`PRIVATE`／404** → 第 3 条里的「仓库权限」仍不通过 |
+| 仓库可见性 | `gh repo view Iskuyal/tuzheng --json visibility`；未登录 `curl -L` 作品仓库地址 | **`PRIVATE`／404** → 第 3 条里的「仓库权限」仍不通过 |
 | 演示视频 | README「提交材料索引」视频行 | 仍是「待补链接」，没有可 `curl` 校验的目标地址 → 第 3 条里的「视频」仍无法执行 |
 
 ### 2. 从零启动复跑（本机，离线）

@@ -1,5 +1,11 @@
 # 分阶段路线图
 
+**2026-10-07 Agent可先行收尾**：新增三臂/五题受控HTTP入口、实际请求数预算与逐请求日志、候选版本冻结/核验、负责人抽查签字模板，以及两组目标读者任务/匿名记录/统计。原12题冻结包与独立期望保留；本轮仅离线验收，0次真实模型调用，0位真实用户。阶段四06材料、阶段五04/05人工阻塞继续保留。完整交付与实际检查见 [本轮报告](reviews/2026-10-07-agent-ready-closeout.md)，准备/真实执行边界见 [接管说明](evaluations/candidate-runbook.md)。
+
+**2026-10-03 来源主入口维护**：首页主动作进入现有 CPI 自制样例输入态，不自动调用模型；来源页任务／结果优先，机制、统计与真实工具轨迹按需展开；设置页区分历史实测、文档预设与当前连接状态。三视口键盘回归覆盖上传、确认、依据、补证、采用及焦点恢复，修复迟到样例覆盖新输入。生产构建重复采样、截图与离线结果见[中文验收报告](reviews/2026-10-03-source-entry-ui.md)。**0 次真实模型调用**，不新增在线可靠性、读屏、真机或部署证明，不关闭阶段五人工阻塞。
+
+**2026-10-02 模型配置维护**：经用户授权实现默认 `file`／显式 `env` 完整配置源；环境模式一次读取协议、地址、模型、密钥，缺项或非法配置明确失败，不混用、不写回、不回传、不进日志，设置页显示来源并只读。API 与评测共用配置源，恢复复用原驱动器。临时目录与假密钥下默认／自定义 API 端口及 Vite 代理四组通过；395/395 单元/API、99/99 浏览器、构建及文档检查通过，赛事 PDF更新为同样的 16 页。**0 次真实模型调用**，不代表在线复验或服务器部署，不改变阶段五人工阻塞。见[配置说明](MODEL-CONFIG.md)与[验收报告](evidence/model-config-env-2026-10-02.md)。
+
 > 基准日期：2026-09-25。按赛题文档所写的 2026-11-18 省赛作品提交截止安排；日期是团队建议窗口，官方安排变化时同步调整。规划、实现与验收分别记录；只有通过实测的交付才标为「已验收」。
 
 ## 目标与依赖
@@ -27,7 +33,7 @@
 - `.firecrawl/`、依赖产物和环境密钥不会进入提交。
 - 新会话只读上述文档即可知道阶段一做什么，以及尚未实现什么。
 
-**验收记录（2026-09-25）：**[GitHub 私有仓库](https://github.com/Iskuyal/web-match) 的可见性与 `main` 远端提交已核对；首批文档的相对链接存在，`.firecrawl/` 和 `.env` 命中忽略规则，提交通过 `git diff --check`。阶段一尚未开发。
+**验收记录（2026-09-25）：**[GitHub 私有仓库](https://github.com/Iskuyal/tuzheng) 的可见性与 `main` 远端提交已核对；首批文档的相对链接存在，`.firecrawl/` 和 `.env` 命中忽略规则，提交通过 `git diff --check`。阶段一尚未开发。
 
 ### 阶段 1：单图审计闭环
 
@@ -216,15 +222,15 @@
 
 **阶段五任务 07 验收记录（2026-09-30 补齐最后一项）：**CI 流水线此前只差「确认刻意注入的缺陷能让 CI 变红」。本次在临时分支 `chore/ci-negative-check`（从 `main` 的 `e8d4363` 开出，验证后本地与远端都已删除、从未合并）上用 `gh workflow run CI --ref ...` 触发两次 `workflow_dispatch`，两次都变红且失败点不重复：
 
-- **类型错误**：`shared/axis-risk.ts` 加 `export const __ciMutationCheck: number = "not a number";` → [run 36723291466](https://github.com/Iskuyal/web-match/actions/runs/36723291466) 41 秒失败于 `npm run typecheck`（`error TS2322: Type 'string' is not assignable to type 'number'.`），后续步骤未执行。本机同条件复验：`npm run typecheck` 退出码 2，而**同一变异下 `npm test` 仍 332/332 通过**（vitest 走 esbuild 只剥离类型）。
-- **断言失败**：回退类型错误，把 `tests/axis-risk.test.ts` 的期望值写成 `"misleading-risk"` → [run 36723673814](https://github.com/Iskuyal/web-match/actions/runs/36723673814) 1 分 21 秒失败于 `npm test`（`AssertionError: expected 'ok' to be 'misleading-risk'`，类型检查与构建先通过）。本机复验：typecheck 退出码 0、`npm test` 331 通过 / 1 失败。
-- **回退与绿态**：两条注入都没进 `main`（`git grep` 为空、工作区干净、分支已删）。删除分支后重新 `workflow_dispatch` 跑 `main`：[run 36724007809](https://github.com/Iskuyal/web-match/actions/runs/36724007809) **绿色**（`verify` 3 分 52 秒），加上 PR #11—#16 与任务 08 的 PR #17（[run 36722687288](https://github.com/Iskuyal/web-match/actions/runs/36722687288)）连续绿态，「绿态连续两次可重复」成立。
+- **类型错误**：`shared/axis-risk.ts` 加 `export const __ciMutationCheck: number = "not a number";` → [run 36723291466](https://github.com/Iskuyal/tuzheng/actions/runs/36723291466) 41 秒失败于 `npm run typecheck`（`error TS2322: Type 'string' is not assignable to type 'number'.`），后续步骤未执行。本机同条件复验：`npm run typecheck` 退出码 2，而**同一变异下 `npm test` 仍 332/332 通过**（vitest 走 esbuild 只剥离类型）。
+- **断言失败**：回退类型错误，把 `tests/axis-risk.test.ts` 的期望值写成 `"misleading-risk"` → [run 36723673814](https://github.com/Iskuyal/tuzheng/actions/runs/36723673814) 1 分 21 秒失败于 `npm test`（`AssertionError: expected 'ok' to be 'misleading-risk'`，类型检查与构建先通过）。本机复验：typecheck 退出码 0、`npm test` 331 通过 / 1 失败。
+- **回退与绿态**：两条注入都没进 `main`（`git grep` 为空、工作区干净、分支已删）。删除分支后重新 `workflow_dispatch` 跑 `main`：[run 36724007809](https://github.com/Iskuyal/tuzheng/actions/runs/36724007809) **绿色**（`verify` 3 分 52 秒），加上 PR #11—#16 与任务 08 的 PR #17（[run 36722687288](https://github.com/Iskuyal/tuzheng/actions/runs/36722687288)）连续绿态，「绿态连续两次可重复」成立。
 - **附带发现（如实记录）**：上述几次运行里 `npm run verify:sample-renders` 在 CI 上已变成 **0/18 失败**（当前 `windows-latest` 镜像 `windows-2025-vs2026` 的 Edge 栅格化与开发机不同），但该步骤 `continue-on-error: true`，整次运行仍绿——「不阻塞的信号」这一设计从声明变成实际发生并被容忍；2026-09-29 记录的「CI 上 18/18、`continue-on-error` 暂未触发」已过时。逐字节同源核对只在开发机（18/18）作为证据，CI 上仅作信号。
 - **未验证**：真实模型相关路径不在 CI（本任务 0 次真实模型请求）；仓库可见性与演示视频仍是人工步骤。
 
 **阶段五任务 05 可先行部分记录（2026-09-30）：**05 仍被 04 的「录制视频」「仓库转 Public／开通评审访问」两项人工步骤阻塞，本次只做不依赖它们、并能如实记录结果的部分，**依赖那两项人工步骤的验收项不勾选，状态仍是阻塞**。对照点 HEAD `fd3a6d1`；离线部分 0 次真实模型请求，同日获准后补跑一次真实模型抽样（见下），未改动产品代码。
 
-- **前置检查**：`gh repo view Iskuyal/web-match --json visibility` → `PRIVATE`（未登录访问作品仓库 404）；README「提交材料索引」的视频行仍是「待补链接」。
+- **前置检查**：`gh repo view Iskuyal/tuzheng --json visibility` → `PRIVATE`（未登录访问作品仓库 404）；README「提交材料索引」的视频行仍是「待补链接」。
 - **从零启动复跑（本机）**：Windows 11 Home China + Node v24.16.0 + npm 11.17.0 + 系统 Edge 154.0.4258.37；按端口清进程后 `npm install`（0 漏洞）→ `npm run dev`（3001／5173 LISTENING，`/api/samples` 200）→ 首页四个入口与 11 张样例可交互；`/audit?sample=multi-claims` 点「确认并计算此主张」得「图内一致」与 `(100 - 80) / 80 × 100 = 25%`（预置样例，离线到结论）；`/source-audit` 载入 CPI 样例后图片与配文「比上月上涨 0.8%」就位、固定资料库 3 条可展开（含链接、指纹与干扰项标注）；`/settings` 双协议与「测试连接」在位、密钥输入框为空。**来源核验停在「运行来源核验」之前**：再点一次就是真实模型请求，本片 0 次请求，因此「按 README 走通演示路径」只验到离线可到的部分。
 - **四类证据**：本地 `npm test` **332/332**、`npm run test:e2e` **87/87**（29 用例 ×3 视口）、`npm run build` 通过、`npm run eval:samples` **23/23**、`npm run verify:sample-renders` **18/18**、PDF **24/30 页**；真实模型在线**同日获准后补跑一次抽样**——五条冻结演示题 ×1 次检索臂，6 次有效运行 **6/6 通过**、接受引用 13 条、被拒 0、**虚构引用 0、越界 0**，q18 先追问后补证并改判一致（余额预检 15.93 元），见[演示路径抽样记录](evidence/stage-5-05-demo-path-live-2026-09-30.md)；另引用 `docs/evidence/` 既有记录；人工材料检查见下；仍未交付＝视频、仓库可见性、团队信息、赛事提交、阶段四 06。
 - **材料与权限排查**：README 34 条仓库内链接 0 缺失；三条国家统计局链接 `curl -L` 均 200、作品仓库未登录 404；PDF 页数在 README／`accessibility-check.md`／issues/05 三处一致（24/30）；截图 **20 张**且图注均为「替身响应渲染」；`git ls-files` 只有 `.env.example`，`dist/`、`node_modules/` 未入库；`GET /api/settings` 只回 `hasApiKey` 布尔值、设置页密钥框为空；`git rev-list --count HEAD` = 82 个提交（历史完整）。
@@ -237,6 +243,8 @@
 
 用户确认以阶段四开始前为对照，核查完整文档、GitHub 与代码，修复回环地址、恢复并发、损坏设置恢复、版本替代引用、方向改写与补证主张隔离问题，并整理配置/赛事资料/缓存目录。本轮只作本地与离线验证，0 次真实模型请求；既有在线记录保留其轮次，修复后的在线稳定性未复验。命令与结果、提交与未完成边界见[维护报告](reviews/2026-10-01-project-review.md)，目录约定见[项目结构](STRUCTURE.md)。本记录不改变阶段五 04/05 的人工阻塞状态。
 
+**2026-10-02 来源核验可靠性回归与记录改进：**当前 22 题的离线复核已完成，真实模型调用 **0 次**。修复配文补证误用图上初查依据，并在缺追问／初查失败时保留恢复阻塞阶段；现有评测 CLI 增加代码／工作区／输入指纹、请求参数、失败工具轨迹、逐次保存与阶段关联，分别报告四种分母。历史有检索数据重统计为阶段 **61/69**、完整路径 **60/66**、有效运行 **61/68**、全部尝试 **61/68**；q18 完整路径 **1/3**，不是补证阶段 2/5。历史原始数据、期望、题集与资料库均未改；主张遗漏／追问漂移及修复后的模型稳定性仍待在线复验。当前测试与首次端口验收失败、串行恢复结果见[中文报告](reviews/2026-10-02-source-audit-reliability.md)，任务见[离线任务](../.scratch/source-audit-reliability/issues/01-regression-and-recording.md)。
+
 ## 两人协作方式
 
 成员 A 主责读者流程、Vue 界面、样例图和演示；成员 B 主责模型适配、结构化观察值、计算与服务端。**每阶段以一条端到端功能验收**，两人都要用固定样例实际操作；不要把阶段拆成只完成前端或只完成后端的任务。
@@ -244,3 +252,5 @@
 ## 阶段结束时的记录格式
 
 在对应阶段任务文档或本文件追加：完成日期、实际交付、运行命令、测试结果、人工验证样例、尚未验证的能力、影响下阶段的决定。计划项与已实现项须始终分开写。
+
+**2026-10-02 独立预留题与三臂离线交付：**新增12题原创SVG/PNG与独立来源/算式期望，冻结图文、资料全集、提示词、工具声明和运行代码指纹；A图文直接响应、B同资料全集直接上下文、C现有工具工作流的注入入口及独立分项评分已实现，B合法来源引用不要求搜索动作。417/417本地测试、构建及默认/自定义端口临时配置验收通过；36完整路径/42阶段替身记录保留故意失败、阻塞、无增益与退化。本次收费模型请求0次，替身成绩不代表模型效果；负责人抽查、在线直接HTTP适配/计数预算、真实三臂3重复整组仍待完成。冻结包、运行计划与实际证据见[交付报告](reviews/2026-10-02-holdout-three-arm.md)。

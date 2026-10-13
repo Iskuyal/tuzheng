@@ -72,7 +72,7 @@ node -v
 
 ```powershell
 # 首次：拉代码（服务器上已有代码就跳过这两行）
-git clone https://github.com/Iskuyal/web-match.git C:\Users\Administrator\Desktop\web\tuzheng
+git clone https://github.com/Iskuyal/tuzheng.git C:\Users\Administrator\Desktop\web\tuzheng
 cd C:\Users\Administrator\Desktop\web\tuzheng
 
 # 省掉几百 MB：本项目浏览器测试用系统自带 Edge，那份测试浏览器演示用不到
@@ -149,9 +149,11 @@ node dist\server\server\index.js
 New-NetFirewallRule -DisplayName "TuZheng-Demo" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow
 ```
 
-**配置模型密钥**：在**服务器本机**打开浏览器访问 `http://127.0.0.1/settings`，填地址 / 模型名 / API Key → 先点「测试连接」→ 保存。
+**配置模型密钥（默认 file 模式）**：在**服务器本机**打开浏览器访问 `http://127.0.0.1/settings`，填地址 / 模型名 / API Key → 先点「测试连接」→ 保存。
 
 > 窗口化正好绕开了正式部署里最麻烦的坑：进程就是你登录的账号在跑，密钥一定存在你的 `%LOCALAPPDATA%\TuZheng\settings.json`，一定读得到。**前提是始终用同一个 Windows 账号启动。**
+
+赛事环境兼容可改用显式 `env` 模式，由启动 API 的环境完整提供模型协议、地址、模型与密钥，设置页只读且不会写回密钥；详见[模型配置说明](MODEL-CONFIG.md)。本轮仅验证本机进程与端口，未部署到服务器。
 
 ## 6. 自检三条
 

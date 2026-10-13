@@ -1,0 +1,122 @@
+{
+  "version": "holdout-v1",
+  "authoredAt": "2026-10-02",
+  "questions": [
+    {
+      "id": "h01",
+      "categories": [
+        "支持"
+      ],
+      "image": "images/h01.png",
+      "caption": "2026年3月全国社会消费品零售总额环比增长0.12%。"
+    },
+    {
+      "id": "h02",
+      "categories": [
+        "支持",
+        "主张覆盖"
+      ],
+      "image": "images/h02.png",
+      "caption": "2026年8月全国CPI环比上涨0.4%；2026年8月全国CPI同比上涨0.8%。"
+    },
+    {
+      "id": "h03",
+      "categories": [
+        "矛盾",
+        "方向"
+      ],
+      "image": "images/h03.png",
+      "caption": "2026年8月全国社会消费品零售总额环比增长0.13%。"
+    },
+    {
+      "id": "h04",
+      "categories": [
+        "矛盾"
+      ],
+      "image": "images/h04.png",
+      "caption": "2026年4月全国社会消费品零售总额环比为-0.32%。"
+    },
+    {
+      "id": "h05",
+      "categories": [
+        "口径缺失",
+        "补证恢复"
+      ],
+      "image": "images/h05.png",
+      "caption": "2026年1月全国社会消费品零售总额增长0.21%。",
+      "supplement": {
+        "answer": "环比",
+        "field": "basis",
+        "claimText": "2026年1月全国社会消费品零售总额增长0.21%。"
+      }
+    },
+    {
+      "id": "h06",
+      "categories": [
+        "口径缺失",
+        "补证恢复"
+      ],
+      "image": "images/h06.png",
+      "caption": "2026年2月社会消费品零售总额环比增长0.27%。",
+      "supplement": {
+        "answer": "全国",
+        "field": "scope",
+        "claimText": "2026年2月社会消费品零售总额环比增长0.27%。"
+      }
+    },
+    {
+      "id": "h07",
+      "categories": [
+        "无适用来源",
+        "错月份"
+      ],
+      "image": "images/h07.png",
+      "caption": "2026年9月全国社会消费品零售总额环比增长0.09%。"
+    },
+    {
+      "id": "h08",
+      "categories": [
+        "无适用来源",
+        "错范围"
+      ],
+      "image": "images/h08.png",
+      "caption": "2026年5月南京市社会消费品零售总额环比为-0.10%。"
+    },
+    {
+      "id": "h09",
+      "categories": [
+        "推断",
+        "支持"
+      ],
+      "image": "images/h09.png",
+      "caption": "2026年8月全国社会消费品零售总额比上月减少。"
+    },
+    {
+      "id": "h10",
+      "categories": [
+        "推断",
+        "无适用来源"
+      ],
+      "image": "images/h10.png",
+      "caption": "2026年5月全国CPI比上月便宜。"
+    },
+    {
+      "id": "h11",
+      "categories": [
+        "版本替代",
+        "矛盾"
+      ],
+      "image": "images/h11.png",
+      "caption": "2026年3月全国社会消费品零售总额环比增长0.10%。"
+    },
+    {
+      "id": "h12",
+      "categories": [
+        "版本替代",
+        "支持"
+      ],
+      "image": "images/h12.png",
+      "caption": "2026年4月全国社会消费品零售总额环比为-0.23%。"
+    }
+  ]
+}

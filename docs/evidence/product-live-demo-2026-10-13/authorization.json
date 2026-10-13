@@ -1,0 +1,23 @@
+{
+  "authorizedOn": "2026-10-13",
+  "authorizationScope": "this chat and this product recording",
+  "userAnswer": "允许真实调用，录制实际核验结果（推荐）",
+  "maxActualHttpRequests": 12,
+  "monetaryBudget": null,
+  "knownFeeRate": null,
+  "source": "file",
+  "provider": "openai-responses",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "baseUrl": "https://api.commandcode.ai/provider/v1",
+  "images": [
+    {
+      "file": "web/public/samples/conflict.png",
+      "sha256": "cb68c39d73b6e4642dfb94921eda1756938a1b0dd9b2e5c0f0b961c193030380"
+    },
+    {
+      "file": "web/public/samples/cpi-2025-12.png",
+      "sha256": "302708110302488f72fad8650ba0cbf6a9791c3675226c404b2190cbf18f1c77"
+    }
+  ],
+  "createdAt": "2026-10-13T14:53:31.058Z"
+}

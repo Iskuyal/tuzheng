@@ -1,0 +1,28 @@
+{
+  "version": "holdout-v1",
+  "frozenAt": "2026-10-02",
+  "repeats": 3,
+  "arms": [
+    "A-direct",
+    "B-full-context",
+    "C-tools"
+  ],
+  "maxOutputTokensPerRequest": 4096,
+  "requestTimeoutMs": 60000,
+  "toolsPerRound": 3,
+  "toolsPerPath": 6,
+  "workflowRoundsPerPath": 4,
+  "clarificationPerPath": 1,
+  "directRequestsPerPath": 2,
+  "workflowDeadlineMs": 150000,
+  "noAutomaticRetry": true,
+  "directResponseSchema": "scripts/holdout-evaluation.ts outputSchema",
+  "observationUnit": "questionId/repeat/arm 的初查及必要恢复整条路径",
+  "scheduledPaths": 108,
+  "scheduledStages": 126,
+  "gainRule": "按题×重复配对；C相对A、B分别记gain/no-gain/regression；失败、阻塞和不成功并列保留",
+  "oracleIsolation": "模型只收到PNG、原配文、所属臂提示词、B全集、C工具输出和已被问到的用户回答；不传期望、图片转录、类别或核对笔记",
+  "rewritePolicy": "确定性主评分接受列举的保留/纠正/限定文字（忽略空白和标点）；其他措辞保留为自动未通过，人工可另附语义复核，不覆盖原判，不改变冻结期望。",
+  "requestBudgetForFutureLivePlan": 360,
+  "requestBudgetNote": "未来真实运行须在HTTP传输层计数并硬限制，兼容重试和收尾均计；4轮不等于4请求。本次不实现或执行收费传输。"
+}

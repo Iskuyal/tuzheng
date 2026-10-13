@@ -8,8 +8,8 @@
 
 ## GitHub 核对
 
-- [项目仓库](https://github.com/Iskuyal/web-match) 仍为 **PRIVATE**，默认分支 `main`；未发现未合并 PR 或未关闭 Issue。实际任务在 `.scratch/` 管理，GitHub Issue 为空不等于没有待办。
-- PR #1—#26 均已合并。开工最新 [CI 36756127800](https://github.com/Iskuyal/web-match/actions/runs/36756127800) 对应 `8572510`，状态成功；最近六次运行均成功。
+- [项目仓库](https://github.com/Iskuyal/tuzheng) 仍为 **PRIVATE**，默认分支 `main`；未发现未合并 PR 或未关闭 Issue。实际任务在 `.scratch/` 管理，GitHub Issue 为空不等于没有待办。
+- PR #1—#26 均已合并。开工最新 [CI 36756127800](https://github.com/Iskuyal/tuzheng/actions/runs/36756127800) 对应 `8572510`，状态成功；最近六次运行均成功。
 - 图片同源步骤允许失败，因此 CI 总绿不证明 CI 环境下 PNG 逐字节同源；本机 18/18 另作证据。
 - 本轮分支 `codex/project-review-structure`；交付链接与 CI 结果在报告末尾记录。未更改仓库可见性、评审权限或既有远端分支。
 
@@ -85,20 +85,20 @@
 - `40d8abd`：隐藏缓存路径中的失败追踪上传。
 - `7097894`：被替代的旧发布标为历史背景，保留其他主张仍在使用的数值依据。
 
-[草稿 PR #27](https://github.com/Iskuyal/web-match/pull/27) 为 OPEN/DRAFT、可合并但**未合并**，留给负责人明早验收。本地分支与远端代码 SHA 已核对一致。
+[草稿 PR #27](https://github.com/Iskuyal/tuzheng/pull/27) 为 OPEN/DRAFT、可合并但**未合并**，留给负责人明早验收。本地分支与远端代码 SHA 已核对一致。
 
-代码与配置两轮远端 CI 通过：[40d8abd 的运行 36761618579](https://github.com/Iskuyal/web-match/actions/runs/36761618579)、[最终代码 7097894 的运行 36762527489](https://github.com/Iskuyal/web-match/actions/runs/36762527489)。最终代码这轮为 353 行为/API 测试、90 浏览器测试、23 固定样例、70 份文档/159 条本地链接及构建通过；PNG 字节核对为 0/18，按 continue-on-error 保留非阻塞信号。最早 b0fe545 那轮被后续提交自动取消，不计为通过。
+代码与配置两轮远端 CI 通过：[40d8abd 的运行 36761618579](https://github.com/Iskuyal/tuzheng/actions/runs/36761618579)、[最终代码 7097894 的运行 36762527489](https://github.com/Iskuyal/tuzheng/actions/runs/36762527489)。最终代码这轮为 353 行为/API 测试、90 浏览器测试、23 固定样例、70 份文档/159 条本地链接及构建通过；PNG 字节核对为 0/18，按 continue-on-error 保留非阻塞信号。最早 b0fe545 那轮被后续提交自动取消，不计为通过。
 
-本报告与任务状态在代码 CI 通过后另作收尾文档提交，不修改产品代码；最终提交检查可从 [PR checks](https://github.com/Iskuyal/web-match/pull/27/checks) 查阅。关机是最终系统操作，执行状态以本次聊天末尾工具回执为准。
+本报告与任务状态在代码 CI 通过后另作收尾文档提交，不修改产品代码；最终提交检查可从 [PR checks](https://github.com/Iskuyal/tuzheng/pull/27/checks) 查阅。关机是最终系统操作，执行状态以本次聊天末尾工具回执为准。
 
 ## 2026-10-01 后续合并记录
 
 用户明确要求提交、推送并合并 PR。开工工作区干净，本轮既有提交均已推送；PR #27 的最终分支检查通过。将草稿转为待审状态后，以 merge commit 合并，保留原有提交历史。
 
-- [PR #27](https://github.com/Iskuyal/web-match/pull/27) 状态已核对为 **MERGED**。
+- [PR #27](https://github.com/Iskuyal/tuzheng/pull/27) 状态已核对为 **MERGED**。
 - 合并提交：`043bf1cbdb5426d69f48beca76311eb26ae905ef`，提交标题为「merge: 合并项目审查修复与目录整理（PR #27）」。
 - 本地已切换到 `main` 并 fast-forward 至远端合并结果；同步时 ahead/behind 为 `0/0`、工作区干净。审查分支保留。
-- [合并后 CI 36800666098](https://github.com/Iskuyal/web-match/actions/runs/36800666098) 已触发；记录时正在运行，不能据此声称合并后检查通过。本次只补充交付状态，不修改产品代码或历史在线证据。
+- [合并后 CI 36800666098](https://github.com/Iskuyal/tuzheng/actions/runs/36800666098) 已触发；记录时正在运行，不能据此声称合并后检查通过。本次只补充交付状态，不修改产品代码或历史在线证据。
 
 ## 端口稳定性修复（2026-10-01，用户反馈：从编辑器启动时端口会变）
 

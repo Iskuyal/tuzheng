@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="440" viewBox="0 0 720 440" role="img" aria-label="年营业收入增长50%，2024年50万元，2025年70万元">
+  <rect width="720" height="440" fill="#fff"/>
+  <g font-family="Microsoft YaHei, sans-serif" fill="#18384c">
+    <text x="40" y="54" font-size="27" font-weight="700">年营业收入增长 50%</text>
+    <text x="40" y="88" font-size="16">团队自制用户任务图 · 单位：万元</text>
+    <path d="M110 120V350H645" stroke="#7991a0" fill="none" stroke-width="2"/>
+    <text x="82" y="356" font-size="16">0</text>
+    <rect x="210" y="225" width="110" height="125" fill="#447f98"/>
+    <rect x="435" y="175" width="110" height="175" fill="#26725e"/>
+    <text x="265" y="213" font-size="25" text-anchor="middle">50</text>
+    <text x="490" y="163" font-size="25" text-anchor="middle">70</text>
+    <text x="265" y="387" font-size="19" text-anchor="middle">2024 年</text>
+    <text x="490" y="387" font-size="19" text-anchor="middle">2025 年</text>
+    <text x="40" y="426" font-size="14">仅供任务验证，非真实企业经营数据。</text>
+  </g>
+</svg>

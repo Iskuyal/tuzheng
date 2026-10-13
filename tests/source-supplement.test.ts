@@ -52,6 +52,29 @@ describe("追问回答的解析", () => {
 });
 
 describe("补证按规则应用到主张", () => {
+  it("同文图上主张排在前面时仍能找到配文自己的初查依据", () => {
+    const target = claim();
+    const image = claim({ fromImage: true, imageExcerpt: CAPTION, basis: "year-on-year" });
+    const result = applySupplementToClaims({
+      claims: [target], priorClaims: [image, target], field: "basis",
+      rawAnswer: "环比", normalized: "month-on-month", targetClaimText: CAPTION, caption: CAPTION,
+    });
+    expect(result.infos[0]).toMatchObject({ applied: true, conflict: null });
+    expect(result.claims[0].basis).toBe("month-on-month");
+  });
+
+  it("配文补证不能借用同文的图上主张作为初查依据", () => {
+    const captionClaim = claim();
+    const imageClaim = claim({ fromImage: true, imageExcerpt: CAPTION, basis: "year-on-year" });
+    const result = applySupplementToClaims({
+      claims: [captionClaim], priorClaims: [imageClaim], field: "basis",
+      rawAnswer: "同比", normalized: "year-on-year", targetClaimText: CAPTION, caption: CAPTION,
+    });
+    expect(result.infos).toEqual([null]);
+    expect(result.claims[0].basis).toBeNull();
+    expect(result.appliedClaimTexts).toEqual([]);
+  });
+
   it("目标主张缺比较方式时，不被另一句的同比阻止补入环比", () => {
     const target = claim({ claimText: "2025 年 12 月全国 CPI 上涨 0.2%", value: 0.2 });
     const other = claim({ claimText: "2026 年 8 月全国 CPI 同比上涨 0.8%", basis: "year-on-year", period: "2026-08" });

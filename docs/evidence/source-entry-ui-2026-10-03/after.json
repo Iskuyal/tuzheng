@@ -1,0 +1,712 @@
+{
+  "startedAt": "2026-10-03T04:21:42.739Z",
+  "finishedAt": "2026-10-03T04:23:01.230Z",
+  "build": "npm run build; dist/client; local Express static server, uncompressed",
+  "environment": {
+    "os": "Windows_NT 10.0.26300 x64",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13650HX",
+    "logicalCpus": 20,
+    "totalMemoryGiB": 31.628116607666016,
+    "node": "v24.16.0",
+    "browser": "154.0.4258.48",
+    "headless": true,
+    "deviceScaleFactor": 1,
+    "mobileEmulation": false,
+    "network": {
+      "latencyMs": 150,
+      "downloadBytesPerSecond": 500000,
+      "uploadBytesPerSecond": 125000,
+      "cacheDisabled": true
+    },
+    "cpuSlowdown": 4,
+    "runsPerPageAndViewport": 3
+  },
+  "sources": {
+    "web/pages/LandingPage.vue": "2ccc4b2e8516b51b534f7e14d23ebcfa385036f97893c9baa29c2cc6605675db",
+    "web/pages/SourceAuditPage.vue": "7915b499534930ac240ad651776c1942cc0d223dc820d88cb71d6e604b96de36",
+    "web/pages/SettingsPage.vue": "c39d6e1ebd03241a48fc7cf0d84f83a2918ec04b9357c1fe6f630bde809d71fa",
+    "web/router.ts": "cbf925a400ea47540e001f980287b4090482057f729f073176ff5ff0489ee637",
+    "web/style.css": "eebd6b94d909ad0fe1e606e5ed7f77c09764d9416903593c6103856b241c832b",
+    "shared/model-presets.ts": "a01a3c22f402e971eaf4b1090d27a7b5225ba51235a24ff0569bf3d3e9d91fdd"
+  },
+  "screenshots": [
+    {
+      "file": "after/home-320.png",
+      "page": "home",
+      "route": "/",
+      "width": 320,
+      "sha256": "4f22cb29fe45b0909fa929c0cbfe4350f7112086494151df9de15f1a20e06e58"
+    },
+    {
+      "file": "after/source-320.png",
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 320,
+      "sha256": "b008d710c446a9ed222774b628c77a5548ce6744cf61531d783b99f71df823ea"
+    },
+    {
+      "file": "after/settings-320.png",
+      "page": "settings",
+      "route": "/settings",
+      "width": 320,
+      "sha256": "7cc3707830275ac06f876ceb1ce01b9fdb3b91f4ecf6c9f727f6fae4a92f8110"
+    },
+    {
+      "file": "after/home-390.png",
+      "page": "home",
+      "route": "/",
+      "width": 390,
+      "sha256": "60bdb38e1a9ed76c1019e54b9028588d1238fce99bed8e9b0f2168dba5c091c1"
+    },
+    {
+      "file": "after/source-390.png",
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 390,
+      "sha256": "e8cd4a6d1f3dbe3d5663c620424c924931a84c5bab4cdbe067ea9f3ecac7cb05"
+    },
+    {
+      "file": "after/settings-390.png",
+      "page": "settings",
+      "route": "/settings",
+      "width": 390,
+      "sha256": "a2292d374e99f0600895ca25ba02444cff3e2f55be23e89ea350b276639a2dc0"
+    },
+    {
+      "file": "after/home-1280.png",
+      "page": "home",
+      "route": "/",
+      "width": 1280,
+      "sha256": "0da8b84cc4852313c104740a9b88575793892b7fddbb3ef5f2eafcae4aec33e5"
+    },
+    {
+      "file": "after/source-1280.png",
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 1280,
+      "sha256": "4d6306777fe39e68156923363ab2db0801543c1deb1498e5dd42c4fa86fc77be"
+    },
+    {
+      "file": "after/settings-1280.png",
+      "page": "settings",
+      "route": "/settings",
+      "width": 1280,
+      "sha256": "17f0d7ab3399792fb26395ed965976f266eabd74014fc4271a09219f799194e3"
+    }
+  ],
+  "guard": {
+    "blockedModelRequests": 0,
+    "realModelRequests": 0
+  },
+  "measurements": [
+    {
+      "page": "home",
+      "route": "/",
+      "width": 320,
+      "run": 1,
+      "taskReadyMs": 1477,
+      "fcpMs": 1264,
+      "lcpMs": 1264,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 943.6000000005588,
+          "duration": 275
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 176443,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "width": 320,
+      "run": 2,
+      "taskReadyMs": 1462.9000000003725,
+      "fcpMs": 1216,
+      "lcpMs": 1216,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 919.3000000007451,
+          "duration": 279
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 176443,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "width": 320,
+      "run": 3,
+      "taskReadyMs": 1504.8999999994412,
+      "fcpMs": 1240,
+      "lcpMs": 1240,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 954,
+          "duration": 267
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 176443,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 320,
+      "run": 1,
+      "taskReadyMs": 2036.8999999994412,
+      "fcpMs": 1212,
+      "lcpMs": 1840,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 997.3999999994412,
+          "duration": 200
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 255395,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 320,
+      "run": 2,
+      "taskReadyMs": 2063.0999999996275,
+      "fcpMs": 1228,
+      "lcpMs": 1868,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 1003.0999999996275,
+          "duration": 210
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 255395,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 320,
+      "run": 3,
+      "taskReadyMs": 2025.199999999255,
+      "fcpMs": 1204,
+      "lcpMs": 1828,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 992,
+          "duration": 196
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 255395,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 320,
+      "run": 1,
+      "taskReadyMs": 1541.0999999996275,
+      "fcpMs": 1368,
+      "lcpMs": 1368,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 1006,
+          "duration": 343
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 200493,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 320,
+      "run": 2,
+      "taskReadyMs": 1567.4000000003725,
+      "fcpMs": 1396,
+      "lcpMs": 1396,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 1004.2000000001863,
+          "duration": 375
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 200493,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 320,
+      "run": 3,
+      "taskReadyMs": 1494.2000000001863,
+      "fcpMs": 1320,
+      "lcpMs": 1320,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 973.1000000005588,
+          "duration": 334
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 200493,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "width": 390,
+      "run": 1,
+      "taskReadyMs": 1446.2000000001863,
+      "fcpMs": 1212,
+      "lcpMs": 1212,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 934.4000000003725,
+          "duration": 261
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 176443,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "width": 390,
+      "run": 2,
+      "taskReadyMs": 1509.2000000001863,
+      "fcpMs": 1236,
+      "lcpMs": 1236,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 941.2000000001863,
+          "duration": 275
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 176443,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "width": 390,
+      "run": 3,
+      "taskReadyMs": 1465.7000000001863,
+      "fcpMs": 1228,
+      "lcpMs": 1228,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 945.6000000005588,
+          "duration": 262
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 176443,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 390,
+      "run": 1,
+      "taskReadyMs": 2064.899999999441,
+      "fcpMs": 1240,
+      "lcpMs": 1880,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 1031,
+          "duration": 197
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 255395,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 390,
+      "run": 2,
+      "taskReadyMs": 2047.5999999996275,
+      "fcpMs": 1216,
+      "lcpMs": 1856,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 997.7999999998137,
+          "duration": 203
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 255395,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 390,
+      "run": 3,
+      "taskReadyMs": 2051.399999999441,
+      "fcpMs": 1216,
+      "lcpMs": 1836,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 1017.8999999994412,
+          "duration": 188
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 255395,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 390,
+      "run": 1,
+      "taskReadyMs": 1547.7999999998137,
+      "fcpMs": 1372,
+      "lcpMs": 1372,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 996.7000000001863,
+          "duration": 355
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 200493,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 390,
+      "run": 2,
+      "taskReadyMs": 1545.7999999998137,
+      "fcpMs": 1372,
+      "lcpMs": 1372,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 979.5999999996275,
+          "duration": 375
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 200493,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 390,
+      "run": 3,
+      "taskReadyMs": 1541.7999999998137,
+      "fcpMs": 1368,
+      "lcpMs": 1368,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 1008.5,
+          "duration": 347
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 200493,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "width": 1280,
+      "run": 1,
+      "taskReadyMs": 1504.7999999998137,
+      "fcpMs": 1268,
+      "lcpMs": 1268,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 934.2000000001863,
+          "duration": 309
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 212247,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "width": 1280,
+      "run": 2,
+      "taskReadyMs": 1591.699999999255,
+      "fcpMs": 1292,
+      "lcpMs": 1292,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 930.7999999998137,
+          "duration": 338
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 212247,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "width": 1280,
+      "run": 3,
+      "taskReadyMs": 1537.9000000003725,
+      "fcpMs": 1288,
+      "lcpMs": 1288,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 962.6000000005588,
+          "duration": 303
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 212247,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 1280,
+      "run": 1,
+      "taskReadyMs": 2095.2000000001863,
+      "fcpMs": 1276,
+      "lcpMs": 1916,
+      "cls": 0.000144146728515625,
+      "shifts": [
+        {
+          "time": 1900.4000000003725,
+          "value": 0.000144146728515625
+        }
+      ],
+      "longTasks": [
+        {
+          "start": 1004.6000000005588,
+          "duration": 253
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 255395,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 1280,
+      "run": 2,
+      "taskReadyMs": 2111.4000000003725,
+      "fcpMs": 1288,
+      "lcpMs": 1912,
+      "cls": 0.000144146728515625,
+      "shifts": [
+        {
+          "time": 1899.6000000005588,
+          "value": 0.000144146728515625
+        }
+      ],
+      "longTasks": [
+        {
+          "start": 1008.7999999998137,
+          "duration": 263
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 255395,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "source",
+      "route": "/source-audit?sample=cpi-2025-12",
+      "width": 1280,
+      "run": 3,
+      "taskReadyMs": 2080.2999999998137,
+      "fcpMs": 1260,
+      "lcpMs": 1884,
+      "cls": 0.000144146728515625,
+      "shifts": [
+        {
+          "time": 1872,
+          "value": 0.000144146728515625
+        }
+      ],
+      "longTasks": [
+        {
+          "start": 996.5,
+          "duration": 250
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 255395,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 1280,
+      "run": 1,
+      "taskReadyMs": 1601.5,
+      "fcpMs": 1428,
+      "lcpMs": 1428,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 985.9000000003725,
+          "duration": 424
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 200493,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 1280,
+      "run": 2,
+      "taskReadyMs": 1632.5,
+      "fcpMs": 1456,
+      "lcpMs": 1456,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 978.8000000007451,
+          "duration": 455
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 200493,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 1280,
+      "run": 3,
+      "taskReadyMs": 1595.0999999996275,
+      "fcpMs": 1412,
+      "lcpMs": 1412,
+      "cls": 0,
+      "shifts": [],
+      "longTasks": [
+        {
+          "start": 980,
+          "duration": 419
+        }
+      ],
+      "observedBlockingMs": 0,
+      "transferBytes": 200493,
+      "overflowPx": 0,
+      "errors": [],
+      "modelAttempts": 0
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "baseCommit": "8a89374ada8a78ab8088c8fc9ccf09d05faebc07",
+  "worktreeIncludedUncommittedChanges": true,
+  "mode": "actual-production-build-and-live-model",
+  "runtime": {
+    "web/pages/AuditPage.vue": "f956f233e0e0b7a14c16d0aa4a503a2fcf11dc3be459b49ee3030d182f7f281a",
+    "web/pages/SourceAuditPage.vue": "0440fc2cc7e05e706e0eebb6f8756b6898604fa2870b0fc22e7824a00955c9c6",
+    "server/app.ts": "208fccbfefc507707c66e34c1688ba46f2fe8695f96f0b79d87b095f4254dfeb",
+    "server/openai-vision.ts": "e584203b470448d166035aef14d5916005c0b782e96e353e192b89f46860914a",
+    "server/source-investigation.ts": "9a21bfcc5907176e7e06519b7fef3e33c88caaa4b05874dc434eb02f7b60fb23",
+    "shared/source-audit.ts": "669b10f2f90d842b09d5e3ca03acebb25a977f7105313545f944397aa28a34f6",
+    "shared/source-library.ts": "168c32bb9c2504c4909d872c1a30c3b2d4747f559af557a05f6a8e986a7e41cb",
+    "scripts/holdout-http.ts": "b939227cf3c8d91e5296e524cc87ef8fe2d2927b76ead270273fe3eb97fc5c9c"
+  },
+  "noResponseFixtures": true,
+  "originalViewport": [
+    1280,
+    720
+  ],
+  "outputResolution": [
+    1920,
+    1080
+  ]
+}

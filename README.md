@@ -1,5 +1,7 @@
 # 图证
 
+项目正式名称为「图证」，npm 包名与 GitHub 仓库名统一使用英文技术标识 `tuzheng`。
+
 图证帮助只有图表截图的读者检查标题与图中标注是否自洽。阶段一的单主张审计路径仍可选择原有样例或上传图片，确认/更正观察值后由程序计算增长率；阶段二任务 01—07 已本地验收，三主张预置示例支持逐条查看、修改、确认、重算，可查看本次会话的审计记录、一键重置。阶段三支持最多两张图的口径核对和柱状图纵轴风险提示，核心路径从 320px 起有自动化浏览器测试。阶段四的来源核验把图文主张对照固定国家统计局资料库，其中任务 03 能把一段短配文拆成直接陈述、可检查推断与观点，并指出推断缺哪一项依据；任务 04 能就一条具体主张提出一个会改变结论的问题，用户补充标为「用户提供」后沿同一条调查记录恢复调查，改动图片或配文则旧结论立即失效、历史结论只作历史展示；任务 05 在核验结束后给出逐处有据的修改建议——每处改动关联原句、理由与当前有效引用，错误数值只能用所引来源的正确值替换，未解决的部分保留限定或建议删除，建议由用户显式采用才写入配文，输入或引用一变旧建议立即撤回并只作历史展示。模型设置支持 OpenAI Responses 兼容与 Anthropic Messages 两种协议，可按协议分别保存地址、模型与密钥并切换。
 
 **阶段一状态：本地可验证功能验收已通过；真实云端视觉读取已于 2026-09-26 用三个团队自制样例通过（单次 3.2—4.4 秒）；独立 UI 评审同日三轮复审达到 9/10 门槛且无必须修项。** 样例使用明确标为“预置示例”的观察值；只有上传图片并点击读取才会请求你配置的模型服务，系统不会把预置结果说成实时 AI 输出。
@@ -10,17 +12,18 @@
 
 | 材料 | 位置 | 状态 |
 | --- | --- | --- |
-| 代码仓库 | <https://github.com/Iskuyal/web-match> | **当前为私有仓库**：评审访问前须设为 Public 或开通访问权限，见[访问检查记录](docs/submission/accessibility-check.md) |
+| 代码仓库 | <https://github.com/Iskuyal/tuzheng> | **当前为私有仓库**：评审访问前须设为 Public 或开通访问权限，见[访问检查记录](docs/submission/accessibility-check.md) |
 | README（介绍、架构、安装、团队） | 本文件 | 就绪 |
 | 赛事技术文档（PDF，≤30 页） | [web-match-competition-report.pdf](docs/submission/web-match-competition-report.pdf) | **16 页赛事阅读版**，按官网评分重点组织，突出技术链、案例和验证边界；重建：`node docs/submission/build-report.mjs --competition`；源文件 [competition-report.html](docs/submission/competition-report.html) |
 | 演示视频（5—8 分钟，1080p MP4） | 待补链接 | **待团队人工录制**；脚本、分镜与逐条走查清单见 [demo-video-script.md](docs/submission/demo-video-script.md) |
+| 90 秒产品演示（真实项目实录，1080p MP4） | [tuzheng-product-demo-90s.mp4](docs/submission/tuzheng-product-demo-90s.mp4) · [完整原始录屏](docs/submission/tuzheng-product-demo-uncut.webm) | 真实页面与当次模型请求，读取失败与待核对项保留；实际 HTTP 4 次，金额未知。等待加速已标注；录制工程与证据见 [code-demo](docs/submission/code-demo/README.md) |
 | 材料访问检查记录 | [accessibility-check.md](docs/submission/accessibility-check.md) | 就绪（含仓库可见性、链接可达性与公网演示决定） |
 | 真实模型证据索引 | [docs/evidence/](docs/evidence/) 与[路线图](docs/PHASES.md) | 就绪 |
 
 **界面截图（用于 PDF 与材料说明）**：`docs/submission/assets/` 下的 20 张 PNG，由 `node e2e/submission-screenshots.mjs` 生成（先 `npm run dev`）。
 这些截图用**替身响应**渲染界面结构，不调用真实模型，只用于说明界面；真实模型输出以 [docs/evidence/](docs/evidence/) 的逐次运行记录为准。
 
-**赛事材料与开发记录**：原 [开发技术报告](docs/submission/web-match-technical-report.pdf) 和 [HTML 源](docs/submission/technical-report.html) 保留作历史归档；赛事提交使用上表的独立版本。[全项目评估](docs/reviews/2026-10-01-competition-assessment.md)记录本次 361/361 行为/API、90/90 浏览器测试、GitHub 主线与未合并 PR、尚缺的在线复验与人工材料；[官网核对](docs/competition/official-rules-verification-2026-10-01.md)记录评分权重与材料要求。**官网要求模型密钥通过环境变量配置，目前项目采用本机设置文件，两者方式不一致，正式提交前须完成兼容或获得组委会认可。** 新赛事版没有将历史在线结果写成当前修复代码已经在线复验。
+**赛事材料与开发记录**：原 [开发技术报告](docs/submission/web-match-technical-report.pdf) 和 [HTML 源](docs/submission/technical-report.html) 保留作历史归档；赛事提交使用上表的独立版本。[全项目评估](docs/reviews/2026-10-01-competition-assessment.md)记录本次 361/361 行为/API、90/90 浏览器测试、GitHub 主线与未合并 PR、尚缺的在线复验与人工材料；[官网核对](docs/competition/official-rules-verification-2026-10-01.md)记录评分权重与材料要求。**2026-10-02 已实现显式启用的完整服务端环境配置，默认本机设置行为保留；配置选择、只读页面与密钥边界通过离线验收，0 次真实模型调用。** 配置方法见[模型配置说明](docs/MODEL-CONFIG.md)，实测见[验收报告](docs/evidence/model-config-env-2026-10-02.md)；历史在线验收不自动覆盖本次环境模式。 新赛事版没有将历史在线结果写成当前修复代码已经在线复验。
 
 ### 冻结的演示路径
 
@@ -42,21 +45,25 @@
 需要 Node.js 22.12 或更高的 22.x，或 Node.js 24.x；阶段验收使用 Node 24.16、npm 11.17。
 
 ```powershell
-npm install
+npm ci
 npm run dev
 ```
 
 打开 <http://127.0.0.1:5173>。根目录脚本会同时启动 Vue/Vite 页面和 Express API；API 默认使用 `127.0.0.1:3001`，网页默认 `127.0.0.1:5173`。两个端口都可以在根目录 `.env` 里改（`PORT`、`WEB_PORT`），或在启动前设置同名进程变量，前端代理使用同一个 `PORT`。**端口固定、不会自动换**：`npm run dev` 先跑 `npm run dev:ports` 预检，哪一端被占用就直接退出并给出清理命令（`netstat -ano | findstr :3001` → `taskkill /F /PID <PID>`），vite 侧另开了 `strictPort` 兜底——这样 README、演示脚本与编辑器里配置的地址不会悄悄变成 5174。
 
-要启用新图片的视觉读取，打开页面右上角的「模型设置」，先选择「接口协议」：**OpenAI Responses 兼容**（默认）或 **Anthropic Messages 兼容**。两种协议各自保存地址、模型与密钥，切换协议会带出该协议已存配置；旧版本保存的单份设置会在读取时自动迁移为 Responses 配置。「常用模型预设」按协议列出常用多模态型号，两种协议都覆盖厂商官方与中转站：**Anthropic Messages 侧 11 条**——DeepSeek 官方 `deepseek-flash`（已实测）、阿里云百炼 `qwen3.8-flash`、智谱 `glm-5.3-flash`、OpenCode Zen、OpenRouter、Anthropic 官方、MiniMax 官方 `MiniMax-M3.1-Flash-Preview`、Fireworks AI（Kimi K3）、阶跃星辰 StepFun `step-3.7-flash`、Kimi 编码套餐 `k3`、七牛云 AI `claude-opus-4-6`；**OpenAI Responses 侧 14 条**——DeepSeek 官方、Command Code 网关（已实测）、OpenCode Zen、OpenRouter、OpenAI 官方、阿里云百炼 `qwen3.8-flash`、Moonshot 官方 `kimi-k3`、MiniMax 官方、Nebius Token Factory、智谱开放平台 `glm-5.3`（Response API）、阶跃星辰 StepFun `step-3.7-flash`、DeepInfra `Qwen/Qwen3-VL-235B-A22B-Instruct`、七牛云 AI `openai/gpt-5`、AI-ML API `openai/gpt-6-sol`。选取即填入地址与型号并显示出处与验证状态；**预设只收录支持图片输入的型号**（应用要靠模型读图，手填请自行确认型号的输入模态），**两侧列表不同是有原因的**：同一家服务商只在它支持该协议的端点上出现（例如 Command Code 的 `/messages` 只服务自家 Claude 模型且受套餐限制、Moonshot 的 `/messages` 返回 404，所以这两家只列在 Responses 侧；Kimi 编码套餐反过来只收 Anthropic 面，因为官方只把那面写成 Anthropic 兼容），**同一家的两个协议面也可能不在同一个基址**（智谱的 Response API 是 `https://open.bigmodel.cn/api/v1`，与它的 Anthropic 面、对话补全面都不同），同一家中转站按协议暴露的型号也可能不同。预设的端点与型号按「未鉴权路由探测（带对照路径）＋官方文档原句＋models.dev／OpenRouter 模态元数据」核实，逐条结论与探测状态码见 [`.scratch/model-presets-research/`](.scratch/model-presets-research/endpoints-2026-10-01.md)。「Anthropic Messages」卡片不绑定 Claude 模型：任何实现 Messages 协议的端点都可以填（官方 Anthropic、提供 Anthropic 兼容面的第三方服务，或自建 LiteLLM 之类的代理），模型名按该端点支持的填写。Base URL 都只填接口根路径（例如以 `/v1` 结尾），应用会按协议自行调用 `/responses` 或 `/messages`；不要填入 `/chat/completions`、`/responses` 或 `/messages` 的完整接口地址，服务端会在保存时拒绝这类误填并保留原设置。可先点「测试连接」检查当前表单参数：Responses 发送一条 JSON Schema 短请求，Anthropic 发送一条强制工具调用短请求；测试不会保存设置或发送图片，**所以纯文本模型也可能测试通过**，图片识别仍需上传样例验证。默认填入的 `https://api.openai.com/v1` / `gpt-4.1-mini` 与 `https://api.anthropic.com/v1` / `claude-sonnet-4-6` 是示例值，可替换；团队已用第三方 Responses 兼容端点完成真实读取验收（见 [阶段一验收记录](docs/STAGE-1.md)和[阶段三复验记录](docs/evidence/stage-3-live-vision-2026-09-27.md)），该默认端点本身未做过调用。远程服务地址必须使用 HTTPS；本机回环服务可用 HTTP。设置只经本机 Node 服务端保存到 `%LOCALAPPDATA%\TuZheng\settings.json`；读取接口只返回 URL、模型名和密钥是否已配置，不回传密钥。`.env.example` 只保留可选端口（`PORT`、`WEB_PORT`）。设置文件使用当前 Windows 账户的本机文件权限；同一账户下运行的其他程序也有权读取。上传的新图会发送到设置页中指定的服务；预置示例不调用云端模型。
+默认 `file` 模式下，要启用新图片的视觉读取，打开页面右上角的「模型设置」，先选择「接口协议」：**OpenAI Responses 兼容**（默认）或 **Anthropic Messages 兼容**。两种协议各自保存地址、模型与密钥，切换协议会带出该协议已存配置；旧版本保存的单份设置会在读取时自动迁移为 Responses 配置。「常用模型预设」按协议列出常用多模态型号，两种协议都覆盖厂商官方与中转站：**Anthropic Messages 侧 11 条**——DeepSeek 官方 `deepseek-flash`（已实测）、阿里云百炼 `qwen3.8-flash`、智谱 `glm-5.3-flash`、OpenCode Zen、OpenRouter、Anthropic 官方、MiniMax 官方 `MiniMax-M3.1-Flash-Preview`、Fireworks AI（Kimi K3）、阶跃星辰 StepFun `step-3.7-flash`、Kimi 编码套餐 `k3`、七牛云 AI `claude-opus-4-6`；**OpenAI Responses 侧 14 条**——DeepSeek 官方、Command Code 网关（已实测）、OpenCode Zen、OpenRouter、OpenAI 官方、阿里云百炼 `qwen3.8-flash`、Moonshot 官方 `kimi-k3`、MiniMax 官方、Nebius Token Factory、智谱开放平台 `glm-5.3`（Response API）、阶跃星辰 StepFun `step-3.7-flash`、DeepInfra `Qwen/Qwen3-VL-235B-A22B-Instruct`、七牛云 AI `openai/gpt-5`、AI-ML API `openai/gpt-6-sol`。选取即填入地址与型号并显示出处与验证状态；**预设只收录支持图片输入的型号**（应用要靠模型读图，手填请自行确认型号的输入模态），**两侧列表不同是有原因的**：同一家服务商只在它支持该协议的端点上出现（例如 Command Code 的 `/messages` 只服务自家 Claude 模型且受套餐限制、Moonshot 的 `/messages` 返回 404，所以这两家只列在 Responses 侧；Kimi 编码套餐反过来只收 Anthropic 面，因为官方只把那面写成 Anthropic 兼容），**同一家的两个协议面也可能不在同一个基址**（智谱的 Response API 是 `https://open.bigmodel.cn/api/v1`，与它的 Anthropic 面、对话补全面都不同），同一家中转站按协议暴露的型号也可能不同。预设的端点与型号按「未鉴权路由探测（带对照路径）＋官方文档原句＋models.dev／OpenRouter 模态元数据」核实，逐条结论与探测状态码见 [`.scratch/model-presets-research/`](.scratch/model-presets-research/endpoints-2026-10-01.md)。「Anthropic Messages」卡片不绑定 Claude 模型：任何实现 Messages 协议的端点都可以填（官方 Anthropic、提供 Anthropic 兼容面的第三方服务，或自建 LiteLLM 之类的代理），模型名按该端点支持的填写。Base URL 都只填接口根路径（例如以 `/v1` 结尾），应用会按协议自行调用 `/responses` 或 `/messages`；不要填入 `/chat/completions`、`/responses` 或 `/messages` 的完整接口地址，服务端会在保存时拒绝这类误填并保留原设置。可先点「测试连接」检查当前表单参数：Responses 发送一条 JSON Schema 短请求，Anthropic 发送一条强制工具调用短请求；测试不会保存设置或发送图片，**所以纯文本模型也可能测试通过**，图片识别仍需上传样例验证。默认填入的 `https://api.openai.com/v1` / `gpt-4.1-mini` 与 `https://api.anthropic.com/v1` / `claude-sonnet-4-6` 是示例值，可替换；团队已用第三方 Responses 兼容端点完成真实读取验收（见 [阶段一验收记录](docs/STAGE-1.md)和[阶段三复验记录](docs/evidence/stage-3-live-vision-2026-09-27.md)），该默认端点本身未做过调用。远程服务地址必须使用 HTTPS；本机回环服务可用 HTTP。默认文件设置经本机 Node 服务端保存到 `%LOCALAPPDATA%\TuZheng\settings.json`；读取接口只返回 URL、模型名和密钥是否已配置，不回传密钥。`.env.example` 包含端口（`PORT`、`WEB_PORT`）及空值模型环境模板。显式设置 `MODEL_CONFIG_SOURCE=env` 后，服务端从 `MODEL_PROVIDER`、`MODEL_BASE_URL`、`MODEL_NAME`、`MODEL_API_KEY` 完整读取配置；缺项或非法配置失败，环境密钥不写回、不回传、不进日志，设置页显示来源并只读。不会与文件逐字段混用，详见[配置说明](docs/MODEL-CONFIG.md)。设置文件使用当前 Windows 账户的本机文件权限；同一账户下运行的其他程序也有权读取。上传的新图会发送到设置页中指定的服务；预置示例不调用云端模型。
 
 ### 在 WebStorm 里构建与运行
 
-可以不碰终端，直接在 IDE 里完成：打开根目录 `package.json`，点 `dependencies` 上方的“Run 'npm install'”提示装依赖，再点 `scripts` 里各条命令左侧的 ▶ 运行。`dev` 会同时起前后端，`build` 做类型检查加打包，`test` 跑行为测试。全部脚本也能在 View → Tool Windows → npm 里看到。
+按上面的 `npm ci` 安装依赖后，可以直接在 IDE 里运行：打开根目录 `package.json`，点 `scripts` 里各条命令左侧的 ▶。`dev` 会同时起前后端，`build` 做类型检查加打包，`test` 跑行为测试。全部脚本也能在 View → Tool Windows → npm 里看到。
+
+`package-lock.json` 已绑定独立预留题的原始运行指纹，其中的历史根名称 `tu-zheng-stage-one` 保留；当前应用名以 `package.json` 的 `tuzheng` 为准。使用 `npm ci` 按锁定版本安装，不重写这份冻结文件。
 
 `tsconfig.json` 是一份“解决方案”配置：它自己不检查任何文件，只指向 `config/tsconfig.web.json`（`web/` 与 `shared/`，带 DOM 与 vite/client 类型）、`config/tsconfig.server.json`（`server/`、`shared/`、`scripts/`、`tests/`，带 Node 类型）与 `config/tsconfig.e2e.json`（浏览器测试，带 Node 与 DOM 类型）。这是刻意的——一旦让它认领源文件，IDE 就会用缺少这些类型的设置去检查代码，报出并不存在的错误。命令行与 IDE 的检查入口都保持为 `npm run typecheck` 与 `npm run build`。
 
 ## 技术架构
+
+2026-10-07可先行收尾已补充：[候选冻结与受控评测](docs/evaluations/candidate-runbook.md)、[真实读者任务包](docs/submission/reader-study/README.md)、[人工交接清单](docs/submission/final-handoff-2026-10-07.md)。本轮只做离线实现与验收，真实模型/用户/视频/评审访问待补，见 [交付报告](docs/reviews/2026-10-07-agent-ready-closeout.md)。
 
 ```mermaid
 flowchart LR
@@ -111,11 +118,12 @@ flowchart LR
 
 计算使用 `(较新值 - 较早值) / 较早值 × 100`。计算值四舍五入到两位小数后，与标题中的百分比精确相等才判为“图内一致”；数值、单位、时间顺序、图中文字依据或标题主张不完整时降级为“需要确认”。
 
-上传文件只在请求期间保存在服务端内存，不写入项目目录。模型读取失败、超时、图片格式不支持或密钥未配置时，页面显示对应说明。模型设置文件位于当前 Windows 用户的 LocalAppData；同一 Windows 账户下的进程也可读取该文件。
+上传文件只在请求期间保存在服务端内存，不写入项目目录。模型读取失败、超时、图片格式不支持或密钥未配置时，页面显示对应说明。默认 file 模式的模型设置文件位于当前 Windows 用户的 LocalAppData；同一 Windows 账户下的进程也可读取该文件。
 
 ## 本地验证
 
 ```powershell
+npm run verify:model-config # 临时目录与假密钥，验证 file/env 和默认/自定义端口；0 次模型调用
 npm run docs:check  # 文档本地链接检查（不验证网络或锚点）
 npm test          # 共享规则、API 与样例的行为测试
 npm run eval:samples  # 18 张预置自制图与 5 组跨图配对的固定评测，不请求真实模型
@@ -140,7 +148,7 @@ node e2e/submission-screenshots.mjs           # 生成提交材料用的界面�
 
 推送与合并请求会由 [CI](.github/workflows/ci.yml) 自动执行文档本地链接检查、类型检查、构建、`npm test`、`npm run eval:samples` 与三视口 `npm run test:e2e`。CI **只跑离线路径**：不配置任何模型密钥，也不执行 `npm run eval:source-audit`，因此不会产生模型费用，评测结果也不会写回仓库。
 
-CI 的拦截点本身做过人为变红验证（阶段五 07）：注入一处类型错误后 [run 36723291466](https://github.com/Iskuyal/web-match/actions/runs/36723291466) 41 秒红在类型检查步骤（同一注入在本机 `npm test` 仍全绿——2026-09-30 实测，当时 332 条；vitest 走 esbuild 只剥离类型不做检查，只有 `npm run typecheck` 能拦）；注入一处断言失败后 [run 36723673814](https://github.com/Iskuyal/web-match/actions/runs/36723673814) 红在 `npm test` 步骤；两处注入都未合并，回退后 main [run 36724007809](https://github.com/Iskuyal/web-match/actions/runs/36724007809) 恢复绿色。逐次记录见 [路线图阶段五 07 一节](docs/PHASES.md)。
+CI 的拦截点本身做过人为变红验证（阶段五 07）：注入一处类型错误后 [run 36723291466](https://github.com/Iskuyal/tuzheng/actions/runs/36723291466) 41 秒红在类型检查步骤（同一注入在本机 `npm test` 仍全绿——2026-09-30 实测，当时 332 条；vitest 走 esbuild 只剥离类型不做检查，只有 `npm run typecheck` 能拦）；注入一处断言失败后 [run 36723673814](https://github.com/Iskuyal/tuzheng/actions/runs/36723673814) 红在 `npm test` 步骤；两处注入都未合并，回退后 main [run 36724007809](https://github.com/Iskuyal/tuzheng/actions/runs/36724007809) 恢复绿色。逐次记录见 [路线图阶段五 07 一节](docs/PHASES.md)。
 
 两处仍需在本机手动执行，不进入 CI：`npm run eval:source-audit` 会调用真实模型并产生费用，需要本机已保存的模型配置；`npm run verify:sample-renders` 逐字节比对 PNG 的 SHA-256，结果依赖本机 Edge 版本的字体栅格化。2026-09-30 实测：当前 `windows-latest` 镜像（`windows-2025-vs2026`）的 Edge 与开发机栅格化结果不同，该信号在 CI 上为 **0/18** 失败；因此它在工作流里是 `continue-on-error: true` 的不阻塞信号，失败不拦截合并，逐字节同源核对只在开发机（18/18）作为证据。
 
@@ -150,7 +158,7 @@ CI 的拦截点本身做过人为变红验证（阶段五 07）：注入一处�
 
 ## 团队信息
 
-仓库：<https://github.com/Iskuyal/web-match>
+仓库：<https://github.com/Iskuyal/tuzheng>
 
 | 分工 | 负责范围 |
 | --- | --- |

@@ -1,7 +1,12 @@
 {
-  "name": "tu-zheng-stage-one",
+  "name": "tuzheng",
   "version": "0.1.0",
   "private": true,
+  "description": "图证：图表证据审计台",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Iskuyal/tuzheng.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "tsx scripts/check-ports.ts && concurrently -k -n api,web -c cyan,green \"npm:dev:api\" \"npm:dev:web\"",
@@ -11,10 +16,17 @@
     "build": "npm run typecheck && vite build --config config/vite.config.ts && tsc -p config/tsconfig.server.build.json",
     "typecheck": "vue-tsc --noEmit -p config/tsconfig.web.json && tsc --noEmit -p config/tsconfig.server.json && tsc --noEmit -p config/tsconfig.e2e.json",
     "test": "vitest run --config config/vitest.config.ts",
+    "test:recording": "node --import tsx --test docs/submission/code-demo/capture-budget.test.mjs",
     "test:e2e": "playwright test --config config/playwright.config.ts",
     "eval:samples": "tsx scripts/evaluate-samples.ts",
     "eval:source-audit": "tsx scripts/evaluate-source-audit.ts",
+    "eval:holdout": "tsx scripts/evaluate-holdout.ts",
+    "eval:preflight": "tsx scripts/candidate-preflight.ts",
+    "eval:holdout:http": "tsx scripts/run-holdout-http.ts",
+    "eval:demo:http": "tsx scripts/run-demo-http.ts",
+    "study:readers": "tsx scripts/user-study.ts",
     "verify:sample-renders": "node scripts/verify-sample-renders.mjs",
+    "verify:model-config": "tsx scripts/verify-model-config.ts",
     "docs:check": "node scripts/check-docs.mjs"
   },
   "dependencies": {

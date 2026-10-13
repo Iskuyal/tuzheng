@@ -3,13 +3,13 @@
 **检查日期：2026-09-30（阶段五任务 04）。** 本文件记录「评审能不能打开材料」这项检查的实测结果与仍需人工处理的事项。
 检查方法都是可复现的命令，不依赖人工目测。
 
-> **当前赛事入口（2026-10-01 本次复核）**：[web-match-competition-report.pdf](web-match-competition-report.pdf)，**16/30 页**；源文件 [competition-report.html](competition-report.html)，重建命令 `node docs/submission/build-report.mjs --competition`，现有产物检查 `--competition --check`。原开发 PDF 实际为 23 页，保留归档，下文 24 / 25 页等属于历史轮次。新 PDF 的逐页视觉与文本 QA、本地 361 / 90 项测试及 GitHub 复核见[完整评估](../reviews/2026-10-01-competition-assessment.md)。官网评分与材料要求已[重新核对](../competition/official-rules-verification-2026-10-01.md)；仓库仍 PRIVATE，视频与团队信息仍待补，公网部署尚无验收证据；密钥本机配置方式与官网环境变量要求存在差异。历史外部来源链接的 HTTP 结果未在本轮重跑。
+> **当前赛事入口（2026-10-01 本次复核）**：[web-match-competition-report.pdf](web-match-competition-report.pdf)，**16/30 页**；源文件 [competition-report.html](competition-report.html)，重建命令 `node docs/submission/build-report.mjs --competition`，现有产物检查 `--competition --check`。原开发 PDF 实际为 23 页，保留归档，下文 24 / 25 页等属于历史轮次。新 PDF 的逐页视觉与文本 QA、本地 361 / 90 项测试及 GitHub 复核见[完整评估](../reviews/2026-10-01-competition-assessment.md)。官网评分与材料要求已[重新核对](../competition/official-rules-verification-2026-10-01.md)；仓库仍 PRIVATE，视频与团队信息仍待补，公网部署尚无验收证据；密钥配置差异已于 2026-10-02 在本地实现显式环境兼容，见[配置说明](../MODEL-CONFIG.md)与[离线验收](../evidence/model-config-env-2026-10-02.md)；环境模式尚未做真实模型或服务器部署验证。历史外部来源链接的 HTTP 结果未在本轮重跑。
 
 ## 1. 结论速览
 
 | 材料 | 状态 | 检查方式 | 需要人工处理 |
 | --- | --- | --- | --- |
-| 代码仓库访问权限 | **不通过（当前为私有仓库）** | `gh repo view Iskuyal/web-match --json visibility` → `PRIVATE`；未登录访问 `https://github.com/Iskuyal/web-match` 返回 404 | **必须**：提交前设为 Public，或为评审开通只读访问权限（赛事要求「须设为 Public 或提供评审访问权限」） |
+| 代码仓库访问权限 | **不通过（当前为私有仓库）** | `gh repo view Iskuyal/tuzheng --json visibility` → `PRIVATE`；未登录访问 `https://github.com/Iskuyal/tuzheng` 返回 404 | **必须**：提交前设为 Public，或为评审开通只读访问权限（赛事要求「须设为 Public 或提供评审访问权限」） |
 | README（介绍／架构／安装／团队／材料索引） | 通过 | 文件存在、Markdown 链接逐一指向仓库内真实文件（见第 3 节） | 提交前补齐团队成员姓名与联系方式 |
 | 技术 PDF（≤30 页） | 通过 | `node docs/submission/build-report.mjs --check` 输出「页数：23 / 上限 30」（2026-10-01 维护重建）；PDF 可被 Chrome/Edge 内置阅读器打开（人工用 DevTools 截图确认第 1 页渲染正常），文字可提取（`pypdf` 23 页） | 无 |
 | 演示视频（5—8 分钟，1080p MP4） | **待录制** | 尚不存在 | **必须**：按 `docs/submission/demo-video-script.md` 录制，并把链接补进 README 的「提交材料索引」 |
@@ -31,7 +31,7 @@ curl -s -o /dev/null -w "%{http_code} %{url_effective}`n" -L <URL>
 | `https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html` | 固定资料库：2025-12 发布 | 200 |
 | `https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912960.html` | 固定资料库：同比与环比解释页 | 200 |
 | `https://www.stats.gov.cn/sj/zxfb/202609/t20260909_1965263.html` | 固定资料库：2026-08 发布（干扰项） | 200 |
-| `https://github.com/Iskuyal/web-match` | 作品仓库（README 首页链接） | **404（未登录）**：仓库为私有，见第 1 节 |
+| `https://github.com/Iskuyal/tuzheng` | 作品仓库（README 首页链接） | **404（未登录）**：仓库为私有，见第 1 节 |
 
 > 说明：三条国家统计局链接返回 200 只说明「页面当前可打开」，不代表系统在运行时访问它们——来源核验只查构建期写死的资料库，运行时不抓取开放网络。
 
@@ -45,7 +45,7 @@ README 与 `docs/submission/` 里指向仓库内文件的链接在提交前用�
 
 **为什么不提供**
 
-1. 本应用按设计把模型密钥保存在**当前 Windows 用户的 LocalAppData**，服务只监听 `127.0.0.1`（见 `AGENTS.md` 的「密钥与示例」约定）。要放到公网，就必须改变密钥方案——这不是加一个反向代理就能解决的问题。
+1. 本应用默认把模型密钥保存在**当前 Windows 用户的 LocalAppData**；2026-10-02 增加显式启用的服务端环境配置，密钥仅在内存使用，见[模型配置说明](../MODEL-CONFIG.md)。服务仍只监听 `127.0.0.1`。环境兼容不提供用户隔离与费用控制，公网演示仍需独立验收。
 2. 公网服务意味着持续可用性与费用承担（模型调用按量计费），本次提交没有安排运维与预算。
 3. 赛事允许「Public 仓库 + README 说明」的离线复现路径；离线功能（样例审计、跨图与纵轴、固定评测、三视口界面）**不需要任何密钥**即可运行，评审可以在本机完整看到除真实模型调用以外的全部行为。
 

@@ -67,8 +67,8 @@ import {
   toModelFinding,
 } from "./source-tools.js";
 
-const REQUEST_TIMEOUT_MS = 60_000;
-const MAX_OUTPUT_TOKENS = 4096;
+export const REQUEST_TIMEOUT_MS = 60_000;
+export const MAX_OUTPUT_TOKENS = 4096;
 
 export interface ToolLoopCall {
   id: string;
@@ -95,6 +95,7 @@ export interface ToolResultPayload {
 
 export interface SourceInvestigationDriver {
   readonly model: string;
+  readonly requestRecords?: ModelRequestRecord[];
   start(): Promise<ToolLoopReply>;
   /** 补证恢复：把用户回答作为一条新的用户消息注入同一段对话，再要下一轮回复。 */
   resume(message: string): Promise<ToolLoopReply>;
@@ -102,7 +103,15 @@ export interface SourceInvestigationDriver {
   finalize(reason: string): Promise<ToolLoopReply>;
 }
 
+export interface ModelRequestRecord {
+  startedAt: string; completedAt: string | null;
+  parameters: { model: string; maxTokens: number; thinking: unknown; toolChoice: unknown };
+  status: "running" | "ok" | "failed"; responseModel: string | null; usage: unknown;
+  httpStatus: number | null;
+}
+
 export class SourceInvestigationError extends Error {
+  trace: ToolTraceEvent[] = [];
   constructor(readonly kind: "timeout" | "upstream" | "invalid-output", options?: ErrorOptions) {
     super(
       kind === "timeout"
@@ -184,6 +193,13 @@ export async function runSourceInvestigation(
   }
   const startedAt = Date.now();
   const trace: ToolTraceEvent[] = resume ? [...resume.prior.trace] : [];
+  const callDriver = async (operation: () => Promise<ToolLoopReply>): Promise<ToolLoopReply> => {
+    try { return await operation(); }
+    catch (error) {
+      if (error instanceof SourceInvestigationError) error.trace = [...trace];
+      throw error;
+    }
+  };
   const hitsById = new Map<string, SourceHit>();
   if (resume) {
     // 同图同配文同资料库：把上一段的检索命中带入本次，引用仍要按本轮主张口径重新校验。
@@ -357,7 +373,7 @@ export async function runSourceInvestigation(
   let reply: ToolLoopReply;
   if (resume && resumeClarification) {
     const parsed = parseClarificationAnswer(resumeClarification.field, resume.answer);
-    reply = await driver.resume(sourceResumeMessage({
+    reply = await callDriver(() => driver.resume(sourceResumeMessage({
       question: resumeClarification.question,
       purpose: resumeClarification.purpose,
       field: resumeClarification.field,
@@ -365,9 +381,9 @@ export async function runSourceInvestigation(
       answer: resume.answer,
       normalized: parsed.ok ? parsed.value : null,
       parseNote: parsed.ok ? null : parsed.reason,
-    }));
+    })));
   } else {
-    reply = await driver.start();
+    reply = await callDriver(() => driver.start());
   }
 
   while (true) {
@@ -400,7 +416,7 @@ export async function runSourceInvestigation(
           durationMs: 0,
         });
       }
-      reply = await driver.finalize("调查轮次上限已到（含补证前的轮次），请基于已有证据立即汇总。");
+      reply = await callDriver(() => driver.finalize("调查轮次上限已到（含补证前的轮次），请基于已有证据立即汇总。"));
       round += 1;
       usage = reply.usage ?? usage;
       recognizedModel = reply.model || recognizedModel;
@@ -425,7 +441,7 @@ export async function runSourceInvestigation(
       // 结构不合法时给一次恢复机会：带上具体错误重报，否则模型只会重复同样的错误。
       if (!repairUsed) {
         repairUsed = true;
-        reply = await driver.finalize(`上一次汇总结构不符合要求。${reportIssueNote}请修正后重新调用 report_source_finding 汇总。`);
+        reply = await callDriver(() => driver.finalize(`上一次汇总结构不符合要求。${reportIssueNote}请修正后重新调用 report_source_finding 汇总。`));
         round += 1;
         usage = reply.usage ?? usage;
         recognizedModel = reply.model || recognizedModel;
@@ -474,7 +490,7 @@ export async function runSourceInvestigation(
       }
 
       if (toolCallsUsed >= TOOL_CALLS_PER_INVESTIGATION) {
-        reply = await driver.finalize("工具调用预算用尽。");
+        reply = await callDriver(() => driver.finalize("工具调用预算用尽。"));
         const finalizeRound = round + 1;
         round = finalizeRound;
         usage = reply.usage ?? usage;
@@ -489,7 +505,7 @@ export async function runSourceInvestigation(
       }
 
       if (round >= INVESTIGATION_ROUNDS) {
-        reply = await driver.finalize("轮次上限。");
+        reply = await callDriver(() => driver.finalize("轮次上限。"));
         round += 1;
         const finalReport = reply.calls.find((call) => call.name === REPORT_TOOL_NAME);
         if (finalReport && acceptReport(finalReport.input, round, 1, "轮次用尽后按要求汇总。")) {
@@ -502,13 +518,13 @@ export async function runSourceInvestigation(
         break;
       }
 
-      reply = await driver.continue(results);
+      reply = await callDriver(() => driver.continue(results));
       continue;
     }
 
     if (actionCalls.length === 0 && reportCalls.length === 0) {
       if (round >= INVESTIGATION_ROUNDS || toolCallsUsed >= TOOL_CALLS_PER_INVESTIGATION) {
-        reply = await driver.finalize("模型没有继续调用工具。");
+        reply = await callDriver(() => driver.finalize("模型没有继续调用工具。"));
         round += 1;
         const finalReport = reply.calls.find((call) => call.name === REPORT_TOOL_NAME);
         if (finalReport && acceptReport(finalReport.input, round, 1, "按要求汇总。")) {
@@ -520,7 +536,7 @@ export async function runSourceInvestigation(
         recognizedModel = reply.model || recognizedModel;
         break;
       }
-      reply = await driver.continue([]);
+      reply = await callDriver(() => driver.continue([]));
       continue;
     }
   }
@@ -562,7 +578,9 @@ export async function runSourceInvestigation(
         ? `用户补充的${fieldText}与图文写明的内容冲突，已保留双方并请求更正，结论保持待核对。`
         : applied.appliedClaimTexts.length > 0
           ? `${fieldText}由用户补充确定，标为用户提供（不是官方来源）。`
-          : `回答与图文写明的${fieldText}一致，未改动结论。`;
+          : applied.infos.some((info) => info !== null)
+            ? `回答与图文写明的${fieldText}一致，未改动结论。`
+            : "没有匹配到补证前后同一来源的目标主张，回答未套用；请重新提取并核对目标主张。";
     supplement = {
       question: resumeClarification.question,
       purpose: resumeClarification.purpose,
@@ -741,6 +759,7 @@ function toToolLoopReply(reply: AnthropicReply, fallbackModel: string): ToolLoop
 
 /** Anthropic Messages 协议的工具循环：多轮工具结果回传，只有汇总工具用强制调用。 */
 export class AnthropicSourceInvestigationDriver implements SourceInvestigationDriver {
+  readonly requestRecords: ModelRequestRecord[] = [];
   private readonly turns: AnthropicTurn[] = [];
   private readonly send: AnthropicMessagesRequester;
   /** 无检索对照臂从工具声明里去掉检索，模型看不到也就不会调用。 */
@@ -755,7 +774,25 @@ export class AnthropicSourceInvestigationDriver implements SourceInvestigationDr
     options: { includeSearch?: boolean } = {},
   ) {
     this.model = config.model;
-    this.send = requester ?? createAnthropicMessagesRequester(config, { timeoutMs: REQUEST_TIMEOUT_MS });
+    const send = requester ?? createAnthropicMessagesRequester(config, { timeoutMs: REQUEST_TIMEOUT_MS });
+    this.send = async (body) => {
+      const record: ModelRequestRecord = {
+        startedAt: new Date().toISOString(), completedAt: null,
+        parameters: { model: body.model, maxTokens: body.max_tokens, thinking: body.thinking ?? null, toolChoice: body.tool_choice ?? null },
+        status: "running", responseModel: null, usage: null, httpStatus: null,
+      };
+      this.requestRecords.push(record);
+      try {
+        const response = await send(body);
+        record.status = "ok"; record.responseModel = response.model ?? null; record.usage = response.usage ?? null;
+        return response;
+      } catch (error) {
+        record.status = "failed";
+        const status = (error as { status?: unknown } | null)?.status;
+        record.httpStatus = typeof status === "number" ? status : null;
+        throw error;
+      } finally { record.completedAt = new Date().toISOString(); }
+    };
     this.toolDeclarations = options.includeSearch === false
       ? sourceToolDeclarations.filter((tool) => tool.name !== SEARCH_TOOL_NAME)
       : sourceToolDeclarations;

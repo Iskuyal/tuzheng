@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { nextTick } from "vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -28,6 +29,14 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 };
   },
+});
+
+router.afterEach(async (_to, _from, failure) => {
+  if (failure) return;
+  await nextTick();
+  const heading = document.querySelector<HTMLElement>("main h1");
+  heading?.setAttribute("tabindex", "-1");
+  heading?.focus({ preventScroll: true });
 });
 
 export default router;

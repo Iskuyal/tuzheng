@@ -1,0 +1,17 @@
+{
+  "mode": "actual-product-live-recording",
+  "source": "file",
+  "provider": "openai-responses",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "maximumHttpRequests": 12,
+  "reservedRequests": 4,
+  "actualHttpRequests": 4,
+  "inputTokens": 14271,
+  "outputTokens": 10730,
+  "failedHttp": 0,
+  "stopReason": null,
+  "cost": null,
+  "feeRate": null,
+  "operationStatus": "complete",
+  "newCallsAllowed": false
+}

@@ -1,6 +1,6 @@
 # 阶段五规格：稳定性、固定评测与提交准备
 
-Status: ready-for-agent
+Status: ready-for-human（仓库侧既有任务已完成，04视频/评审访问与05最终交接仍待人工；正文保留原规划）
 
 ## Problem Statement
 
@@ -25,7 +25,7 @@ Status: ready-for-agent
 
 ## Implementation Decisions
 
-- 继续使用 Windows 根目录 Node/npm 启动方式；API Key 只经本机设置页交给回环服务，并保存在当前用户 LocalAppData，不改用环境变量或写入仓库。
+- 继续使用 Windows 根目录 Node/npm 启动方式；默认由本机设置页将 API Key 保存到当前用户 LocalAppData。2026-10-02 经用户授权，显式启用时支持完整服务端环境配置，环境密钥仅在内存使用，不落盘、不回传、不进日志或仓库；规则见[模型配置说明](../../docs/MODEL-CONFIG.md)。
 - Responses Base URL 指服务根路径；应用自己追加 `/responses`。保存时拒绝明显的完整端点路径（例如 `/responses`、`/chat/completions`），给出可操作的错误，同时不改动原有设置。
 - 「测试连接」使用当前未保存的表单参数；密钥栏留空时可沿用已存密钥，测试不写入配置文件。服务端只发一条有限时、有限输出的短文本 Responses JSON Schema 请求；成功只代表连接及结构化输出可用，不能替代图片读取验收。
 - 固定样例沿用团队自制图片与独立预期，不把预置观察当成真实模型输出。目标总量至少 18 张；阶段四独有的来源核验样例待阶段四范围落实后加入。

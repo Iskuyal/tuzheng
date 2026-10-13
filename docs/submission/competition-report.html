@@ -321,12 +321,12 @@ npm ci
 npm run dev
 # 网页 http://127.0.0.1:5173
 # API  http://127.0.0.1:3001</pre>
-<p>网页与 API 端口在 <code>.env</code> 配置（WEB_PORT、PORT）。启动先预检端口，被占用时直接提示；不静默更换端口。模型密钥在设置页配置，离线样例、计算和固定样例评测不需要密钥。</p>
+<p>网页与 API 端口在 <code>.env</code> 配置（WEB_PORT、PORT）。启动先预检端口，被占用时直接提示；不静默更换端口。模型配置默认使用本机设置页，也支持显式启用完整服务端环境配置；离线样例、计算和固定样例评测不需要密钥。</p>
 <h3>CI 与部署状态</h3>
 <p>GitHub Actions 使用 Windows + Node 24，执行文档链接、类型、构建、行为测试和三视口浏览器测试；失败上传 trace。图片字节同源步骤受 Edge 栅格化差异影响，属于允许失败的信号，不能由 CI 总绿推断其通过。</p>
 <p>已验证的交付形态是本机运行。公网部署尚无上线或可用性证据，反向代理方案也不等于已部署；公共演示是赛事可选项，需另做访问、密钥隔离与额度管理。</p>
-<div class="box warn"><strong>密钥配置与赛事要求的差异</strong><p>官网要求 API 密钥通过环境变量配置。本项目按本机使用设计保存在用户配置文件，不读取模型密钥环境变量。防止密钥进入仓库的目标已有实现，但配置方式尚未满足这项文字要求，应在正式提交前完成适配或取得组委会认可。</p></div>
-<p class="source">本地命令、基线与 GitHub CI 核对见 [E7]；本机密钥实现 server/model-settings.ts；官网 [R1]。</p>
+<div class="box warn"><strong>2026-10-02 环境密钥兼容（本地工作区补充）</strong><p>显式设置 MODEL_CONFIG_SOURCE=env，服务端一次完整读取 MODEL_PROVIDER、MODEL_BASE_URL、MODEL_NAME、MODEL_API_KEY。缺项或非法地址明确失败，不混用本机文件。环境密钥不写回、不回传、不进日志，设置页显示来源并只读。默认 file 模式保持本机设置。临时配置与假密钥下两种来源、默认／自定义端口及 Vite 代理通过；本轮 0 次真实模型调用，未证明在线调用或服务器部署。</p></div>
+<p class="source">本地命令、基线与 GitHub CI 核对见 [E7]；配置规则 docs/MODEL-CONFIG.md；离线验收 docs/evidence/model-config-env-2026-10-02.md；官网 [R1]。</p>
 </section>
 
 <section class="sheet">
@@ -375,7 +375,7 @@ npm run dev
 <tr><td>S4 / S5</td><td>零售总额旧发布与修订发布</td><td>国家统计局 · <a href="https://www.stats.gov.cn/sj/zxfb/202608/t20260817_1965052.html">2026-08-17</a> / <a href="https://www.stats.gov.cn/sj/zxfb/202609/t20260915_1965311.html">2026-09-15</a></td></tr>
 </tbody></table>
 <p>资料录入包含原始链接、发布者、日期、短摘录、适用口径与指纹。本次未重新核对五条统计发布的完整页面，不把文件链接存在等同于来源再次验收。</p>
-<p class="small">源码与完整证据：<a href="https://github.com/Iskuyal/web-match">github.com/Iskuyal/web-match</a>。复现配置与安装步骤见仓库 README；赛事版生成命令为 <code>node docs/submission/build-report.mjs --competition</code>。</p>
+<p class="small">源码与完整证据：<a href="https://github.com/Iskuyal/tuzheng">github.com/Iskuyal/tuzheng</a>。复现配置与安装步骤见仓库 README；赛事版生成命令为 <code>node docs/submission/build-report.mjs --competition</code>。</p>
 <p class="source">本文不包含密钥、真实用户数据、任务日志或开发待办。团队报名信息与视频、仓库访问权限在提交材料入口核对，不能由本 PDF 生成结果代替。</p>
 </section>
 </body>

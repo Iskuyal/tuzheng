@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>图证 · 真实项目实录</title><style>
+*{box-sizing:border-box}body{margin:0;padding:28px;background:#e6eff0;color:#10243a;font-family:'Microsoft YaHei',sans-serif}main{max-width:1500px;margin:auto}h1{font-size:24px;margin:0 0 8px}p{line-height:1.7;color:#526675;font-size:14px}video{display:block;width:100%;aspect-ratio:16/9;background:#10243a;border:1px solid #b9cdd1}nav{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px}a{color:#2546bd;text-underline-offset:3px}a:focus-visible{outline:3px solid #365be6;outline-offset:4px}@media(max-width:600px){body{padding:14px}h1{font-size:20px}}
+</style></head><body><main><h1>图证 · 90秒真实项目实录</h1><p>实际 Vue 页面与 Express API，模型响应来自当次真实请求。团队自制输入图；读取失败、待核对项和真实工具轨迹均保留。</p><video controls playsinline preload="metadata"></video><p id="status" role="status">正在读取实录信息。</p><nav><a id="download" hidden download>下载90秒MP4</a><a id="uncut" hidden download>下载完整原始录屏</a><a href="README.md">源码与复现说明</a></nav></main><script type="module">
+const info=await fetch('output/verification.json').then(r=>r.json());
+if(info.mode==='actual-product-live-recording'){
+ const v=document.querySelector('video');v.src='output/tuzheng-demo-90s.mp4';const ready=new Promise(r=>v.addEventListener('loadeddata',r,{once:true}));v.load();await ready;
+ document.querySelector('#status').textContent=`实际模型HTTP请求 ${info.actualHttpRequests} 次；原录屏 ${info.originalDuration.toFixed(2)} 秒。仅等待段加速 ${info.waitingSpeed.toFixed(2)} 倍。金额与费率未知。`;
+ for(const[id,path]of[['download','output/tuzheng-demo-90s.mp4'],['uncut','output/actual-product-uncut.webm']]){const a=document.getElementById(id);a.href=path;a.hidden=false;}window.playerReady=true;
+}else document.querySelector('#status').textContent='真实实录版本正在生成，旧示意动画已撤下。';
+</script></body></html>

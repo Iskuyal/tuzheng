@@ -1,6 +1,6 @@
 # Anthropic Messages 协议支持：设置、连接测试与图片读取
 
-Status: ready-for-agent
+Status: completed（任务01—03均已完成；历史规划正文保留）
 
 ## Problem Statement
 

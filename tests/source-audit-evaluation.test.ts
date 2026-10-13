@@ -10,6 +10,7 @@ import {
   REQUIRED_CATEGORIES,
   runPairedEvaluation,
   summarizeEvaluation,
+  suggestionIndependenceProblems,
   verifyFrozenSetup,
   type Arm,
   type RunRecord,
@@ -772,7 +773,7 @@ describe("任务 04 新增的补证与追问题", () => {
     expect(report.summary.arms[0].supplementAppliedRuns).toBe(1);
   });
 
-  it("初查未追问时不跑补证后阶段，也不编造记录", async () => {
+  it("初查未追问时不调用恢复，但保存阻塞阶段与失败分母", async () => {
     const searchCall = {
       id: "s1",
       name: "search_source_library",
@@ -827,12 +828,19 @@ describe("任务 04 新增的补证与追问题", () => {
       driverFactory: () => driver,
     });
 
-    // 只有一条补证前记录；未追问已由 missing-clarification 判为未通过。
-    expect(report.records).toHaveLength(1);
+    // 不发恢复请求；阻塞段保留在计划记录里，不冒充真实模型结果。
+    expect(report.records).toHaveLength(2);
+    expect(report.records[1]).toMatchObject({ phase: "after", status: "blocked", failureKind: "missing-clarification" });
     expect(report.records[0].phase).toBe("before");
     expect(report.records[0].judgment.problems.map((problem) => problem.kind)).toContain("missing-clarification");
     expect(report.records[0].judgment.ok).toBe(false);
     expect(report.summary.arms[0].resumeRuns).toBe(0);
+    expect(report.summary.arms[0]).toMatchObject({
+      plannedStages: 2, blockedStages: 1,
+      stagePass: { passed: 0, total: 2, rate: 0 },
+      fullPathPass: { passed: 0, total: 1, rate: 0 },
+      allAttemptSuccess: { passed: 0, total: 1, rate: 0 },
+    });
   });
 
   it("带补证阶段的题把计划请求数翻倍计", () => {
@@ -871,6 +879,16 @@ describe("任务 05 新增的改写期望题", () => {
   function q20Result(): SourceInvestigationResult {
     return resultFor([WRONG_YOY, NO_SOURCE_MOM], VALUE_CITATION, { caption: CAPTION });
   }
+
+  it("q20 独立复算拒绝错句引用与来源相反方向，不能只检查全文数字集合", () => {
+    const wrongCitation = q20Result();
+    wrongCitation.captionSuggestion!.changes[0].sourceIds = ["stats-cpi-2026-08"];
+    wrongCitation.acceptedCitations.push({ ...wrongCitation.acceptedCitations[0], sourceId: "stats-cpi-2026-08" });
+    expect(suggestionIndependenceProblems(wrongCitation, CAPTION).map((problem) => problem.kind)).toContain("suggestion-wrong-citation");
+    const wrongDirection = q20Result();
+    wrongDirection.captionSuggestion!.changes[0].suggested = "2025 年 12 月 CPI 同比下降 0.8%";
+    expect(suggestionIndependenceProblems(wrongDirection, CAPTION).map((problem) => problem.kind)).toContain("suggestion-wrong-source-direction");
+  });
 
   it("q20 有独立输入与成对的期望：替换错误值 + 保留未解决项", () => {
     const question = questionsCatalog.questions.find((entry) => entry.id === "q20-rewrite-replace-and-qualify");

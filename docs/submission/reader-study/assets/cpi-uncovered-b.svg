@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="440" viewBox="0 0 720 440" role="img" aria-label="自制未核实图：2026年4月全国CPI同比上涨0.3%">
+  <rect width="720" height="440" fill="#fff"/>
+  <g font-family="Microsoft YaHei, sans-serif" fill="#18384c">
+    <text x="40" y="55" font-size="25" font-weight="700">2026 年 4 月全国 CPI 同比上涨 0.3%</text>
+    <text x="40" y="91" font-size="17">团队自制用户任务图 · 未核实数值 · 单位：%</text>
+    <path d="M160 130V350H620" stroke="#7991a0" fill="none" stroke-width="2"/>
+    <text x="131" y="355" font-size="16">0</text>
+    <rect x="285" y="200" width="130" height="150" fill="#447f98"/>
+    <text x="350" y="184" font-size="28" text-anchor="middle">0.3%</text>
+    <text x="350" y="385" font-size="20" text-anchor="middle">2026 年 4 月</text>
+    <text x="40" y="427" font-size="15">仅供任务验证，不是官方图，也不是已核实的统计数据。</text>
+  </g>
+</svg>

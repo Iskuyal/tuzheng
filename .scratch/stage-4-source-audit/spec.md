@@ -1,6 +1,6 @@
 # 阶段四规格：图文证据调查与有依据的修改建议
 
-Status: ready-for-agent
+Status: ready-for-human（核心01—05已验收；06版本替代已实现，剩余同口径冲突材料待人工提供；正文保留原规划）
 
 ## Problem Statement
 

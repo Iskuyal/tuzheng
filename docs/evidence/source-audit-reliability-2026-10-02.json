@@ -1,0 +1,1377 @@
+{
+  "schemaVersion": 2,
+  "mode": "historical-recount",
+  "realModelCalls": 0,
+  "historical": {
+    "path": "F:\\VibeCoding\\web-match\\docs\\evidence\\stage-4-source-audit-eval-2026-10-01-revision.json",
+    "sha256": "b5491243a76f895c6b6e4510345a24615c621e5ad85ff80eed756a28839d0dba",
+    "generatedAt": "2026-09-30T17:20:50.201Z",
+    "provenance": null,
+    "note": "当前 provenance 仅属于重统计工具与输入；原记录未保存的代码／输入指纹无法追补。sourceRecordIndex 与阶段关联为派生字段，未重新判定模型表现。"
+  },
+  "generatedAt": "2026-10-02T03:49:24.035Z",
+  "runId": "754ad86f-cefd-480b-a877-35156f060e84",
+  "provenance": {
+    "capturedAt": "2026-10-02T03:49:24.510Z",
+    "code": {
+      "sha": "8a89374ada8a78ab8088c8fc9ccf09d05faebc07",
+      "dirty": true,
+      "status": " M .env.example\n M .scratch/stage-4-source-audit/issues/02-evidence-boundaries-and-evaluation.md\n M .scratch/stage-4-source-audit/issues/04-clarify-and-resume.md\n M .scratch/stage-4-source-audit/issues/05-grounded-rewrite.md\n M .scratch/stage-4-source-audit/issues/06-counterevidence-review.md\n M .scratch/stage-5-stability-submission/spec.md\n M AGENTS.md\n M CONTEXT.md\n M PLAN.md\n M README.md\n M docs/DEPLOY-DEMO-QUICK.md\n M docs/DEPLOY-WINDOWS-SERVER.md\n M docs/PHASES.md\n M docs/STAGE-1-PROMPT.md\n M docs/STAGE-1.md\n M docs/STRUCTURE.md\n M docs/competition/official-rules-verification-2026-10-01.md\n M docs/reviews/2026-10-01-competition-assessment.md\n M docs/submission/accessibility-check.md\n M docs/submission/competition-report.html\n M docs/submission/web-match-competition-report.pdf\n M e2e/settings-connection.spec.ts\n M package.json\n M scripts/evaluate-source-audit.ts\n M server/app.ts\n M server/model-settings.ts\n M server/source-investigation.ts\n M shared/source-audit.ts\n M tests/source-audit-evaluation.test.ts\n M tests/source-investigation.test.ts\n M tests/source-supplement.test.ts\n M web/pages/SettingsPage.vue\n?? .scratch/model-config-env/issues/01-config-sources.md\n?? .scratch/model-config-env/spec.md\n?? .scratch/source-audit-reliability/issues/01-regression-and-recording.md\n?? .scratch/source-audit-reliability/spec.md\n?? docs/MODEL-CONFIG.md\n?? docs/evidence/model-config-env-2026-10-02.md\n?? docs/evidence/source-audit-reliability-2026-10-02.json\n?? docs/reviews/2026-10-02-mock-judge-review.md\n?? docs/reviews/2026-10-02-remediation-agent-prompts.md\n?? docs/reviews/2026-10-02-source-audit-reliability.md\n?? scripts/source-audit-recording.ts\n?? scripts/verify-model-config.ts\n?? tests/environment-settings.test.ts\n?? tests/source-audit-recording.test.ts\n",
+      "diffSha256": "76ebef66f18b7dedfe671a243001c52832b911e9d94e9bbe34a83176187da698",
+      "untracked": {
+        ".scratch/model-config-env/issues/01-config-sources.md": "30747723cdc7099126182fe584e0808faeeed5f3c6d9f745dfa9145bcf3d30b8",
+        ".scratch/model-config-env/spec.md": "fb60f6df3b97dc8ed38e6d6227d62b3f90095c0c9d0eea4eaf823b1539254388",
+        ".scratch/source-audit-reliability/issues/01-regression-and-recording.md": "ab3284a463d18857324772a7fe0974d5c3ff1f805a55debd0812b430ab252c70",
+        ".scratch/source-audit-reliability/spec.md": "8c034f9d81b26bfb5ee0b8bf2e8bd869a8f6946c263a1bf4c2a6cd891efa7dab",
+        "docs/MODEL-CONFIG.md": "61ca21c99c3f6c1f4c35cc30bd62eea6ab9374aa3a4ffbeae037a1f5cc1eeefe",
+        "docs/evidence/model-config-env-2026-10-02.md": "a050606558304960c4428479d167c9fb9412b573c0b358dfddaa41a39a5c4b04",
+        "docs/evidence/source-audit-reliability-2026-10-02.json": "95027964e5b6c4be9c666a1f8ee9610578a6314b250901f663541f8138fbddfb",
+        "docs/reviews/2026-10-02-mock-judge-review.md": "e5ba8174d5a2ccc4fdfa97eafcfe37f4c7ebf9f735a240d48c95c2548832509f",
+        "docs/reviews/2026-10-02-remediation-agent-prompts.md": "a01910a53c51474292b346649b1805e71b519de6effae6ca7117f36aa5896723",
+        "docs/reviews/2026-10-02-source-audit-reliability.md": "5383e4dad62276e1769d13aac9e629766b579dc87a753a1967da098341b2ff2f",
+        "scripts/source-audit-recording.ts": "5dbe2cb8f2bfd22db3bcf15c3ed3ddc2702a46e461141fcf21c24faa62ff67e3",
+        "scripts/verify-model-config.ts": "8145c1c491bda769425b13209424c5b9ee6d94c975527f350a838d6a92224f4d",
+        "tests/environment-settings.test.ts": "11c3f3c1af3bae304982205319d683931ed12f3c27a1eb49381e9bf1e8b9a104",
+        "tests/source-audit-recording.test.ts": "1446c60b15230e81da33c5d8533acad104f2d2128e1a0653124b06e815eb5a21"
+      }
+    },
+    "fingerprints": {
+      "questionsFile": "171b952d40d72e81f5afbfa9518295f555d1369f997bb5201bbe9614e7a10805",
+      "questionsContent": "1ac418dd4d897410f4d573f9cb8ee32481082e740a9e4e51b5a07996ff99dfc6",
+      "expectationsFile": "3ad6deda9d1612e229832c059074c2c97351f310eac93df67d5dc579f9a37c50",
+      "expectationsContent": "be484ca1bcc009e03ab5d5d45865dd3939cf1d3d2970faa830f1ca6598268e61",
+      "libraryFile": "168c32bb9c2504c4909d872c1a30c3b2d4747f559af557a05f6a8e986a7e41cb",
+      "libraryContent": "4732b84a1e8e07d3a8a24e55f6d2533bb9e6c50490ee371fd93bdda4aace925e",
+      "images": {
+        "cpi-2025-12": {
+          "pngSha256": "302708110302488f72fad8650ba0cbf6a9791c3675226c404b2190cbf18f1c77",
+          "svgSha256": "c6b2df3c94c209f10d2afa73e7e35ac633a75830e12da32d892954d1be33caf0"
+        },
+        "cpi-2025-12-yoy": {
+          "pngSha256": "568de51008c4bc7d2e62ff6385d7418239c2aede616023bb61d7885a5a2ed2b4",
+          "svgSha256": "d4a5d98827786fa63edd8da6c4e796f997dc31b3030ff01924111c167d1befe9"
+        },
+        "cpi-2025-12-mom": {
+          "pngSha256": "1cffbe1a8b82fbb025250dfdce8ea769d79d0c667176cd2d9f35a488c35aee43",
+          "svgSha256": "94552fbddd4183d3e73cd7c3519ef1423bcab0e0d1ad6c6b0bcfcab99b7d51d7"
+        },
+        "cpi-2025-12-city": {
+          "pngSha256": "351fe5d8091c9e76096aeb0df88b874e5e4e45b3abf22cd93227d20955c7dd1b",
+          "svgSha256": "431948a5c45b28bacec143e1d4f1f9c5026faea84115e1912de55d43e028adf5"
+        },
+        "cpi-2026-08-yoy": {
+          "pngSha256": "74225b518dbaf0b9a7c25b5dc72739b62f92654f7ddb6b45321ce7782af9136b",
+          "svgSha256": "1a5eaa08a07198d49e2094b3b700b21880d7523b8e4416ca7de2ae527c8293c3"
+        },
+        "cpi-2026-07-08-yoy-trend": {
+          "pngSha256": "38d550e29f4650c6bdfe1b8fc581d67cf48435a996e508ebd3ed6db9bcfa4e03",
+          "svgSha256": "a059a5689c7bca6cb35662db814bf7402a3c520fd9722bb41a77e3f19195dc94"
+        },
+        "retail-2026-06": {
+          "pngSha256": "98e8a36e2ef22c037b3a5c508a79727184b1f6c0c09c1a76b6fd569bfbc01943",
+          "svgSha256": "34de6f27df164a42c89979c2932fd53084e1d2e80ea92b2850f359404e026df8"
+        }
+      },
+      "documents": {
+        "stats-cpi-2025-12": "67828d756d2d683d",
+        "stats-term-yoy-mom": "3873318af079acdd",
+        "stats-cpi-2026-08": "1629bc6cd4a8e45f",
+        "stats-retail-2026-07": "017220654d110dda",
+        "stats-retail-2026-08": "382eec551290742b"
+      },
+      "prompts": {
+        "retrieval": "1c0a33b80397d0a8106c07604e56bb9cd4653f0805c1945f1b9ceaf1ebf04808",
+        "no-retrieval": "decf808a91c74d3cceb4a044c1601d9d75a0e6b8692f707e4747dc16da119c1c"
+      }
+    },
+    "runtime": null
+  },
+  "summary": {
+    "arms": [
+      {
+        "arm": "retrieval",
+        "plannedStages": 69,
+        "blockedStages": 1,
+        "pendingStages": 0,
+        "stagePass": {
+          "passed": 61,
+          "total": 69,
+          "rate": 0.8840579710144928
+        },
+        "fullPathPass": {
+          "passed": 60,
+          "total": 66,
+          "rate": 0.9090909090909091
+        },
+        "validRunPass": {
+          "passed": 61,
+          "total": 68,
+          "rate": 0.8970588235294118
+        },
+        "allAttemptSuccess": {
+          "passed": 61,
+          "total": 68,
+          "rate": 0.8970588235294118
+        },
+        "attempts": 68,
+        "validRuns": 68,
+        "failedRuns": 0,
+        "failureKinds": {},
+        "correctRuns": 61,
+        "accuracy": 0.8970588235294118,
+        "acceptedCitations": 145,
+        "rejectedCitations": 2,
+        "fabricatedCitations": 0,
+        "recalledCitations": 0,
+        "noApplicableSourceReasons": 15,
+        "clarifications": 19,
+        "clarificationQuestions": [
+          "q05-caption-wrong-month-distractor：配文写的是「2026 年 8 月全国 CPI 比上月上涨 0.8%」，但图片上标注的是「全国 · 2025 年 12 月」、涨幅 0.8%。这条配文应以图上标注的 2025 年 12 月为准，还是以配文写的 2026 年 8 月为准？另外该 0.8% 是同比口径还是环比口径？",
+          "q06-caption-wrong-scope-city：配文「12 月全国城市 CPI 同比上涨 0.8%」里的 0.8%，是想核对国家统计局公布的「全国居民消费价格」（全国口径）2025 年 12 月同比涨幅，还是想核对「城市」口径的 12 月同比涨幅？",
+          "q07-caption-no-such-month：配文里的「比上月」是要核定的口径，还是笔误？如果要核对的是图上那张卡片，请确认目标月份与比较基准（例如「2025 年 12 月、同比」或「2025 年 12 月、环比」）？",
+          "q07-caption-no-such-month：配文写的是「2026 年 5 月全国 CPI 比上月上涨 0.8%」，但图上标注的是「全国 · 2025 年 12 月」，且卡片明确写着「未标注比较基准」。请问这条主张的月份和比较基准，应以哪一个为准：是照配文按 2026 年 5 月、环比（比上月）核对，还是照图上按 2025 年 12 月核对？如果是 2025 年 12 月，比较基准是同比还是环比？",
+          "q08-caption-image-basis-unclear：配文「12 月物价上涨 0.8%」中的 0.8% 指的是同比涨幅（与 2024 年 12 月相比）还是环比涨幅（与 2025 年 11 月相比）？",
+          "q08-caption-image-basis-unclear：配文「12 月物价上涨 0.8%」和图上「0.8%」都没有标注比较基准：这 0.8% 指的是 2025 年 12 月全国居民消费价格的同比涨幅，还是环比涨幅？",
+          "q08-caption-image-basis-unclear：配文「12 月物价上涨 0.8%」和图上「2025 年 12 月全国 CPI 上涨 0.8%」都只写了涨幅数值，没有标注比较基准；国家统计局 2025 年 12 月数据显示全国居民消费价格同比上涨 0.8%、环比上涨 0.2%。请问这个 0.8% 指的是同比涨幅还是环比涨幅？",
+          "q09-caption-distractor-same-yoy：配文说的「12 月 CPI 同比上涨 0.8%」中的「同比」是按什么依据写的？图上只写了「上涨 0.8%」且卡片声明未标注比较基准，2025 年 12 月全国居民消费价格同比为 0.8%、环比为 0.2%，两者数值不同，需要确认这条主张要核对的是同比口径还是环比口径？",
+          "q09-caption-distractor-same-yoy：配文写「12 月 CPI 同比上涨 0.8%」，但图片上只写了「2025 年 12 月全国 CPI 上涨 0.8%」并注明「未标注比较基准」。请问这条 0.8% 应该按同比核对，还是按环比核对？",
+          "q09-caption-distractor-same-yoy：配文写的「12 月 CPI 同比上涨 0.8%」中，这个 0.8% 是以同比（与 2024 年 12 月相比）为口径，还是以环比（与 2025 年 11 月相比）为口径？图上的卡片明确写着「未标注比较基准」，所以需要你确认想核对的比较方式。",
+          "q11-caption-value-without-basis：配文「12 月物价上涨 0.2%」中的 0.2% 指的是同比（与 2024 年 12 月相比）还是环比（与 2025 年 11 月相比）？",
+          "q11-caption-value-without-basis：配文「12 月物价上涨 0.2%。」中的 0.2% 指的是同比还是环比？国家统计局 2025 年 12 月同口径数据显示：环比上涨 0.2%（比上月），同比上涨 0.8%（比上年同月）。",
+          "q11-caption-value-without-basis：配文「12 月物价上涨 0.2%」中的 0.2% 指的是同比还是环比？",
+          "q14-inference-mom-supported：配文「8 月 CPI 比上月上涨」没有写明是同比还是环比：您要核对的是 2026 年 8 月的环比（与 2026 年 7 月相比），还是同比（与 2025 年 8 月相比）？",
+          "q17-inference-no-mom-source：「7 月 CPI 比上月便宜」这句里的「比上月」是指环比吗？你能否提供 2026 年 7 月全国 CPI 环比的数值（或它的来源）？",
+          "q18-clarify-basis-resume：配文「12 月 CPI 上涨 0.8%」中的 0.8% 指的是同比（比上年同月）还是环比（比上月）？2025 年 12 月全国居民消费价格同比上涨 0.8%、环比上涨 0.2%，两者不同，需要确认这一条针对哪个口径。",
+          "q18-clarify-basis-resume：配文「12 月 CPI 上涨 0.8%」指的是 2025 年 12 月全国居民消费价格同比上涨 0.8%，还是环比上涨 0.8%？",
+          "q20-rewrite-replace-and-qualify：配文第二句「2026 年 5 月 CPI 比上月上涨 0.1%」中的「2026 年 5 月」这个月份是从哪里来的？是要核对国家统计局 2026 年 5 月的全国居民消费价格数据，还是想核对 2025 年 12 月的环比数据？",
+          "q22-retail-value-current：配文写的是「2026 年 6 月社会消费品零售总额环比增长 0.40%」，而图上标注并援引的是国家统计局 2026-08-17 发布附注5 中的 0.35%；0.40% 出现在更晚的 2026-09-15 发布（1—8 月数据）对 2026 年 6 月的修订值里。请问这条 6 月环比增速应以哪次发布为准：2026-08-17 发布的 0.35%，还是 2026-09-15 发布的修订值 0.40%？"
+        ],
+        "clarificationProblems": 1,
+        "resumeRuns": 2,
+        "supplementAppliedRuns": 1,
+        "noApplicableSourceOverclaims": 0,
+        "inferenceUnsupported": 5,
+        "notVerifiable": 4,
+        "omittedClaims": 13,
+        "otherOmittedText": 62,
+        "suggestionRuns": 66,
+        "suggestionModelChanges": 34,
+        "suggestionRejectedProposals": 46,
+        "suggestionProblems": 2,
+        "revisionAppliedRuns": 5,
+        "revisionHelpedRuns": 5,
+        "revisionHurtRuns": 0,
+        "averageLatencyMs": 6723,
+        "averageToolCalls": 3.72
+      },
+      {
+        "arm": "no-retrieval",
+        "plannedStages": 69,
+        "blockedStages": 0,
+        "pendingStages": 0,
+        "stagePass": {
+          "passed": 19,
+          "total": 69,
+          "rate": 0.2753623188405797
+        },
+        "fullPathPass": {
+          "passed": 19,
+          "total": 66,
+          "rate": 0.2878787878787879
+        },
+        "validRunPass": {
+          "passed": 19,
+          "total": 69,
+          "rate": 0.2753623188405797
+        },
+        "allAttemptSuccess": {
+          "passed": 19,
+          "total": 69,
+          "rate": 0.2753623188405797
+        },
+        "attempts": 69,
+        "validRuns": 69,
+        "failedRuns": 0,
+        "failureKinds": {},
+        "correctRuns": 19,
+        "accuracy": 0.2753623188405797,
+        "acceptedCitations": 0,
+        "rejectedCitations": 0,
+        "fabricatedCitations": 0,
+        "recalledCitations": 0,
+        "noApplicableSourceReasons": 68,
+        "clarifications": 31,
+        "clarificationQuestions": [
+          "q01-caption-yoy-match：配文「12 月 CPI 同比上涨 0.8%」中的「同比」，是指比上年同月（2024 年 12 月）的涨幅，还是指比上月（环比）？请明确比较基准。",
+          "q02-caption-mom-match：配文只写了「12 月 CPI 环比上涨 0.2%」，但本次未提供资料库检索工具，无法核对国家统计局的同比/环比真实数值；请问这 0.2% 是 2025 年 12 月全国 CPI 的环比涨幅，还是同比涨幅？",
+          "q02-caption-mom-match：配文说「12 月 CPI 环比上涨 0.2%」，年份按图上标注理解为 2025 年 12 月。请问这条 0.2% 的数据来源是国家统计局公布的 2025 年 12 月全国居民消费价格环比涨幅吗？",
+          "q03-caption-mom-value-as-yoy：配文写「12 月 CPI 同比上涨 0.2%」，而图片卡片只给出当月涨幅 0.8%（未标注比较基准）。请确认这条 0.2% 是同比（与上年同月比）还是环比（与上月比）？",
+          "q03-caption-mom-value-as-yoy：配文说「12 月 CPI 同比上涨 0.2%」，但图上是「2025 年 12 月全国 CPI 上涨 0.8%」，且图上注明「未标注比较基准」。请问这条配文想说的是同比（与上年同月比）还是环比（与上月比），数值应以哪个为准？",
+          "q04-caption-yoy-value-as-mom：配文说「比上月上涨 0.8%」，即认定 0.8% 是环比涨幅；但图上只写「涨幅 0.8%」且明确声明未标注比较基准。请问这个 0.8% 到底是同比涨幅还是环比涨幅？",
+          "q04-caption-yoy-value-as-mom：配文「比上月上涨 0.8%」中的 0.8% 是指环比（比上月）涨幅还是同比（比去年同月）涨幅？",
+          "q04-caption-yoy-value-as-mom：配文写的是「比上月上涨 0.8%」，即环比口径；但图上只写「2025 年 12 月全国 CPI 上涨 0.8%」，并明确注明「未标注比较基准」。请问这 0.8% 是同比（与 2024 年 12 月相比）还是环比（与 2025 年 11 月相比）？",
+          "q05-caption-wrong-month-distractor：配文写的是「2026 年 8 月全国 CPI 比上月上涨 0.8%」，但图片标注的是「全国 · 2025 年 12 月」且图上未标注比较基准；请问这条主张要核对的到底是哪个月份、哪个比较方式（同比还是环比）？",
+          "q05-caption-wrong-month-distractor：配文写的是「2026 年 8 月全国 CPI 比上月上涨 0.8%」，但图上标注的是「2025 年 12 月」，且图上明确写了「未标注比较基准」——请确认这条主张到底要核对哪个时间段、以及 0.8% 是同比还是环比口径？",
+          "q06-caption-wrong-scope-city：配文只写「12 月全国城市 CPI 同比上涨 0.8%」，与图上「2025 年 12 月」一致，但本次没有可用资料库来源核对数值。请问这条 0.8% 应作为「暂未核实」处理，还是您能指明它对应的口径（同比／环比）与数据发布机构？",
+          "q07-caption-no-such-month：配文写的是「2026 年 5 月」全国 CPI 比上月上涨 0.8%，而图片上写的是「2025 年 12 月」上涨 0.8%。这条配文到底要核对的是哪个月份、哪个比较基准？",
+          "q08-caption-image-basis-unclear：配文「12 月物价上涨 0.8%」中的 0.8% 是同比涨幅还是环比涨幅？",
+          "q08-caption-image-basis-unclear：配文「12 月物价上涨 0.8%」中的 0.8% 是指同比涨幅（与 2024 年 12 月相比）还是环比涨幅（与 2025 年 11 月相比）？",
+          "q09-caption-distractor-same-yoy：配文说「12 月 CPI 同比上涨 0.8%」，但图片卡片明确写着「本卡片只写出当月涨幅数值。未标注比较基准」。请问这个 0.8% 是同比（与 2024 年 12 月比）还是环比（与 2025 年 11 月比）？",
+          "q09-caption-distractor-same-yoy：配文写「12 月 CPI 同比上涨 0.8%」，但图表只给出 0.8% 且明确标注「未标注比较基准」。请问这 0.8% 指的是 2025 年 12 月 CPI 的同比涨幅，还是环比涨幅？",
+          "q11-caption-value-without-basis：配文「12 月物价上涨 0.2%」里的 0.2%，指的是同比（与上年同月相比）还是环比（与上月相比）？",
+          "q11-caption-value-without-basis：配文「12 月物价上涨 0.2%」里的 0.2% 指的是哪种比较方式——环比（比上月）还是同比（比去年同月）？",
+          "q12-caption-term-misuse：配文说「12 月 CPI 环比是跟上年同期比出来的」，但图上的 0.8% 只写了「当月涨幅数值」，没有标注比较基准。请问这个 0.8% 指的是 2025 年 12 月 CPI 的同比涨幅（与 2024 年 12 月比），还是环比涨幅（与 2025 年 11 月比）？",
+          "q13-inference-mom-contradicted：配文「8 月 CPI 比上月便宜」是依据同比（与去年 8 月相比）还是环比（与 2026 年 7 月相比）口径？图上只标注了同比涨幅（7 月 1.0%、8 月 0.8%），并未给出环比数值。",
+          "q13-inference-mom-contradicted：「8 月 CPI 比上月便宜」这句话，你认为依据的是哪个口径：8 月环比（比 7 月）CPI 变动，还是 8 月同比涨幅（0.8%）低于 7 月同比涨幅（1.0%）？",
+          "q13-inference-mom-contradicted：「8 月 CPI 比上月便宜」这句是环比口径（8 月价格水平比 7 月低），但图上只给了 2026 年 7 月、8 月的同比涨幅（1.0%、0.8%），没有环比数值。请问这句是否确实指环比下降，还是本意只是说「同比涨幅由 1.0% 回落到 0.8%」？",
+          "q14-inference-mom-supported：配文「8 月 CPI 比上月上涨」中的「比上月」指的是环比（2026 年 8 月相比 2026 年 7 月），还是您想表达的是图上标注的同比数据（2026 年 8 月相比 2025 年 8 月）？请确认该句的比较口径。",
+          "q16-caption-over-three-claims：配文写「8 月 CPI 比上月上涨 0.4%」，这里「比上月」是环比口径，但图上只标了 2026 年 7 月、8 月的同比涨幅（1.0%、0.8%），没有环比数值；本次也没有可用资料库可核对。请问这个 0.4% 指的是 2026 年 8 月 CPI 的环比涨幅，还是同比涨幅（或其它口径）？",
+          "q16-caption-over-three-claims：配文说「8 月 CPI 比上月上涨 0.4%」和「7 月 CPI 比上月便宜」，这里指的是环比（比上月）口径，但图上只标了 2026 年 7 月同比 1.0%、8 月同比 0.8% 两个同比值，没有任何环比数值。请问这两句中的「比上月」是环比口径（对应哪个数值来源）还是笔误、本意是同比？",
+          "q16-caption-over-three-claims：配文写的「8 月 CPI 比上月上涨 0.4%」和「7 月 CPI 比上月便宜」（都是环比口径），图上只给了 2026 年 7 月、8 月的同比涨幅 1.0% 和 0.8%，没有给任何环比数值。请问这两句的环比口径数值来自哪里、口径是什么？",
+          "q17-inference-no-mom-source：配文「7 月 CPI 比上月便宜」中的「比上月」是想按环比（7 月 vs 2026 年 6 月）来核对吗？如果是，请确认比较口径为环比；若你实际想表达的是同比（2026 年 7 月 vs 2025 年 7 月），请说明。",
+          "q17-inference-no-mom-source：配文「7 月 CPI 比上月便宜」中的「比上月」比较，是否是指环比（month-on-month）口径？若是，请补充 2026 年 7 月全国 CPI 环比的具体数值或涨跌方向（图上只标了 7 月同比上涨 1.0%，没有环比数据）。",
+          "q18-clarify-basis-resume：配文写的「12 月 CPI 上涨 0.8%」中的 0.8%，是指同比（比上年同月）还是环比（比上月）？",
+          "q18-clarify-basis-resume：配文只写了「12 月 CPI 上涨 0.8%」，没有说明是同比还是环比。请确认这句话的比较口径是同比（比上年同月）还是环比（比上年12月／上月）？",
+          "q18-clarify-basis-resume：配文「12 月 CPI 上涨 0.8%。」中的 0.8% 指的是同比（比上年同月）还是环比（比上月）？"
+        ],
+        "clarificationProblems": 0,
+        "resumeRuns": 3,
+        "supplementAppliedRuns": 3,
+        "noApplicableSourceOverclaims": 0,
+        "inferenceUnsupported": 13,
+        "notVerifiable": 4,
+        "omittedClaims": 3,
+        "otherOmittedText": 53,
+        "suggestionRuns": 68,
+        "suggestionModelChanges": 68,
+        "suggestionRejectedProposals": 13,
+        "suggestionProblems": 51,
+        "revisionAppliedRuns": 0,
+        "revisionHelpedRuns": 0,
+        "revisionHurtRuns": 0,
+        "averageLatencyMs": 5472,
+        "averageToolCalls": 0.88
+      }
+    ],
+    "questions": [
+      {
+        "questionId": "q01-caption-yoy-match",
+        "categories": [
+          "数值正确"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文一致 图一致 图一致",
+              "文一致 图一致 图一致",
+              "文一致 图一致 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q02-caption-mom-match",
+        "categories": [
+          "数值正确"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文一致 图一致 图待核对",
+              "文一致 图一致 图一致",
+              "文一致 图一致 图一致"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q03-caption-mom-value-as-yoy",
+        "categories": [
+          "同比与环比错用"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文不一致 图待核对 图待核对",
+              "文不一致 图待核对 图待核对",
+              "文不一致 图待核对 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q04-caption-yoy-value-as-mom",
+        "categories": [
+          "同比与环比错用",
+          "图上比较方式不明"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文不一致 图待核对 图待核对",
+              "文不一致 图待核对 图待核对",
+              "图待核对 图待核对 文不一致"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q05-caption-wrong-month-distractor",
+        "categories": [
+          "错月份",
+          "干扰来源命中"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文不一致 图待核对 图待核对",
+              "文不一致 图待核对 图待核对",
+              "文不一致 图待核对 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "无结论",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q06-caption-wrong-scope-city",
+        "categories": [
+          "错范围与人群",
+          "资料库无适用来源"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 1,
+            "passedPaths": 1,
+            "totalPaths": 3,
+            "outcomes": [
+              "图待核对 图待核对 图待核对",
+              "无结论",
+              "文待核对 图待核对 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 2,
+            "passedPaths": 2,
+            "totalPaths": 3,
+            "outcomes": [
+              "图待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "两臂相同"
+      },
+      {
+        "questionId": "q07-caption-no-such-month",
+        "categories": [
+          "错月份",
+          "资料库无适用来源"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "两臂相同"
+      },
+      {
+        "questionId": "q08-caption-image-basis-unclear",
+        "categories": [
+          "图上比较方式不明",
+          "资料库无适用来源"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "图待核对 图待核对 文待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "两臂相同"
+      },
+      {
+        "questionId": "q09-caption-distractor-same-yoy",
+        "categories": [
+          "数值正确",
+          "干扰来源命中"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文一致 图待核对 图待核对",
+              "文一致 图待核对 图待核对",
+              "文一致 图待核对 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q10-caption-2026-08-match",
+        "categories": [
+          "数值正确",
+          "干扰来源命中"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文一致 图一致 图一致",
+              "文一致 图一致 图一致",
+              "文一致 图一致 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q11-caption-value-without-basis",
+        "categories": [
+          "图上比较方式不明"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图一致 图待核对",
+              "文待核对 图一致 图待核对",
+              "文待核对 图一致 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "两臂相同"
+      },
+      {
+        "questionId": "q12-caption-term-misuse",
+        "categories": [
+          "术语页不可作数值依据"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 2,
+            "passedPaths": 2,
+            "totalPaths": 3,
+            "outcomes": [
+              "文不核验 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "两臂相同"
+      },
+      {
+        "questionId": "q13-inference-mom-contradicted",
+        "categories": [
+          "推断缺口",
+          "错误推断"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文不一致 图待核对 图一致",
+              "文不一致 图待核对 图一致",
+              "文不一致 图待核对 图一致"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文依据不足 图待核对 图待核对",
+              "文依据不足 图待核对 图待核对",
+              "文依据不足 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q14-inference-mom-supported",
+        "categories": [
+          "推断缺口",
+          "正确推断"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文一致 图一致 图待核对",
+              "文一致 图一致 图待核对",
+              "文一致 图一致 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文依据不足 图待核对 图待核对",
+              "文依据不足 图待核对 图待核对",
+              "文依据不足 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q15-opinion-not-verifiable",
+        "categories": [
+          "观点不支持核验"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文一致 文不核验 文不核验",
+              "文一致 文不核验 图一致",
+              "文一致 文不核验 图一致"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 文不核验 图待核对",
+              "文待核对 文不核验 图待核对",
+              "文待核对 文依据不足 文不核验"
+            ]
+          }
+        },
+        "verdict": "两臂相同"
+      },
+      {
+        "questionId": "q16-caption-over-three-claims",
+        "categories": [
+          "主张拆解与覆盖",
+          "超过三条不静默丢弃"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 2,
+            "passedPaths": 2,
+            "totalPaths": 3,
+            "outcomes": [
+              "文一致 文一致 文依据不足",
+              "文一致 文一致 文依据不足",
+              "无结论"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 文待核对 文依据不足",
+              "文待核对 文待核对 文依据不足",
+              "文待核对 文待核对 文依据不足"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q17-inference-no-mom-source",
+        "categories": [
+          "推断缺口",
+          "证据不足"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文依据不足 图待核对 图一致",
+              "文依据不足 图待核对 图一致",
+              "图待核对 图待核对 文依据不足"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文依据不足 图待核对 图待核对",
+              "文依据不足 图待核对 图待核对",
+              "文依据不足 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "两臂相同"
+      },
+      {
+        "questionId": "q18-clarify-basis-resume",
+        "categories": [
+          "补证与恢复",
+          "图上比较方式不明"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 5,
+            "validRuns": 5,
+            "correctRuns": 2,
+            "passedPaths": 1,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图一致 图待核对",
+              "补证后 文一致 图一致 图待核对",
+              "图一致 图一致 图一致",
+              "图一致 图待核对 图待核对",
+              "补证后 文一致 图一致 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 6,
+            "validRuns": 6,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "补证后 文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "补证后 文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "补证后 文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q19-covered-no-clarify",
+        "categories": [
+          "数值正确",
+          "无需追问"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文一致 图一致 图一致",
+              "文一致 图一致 图待核对",
+              "文一致 图一致 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "图待核对 图待核对 文待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q20-rewrite-replace-and-qualify",
+        "categories": [
+          "修改建议",
+          "同比与环比错用",
+          "资料库无适用来源"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 2,
+            "passedPaths": 2,
+            "totalPaths": 3,
+            "outcomes": [
+              "图一致 图待核对 图待核对",
+              "文不一致 文待核对 图一致",
+              "文不一致 文待核对 图一致"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 文待核对 图待核对",
+              "文待核对 文待核对 图待核对",
+              "文待核对 文待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q21-retail-value-superseded",
+        "categories": [
+          "版本修订",
+          "数值被后续发布改写"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文不一致 图不一致 图待核对",
+              "文不一致 图不一致 图待核对",
+              "文不一致 图不一致 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      },
+      {
+        "questionId": "q22-retail-value-current",
+        "categories": [
+          "版本修订",
+          "数值正确"
+        ],
+        "perArm": {
+          "retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 3,
+            "passedPaths": 3,
+            "totalPaths": 3,
+            "outcomes": [
+              "文一致 图不一致 图待核对",
+              "文一致 图不一致 图待核对",
+              "文一致 图不一致 图待核对"
+            ]
+          },
+          "no-retrieval": {
+            "attempts": 3,
+            "validRuns": 3,
+            "correctRuns": 0,
+            "passedPaths": 0,
+            "totalPaths": 3,
+            "outcomes": [
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对",
+              "文待核对 图待核对 图待核对"
+            ]
+          }
+        },
+        "verdict": "仅检索臂正确"
+      }
+    ],
+    "gates": [
+      {
+        "id": "claim-status-accuracy",
+        "label": "retrieval 臂全部尝试成功率 ≥ 80%（含运行失败）",
+        "passed": true,
+        "detail": "89.7%（61/68 次尝试）"
+      },
+      {
+        "id": "fabricated-citations",
+        "label": "虚构引用为零（两臂合计）",
+        "passed": true,
+        "detail": "0 条"
+      },
+      {
+        "id": "no-applicable-source",
+        "label": "无适用来源案例不下确定来源结论（两臂合计）",
+        "passed": true,
+        "detail": "0 次越界"
+      }
+    ],
+    "gateArm": "retrieval",
+    "degradedQuestions": []
+  },
+  "artifactKind": "derived-summary",
+  "focusRecords": [
+    {
+      "sourceRecordIndex": 51,
+      "questionId": "q18-clarify-basis-resume",
+      "arm": "retrieval",
+      "run": 1,
+      "phase": "before",
+      "judgment": {
+        "ok": true,
+        "problems": []
+      },
+      "clarification": {
+        "question": "配文「12 月 CPI 上涨 0.8%」中的 0.8% 指的是同比（比上年同月）还是环比（比上月）？2025 年 12 月全国居民消费价格同比上涨 0.8%、环比上涨 0.2%，两者不同，需要确认这一条针对哪个口径。",
+        "purpose": "决定「12 月 CPI 上涨 0.8%」这条主张的 basis 字段：若为同比，则与国家统计局 2025-12 同比 0.8% 一致；若为环比，则 2025-12 环比为 0.2%，该主张数值有误，需改写。同时影响 direction 与改写建议。",
+        "field": "basis",
+        "claimText": "12 月 CPI 上涨 0.8%。"
+      },
+      "supplement": null,
+      "captionClaims": [
+        {
+          "claimText": "12 月 CPI 上涨 0.8%。",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": null,
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "来源待核对：主张没有写明比较方式，无法与具体数值对照。",
+          "revisionReview": null
+        }
+      ]
+    },
+    {
+      "sourceRecordIndex": 52,
+      "questionId": "q18-clarify-basis-resume",
+      "arm": "retrieval",
+      "run": 1,
+      "phase": "after",
+      "judgment": {
+        "ok": true,
+        "problems": []
+      },
+      "clarification": null,
+      "supplement": {
+        "question": "配文「12 月 CPI 上涨 0.8%」中的 0.8% 指的是同比（比上年同月）还是环比（比上月）？2025 年 12 月全国居民消费价格同比上涨 0.8%、环比上涨 0.2%，两者不同，需要确认这一条针对哪个口径。",
+        "purpose": "决定「12 月 CPI 上涨 0.8%」这条主张的 basis 字段：若为同比，则与国家统计局 2025-12 同比 0.8% 一致；若为环比，则 2025-12 环比为 0.2%，该主张数值有误，需改写。同时影响 direction 与改写建议。",
+        "field": "basis",
+        "claimText": "12 月 CPI 上涨 0.8%。",
+        "answer": "同比",
+        "normalized": "year-on-year",
+        "applied": true,
+        "conflicts": [],
+        "parseNote": null,
+        "note": "比较方式由用户补充确定，标为用户提供（不是官方来源）。"
+      },
+      "captionClaims": [
+        {
+          "claimText": "12 月 CPI 上涨 0.8%。",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-match",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）记载的同比 0.8% 一致。",
+          "revisionReview": null
+        }
+      ]
+    },
+    {
+      "sourceRecordIndex": 53,
+      "questionId": "q18-clarify-basis-resume",
+      "arm": "retrieval",
+      "run": 2,
+      "phase": "before",
+      "judgment": {
+        "ok": false,
+        "problems": [
+          {
+            "kind": "no-matching-claim",
+            "detail": "缺少符合「配文主张 · 无比较方式」的主张：需要 1 条，实际 0 条。"
+          },
+          {
+            "kind": "missing-clarification",
+            "detail": "资料库回答不了这条口径缺口，模型必须提出一次追问，但本次没有追问。"
+          },
+          {
+            "kind": "no-matching-suggestion-change",
+            "detail": "缺少符合「配文主张 · 无比较方式」的改动说明：需要 1 条，实际 0 条。"
+          }
+        ]
+      },
+      "clarification": null,
+      "supplement": null,
+      "captionClaims": []
+    },
+    {
+      "sourceRecordIndex": 54,
+      "questionId": "q18-clarify-basis-resume",
+      "arm": "retrieval",
+      "run": 3,
+      "phase": "before",
+      "judgment": {
+        "ok": false,
+        "problems": [
+          {
+            "kind": "no-matching-claim",
+            "detail": "缺少符合「配文主张 · 无比较方式」的主张：需要 1 条，实际 0 条。"
+          },
+          {
+            "kind": "no-matching-suggestion-change",
+            "detail": "缺少符合「配文主张 · 无比较方式」的改动说明：需要 1 条，实际 0 条。"
+          }
+        ]
+      },
+      "clarification": {
+        "question": "配文「12 月 CPI 上涨 0.8%」指的是 2025 年 12 月全国居民消费价格同比上涨 0.8%，还是环比上涨 0.8%？",
+        "purpose": "配文与图上的卡片都没有写比较方式；资料库显示 2025-12 全国 CPI 同比为 0.8%、环比为 0.2%。若用户要核对的是同比，配文数值与来源一致；若是环比，则配文数值应为 0.2%，现存 0.8% 属错误。这个答案决定该条主张的 basis 口径及是否一致。",
+        "field": "basis",
+        "claimText": "12 月 CPI 上涨 0.8%。"
+      },
+      "supplement": null,
+      "captionClaims": []
+    },
+    {
+      "sourceRecordIndex": 55,
+      "questionId": "q18-clarify-basis-resume",
+      "arm": "retrieval",
+      "run": 3,
+      "phase": "after",
+      "judgment": {
+        "ok": false,
+        "problems": [
+          {
+            "kind": "missing-supplement-application",
+            "detail": "补证后应当把用户回答套用到受影响主张并标为用户提供，但本次补充记录为：回答与图文写明的比较方式一致，未改动结论。"
+          }
+        ]
+      },
+      "clarification": null,
+      "supplement": {
+        "question": "配文「12 月 CPI 上涨 0.8%」指的是 2025 年 12 月全国居民消费价格同比上涨 0.8%，还是环比上涨 0.8%？",
+        "purpose": "配文与图上的卡片都没有写比较方式；资料库显示 2025-12 全国 CPI 同比为 0.8%、环比为 0.2%。若用户要核对的是同比，配文数值与来源一致；若是环比，则配文数值应为 0.2%，现存 0.8% 属错误。这个答案决定该条主张的 basis 口径及是否一致。",
+        "field": "basis",
+        "claimText": "12 月 CPI 上涨 0.8%。",
+        "answer": "同比",
+        "normalized": "year-on-year",
+        "applied": false,
+        "conflicts": [],
+        "parseNote": null,
+        "note": "回答与图文写明的比较方式一致，未改动结论。"
+      },
+      "captionClaims": [
+        {
+          "claimText": "12 月 CPI 上涨 0.8%。",
+          "kind": "direct",
+          "direction": null,
+          "fromImage": false,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.8,
+          "status": "source-match",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）记载的同比 0.8% 一致。",
+          "revisionReview": null
+        }
+      ]
+    },
+    {
+      "sourceRecordIndex": 59,
+      "questionId": "q20-rewrite-replace-and-qualify",
+      "arm": "retrieval",
+      "run": 1,
+      "phase": "before",
+      "judgment": {
+        "ok": false,
+        "problems": [
+          {
+            "kind": "no-matching-claim",
+            "detail": "缺少符合「配文主张 · 同比 · 月份 2025-12」的主张：需要 1 条，实际 0 条。"
+          },
+          {
+            "kind": "no-matching-claim",
+            "detail": "缺少符合「配文主张 · 环比 · 月份 2026-05」的主张：需要 1 条，实际 0 条。"
+          },
+          {
+            "kind": "no-matching-suggestion-change",
+            "detail": "缺少符合「配文主张 · 同比 · 月份 2025-12」的改动说明：需要 1 条，实际 0 条。"
+          },
+          {
+            "kind": "no-matching-suggestion-change",
+            "detail": "缺少符合「配文主张 · 环比 · 月份 2026-05」的改动说明：需要 1 条，实际 0 条。"
+          },
+          {
+            "kind": "suggestion-missing-number",
+            "detail": "建议配文里没有期望的正确数值 0.8：「2025 年 12 月 CPI 同比上涨 0.2%，2026 年 5 月 CPI 比上月上涨 0.1%。」"
+          },
+          {
+            "kind": "suggestion-forbidden-number",
+            "detail": "建议配文里仍出现不应有的数值 0.2：「2025 年 12 月 CPI 同比上涨 0.2%，2026 年 5 月 CPI 比上月上涨 0.1%。」"
+          }
+        ]
+      },
+      "clarification": null,
+      "supplement": null,
+      "captionClaims": []
+    },
+    {
+      "sourceRecordIndex": 60,
+      "questionId": "q20-rewrite-replace-and-qualify",
+      "arm": "retrieval",
+      "run": 2,
+      "phase": "before",
+      "judgment": {
+        "ok": true,
+        "problems": []
+      },
+      "clarification": null,
+      "supplement": null,
+      "captionClaims": [
+        {
+          "claimText": "2025 年 12 月 CPI 同比上涨 0.2%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.2,
+          "status": "source-mismatch",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）不一致：该发布记载同比 0.8%，主张写 0.2%，相差 0.6 个百分点。",
+          "revisionReview": null
+        },
+        {
+          "claimText": "2026 年 5 月 CPI 比上月上涨 0.1%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": "month-on-month",
+          "period": "2026-05",
+          "scope": "全国",
+          "value": 0.1,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [],
+          "summary": "来源待核对：所引来源与主张口径不一致，不能作为数值依据。",
+          "revisionReview": null
+        }
+      ]
+    },
+    {
+      "sourceRecordIndex": 61,
+      "questionId": "q20-rewrite-replace-and-qualify",
+      "arm": "retrieval",
+      "run": 3,
+      "phase": "before",
+      "judgment": {
+        "ok": true,
+        "problems": []
+      },
+      "clarification": {
+        "question": "配文第二句「2026 年 5 月 CPI 比上月上涨 0.1%」中的「2026 年 5 月」这个月份是从哪里来的？是要核对国家统计局 2026 年 5 月的全国居民消费价格数据，还是想核对 2025 年 12 月的环比数据？",
+        "purpose": "资料库里没有 2026 年 5 月的全国居民消费价格材料，只有 2025 年 12 月（同比 0.8%、环比 0.2%）和 2026 年 8 月（同比 0.8%、环比 0.4%）。这句的 period 一旦确认，就能决定它是「月份不存在于资料、无法核对」还是「月份写错、应核对 2025-12 环比」，从而决定该主张的数值与结论。缺的是 period 口径。",
+        "field": "period",
+        "claimText": "2026 年 5 月 CPI 比上月上涨 0.1%。"
+      },
+      "supplement": null,
+      "captionClaims": [
+        {
+          "claimText": "2025 年 12 月 CPI 同比上涨 0.2%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": "year-on-year",
+          "period": "2025-12",
+          "scope": "全国",
+          "value": 0.2,
+          "status": "source-mismatch",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）不一致：该发布记载同比 0.8%，主张写 0.2%，相差 0.6 个百分点。",
+          "revisionReview": null
+        },
+        {
+          "claimText": "2026 年 5 月 CPI 比上月上涨 0.1%",
+          "kind": "direct",
+          "direction": "up",
+          "fromImage": false,
+          "basis": "month-on-month",
+          "period": "2026-05",
+          "scope": "全国",
+          "value": 0.1,
+          "status": "source-pending",
+          "parts": [],
+          "periodNote": null,
+          "citedSourceIds": [],
+          "summary": "来源待核对：所引来源与主张口径不一致，不能作为数值依据。",
+          "revisionReview": null
+        }
+      ]
+    }
+  ],
+  "fullDerivedRecordsPath": ".cache/reliability/source-audit-recount-final-v2-2026-10-02.json",
+  "validation": {
+    "unitApi": "406/406 (23 files)",
+    "browser": "99/99 (33 cases x 3 viewports), offline stubs",
+    "build": "passed",
+    "fixedSamples": "23/23",
+    "imageRenders": "18/18",
+    "modelConfigPorts": {
+      "attempt1": "failed: concurrent Playwright API on default ports returned another model",
+      "attempt2": "passed: serial file/env x default/custom ports, fake keys, 0 model calls"
+    },
+    "frozenInputs": "22 questions passed",
+    "realModelCalls": 0,
+    "docsCheck": "85 documents / 266 local links / 0 missing",
+    "diffCheck": "passed",
+    "historicalAndFrozenInputGitDiff": "exit 0: samples, source-library.ts, historical source-audit-eval JSON unchanged"
+  }
+}

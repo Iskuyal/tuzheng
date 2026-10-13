@@ -152,6 +152,18 @@ describe("请求失败的分类", () => {
     await expect(driver.start()).resolves.toMatchObject({ truncated: true, calls: [] });
   });
 
+  it("逐个请求保存发送参数与实际响应模型，不保存密钥／图片／消息", async () => {
+    const driver = new AnthropicSourceInvestigationDriver(config, image, "私有配文", "私有提示词", async () => ({
+      model: "actual-model", content: [{ type: "text", text: "汇总" }], stop_reason: "end_turn",
+      usage: { input_tokens: 12, output_tokens: 3 },
+    }));
+    await driver.start();
+    expect(driver.requestRecords[0]).toMatchObject({ status: "ok", responseModel: "actual-model",
+      parameters: { model: "stub-model", maxTokens: 4096, thinking: { type: "disabled" }, toolChoice: { type: "auto" } } });
+    const saved = JSON.stringify(driver.requestRecords);
+    for (const secret of ["sk-test", "私有配文", "私有提示词", "base64"]) expect(saved).not.toContain(secret);
+  });
+
   it("恢复前补齐未回应工具调用的 tool_result，避免 Anthropic 拒绝整段对话", async () => {
     const bodies: Array<{ messages: Array<{ role: string; content: Array<{ type: string; tool_use_id?: string }> }> }> = [];
     const driver = new AnthropicSourceInvestigationDriver(config, image, "配文", "提示词", async (body) => {

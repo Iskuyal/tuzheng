@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
 import SourceClaimCard from "../components/SourceClaimCard.vue";
 import {
@@ -37,7 +38,11 @@ interface HistoryEntry {
   adopted?: boolean;
 }
 
+const route = useRoute();
 const library = ref<PublicSourceLibraryEntry[]>([]);
+const sampleLoading = ref(true);
+const inputNotice = ref("");
+const sampleController = new AbortController();
 const sample = ref<SourceAuditSample | null>(null);
 const caption = ref("");
 const selectedFileName = ref("");
@@ -126,6 +131,8 @@ function stopTimer(): void {
 onBeforeUnmount(() => {
   stopTimer();
   controller?.abort();
+  sampleController.abort();
+  if (previewUrl.value.startsWith("blob:")) URL.revokeObjectURL(previewUrl.value);
 });
 
 // 配文一改动（含月份、范围、比较方式这些写在配文里的口径），旧结论立即失效。
@@ -145,13 +152,15 @@ onMounted(async () => {
     // 资料库清单只用于展示，取不到时不影响核验路径。
   }
   try {
-    const response = await fetch("/api/source-audit/sample");
-    if (response.ok) {
-      const body = await response.json() as { sample: SourceAuditSample };
-      sample.value = body.sample;
-    }
+    const response = await fetch("/api/source-audit/sample", { signal: sampleController.signal });
+    if (!response.ok) throw new Error("sample-unavailable");
+    const body = await response.json() as { sample: SourceAuditSample };
+    sample.value = body.sample;
+    if (route.query.sample === sample.value.id && !pendingFile.value && !caption.value) await loadSampleImage();
   } catch {
-    // 样例入口缺失时仍可手动上传图片。
+    if (!sampleController.signal.aborted) errorMessage.value = "CPI 样例暂时无法载入，请刷新重试或手动上传图片并填写配文。";
+  } finally {
+    sampleLoading.value = false;
   }
 });
 
@@ -167,6 +176,16 @@ const claimsWithConclusions = computed<ClaimRow[]>(() => {
 
 const imageClaims = computed(() => claimsWithConclusions.value.filter((row) => row.claim.fromImage));
 const captionClaims = computed(() => claimsWithConclusions.value.filter((row) => !row.claim.fromImage));
+function summarizeClaims(label: string, rows: ClaimRow[]): string {
+  if (!rows.length) return `${label}：本次未拆出可核验主张。`;
+  const counts = new Map<ClaimSourceStatus, number>();
+  for (const row of rows) {
+    const status = row.conclusion?.status ?? "source-pending";
+    counts.set(status, (counts.get(status) ?? 0) + 1);
+  }
+  return `${label}：${Array.from(counts, ([status, count]) => `${count} 条${CLAIM_STATUS_LABELS[status]}`).join("；")}。`;
+}
+const resultOverview = computed(() => [summarizeClaims("配文", captionClaims.value), summarizeClaims("图内观察", imageClaims.value)]);
 
 const citedSourceIds = computed(() => new Set(
   (result.value?.acceptedCitations ?? []).map((citation) => citation.sourceId),
@@ -224,6 +243,7 @@ function setPendingImage(file: File, name: string): void {
   selectedFileName.value = name;
   if (previewUrl.value.startsWith("blob:")) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = URL.createObjectURL(file);
+  inputNotice.value = "图片已载入，未开始核验。请核对配文后点击「运行来源核验」。";
 }
 
 async function loadSampleImage(): Promise<void> {
@@ -232,14 +252,17 @@ async function loadSampleImage(): Promise<void> {
   errorCode.value = "";
   adoptedNotice.value = "";
   invalidateCurrentResult("已载入样例图片，旧结论已失效");
+  const inputSeq = requestSeq;
   try {
-    const response = await fetch(sample.value.imageUrl);
+    const response = await fetch(sample.value.imageUrl, { signal: sampleController.signal });
     if (!response.ok) throw new Error("sample-unavailable");
     const blob = await response.blob();
+    // 下载期间的用户输入优先；迟到的样例不能覆盖新图片或配文。
+    if (inputSeq !== requestSeq || sampleController.signal.aborted) return;
     setPendingImage(new File([blob], `${sample.value.id}.png`, { type: "image/png" }), sample.value.name);
     caption.value = sample.value.caption;
   } catch {
-    errorMessage.value = "样例图片暂时取不到，请改用手动上传。";
+    if (inputSeq === requestSeq && !sampleController.signal.aborted) errorMessage.value = "样例图片暂时取不到，请改用手动上传。";
   }
 }
 
@@ -250,6 +273,7 @@ function cancelRun(): void {
   busy.value = false;
   stopTimer();
   errorMessage.value = "已取消这次来源核验。";
+  void nextTick(() => document.querySelector<HTMLButtonElement>('[data-testid="run-source-audit"]')?.focus());
 }
 
 type PostOutcome =
@@ -330,16 +354,20 @@ async function runInvestigation(): Promise<void> {
   retireCurrentResult("重新核验，上一份结论已转为历史");
   if (!pendingFile.value) {
     errorMessage.value = "请先上传图表图片，或载入团队自制 CPI 样例。";
+    document.getElementById("source-audit-upload")?.focus();
     return;
   }
   if (!caption.value.trim()) {
     errorMessage.value = "请填写要核对的配文，至少一句话。";
+    document.getElementById("source-audit-caption")?.focus();
     return;
   }
 
   const outcome = await postInvestigation("/api/source-audit/investigate", buildAuditForm(), "已取消这次来源核验。");
   if (!applyOutcome(outcome) || outcome.kind !== "ok") return;
   result.value = outcome.investigation;
+  await nextTick();
+  document.getElementById("source-result-title")?.focus();
 }
 
 /** 提交对追问的回答，沿同一段对话恢复调查；旧结果在成功后转为历史。 */
@@ -350,6 +378,7 @@ async function submitClarification(): Promise<void> {
   if (!current?.clarification || !current.investigationId) return;
   if (!clarificationAnswer.value.trim()) {
     errorMessage.value = "请先填写对追问的回答。";
+    document.getElementById("source-clarification-answer")?.focus();
     return;
   }
   if (!pendingFile.value) {
@@ -366,6 +395,8 @@ async function submitClarification(): Promise<void> {
   // 同一条记录的前后两段：补证前的结论转为历史，恢复段成为当前结果。
   retireCurrentResult("已由补证结果接续，本段转为历史");
   result.value = outcome.investigation;
+  await nextTick();
+  document.getElementById("source-result-title")?.focus();
 }
 
 /**
@@ -380,6 +411,7 @@ function adoptSuggestion(): void {
   errorCode.value = "";
   caption.value = suggestion.suggestedCaption;
   adoptedNotice.value = "已采用修改建议：建议文本已写入配文输入框，请重新核验后再使用。";
+  document.getElementById("source-audit-caption")?.focus();
 }
 </script>
 
@@ -389,12 +421,11 @@ function adoptSuggestion(): void {
     <main class="page-shell source-audit-page">
       <section class="intro">
         <div>
-          <p class="eyebrow">阶段四 · 公开来源核验</p>
-          <h1>CPI 图文主张的来源核验</h1>
+          <p class="eyebrow">公开来源核验</p>
+          <h1>核对配文与公开来源</h1>
           <p class="intro-copy">
-            上传一张图表截图并填写配文。模型自行选择受限工具，在固定国家统计局资料库中检索，
-            程序校验工具名、参数、调用次数与引用来源，最后给出逐条来源结论。资料库在构建期固定，
-            运行时不访问开放网络。
+            上传图表并填写配文，逐条查看与来源一致、不一致或仍待核对的内容，以及引用和修改建议。
+            当前对照固定国家统计局资料库，只核验资料覆盖的指标、月份和范围；缺少适用依据时保留不确定性。
           </p>
         </div>
         <div class="scope-stamp">
@@ -402,6 +433,13 @@ function adoptSuggestion(): void {
           <span><strong>固定资料库</strong><br />不抓取开放网络</span>
         </div>
       </section>
+
+      <details class="source-mechanism">
+        <summary>查看核验机制与使用边界</summary>
+        <p>模型识别图文主张，自行选择检索、比较数值或请求确认等受限工具；程序校验工具名、参数、预算与引用。每轮最多 3 次工具调用，单次调查最多 6 次，仅一次补证机会。</p>
+        <p>资料库在构建期固定，运行时不抓取开放网络。检索命中仍需匹配指标、月份、范围与比较方式；用户补充不等于官方证据，术语页不能作为数值依据。结果只说明与所引来源的关系。</p>
+        <p>图片和配文仅在点击「运行来源核验」后发送到所配模型服务。工具轨迹在响应返回后显示，不代表实时进度。</p>
+      </details>
 
       <section class="source-input-grid" aria-label="核验输入">
         <div class="source-panel">
@@ -414,6 +452,7 @@ function adoptSuggestion(): void {
               <span aria-hidden="true">＋</span> 选择图片
               <input
                 id="source-audit-upload"
+                aria-label="选择图表图片"
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
                 @change="onFileChange"
@@ -427,18 +466,18 @@ function adoptSuggestion(): void {
               <span>上传自制图表截图，或载入团队自制 CPI 样例。</span>
             </div>
           </div>
-          <p v-if="selectedFileName" class="source-file-name">当前图片：{{ selectedFileName }}</p>
+          <p class="source-file-name">当前图片：{{ selectedFileName || "尚未选择" }}</p>
           <div class="source-sample-row">
             <button
-              v-if="sample"
               type="button"
               class="ghost-button"
               data-testid="load-source-sample"
+              :disabled="sampleLoading || !sample"
               @click="loadSampleImage"
             >
-              载入团队自制 CPI 样例
+              {{ sampleLoading ? "正在载入 CPI 样例…" : "载入团队自制 CPI 样例" }}
             </button>
-            <span v-if="sample" class="source-sample-note">{{ sample.note }}</span>
+            <span class="source-sample-note">团队自制示意图，不是国家统计局原图。用于展示口径核对；与公开来源的关系须运行后查看。</span>
           </div>
         </div>
 
@@ -457,12 +496,13 @@ function adoptSuggestion(): void {
               rows="4"
               maxlength="400"
               placeholder="例如：比上月上涨 0.8%"
+              aria-describedby="source-caption-hint"
             ></textarea>
           </label>
-          <p class="source-caption-hint">
-            图上没有写比较方式时，模型应把比较方式留空，并把口径缺口列进未解决项；
-            引用只能来自本次检索命中的材料，否则结论降级为「来源待核对」。
+          <p id="source-caption-hint" class="source-caption-hint">
+            比较方式、月份或范围不清楚时会保留待核对项；只有适用来源才能支持结论。
           </p>
+          <p v-if="!busy && !result" class="source-input-notice" role="status">{{ inputNotice || "尚未开始核验。请先选择图片并填写配文。" }}</p>
           <div class="source-run-row">
             <button
               type="button"
@@ -476,18 +516,25 @@ function adoptSuggestion(): void {
             <button v-if="busy" type="button" class="read-cancel-button" @click="cancelRun">取消核验</button>
             <span v-if="busy" class="source-run-note">模型可能多轮调用工具，通常需要 5—30 秒。</span>
           </div>
+          <p class="sr-only" role="status">{{ busy ? "正在等待模型核验，可取消。工具记录在响应返回后显示。" : result ? "核验已返回，请查看逐条结论与未解决项。" : "" }}</p>
           <p v-if="errorMessage" class="error-message" role="alert">
             {{ errorMessage }}
             <RouterLink v-if="errorCode === 'MODEL_NOT_CONFIGURED'" class="source-settings-link" to="/settings">
               前往模型设置并测试连接
             </RouterLink>
           </p>
-          <p v-if="adoptedNotice" class="source-adopted-notice" data-testid="adopted-notice">{{ adoptedNotice }}</p>
+          <p v-if="adoptedNotice" class="source-adopted-notice" role="status" data-testid="adopted-notice">{{ adoptedNotice }}</p>
         </div>
       </section>
 
       <section v-if="result" class="source-result" aria-label="核验结果">
-        <div class="source-run-summary">
+        <h2 id="source-result-title" tabindex="-1">本次核验结果</h2>
+        <div class="source-overview" data-testid="source-overview">
+          <p v-for="line in resultOverview" :key="line">{{ line }}</p>
+        </div>
+        <details class="source-run-details">
+          <summary>查看模型与运行统计</summary>
+          <div class="source-run-summary">
           <span class="source-run-chip">模型：{{ result.model }}</span>
           <span class="source-run-chip">耗时：{{ formatDuration(result.latencyMs) }}</span>
           <span class="source-run-chip">轮数：{{ result.rounds }}</span>
@@ -495,7 +542,8 @@ function adoptSuggestion(): void {
           <span v-if="result.usage" class="source-run-chip">
             tokens：输入 {{ result.usage.inputTokens ?? "—" }} · 输出 {{ result.usage.outputTokens ?? "—" }}
           </span>
-        </div>
+          </div>
+        </details>
         <p class="source-stop-reason" data-testid="stop-reason">停止原因：{{ result.stopReason }}</p>
 
         <p v-if="!result.claims.length" class="source-no-finding" data-testid="no-finding">
@@ -574,13 +622,13 @@ function adoptSuggestion(): void {
           <div class="section-heading">
             <div>
               <p class="eyebrow">结果</p>
-              <h2>图内观察</h2>
+              <h2>配文主张</h2>
             </div>
           </div>
-          <p class="source-section-note">只列模型从图上读到的文字，不代表已确认。</p>
+          <p v-if="!captionClaims.length" class="source-section-note">模型没有从配文中拆出可核查主张。</p>
           <SourceClaimCard
-            v-for="row in imageClaims"
-            :key="`img-${row.index}`"
+            v-for="row in captionClaims"
+            :key="`cap-${row.index}`"
             :claim="row.claim"
             :conclusion="row.conclusion"
             :hits="result.hits"
@@ -592,13 +640,13 @@ function adoptSuggestion(): void {
           <div class="section-heading">
             <div>
               <p class="eyebrow">结果</p>
-              <h2>配文主张</h2>
+              <h2>图内观察</h2>
             </div>
           </div>
-          <p v-if="!captionClaims.length" class="source-section-note">模型没有从配文中拆出可核查主张。</p>
+          <p class="source-section-note">只列模型从图上读到的文字，不代表已确认。</p>
           <SourceClaimCard
-            v-for="row in captionClaims"
-            :key="`cap-${row.index}`"
+            v-for="row in imageClaims"
+            :key="`img-${row.index}`"
             :claim="row.claim"
             :conclusion="row.conclusion"
             :hits="result.hits"
@@ -719,6 +767,8 @@ function adoptSuggestion(): void {
           <article
             v-for="hit in result.hits"
             :key="hit.document.id"
+            :id="`source-document-${hit.document.id}`"
+            tabindex="-1"
             class="source-document-card"
             :class="{ 'is-cited': citedSourceIds.has(hit.document.id) }"
           >
@@ -761,13 +811,8 @@ function adoptSuggestion(): void {
           </div>
         </div>
 
-        <div class="source-section">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">过程</p>
-              <h2>工具轨迹</h2>
-            </div>
-          </div>
+        <details class="source-section source-tool-details">
+          <summary>查看工具轨迹与调用预算</summary>
           <p class="source-section-note">
             每轮最多 3 次工具调用，单次调查共 6 次；检索、比较与追问计入预算，汇总不计入。
           </p>
@@ -784,7 +829,7 @@ function adoptSuggestion(): void {
               <p class="trace-io">结果：{{ event.resultSummary }}</p>
             </li>
           </ol>
-        </div>
+        </details>
 
         <div v-if="result.unresolvedItems.length || result.noApplicableSourceReason" class="source-section">
           <div class="section-heading">

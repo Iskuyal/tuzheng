@@ -1,6 +1,6 @@
 # 阶段五后续任务交接提示词
 
-**状态（2026-10-01 第六次更新）：** 阶段四任务 01—05 全部实现并通过在线验收，**06 的「版本修订／版本替代」已于 2026-10-01 实现并完成整组实测**（整组一轮 22 题 ×2 臂 ×3 次：有检索臂 89.7%，版本复查替代生效 5 次、修正 5／误改 0；「同口径冲突 → 来源存在分歧」仍为 `needs-info`）；证据索引见 [PHASES.md](PHASES.md) 阶段四一节。阶段五 01／02／03／06／07／08 已完成：07 的人为变红验证已补齐（类型错误 [run 36723291466](https://github.com/Iskuyal/web-match/actions/runs/36723291466)、断言失败 [run 36723673814](https://github.com/Iskuyal/web-match/actions/runs/36723673814)，回退后 main 绿 [run 36724007809](https://github.com/Iskuyal/web-match/actions/runs/36724007809)）；08（主图载入期间选择对照图被静默取消）已改为「载入在途时跨图区禁用并说明原因」，语义见 [ADR 0001](adr/0001-disable-cross-picker-while-main-image-loads.md)，已合并于 PR #17。**04 的仓库侧材料已完成（PR #14 冻结）并在 2026-09-30 与 08／07 的实测同步**：README 材料索引与冻结演示路径、技术 PDF（2026-10-01 为 **25/30 页**）、演示脚本与逐条走查清单、访问检查记录、20 张替身响应截图；材料里的 e2e 条数已改为 **90/90（30 用例 ×3 视口）**、`npm test` **338/338**、固定资料库 **5 条**、题集 **22 题**，`docs/submission/` 下不再有 78/78 与「26 用例」（其余出现都在 PHASES、本文件的历史提示词与 docs/evidence 的当时记录里，属快照）。
+**状态（2026-10-01 第六次更新）：** 阶段四任务 01—05 全部实现并通过在线验收，**06 的「版本修订／版本替代」已于 2026-10-01 实现并完成整组实测**（整组一轮 22 题 ×2 臂 ×3 次：有检索臂 89.7%，版本复查替代生效 5 次、修正 5／误改 0；「同口径冲突 → 来源存在分歧」仍为 `needs-info`）；证据索引见 [PHASES.md](PHASES.md) 阶段四一节。阶段五 01／02／03／06／07／08 已完成：07 的人为变红验证已补齐（类型错误 [run 36723291466](https://github.com/Iskuyal/tuzheng/actions/runs/36723291466)、断言失败 [run 36723673814](https://github.com/Iskuyal/tuzheng/actions/runs/36723673814)，回退后 main 绿 [run 36724007809](https://github.com/Iskuyal/tuzheng/actions/runs/36724007809)）；08（主图载入期间选择对照图被静默取消）已改为「载入在途时跨图区禁用并说明原因」，语义见 [ADR 0001](adr/0001-disable-cross-picker-while-main-image-loads.md)，已合并于 PR #17。**04 的仓库侧材料已完成（PR #14 冻结）并在 2026-09-30 与 08／07 的实测同步**：README 材料索引与冻结演示路径、技术 PDF（2026-10-01 为 **25/30 页**）、演示脚本与逐条走查清单、访问检查记录、20 张替身响应截图；材料里的 e2e 条数已改为 **90/90（30 用例 ×3 视口）**、`npm test` **338/338**、固定资料库 **5 条**、题集 **22 题**，`docs/submission/` 下不再有 78/78 与「26 用例」（其余出现都在 PHASES、本文件的历史提示词与 docs/evidence 的当时记录里，属快照）。
 
 **阶段四 06 已于 2026-10-01 完成「版本修订／版本替代」这一支**（全量调研 → 用户批准把资料库扩到「社会消费品零售总额」→ 实现 → 整组实测：有检索臂 **89.7%（61/68）**、虚构引用 0、越界 0、退化题 0，q21／q22 各 3/3，**版本复查替代生效 5 次、修正 5／误改 0**；PDF 重建为 25/30 页）；**「同口径冲突 → 来源存在分歧」仍因没有可核对材料停在 `needs-info`，不进入任何能力声明**。**另按用户要求做了预设端点核实与补齐（C7，2026-10-01）**：新增 6 条 documented 预设（Anthropic 侧 MiniMax、Fireworks；Responses 侧百炼、Moonshot、MiniMax、Nebius），修掉 OpenRouter 两条失效出处链接，把「路由存在 ≠ 能读图」和未核实项如实写明；提示词与结果见下方 details。**现在剩下的都是人工步骤**：录制 5—8 分钟视频、把仓库从私有改为评审可访问、补齐团队信息、赛事提交——它们阻塞阶段五 05 的整体通过（其中「另一台 Windows 环境复跑」已由用户 2026-09-30 决定交团队在服务器上执行）。**documented → live 升格已按用户 2026-10-01 的决定暂缓**（本机只有 Command Code 与 DeepSeek 两把密钥，且这两条预设已是 `live`；其余 documented 条目要各自的密钥才能实测）。**下一片 = 预设「未核实」清单收口（0 次真实模型请求），提示词在最上面**；**阶段五 05 收尾的提示词已排队在它下面**，等人工步骤就绪再复制。不要动：阶段五 04／05 的验收状态、这些人工事项。
 
@@ -109,7 +109,7 @@
 ```text
 [$implement](C:\Users\dusta\.agents\skills\implement\SKILL.md)
 
-请在 F:\VibeCoding\web-match 收尾阶段五任务 05（.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md），**开工前先核对 04 的两项人工步骤是否已经完成**：① 仓库可见性——`gh repo view Iskuyal/web-match --json visibility` 应为 `PUBLIC`，或已为评审开通只读访问权限；② 演示视频——README「提交材料索引」的视频行应是可打开的链接，用 `curl -s -o NUL -w "%{http_code}" -L <链接>` 实测 200。两项都没就绪时：如实告诉用户还差什么、只做可先行部分并标成「等人」，**不要把没做的写成通过**。开始前先记录当前 HEAD 作为代码审查对照点、检查工作区，并阅读 AGENTS.md、CONTEXT.md、docs/PHASES.md 阶段四一节（06 记录）与阶段五一节（04、05、07、08 记录）、.scratch/stage-5-stability-submission/issues/04 与 05、README.md 的「提交材料索引」「当前能力状态」「本地验证」「持续集成」、docs/submission/accessibility-check.md、docs/submission/demo-video-script.md、docs/submission/technical-report.html、docs/adr/0001 与 0002，以及`docs/competition/AI-WEB网页开发挑战赛文档.md`。
+请在 F:\VibeCoding\web-match 收尾阶段五任务 05（.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md），**开工前先核对 04 的两项人工步骤是否已经完成**：① 仓库可见性——`gh repo view Iskuyal/tuzheng --json visibility` 应为 `PUBLIC`，或已为评审开通只读访问权限；② 演示视频——README「提交材料索引」的视频行应是可打开的链接，用 `curl -s -o NUL -w "%{http_code}" -L <链接>` 实测 200。两项都没就绪时：如实告诉用户还差什么、只做可先行部分并标成「等人」，**不要把没做的写成通过**。开始前先记录当前 HEAD 作为代码审查对照点、检查工作区，并阅读 AGENTS.md、CONTEXT.md、docs/PHASES.md 阶段四一节（06 记录）与阶段五一节（04、05、07、08 记录）、.scratch/stage-5-stability-submission/issues/04 与 05、README.md 的「提交材料索引」「当前能力状态」「本地验证」「持续集成」、docs/submission/accessibility-check.md、docs/submission/demo-video-script.md、docs/submission/technical-report.html、docs/adr/0001 与 0002，以及`docs/competition/AI-WEB网页开发挑战赛文档.md`。
 
 当前基线（2026-10-01，写这份提示词时）：`npm test` **338/338**、`npm run test:e2e` **90/90**（30 用例 ×3 视口）、`npm run build` 通过、`npm run eval:samples` 23/23、`npm run verify:sample-renders` 18/18；技术 PDF **25/30 页**；固定资料库 5 条、题集 22 题；阶段四 06 的「版本修订／版本替代」已实现并整组实测，仍停在 `needs-info` 的只有「同口径冲突 → 来源存在分歧」。
 
@@ -146,7 +146,7 @@
 先简短说明你对任务的理解、哪些验收项现在可做、哪些仍缺人工输入，以及每项的验收方式。这一片要证明的是：**05 里不依赖人工步骤的部分都有可复查的记录（命令、版本、结果、未验证项），没做的部分被明确标成「等人」而不是「通过」。**
 
 ## 开工前的两个前置检查（人工步骤，助手不能代做）
-1. **仓库可见性**：`gh repo view Iskuyal/web-match --json visibility` 应为 `PUBLIC`，或已为评审开通只读访问权限（当前预期是 `PRIVATE`）。
+1. **仓库可见性**：`gh repo view Iskuyal/tuzheng --json visibility` 应为 `PUBLIC`，或已为评审开通只读访问权限（当前预期是 `PRIVATE`）。
 2. **演示视频**：README「提交材料索引」的视频一行应为可打开的链接，用 `curl -s -o NUL -w "%{http_code}" -L <链接>` 实测 200（当前预期仍是「待补链接」）。
    两项就绪与否只决定哪些验收项能勾选；没就绪时如实记录，只做不依赖它们的部分，不要为了「跑完清单」把未完成项写成通过。
 
@@ -210,7 +210,7 @@
 - 视频录制、仓库可见性、团队信息与赛事提交是人工步骤，本次不要代做，也不要更新阶段五 04／05 的验收状态。
 ```
 
-执行结果：08 已修复并合并（PR #17）——载入在途时跨图区禁用并在跨图区显示 `role="status"` 说明，载入失败／取消后恢复，语义与保留边界写在 [docs/adr/0001-disable-cross-picker-while-main-image-loads.md](adr/0001-disable-cross-picker-while-main-image-loads.md)；e2e 由 26 用例 ×3 视口增至 **29 用例 = 87 条**，`npm test` **332/332**、`eval:samples` 23/23、`verify:sample-renders` 本机 18/18。07 的人为变红验证补齐：类型错误 [run 36723291466](https://github.com/Iskuyal/web-match/actions/runs/36723291466)、断言失败 [run 36723673814](https://github.com/Iskuyal/web-match/actions/runs/36723673814)、回退后 main 绿 [run 36724007809](https://github.com/Iskuyal/web-match/actions/runs/36724007809)。材料侧的 78/78 → 87/87 同步见本次任务记录（issues/04 的 Comments）。
+执行结果：08 已修复并合并（PR #17）——载入在途时跨图区禁用并在跨图区显示 `role="status"` 说明，载入失败／取消后恢复，语义与保留边界写在 [docs/adr/0001-disable-cross-picker-while-main-image-loads.md](adr/0001-disable-cross-picker-while-main-image-loads.md)；e2e 由 26 用例 ×3 视口增至 **29 用例 = 87 条**，`npm test` **332/332**、`eval:samples` 23/23、`verify:sample-renders` 本机 18/18。07 的人为变红验证补齐：类型错误 [run 36723291466](https://github.com/Iskuyal/tuzheng/actions/runs/36723291466)、断言失败 [run 36723673814](https://github.com/Iskuyal/tuzheng/actions/runs/36723673814)、回退后 main 绿 [run 36724007809](https://github.com/Iskuyal/tuzheng/actions/runs/36724007809)。材料侧的 78/78 → 87/87 同步见本次任务记录（issues/04 的 Comments）。
 
 </details>
 

@@ -1,0 +1,19 @@
+{
+  "candidateHash": "",
+  "reviewer": "",
+  "reviewedAt": "",
+  "questions": [
+    { "id": "h01", "approved": false, "note": "待核对3月社零修订后0.12%、题面与独立期望" },
+    { "id": "h02", "approved": false, "note": "待核对8月CPI同比/环比及双主张覆盖" },
+    { "id": "h03", "approved": false, "note": "待核对8月社零方向+0.13与-0.13" },
+    { "id": "h04", "approved": false, "note": "待核对4月社零-0.32与-0.23" },
+    { "id": "h05", "approved": false, "note": "待核对比较方式追问只补配文" },
+    { "id": "h06", "approved": false, "note": "待核对范围追问只补配文" },
+    { "id": "h07", "approved": false, "note": "待核对库内9月无适用材料与恰当停止" },
+    { "id": "h08", "approved": false, "note": "待核对南京市范围不适用全国发布" },
+    { "id": "h09", "approved": false, "note": "待核对环比方向推断依据" },
+    { "id": "h10", "approved": false, "note": "待核对自制5月CPI同比不能推出环比方向" },
+    { "id": "h11", "approved": false, "note": "待核对3月版本替代、官方修订声明与旧新值" },
+    { "id": "h12", "approved": false, "note": "待核对4月旧图新配文版本交叉，避免误改" }
+  ]
+}

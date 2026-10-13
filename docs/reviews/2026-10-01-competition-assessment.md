@@ -1,5 +1,7 @@
 # 图证：全项目评估与赛事材料优化
 
+> **2026-10-02 后续更新**：历史表格中的密钥配置差异已由显式 `env` 兼容实现处理；默认 `file` 行为保留。见[模型配置说明](../MODEL-CONFIG.md)和[本轮离线验收](../evidence/model-config-env-2026-10-02.md)。本轮 0 次真实模型调用；下文其余记录保持原核对日期，不表示重新核查官网或 GitHub。
+
 核对日期：2026-10-01（北京时间）。本文主体记录审阅时的状态；后续提交与合并应以 Git 历史及 PR #31 为准。结论：**核心参赛路径已具备完整实现与较强工程证据；正式提交条件尚未齐备。下一步应优先收口当前版本验证、评审访问、视频和密钥配置要求，而不是继续增加模型预设或外围功能。**
 
 ## 范围与方法
@@ -15,10 +17,10 @@
 | 工作分支 / HEAD | `feat/model-presets-unverified-closure` / `61c5b6fee1fcf55c773296ecec9fc6fce2732f1a` |
 | main / origin/main / 远端 main | `f1c84afe96e37dd01213ee75851b16fcef177bf5`，三者一致 |
 | 分支新增内容 | `git diff main...HEAD --stat`：8 文件，427 新增 / 24 删除，主要是预设、调研、设置 e2e 与文档 |
-| [PR #31](https://github.com/Iskuyal/web-match/pull/31) | OPEN，head 为 `61c5b6f`，未合并；不得写成 main 已交付 |
-| [仓库](https://github.com/Iskuyal/web-match) | PRIVATE，默认分支 main；未发现已给评审访问权限的证据 |
-| [主线 CI](https://github.com/Iskuyal/web-match/actions/runs/36806496977) | `f1c84af` 成功 |
-| [分支 CI](https://github.com/Iskuyal/web-match/actions/runs/36813246433) | `61c5b6f` 成功，PR 的 verify 检查成功 |
+| [PR #31](https://github.com/Iskuyal/tuzheng/pull/31) | OPEN，head 为 `61c5b6f`，未合并；不得写成 main 已交付 |
+| [仓库](https://github.com/Iskuyal/tuzheng) | PRIVATE，默认分支 main；未发现已给评审访问权限的证据 |
+| [主线 CI](https://github.com/Iskuyal/tuzheng/actions/runs/36806496977) | `f1c84af` 成功 |
+| [分支 CI](https://github.com/Iskuyal/tuzheng/actions/runs/36813246433) | `61c5b6f` 成功，PR 的 verify 检查成功 |
 | GitHub Issue | 开放 Issue 为零；实际任务位于 .scratch/，不能因此推断没有待办 |
 | 开工未跟踪文件 | `config/nginx/`、`docs/DEPLOY-DEMO-QUICK.md`、`docs/DEPLOY-WINDOWS-SERVER.md`；未改动 |
 

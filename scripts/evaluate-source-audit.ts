@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { createHash, randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import rawQuestions from "../samples/source-audit-questions.json" with { type: "json" };
@@ -9,10 +9,14 @@ import {
   AnthropicSourceInvestigationDriver,
   SourceInvestigationError,
   runSourceInvestigation,
+  MAX_OUTPUT_TOKENS,
+  REQUEST_TIMEOUT_MS,
   type SourceInvestigationDriver,
+  type ModelRequestRecord,
 } from "../server/source-investigation.js";
 import { sourceInvestigationPrompt } from "../server/source-prompt.js";
-import { activeProviderConfig, FileModelSettingsStore } from "../server/model-settings.js";
+import "dotenv/config";
+import { activeProviderConfig, createModelSettingsStore } from "../server/model-settings.js";
 import {
   CLARIFICATIONS_PER_INVESTIGATION,
   INVESTIGATION_DEADLINE_MS,
@@ -26,6 +30,7 @@ import {
   type SourceInvestigationResult,
 } from "../shared/source-audit.js";
 import { SOURCE_LIBRARY, findSourceDocument, verifySourceLibrary } from "../shared/source-library.js";
+import { captureProvenance, createEvaluationWriter, sha256 } from "./source-audit-recording.js";
 
 const armSchema = z.enum(["retrieval", "no-retrieval"]);
 const statusSchema = z.enum([
@@ -221,7 +226,15 @@ export interface RunRecord {
   run: number;
   /** before = 补证前初查；after = 用题面 clarifyAnswer 恢复的补证后阶段。 */
   phase: "before" | "after";
-  status: "ok" | "failed";
+  status: "pending" | "running" | "ok" | "failed" | "blocked";
+  attemptId?: string;
+  pathId?: string;
+  parentAttemptId?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  trace?: SourceInvestigationResult["trace"];
+  sourceRecordIndex?: number;
+  requests?: ModelRequestRecord[];
   failureKind: string | null;
   failureMessage: string | null;
   latencyMs: number | null;
@@ -418,8 +431,40 @@ export function suggestionIndependenceProblems(
     }
   }
   for (const change of suggestion.changes) {
-    if (!result.claims.some((claim) => claim.claimText === change.claimText)) {
+    const index = result.claims.findIndex((claim) => !claim.fromImage && claim.claimText === change.claimText);
+    if (index < 0) {
       problems.push({ kind: "suggestion-orphan-change", detail: `改动「${change.claimText}」不对应本次核验的任何主张。` });
+      continue;
+    }
+    const claim = result.claims[index];
+    const conclusion = result.conclusions[index];
+    if (!change.applied) {
+      problems.push({ kind: "suggestion-unapplied-change", detail: `改动「${change.claimText}」未并入建议配文。` });
+    }
+    if (change.sourceIds.some((id) => !citedIds.has(id) || !conclusion.citedSourceIds.includes(id))) {
+      problems.push({ kind: "suggestion-wrong-citation", detail: `改动「${change.claimText}」引用了不属于对应结论的资料。` });
+    }
+    if (conclusion.status === "source-mismatch" && change.kind !== "suggest-delete") {
+      const measures = change.sourceIds.flatMap((id) => {
+        const doc = findSourceDocument(id);
+        if (!doc || !conclusion.citedSourceIds.includes(id)) return [];
+        return doc.measures.filter((measure) => measure.basis === claim.basis
+          && (measure.period ?? doc.basis.period) === normalizeSourcePeriod(claim.period));
+      });
+      if (!measures.length) {
+        problems.push({ kind: "suggestion-no-value-source", detail: `改动「${change.claimText}」没有同月份／比较方式的数值引用。` });
+      } else {
+        const values = measures.map((measure) => measure.value);
+        const percentages = [...change.suggested.matchAll(/(-?\d+(?:\.\d+)?)\s*%/g)].map((match) => Number(match[1]));
+        if (claim.value !== null && !values.includes(claim.value) && !percentages.some((value) => values.includes(value))) {
+          problems.push({ kind: "suggestion-wrong-source-value", detail: `改动「${change.claimText}」未使用其适用引用里的百分比。` });
+        }
+        const up = /上涨|上升|增长|增加|更贵/.test(change.suggested);
+        const down = /下降|下跌|减少|降低|便宜/.test(change.suggested);
+        if ((values.every((value) => value > 0) && down) || (values.every((value) => value < 0) && up)) {
+          problems.push({ kind: "suggestion-wrong-source-direction", detail: `改动「${change.claimText}」仍保留与适用来源相反的方向。` });
+        }
+      }
     }
   }
 
@@ -685,23 +730,23 @@ export function judgeRun(
   return { ok: problems.length === 0, problems, conclusions };
 }
 
-/** 上游失败的原因文本一并留档：只记分类无法解释失败率，也无法复现。 */
+/** 上游异常可能含请求头与密钥，只留 HTTP 状态，不保存原始文本。 */
 function failureCause(error: unknown): string {
   const cause = (error as { cause?: unknown }).cause;
   if (!cause) return "";
   if (cause instanceof Error) {
     const status = (cause as { status?: unknown }).status;
-    return `${cause.name}${typeof status === "number" ? ` ${status}` : ""}: ${cause.message}`.slice(0, 240);
+    return typeof status === "number" && Number.isFinite(status) ? `HTTP ${status}` : "上游请求失败";
   }
-  return String(cause).slice(0, 240);
+  return "上游请求失败";
 }
 
-function classifyFailure(error: unknown): { kind: string; message: string } {
+function classifyFailure(error: unknown): { kind: string; message: string; trace?: SourceInvestigationResult["trace"] } {
   if (error instanceof SourceInvestigationError) {
     const cause = failureCause(error);
-    return { kind: error.kind, message: cause ? `${error.message}（上游：${cause}）` : error.message };
+    return { kind: error.kind, message: cause ? `${error.message}（上游：${cause}）` : error.message, trace: error.trace };
   }
-  return { kind: "harness", message: error instanceof Error ? error.message : String(error) };
+  return { kind: "harness", message: "评测执行失败（原始异常不留档）。" };
 }
 
 /** 这道题是否有补证后阶段（题面写了人写定的回答且期望带 resume 规则）。 */
@@ -751,7 +796,10 @@ export async function checkBalance(
     const response = await fetchImpl("https://api.deepseek.com/user/balance", {
       headers: { authorization: `Bearer ${apiKey}` },
     });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) return {
+      checked: false, totalBalance: null,
+      message: `余额预检没成功（HTTP ${response.status}），不拦截，继续运行。`, blocked: false,
+    };
     const body = await response.json() as {
       is_available?: boolean;
       balance_infos?: Array<{ currency?: string; total_balance?: string }>;
@@ -767,9 +815,8 @@ export async function checkBalance(
       message: `账户余额 ${total.toFixed(2)} 元（下限 ${minBalanceYuan.toFixed(2)} 元${body.is_available === false ? "，账户当前不可用" : ""}）。`,
       blocked: total < minBalanceYuan,
     };
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    return { checked: false, totalBalance: null, message: `余额预检没成功（${reason}），不拦截，继续运行。`, blocked: false };
+  } catch {
+    return { checked: false, totalBalance: null, message: "余额预检没成功，不拦截，继续运行。", blocked: false };
   }
 }
 
@@ -778,9 +825,14 @@ export interface EvaluationOptions {
   runs?: number;
   arms?: Arm[];
   log?: (line: string) => void;
+  /** 初始计划、每次开始与结果都写盘；写盘失败立即停止，不继续收费请求。 */
+  onCheckpoint?: (report: EvaluationReport) => Promise<void>;
+  runId?: string;
 }
 
 export interface EvaluationReport {
+  runId?: string;
+  state?: "running" | "completed";
   generatedAt: string;
   arms: Arm[];
   runsPerArm: number;
@@ -796,6 +848,13 @@ export interface ArmSummary {
   failureKinds: Record<string, number>;
   correctRuns: number;
   accuracy: number | null;
+  plannedStages: number;
+  blockedStages: number;
+  pendingStages: number;
+  stagePass: PassRate;
+  fullPathPass: PassRate;
+  validRunPass: PassRate;
+  allAttemptSuccess: PassRate;
   acceptedCitations: number;
   rejectedCitations: number;
   fabricatedCitations: number;
@@ -832,10 +891,46 @@ export interface ArmSummary {
   averageToolCalls: number | null;
 }
 
+export interface PassRate { passed: number; total: number; rate: number | null }
+const passRate = (passed: number, total: number): PassRate => ({ passed, total, rate: total ? passed / total : null });
+
+/** 完整路径要求初查及期望中的恢复段全部通过；缺追问不能让恢复段从分母消失。 */
+export function reliabilityCounts(records: RunRecord[], expectations: SourceAuditExpectations) {
+  const paths = new Map<string, RunRecord[]>();
+  for (const record of records) {
+    const key = record.pathId ?? `${record.arm}/${record.questionId}/${record.run}`;
+    paths.set(key, [...(paths.get(key) ?? []), record]);
+  }
+  let plannedStages = 0;
+  let implicitBlocked = 0;
+  let fullPassed = 0;
+  for (const path of paths.values()) {
+    const expectedResume = Boolean(expectations.questions.find((q) => q.id === path[0].questionId)?.resume);
+    plannedStages += expectedResume ? 2 : 1;
+    const before = path.find((record) => record.phase === "before");
+    const after = path.find((record) => record.phase === "after");
+    if (expectedResume && !after && before && (before.status === "failed" || !before.clarification)) implicitBlocked++;
+    if (before?.status === "ok" && before.judgment.ok
+      && (!expectedResume || (after?.status === "ok" && after.judgment.ok))) fullPassed++;
+  }
+  const valid = records.filter((r) => r.status === "ok");
+  const attempts = records.filter((r) => ["ok", "failed", "running"].includes(r.status));
+  const passed = valid.filter((r) => r.judgment.ok).length;
+  const blockedStages = implicitBlocked + records.filter((r) => r.status === "blocked").length;
+  return {
+    plannedStages, blockedStages,
+    pendingStages: plannedStages - attempts.length - blockedStages,
+    stagePass: passRate(passed, plannedStages),
+    fullPathPass: passRate(fullPassed, paths.size),
+    validRunPass: passRate(passed, valid.length),
+    allAttemptSuccess: passRate(passed, attempts.length),
+  };
+}
+
 export interface QuestionPairSummary {
   questionId: string;
   categories: string[];
-  perArm: Record<string, { attempts: number; validRuns: number; correctRuns: number; outcomes: string[] }>;
+  perArm: Record<string, { attempts: number; validRuns: number; correctRuns: number; passedPaths: number; totalPaths: number; outcomes: string[] }>;
   verdict: "仅检索臂正确" | "仅无检索臂正确" | "两臂相同" | "两臂均未通过" | "无有效运行";
 }
 
@@ -865,6 +960,7 @@ const SHORT_STATUS: Record<ClaimSourceStatus, string> = {
 function describeRun(record: RunRecord): string {
   const prefix = record.phase === "after" ? "补证后 " : "";
   if (record.status === "failed") return `${prefix}失败(${record.failureKind})`;
+  if (record.status !== "ok") return `${prefix}${record.status}(${record.failureKind ?? "未完成"})`;
   if (record.conclusions.length === 0) return `${prefix}无结论`;
   return prefix + record.conclusions.map((conclusion) => `${conclusion.fromImage ? "图" : "文"}${SHORT_STATUS[conclusion.status]}`).join(" ");
 }
@@ -885,9 +981,10 @@ export function summarizeEvaluation(records: RunRecord[], expectations: SourceAu
     const correctRuns = valid.filter((record) => record.judgment.ok).length;
     return {
       arm,
-      attempts: armRecords.length,
+      ...reliabilityCounts(armRecords, expectations),
+      attempts: armRecords.filter((r) => ["ok", "failed", "running"].includes(r.status)).length,
       validRuns: valid.length,
-      failedRuns: armRecords.length - valid.length,
+      failedRuns: armRecords.filter((r) => r.status === "failed").length,
       failureKinds,
       correctRuns,
       accuracy: valid.length > 0 ? correctRuns / valid.length : null,
@@ -960,9 +1057,11 @@ export function summarizeEvaluation(records: RunRecord[], expectations: SourceAu
       const armRecords = questionRecords.filter((record) => record.arm === arm);
       const valid = armRecords.filter((record) => record.status === "ok");
       perArm[arm] = {
-        attempts: armRecords.length,
+        attempts: armRecords.filter((r) => ["ok", "failed", "running"].includes(r.status)).length,
         validRuns: valid.length,
         correctRuns: valid.filter((record) => record.judgment.ok).length,
+        passedPaths: reliabilityCounts(armRecords, expectations).fullPathPass.passed,
+        totalPaths: reliabilityCounts(armRecords, expectations).fullPathPass.total,
         outcomes: armRecords.map(describeRun),
       };
     }
@@ -972,26 +1071,26 @@ export function summarizeEvaluation(records: RunRecord[], expectations: SourceAu
     if (retrieval && noRetrieval) {
       // 两臂都没有有效运行时单列，避免把「上游全失败」读成「模型全答错」。
       if (retrieval.validRuns === 0 && noRetrieval.validRuns === 0) verdict = "无有效运行";
-      else if (retrieval.correctRuns === 0 && noRetrieval.correctRuns > 0) verdict = "仅无检索臂正确";
-      else if (retrieval.correctRuns > 0 && noRetrieval.correctRuns === 0) verdict = "仅检索臂正确";
-      else if (retrieval.correctRuns === 0 && noRetrieval.correctRuns === 0) verdict = "两臂均未通过";
+      else if (retrieval.passedPaths === 0 && noRetrieval.passedPaths > 0) verdict = "仅无检索臂正确";
+      else if (retrieval.passedPaths > 0 && noRetrieval.passedPaths === 0) verdict = "仅检索臂正确";
+      else if (retrieval.passedPaths === 0 && noRetrieval.passedPaths === 0) verdict = "两臂均未通过";
     }
     return { questionId: expectation.id, categories: question?.categories ?? [], perArm, verdict };
   });
 
   const gateArm = expectations.frozen.gates.gateArm;
   const gateSummary = armSummaries.find((entry) => entry.arm === gateArm);
-  const accuracy = gateSummary?.accuracy ?? null;
+  const accuracy = gateSummary?.allAttemptSuccess.rate ?? null;
   const fabricatedTotal = armSummaries.reduce((total, entry) => total + entry.fabricatedCitations, 0);
   const overclaimTotal = armSummaries.reduce((total, entry) => total + entry.noApplicableSourceOverclaims, 0);
   const gates: GateResult[] = [
     {
       id: "claim-status-accuracy",
-      label: `${gateArm} 臂主张状态正确率 ≥ ${(expectations.frozen.gates.claimStatusAccuracy * 100).toFixed(0)}%`,
+      label: `${gateArm} 臂全部尝试成功率 ≥ ${(expectations.frozen.gates.claimStatusAccuracy * 100).toFixed(0)}%（含运行失败）`,
       passed: accuracy !== null && accuracy >= expectations.frozen.gates.claimStatusAccuracy,
       detail: accuracy === null
         ? "没有有效运行，无法计算。"
-        : `${(accuracy * 100).toFixed(1)}%（${gateSummary?.correctRuns ?? 0}/${gateSummary?.validRuns ?? 0} 次有效运行）`,
+        : `${(accuracy * 100).toFixed(1)}%（${gateSummary?.correctRuns ?? 0}/${gateSummary?.attempts ?? 0} 次尝试）`,
     },
     {
       id: "fabricated-citations",
@@ -1016,6 +1115,43 @@ export function summarizeEvaluation(records: RunRecord[], expectations: SourceAu
   };
 }
 
+export function emptyRunRecord(base: Pick<RunRecord, "questionId" | "arm" | "run" | "phase">): RunRecord {
+  return {
+    ...base, status: "pending", failureKind: null, failureMessage: null,
+    latencyMs: null, rounds: null, toolCallsUsed: null, toolSequence: [], trace: [],
+    reportRejections: [], stopReason: null, clarification: null, supplement: null, conclusionChanges: null,
+    noApplicableSourceReason: null, model: null, usage: null, conclusions: [], acceptedCitations: [],
+    rejectedCitations: [], fabricatedCitations: [], recalledCitations: [], hitIds: [], excludedIds: [],
+    omittedClaims: [], captionCoverage: null, captionCoverageNote: null, suggestion: null,
+    judgment: { ok: false, problems: [{ kind: "not-completed", detail: "阶段尚未完成。" }] },
+  };
+}
+
+/** JSONL 最后一行若中断未写完，只恢复前面已 fsync 的完整快照；中间损坏明确失败。 */
+export function readEvaluationSnapshot(text: string, jsonl = false): EvaluationReport {
+  if (!jsonl) return JSON.parse(text) as EvaluationReport;
+  const lines = text.split("\n");
+  let latest: EvaluationReport | null = null;
+  for (const [index, line] of lines.entries()) {
+    if (!line.trim()) continue;
+    try {
+      const event = JSON.parse(line) as EvaluationReport & { type?: string; updates?: RunRecord[] };
+      if (event.type === "checkpoint") {
+        if (!latest || event.runId !== latest.runId) throw new Error("逐次日志缺少初始快照或运行 ID 不一致。");
+        for (const update of event.updates ?? []) {
+          const recordIndex = latest.records.findIndex((record) => record.attemptId === update.attemptId);
+          if (recordIndex < 0) throw new Error("逐次日志含不在计划内的阶段。");
+          latest.records[recordIndex] = update;
+        }
+        latest.state = event.state; latest.summary = event.summary;
+      } else { latest = event; }
+    }
+    catch (error) { if (!(error instanceof SyntaxError) || index !== lines.length - 1) throw error; }
+  }
+  if (!latest) throw new Error("逐次日志没有可恢复的完整快照。");
+  return latest;
+}
+
 export async function runPairedEvaluation(
   questions: SourceAuditQuestions,
   expectations: SourceAuditExpectations,
@@ -1025,12 +1161,49 @@ export async function runPairedEvaluation(
   const runs = options.runs ?? expectations.frozen.runsPerArm;
   const log = options.log ?? (() => {});
   const records: RunRecord[] = [];
+  const runId = options.runId ?? randomUUID();
+  const generatedAt = new Date().toISOString();
+  for (const arm of arms) for (const question of questions.questions) for (let run = 1; run <= runs; run++) {
+    const pathId = `${runId}/${arm}/${question.id}/${run}`;
+    for (const phase of hasResumePhase(question, expectations) ? ["before", "after"] as const : ["before"] as const) {
+      records.push({ ...emptyRunRecord({ questionId: question.id, arm, run, phase }),
+        pathId, attemptId: `${pathId}/${phase}`, parentAttemptId: phase === "after" ? `${pathId}/before` : null,
+        startedAt: null, completedAt: null });
+    }
+  }
+  const snapshot = (state: "running" | "completed" = "running"): EvaluationReport => ({
+    runId, state, generatedAt, arms, runsPerArm: runs, records: structuredClone(records),
+    summary: summarizeEvaluation(records, expectations),
+  });
+  const checkpoint = async () => { await options.onCheckpoint?.(snapshot()); };
+  const findRecord = (base: Pick<RunRecord, "questionId" | "arm" | "run" | "phase">) => {
+    const index = records.findIndex((r) => r.questionId === base.questionId && r.arm === base.arm && r.run === base.run && r.phase === base.phase);
+    if (index < 0) throw new Error("阶段不在评测计划内。");
+    return index;
+  };
+  const startRecord = (base: Pick<RunRecord, "questionId" | "arm" | "run" | "phase">) => {
+    const record = records[findRecord(base)];
+    record.status = "running";
+    record.startedAt = new Date().toISOString();
+  };
+  const saveRecord = (record: RunRecord) => {
+    const index = findRecord(record);
+    records[index] = { ...records[index], ...record, completedAt: new Date().toISOString() };
+  };
+  const blockResume = (before: Pick<RunRecord, "questionId" | "arm" | "run" | "phase">, kind: string) => {
+    if (!records.some((r) => r.questionId === before.questionId && r.arm === before.arm && r.run === before.run && r.phase === "after")) return;
+    saveRecord({ ...emptyRunRecord({ ...before, phase: "after" }), status: "blocked", failureKind: kind,
+      failureMessage: "初查失败或未追问，恢复未执行。", judgment: { ok: false, problems: [{ kind, detail: "恢复路径未完成。" }] } });
+  };
+  await checkpoint();
 
   /** 把一次成功的结果按阶段判定并落成记录。 */
   const recordSuccess = (
     base: { questionId: string; arm: Arm; run: number; phase: "before" | "after"; caption: string },
     expectation: QuestionExpectation,
     result: SourceInvestigationResult,
+    driver?: SourceInvestigationDriver,
+    requestOffset = 0,
   ): void => {
     const judgment = judgeRun(expectation, result, { arm: base.arm, phase: base.phase, caption: base.caption });
     const hitIds = new Set(result.hits.map((hit) => hit.document.id));
@@ -1047,6 +1220,8 @@ export async function runPairedEvaluation(
       rounds: result.rounds,
       toolCallsUsed: result.toolCallsUsed,
       toolSequence: result.trace.map((event) => `${event.tool}:${event.status}`),
+      trace: result.trace,
+      requests: structuredClone(driver?.requestRecords?.slice(requestOffset) ?? []),
       reportRejections: result.trace
         .filter((event) => event.tool === "report_source_finding" && event.status === "rejected")
         .map((event) => event.resultSummary),
@@ -1091,7 +1266,7 @@ export async function runPairedEvaluation(
         : null,
       judgment: { ok: judgment.ok, problems: judgment.problems },
     };
-    records.push(record);
+    saveRecord(record);
     log(
       `  ${base.questionId} [${base.arm}] #${base.run}${base.phase === "after" ? "（补证后）" : ""} `
       + `${judgment.ok ? "通过" : "未通过"} ${describeRun(record)}`
@@ -1102,9 +1277,11 @@ export async function runPairedEvaluation(
 
   const recordFailure = (
     base: { questionId: string; arm: Arm; run: number; phase: "before" | "after" },
-    failure: { kind: string; message: string },
+    failure: { kind: string; message: string; trace?: SourceInvestigationResult["trace"] },
+    driver?: SourceInvestigationDriver,
+    requestOffset = 0,
   ): void => {
-    records.push({
+    saveRecord({
       questionId: base.questionId,
       arm: base.arm,
       run: base.run,
@@ -1115,7 +1292,9 @@ export async function runPairedEvaluation(
       latencyMs: null,
       rounds: null,
       toolCallsUsed: null,
-      toolSequence: [],
+      trace: failure.trace ?? [],
+      requests: structuredClone(driver?.requestRecords?.slice(requestOffset) ?? []),
+      toolSequence: (failure.trace ?? []).map((event) => `${event.tool}:${event.status}`),
       reportRejections: [],
       stopReason: null,
       clarification: null,
@@ -1145,48 +1324,59 @@ export async function runPairedEvaluation(
       const expectation = expectations.questions.find((entry) => entry.id === question.id);
       if (!expectation) throw new Error(`题集与期望不一致：${question.id} 没有独立期望。`);
       for (let run = 1; run <= runs; run += 1) {
-        const driver = options.driverFactory(question, arm);
+        let driver: SourceInvestigationDriver | undefined;
         const before = { questionId: question.id, arm, run, phase: "before" as const, caption: question.caption };
         let result: SourceInvestigationResult | null = null;
+        startRecord(before);
+        await checkpoint();
         try {
+          driver = options.driverFactory(question, arm);
           result = await runSourceInvestigation(driver, {
             allowSearch: arm === "retrieval",
             caption: question.caption,
           });
         } catch (error) {
-          recordFailure(before, classifyFailure(error));
+          recordFailure(before, classifyFailure(error), driver);
+          blockResume(before, "initial-failed");
+          await checkpoint();
           continue;
         }
-        recordSuccess(before, expectation, result);
+        recordSuccess(before, expectation, result, driver);
+        await checkpoint();
 
         // 补证后阶段：题面写了人写定的回答且初查提出了追问时，沿同一段对话恢复。
         if (!question.clarifyAnswer || !expectation.resume) continue;
         if (!result.clarification) {
+          blockResume(before, "missing-clarification");
+          await checkpoint();
           log(`  ${question.id} [${arm}] #${run} 初查未提出追问，补证后阶段无法运行（已在补证前判定 missing-clarification）。`);
           continue;
         }
         const after = { questionId: question.id, arm, run, phase: "after" as const, caption: question.caption };
+        const requestOffset = driver?.requestRecords?.length ?? 0;
+        startRecord(after);
+        await checkpoint();
+        let resumed: SourceInvestigationResult;
         try {
-          const resumed = await runSourceInvestigation(driver, {
+          resumed = await runSourceInvestigation(driver!, {
             allowSearch: arm === "retrieval",
             caption: question.caption,
             resume: { answer: question.clarifyAnswer, prior: result },
           });
-          recordSuccess(after, expectation, resumed);
         } catch (error) {
-          recordFailure(after, classifyFailure(error));
+          recordFailure(after, classifyFailure(error), driver, requestOffset);
+          await checkpoint();
+          continue;
         }
+        recordSuccess(after, expectation, resumed, driver, requestOffset);
+        await checkpoint();
       }
     }
   }
 
-  return {
-    generatedAt: new Date().toISOString(),
-    arms,
-    runsPerArm: runs,
-    records,
-    summary: summarizeEvaluation(records, expectations),
-  };
+  const report = snapshot("completed");
+  await options.onCheckpoint?.(report);
+  return report;
 }
 
 /** 运行前的冻结检查：题集、期望、图片、资料库与预算都必须与预先锁定的版本一致。 */
@@ -1288,6 +1478,8 @@ interface CliOptions {
   ids: string[] | null;
   minBalance: number;
   allowLowBalance: boolean;
+  replay: string | null;
+  checkOnly: boolean;
 }
 
 function parseCli(argv: string[]): CliOptions {
@@ -1301,6 +1493,8 @@ function parseCli(argv: string[]): CliOptions {
     ids: null,
     minBalance: 1,
     allowLowBalance: false,
+    replay: null,
+    checkOnly: false,
   };
   for (const argument of argv) {
     const [key, value = ""] = argument.split("=");
@@ -1312,12 +1506,17 @@ function parseCli(argv: string[]): CliOptions {
     else if (key === "--strict") options.strict = true;
     else if (key === "--min-balance") options.minBalance = Number.parseFloat(value);
     else if (key === "--allow-low-balance") options.allowLowBalance = true;
+    else if (key === "--replay") options.replay = value;
+    else if (key === "--check-only") options.checkOnly = true;
     else throw new Error(`未知参数：${argument}`);
   }
   if (!Number.isInteger(options.runs) || options.runs < 1) throw new Error(`--runs 必须是正整数，收到「${options.runs}」。`);
   if (options.arms.length === 0) throw new Error("--arms 只能取 retrieval 或 no-retrieval。");
+  if (new Set(options.arms).size !== options.arms.length) throw new Error("--arms 不能重复，避免重复阶段覆盖记录。");
   if (options.ids !== null && options.ids.length === 0) throw new Error("--ids 至少给一个题号。");
   if (Number.isNaN(options.minBalance) || options.minBalance < 0) throw new Error(`--min-balance 必须是非负数，收到「${options.minBalance}」。`);
+  if (options.replay === "") throw new Error("--replay 必须提供历史原始记录路径。");
+  if (options.checkOnly && options.replay) throw new Error("--check-only 与 --replay 请分别运行。");
   return options;
 }
 
@@ -1334,7 +1533,7 @@ export function printReport(
       if (!entry) return "-";
       const outcomes = [...new Set(entry.outcomes)];
       const text = outcomes.length > 1 ? outcomes.join(" | ") : (outcomes[0] ?? "");
-      return `${entry.correctRuns}/${entry.validRuns} ${text}`;
+      return `阶段 ${entry.correctRuns}/${entry.validRuns}；路径 ${entry.passedPaths}/${entry.totalPaths} ${text}`;
     };
     console.log(question.questionId.padEnd(38) + cell("retrieval").padEnd(34) + cell("no-retrieval").padEnd(34) + question.verdict);
   }
@@ -1353,6 +1552,8 @@ export function printReport(
       + `版本复查替代生效 ${arm.revisionAppliedRuns} 次（修正 ${arm.revisionHelpedRuns}／误改 ${arm.revisionHurtRuns}；额外模型调用 0 次、额外轮次 0 轮）；`
       + `无来源说明 ${arm.noApplicableSourceReasons} 次；越界结论 ${arm.noApplicableSourceOverclaims} 次`,
     );
+    const show = (rate: PassRate) => `${rate.passed}/${rate.total}（${rate.rate === null ? "—" : `${(rate.rate * 100).toFixed(1)}%`}）`;
+    console.log(`  阶段通过 ${show(arm.stagePass)}；完整路径通过 ${show(arm.fullPathPass)}；有效运行通过 ${show(arm.validRunPass)}；全部尝试成功 ${show(arm.allAttemptSuccess)}；阻塞 ${arm.blockedStages}、未完成 ${arm.pendingStages}。`);
   }
 
   console.log("\n== 门槛 ==");
@@ -1393,8 +1594,51 @@ async function main(): Promise<void> {
     return;
   }
   console.log(`题集：${questions.questions.length} 题（冻结于 ${questions.frozenAt}），期望独立保存于 samples/source-audit-expectations.json。`);
+  if (options.checkOnly) {
+    console.log("冻结检查通过；未读取密钥，真实模型调用 0 次。");
+    return;
+  }
+  if (options.replay) {
+    const bytes = await readFile(options.replay);
+    const historical = readEvaluationSnapshot(bytes.toString("utf8"), options.replay.endsWith(".jsonl")) as EvaluationReport & {
+      model?: string; baseUrl?: string; questionCount?: number; provenance?: Awaited<ReturnType<typeof captureProvenance>>;
+    };
+    if (!Array.isArray(historical.records) || !historical.records.length) throw new Error("历史文件没有逐次记录。");
+    const seen = new Set<string>();
+    for (const record of historical.records) {
+      const identity = `${record.arm}/${record.questionId}/${record.run}/${record.phase}`;
+      if (seen.has(identity)) throw new Error(`历史阶段重复：${identity}。`);
+      seen.add(identity);
+      if (!expectations.questions.some((entry) => entry.id === record.questionId)) throw new Error(`历史题号 ${record.questionId} 不在当前期望里。`);
+      if (!["before", "after"].includes(record.phase) || !["ok", "failed", "blocked", "pending", "running"].includes(record.status)) throw new Error("历史阶段或状态无效。");
+    }
+    // 仅重新统计已保存的独立判定，不把旧模型输出重构成新代码的在线验收。
+    const recountId = randomUUID();
+    const report: EvaluationReport = {
+      generatedAt: new Date().toISOString(), runId: recountId, state: "completed",
+      arms: historical.arms, runsPerArm: historical.runsPerArm,
+      records: historical.records.map((record, sourceRecordIndex) => {
+        const pathId = `${recountId}/${record.arm}/${record.questionId}/${record.run}`;
+        return { ...record, sourceRecordIndex, pathId, attemptId: `${pathId}/${record.phase}`,
+          parentAttemptId: record.phase === "after" ? `${pathId}/before` : null };
+      }), summary: summarizeEvaluation(historical.records, expectations),
+    };
+    const writer = await createEvaluationWriter([options.out, ...(options.record ? [options.record] : [])],
+      await captureProvenance(questions), {
+        mode: "historical-recount", realModelCalls: 0,
+        historical: { path: resolve(options.replay), sha256: sha256(bytes), generatedAt: historical.generatedAt,
+          provenance: historical.provenance ?? null,
+          note: "当前 provenance 仅属于重统计工具与输入；原记录未保存的代码／输入指纹无法追补。sourceRecordIndex 与阶段关联为派生字段，未重新判定模型表现。" },
+      });
+    try { await writer.save(report); } finally { await writer.close(); }
+    printReport(report, expectations, { model: historical.model ?? historical.provenance?.runtime?.requestedModel ?? "历史未知",
+      baseUrl: historical.baseUrl ?? historical.provenance?.runtime?.baseUrl ?? "历史未知" });
+    console.log(`离线重统计已保存：${options.out}；真实模型调用 0 次。`);
+    if (options.strict && report.summary.gates.some((gate) => !gate.passed)) process.exitCode = 1;
+    return;
+  }
 
-  const settings = await new FileModelSettingsStore().read();
+  const settings = await createModelSettingsStore().read();
   const { provider, config } = activeProviderConfig(settings);
   if (provider !== frozen.provider) {
     console.error(`当前启用协议是 ${provider}，冻结配置要求 ${frozen.provider} 并已在线验证工具调用。请在设置页切换后重试。`);
@@ -1429,6 +1673,9 @@ async function main(): Promise<void> {
   const selected: SourceAuditQuestions = options.ids
     ? { ...questions, questions: questions.questions.filter((question) => options.ids?.includes(question.id)) }
     : questions;
+  if (!selected.questions.length || options.ids?.some((id) => !questions.questions.some((question) => question.id === id))) {
+    throw new Error("--ids 含未知题号或选择结果为空，已停止。");
+  }
 
   // 花钱预检：先说清这次要发多少请求、账户还剩多少，余额不够就直接停，
   // 避免跑到一半因 402／400 白跑（阶段四任务 03 踩过一次）。
@@ -1461,7 +1708,19 @@ async function main(): Promise<void> {
     return;
   }
 
-  const report = await runPairedEvaluation(selected, expectations, {
+  const provenance = await captureProvenance(questions, {
+    provider, requestedModel: config.model, baseUrl: config.baseUrl,
+    parameters: { maxOutputTokens: MAX_OUTPUT_TOKENS, requestTimeoutMs: REQUEST_TIMEOUT_MS,
+      temperature: null, topP: null, seed: null, thinking: "首选 disabled，400 时省略字段重试",
+      toolChoice: "auto；汇总为强制 report_source_finding（兼容回退为 auto）",
+      note: "null 表示未显式发送；提供方默认值未知。实际响应模型逐阶段保存。" },
+  }, process.cwd(), imageBuffers);
+  const writer = await createEvaluationWriter([options.out, ...(options.record ? [options.record] : [])], provenance,
+    { mode: "live", questionCount: selected.questions.length, catalogQuestionCount: questions.questions.length,
+      selectedQuestionIds: selected.questions.map((q) => q.id), traceScope: "调查累计（恢复段含初查轨迹）；requests 仅含本阶段请求，兼容重试逐个保存。" });
+  let report: EvaluationReport;
+  try {
+    report = await runPairedEvaluation(selected, expectations, {
     runs: options.runs,
     arms: options.arms,
     driverFactory: (question, arm) => new AnthropicSourceInvestigationDriver(
@@ -1473,25 +1732,14 @@ async function main(): Promise<void> {
       { includeSearch: arm === "retrieval" },
     ),
     log: (line) => console.log(line),
-  });
+    onCheckpoint: (snapshot) => writer.save(snapshot),
+    });
+  } finally { await writer.close(); }
 
   printReport(report, expectations, config);
 
-  await mkdir(dirname(options.out), { recursive: true });
-  await writeFile(options.out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   console.log(`完整记录：${options.out}`);
   if (options.record) {
-    await mkdir(dirname(options.record), { recursive: true });
-    await writeFile(options.record, `${JSON.stringify({
-      generatedAt: report.generatedAt,
-      arms: report.arms,
-      runsPerArm: report.runsPerArm,
-      provider: frozen.provider,
-      model: frozen.model,
-      baseUrl: frozen.baseUrl,
-      questionCount: questions.questions.length,
-      records: report.records,
-    }, null, 2)}\n`, "utf8");
     console.log(`逐题记录：${options.record}`);
   }
 

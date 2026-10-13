@@ -62,7 +62,7 @@ node -e "console.log(process.versions)"   # 能打印即通过冒烟；报错就
 构建需要 devDependencies（vite / typescript / vue-tsc），**不能用 `--omit=dev` 装**。
 
 ```powershell
-git clone https://github.com/Iskuyal/web-match.git C:\apps\web-match
+git clone https://github.com/Iskuyal/tuzheng.git C:\apps\web-match
 cd C:\apps\web-match
 
 # 关键：跳过 Playwright 浏览器下载（几百 MB）。本项目的浏览器测试用系统自带 Edge
@@ -83,6 +83,8 @@ npm run build
 构建完成后**不要**立刻 `npm prune --omit=dev`——它会把 vite 等一起删掉，之后想重建就得重装。
 
 ### 3.3 配置模型密钥（最容易踩的一步）
+
+以下是默认 `file` 模式。赛事部署可显式启用 `env` 模式，由运行服务的环境注入完整协议／地址／模型／密钥；设置页只读，环境密钥不会写入设置文件。变量、地址限制与重启要求见[模型配置说明](MODEL-CONFIG.md)。这只是配置输入兼容，本轮未验证 Windows Server 部署。
 
 用**将来跑服务的那个 Windows 账号**登录一次，然后：
 

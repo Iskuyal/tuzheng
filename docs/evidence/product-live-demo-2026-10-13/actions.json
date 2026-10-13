@@ -1,0 +1,57 @@
+[
+  {
+    "time": 0.703,
+    "label": "landing",
+    "caption": "图证：实际项目页面与真实操作实录。"
+  },
+  {
+    "time": 4.534,
+    "label": "upload",
+    "caption": "上传项目自制图：2024 年 80 万元，2025 年 100 万元，标题写增长 40%。"
+  },
+  {
+    "time": 7.415,
+    "label": "vision-request",
+    "caption": "点击读取图片，向当前配置的模型发起真实请求。"
+  },
+  {
+    "time": 42.193,
+    "label": "vision-failed",
+    "caption": "这次模型读取失败；页面显示实际错误，不用预置结果代替。"
+  },
+  {
+    "time": 48.532,
+    "label": "source-input",
+    "caption": "载入项目自制 CPI 图与配文；此时尚未开始核验。"
+  },
+  {
+    "time": 53.388,
+    "label": "source-request",
+    "caption": "运行真实来源核验：模型选择工具，程序检索固定资料库。"
+  },
+  {
+    "time": 112.686,
+    "label": "source-result",
+    "caption": "下面是这次真实返回的逐条结论，缺口和停止原因同样保留。"
+  },
+  {
+    "time": 120.409,
+    "label": "tools",
+    "caption": "展开当次工具轨迹，查看实际检索、比较及停止原因。"
+  },
+  {
+    "time": 126.579,
+    "label": "suggestion",
+    "caption": "查看这次建议及其依据，由用户显式选择采用。"
+  },
+  {
+    "time": 131.147,
+    "label": "adopt",
+    "caption": "实际点击采用：配文更新，旧结果转为历史，提示重新核验。"
+  },
+  {
+    "time": 137.386,
+    "label": "end",
+    "caption": "实录结束：实际模型 HTTP 请求 4 次；金额与费率未知。"
+  }
+]

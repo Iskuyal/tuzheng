@@ -1,0 +1,415 @@
+{
+  "investigation": {
+    "model": "deepseek/deepseek-v4.1-flash",
+    "latencyMs": 59230,
+    "rounds": 3,
+    "stopReason": "模型在看完工具结果后给出汇总。",
+    "trace": [
+      {
+        "round": 1,
+        "order": 1,
+        "detail": "模型调用工具。",
+        "status": "ok",
+        "tool": "search_source_library",
+        "inputSummary": "{\"metric\":\"全国居民消费价格\",\"period\":\"2025-12\",\"scope\":\"全国\",\"terms\":[\"同比\",\"环比\",\"上涨\"]}",
+        "resultSummary": "命中 3 条：2025年12月份居民消费价格同比上涨0.8%（口径匹配）；2026年8月份居民消费价格同比上涨0.8%（口径不适配）；同比与环比有何不同（口径不适配）",
+        "durationMs": 2
+      },
+      {
+        "round": 1,
+        "order": 2,
+        "detail": "模型调用工具。",
+        "status": "ok",
+        "tool": "search_source_library",
+        "inputSummary": "{\"metric\":\"居民消费价格\",\"period\":\"2025-12\",\"scope\":\"全国\",\"terms\":[\"环比\",\"涨幅\"]}",
+        "resultSummary": "命中 3 条：2025年12月份居民消费价格同比上涨0.8%（口径匹配）；2026年8月份居民消费价格同比上涨0.8%（口径不适配）；同比与环比有何不同（口径不适配）",
+        "durationMs": 0
+      },
+      {
+        "round": 2,
+        "order": 1,
+        "detail": "模型调用工具。",
+        "status": "ok",
+        "tool": "compare_values",
+        "inputSummary": "{\"left\":0.8,\"right\":0.2,\"unit\":\"%\",\"label\":\"配文「比上月上涨 0.8%」与资料中 2025-12 环比涨幅 0.2% 的差异\"}",
+        "resultSummary": "两个数值相差 0.6%（0.8% 与 0.2%）。",
+        "durationMs": 33
+      },
+      {
+        "round": 2,
+        "order": 2,
+        "detail": "模型调用工具。",
+        "status": "ok",
+        "tool": "compare_values",
+        "inputSummary": "{\"left\":0.8,\"right\":0.8,\"unit\":\"%\",\"label\":\"图上 0.8% 与资料中 2025-12 同比涨幅 0.8% 的比对\"}",
+        "resultSummary": "两个数值相等，均为 0.8%。",
+        "durationMs": 0
+      },
+      {
+        "round": 3,
+        "order": 1,
+        "detail": "已检索。",
+        "status": "ok",
+        "tool": "report_source_finding",
+        "inputSummary": "3 条主张、2 条引用、1 条改写提议",
+        "resultSummary": "已接收汇总，准备由程序校验引用并组合结论。",
+        "durationMs": 0
+      }
+    ],
+    "claims": [
+      {
+        "claimText": "比上月上涨 0.8%",
+        "metric": "全国居民消费价格",
+        "scope": "全国",
+        "period": "2025-12",
+        "value": 0.8,
+        "basis": "month-on-month",
+        "kind": "direct",
+        "direction": "up",
+        "fromImage": false,
+        "imageExcerpt": null
+      },
+      {
+        "claimText": "2025 年 12 月全国 CPI 上涨 0.8%",
+        "metric": "全国居民消费价格",
+        "scope": "全国",
+        "period": "2025-12",
+        "value": 0.8,
+        "basis": null,
+        "kind": "direct",
+        "direction": "up",
+        "fromImage": true,
+        "imageExcerpt": "2025 年 12 月全国 CPI 上涨 0.8%"
+      },
+      {
+        "claimText": "0.8%",
+        "metric": "全国居民消费价格",
+        "scope": "全国",
+        "period": "2025-12",
+        "value": 0.8,
+        "basis": null,
+        "kind": "direct",
+        "direction": null,
+        "fromImage": true,
+        "imageExcerpt": "0.8%"
+      }
+    ],
+    "conclusions": [
+      {
+        "claimText": "比上月上涨 0.8%",
+        "claimKind": "direct",
+        "fromImage": false,
+        "basisLabel": "环比",
+        "claimValue": 0.8,
+        "citedSourceIds": [
+          "stats-cpi-2025-12"
+        ],
+        "parts": [],
+        "origin": {
+          "fromImage": false,
+          "originText": "比上月上涨 0.8%",
+          "traceable": true,
+          "coverage": 1,
+          "matchedRun": "比上月上涨08%",
+          "note": null
+        },
+        "periodNote": null,
+        "supplement": null,
+        "status": "source-mismatch",
+        "summary": "与所引国家统计局发布《2025年12月份居民消费价格同比上涨0.8%》（2026-01-09）不一致：该发布记载环比 0.2%，主张写 0.8%，相差 0.6 个百分点。",
+        "officialValue": 0.2,
+        "difference": 0.6,
+        "reasons": [
+          "依据原句：12月份，全国居民消费价格环比上涨0.2%。"
+        ],
+        "unresolved": []
+      },
+      {
+        "claimText": "2025 年 12 月全国 CPI 上涨 0.8%",
+        "claimKind": "direct",
+        "fromImage": true,
+        "basisLabel": null,
+        "claimValue": 0.8,
+        "citedSourceIds": [
+          "stats-cpi-2025-12"
+        ],
+        "parts": [],
+        "origin": {
+          "fromImage": true,
+          "originText": "2025 年 12 月全国 CPI 上涨 0.8%",
+          "traceable": true,
+          "coverage": 1,
+          "matchedRun": "2025年12月全国cpi上涨08%",
+          "note": null
+        },
+        "periodNote": null,
+        "supplement": null,
+        "status": "source-pending",
+        "summary": "来源待核对：主张没有写明比较方式，无法与具体数值对照。",
+        "officialValue": null,
+        "difference": null,
+        "reasons": [
+          "主张未说明同比或环比；所引《2025年12月份居民消费价格同比上涨0.8%》分别记载了不同比较方式，不能确定对应哪一个。"
+        ],
+        "unresolved": [
+          "需要补充比较方式（同比／环比）才能继续核对。"
+        ]
+      },
+      {
+        "claimText": "0.8%",
+        "claimKind": "direct",
+        "fromImage": true,
+        "basisLabel": null,
+        "claimValue": 0.8,
+        "citedSourceIds": [
+          "stats-cpi-2025-12"
+        ],
+        "parts": [],
+        "origin": {
+          "fromImage": true,
+          "originText": "0.8%",
+          "traceable": true,
+          "coverage": 1,
+          "matchedRun": "08%",
+          "note": null
+        },
+        "periodNote": null,
+        "supplement": null,
+        "status": "source-pending",
+        "summary": "来源待核对：主张没有写明比较方式，无法与具体数值对照。",
+        "officialValue": null,
+        "difference": null,
+        "reasons": [
+          "主张未说明同比或环比；所引《2025年12月份居民消费价格同比上涨0.8%》分别记载了不同比较方式，不能确定对应哪一个。"
+        ],
+        "unresolved": [
+          "需要补充比较方式（同比／环比）才能继续核对。"
+        ]
+      }
+    ],
+    "citations": [
+      {
+        "sourceId": "stats-cpi-2025-12",
+        "role": "value-basis",
+        "note": "2025 年 12 月全国居民消费价格同比上涨 0.8%，环比上涨 0.2%；配文「比上月」（环比）对应 0.2%，与配文写的 0.8% 不一致。"
+      },
+      {
+        "sourceId": "stats-term-yoy-mom",
+        "role": "term-explanation",
+        "note": "用于说明「比上月」即环比，是与上一个相邻统计周期（第 n－1 月）比较。"
+      }
+    ],
+    "acceptedCitations": [
+      {
+        "sourceId": "stats-cpi-2025-12",
+        "role": "value-basis",
+        "note": "2025 年 12 月全国居民消费价格同比上涨 0.8%，环比上涨 0.2%；配文「比上月」（环比）对应 0.2%，与配文写的 0.8% 不一致。"
+      },
+      {
+        "sourceId": "stats-term-yoy-mom",
+        "role": "term-explanation",
+        "note": "用于说明「比上月」即环比，是与上一个相邻统计周期（第 n－1 月）比较。"
+      }
+    ],
+    "citationsRejected": [],
+    "hits": [
+      {
+        "document": {
+          "id": "stats-cpi-2025-12",
+          "kind": "data-release",
+          "title": "2025年12月份居民消费价格同比上涨0.8%",
+          "publisher": "国家统计局",
+          "url": "https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html",
+          "publishedAt": "2026-01-09",
+          "basis": {
+            "metric": "全国居民消费价格",
+            "period": "2025-12",
+            "scope": "全国"
+          },
+          "aliases": [
+            "CPI",
+            "居民消费价格指数",
+            "居民消费价格",
+            "全国居民消费价格",
+            "消费价格"
+          ],
+          "excerpt": "2025年12月份，全国居民消费价格同比上涨0.8%。12月份，全国居民消费价格环比上涨0.2%。",
+          "measures": [
+            {
+              "basis": "year-on-year",
+              "value": 0.8,
+              "unit": "%",
+              "excerpt": "2025年12月份，全国居民消费价格同比上涨0.8%。"
+            },
+            {
+              "basis": "month-on-month",
+              "value": 0.2,
+              "unit": "%",
+              "excerpt": "12月份，全国居民消费价格环比上涨0.2%。"
+            }
+          ],
+          "fingerprint": "67828d756d2d683d"
+        },
+        "score": 11.75,
+        "matchReasons": [
+          "指标与资料口径匹配",
+          "资料适用月份为 2025-12",
+          "范围与资料一致（全国）",
+          "命中关键词：同比、环比、上涨"
+        ],
+        "applicability": {
+          "applicableForValue": true,
+          "applicableForTerm": false,
+          "mismatchFields": [],
+          "missingFields": []
+        }
+      },
+      {
+        "document": {
+          "id": "stats-cpi-2026-08",
+          "kind": "data-release",
+          "title": "2026年8月份居民消费价格同比上涨0.8%",
+          "publisher": "国家统计局",
+          "url": "https://www.stats.gov.cn/sj/zxfb/202609/t20260909_1965263.html",
+          "publishedAt": "2026-09-09",
+          "basis": {
+            "metric": "全国居民消费价格",
+            "period": "2026-08",
+            "scope": "全国"
+          },
+          "aliases": [
+            "CPI",
+            "居民消费价格指数",
+            "居民消费价格",
+            "全国居民消费价格",
+            "消费价格"
+          ],
+          "excerpt": "2026年8月份，全国居民消费价格同比上涨0.8%。8月份，全国居民消费价格环比上涨0.4%。",
+          "measures": [
+            {
+              "basis": "year-on-year",
+              "value": 0.8,
+              "unit": "%",
+              "excerpt": "2026年8月份，全国居民消费价格同比上涨0.8%。"
+            },
+            {
+              "basis": "month-on-month",
+              "value": 0.4,
+              "unit": "%",
+              "excerpt": "8月份，全国居民消费价格环比上涨0.4%。"
+            }
+          ],
+          "distractor": true,
+          "note": "干扰项：同比数值与 2025 年 12 月发布相同（均为 0.8%），月份不同，环比为 0.4%。",
+          "fingerprint": "1629bc6cd4a8e45f"
+        },
+        "score": 8.25,
+        "matchReasons": [
+          "指标与资料口径匹配",
+          "资料适用月份为 2026-08，与查询月份不同",
+          "范围与资料一致（全国）",
+          "命中关键词：同比、环比、上涨"
+        ],
+        "applicability": {
+          "applicableForValue": false,
+          "applicableForTerm": false,
+          "mismatchFields": [
+            "period"
+          ],
+          "missingFields": []
+        }
+      },
+      {
+        "document": {
+          "id": "stats-term-yoy-mom",
+          "kind": "term-explanation",
+          "title": "同比与环比有何不同",
+          "publisher": "国家统计局",
+          "url": "https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912960.html",
+          "publishedAt": "2025-07-17",
+          "basis": {
+            "metric": "统计术语：同比与环比",
+            "period": null,
+            "scope": null
+          },
+          "aliases": [
+            "同比",
+            "环比",
+            "比较方式",
+            "基期",
+            "统计周期"
+          ],
+          "excerpt": "同比是以上年同期为基期相比较，即本期某一时间段（点）与上年某一时间段（点）相比，可以理解为今年第n月与去年第n月的比较。环比是与上一个相邻统计周期相比较，表明统计指标逐期的发展变化，可以理解为第n月与第n－1月的比较。",
+          "measures": [],
+          "note": "页面正文标注的发布时间为 2025-07-17；URL 路径段为 202301，两者不一致，按页面标注记录。",
+          "fingerprint": "3873318af079acdd"
+        },
+        "score": 3,
+        "matchReasons": [
+          "术语解释材料，可用于比较方式说明",
+          "命中关键词：同比、环比"
+        ],
+        "applicability": {
+          "applicableForValue": false,
+          "applicableForTerm": true,
+          "mismatchFields": [
+            "metric"
+          ],
+          "missingFields": []
+        }
+      }
+    ],
+    "excludedSources": [
+      {
+        "sourceId": "stats-cpi-2026-08",
+        "title": "2026年8月份居民消费价格同比上涨0.8%",
+        "reason": "所引资料与主张口径不一致（月份），不作为数值依据。"
+      },
+      {
+        "sourceId": "stats-term-yoy-mom",
+        "title": "同比与环比有何不同",
+        "reason": "同比与环比有何不同 是术语解释页，只用于说明同比与环比的差别，不能作为数值依据。"
+      }
+    ],
+    "unresolvedItems": [
+      "图上只写「上涨 0.8%」，未标注比较基准（图上自述「未标注比较基准」），因此无法从图上确认这 0.8% 指同比还是环比；资料库中 2025-12 同比为 0.8%、环比为 0.2%，两项数值都在，故需由配文口径判定。"
+    ],
+    "noApplicableSourceReason": null,
+    "clarification": null,
+    "toolCallsUsed": 4,
+    "usage": {
+      "inputTokens": 5307,
+      "outputTokens": 3515
+    },
+    "omittedClaims": [],
+    "captionCoverage": 1,
+    "captionCoverageNote": null,
+    "supplement": null,
+    "conclusionChanges": null,
+    "captionSuggestion": {
+      "caption": "比上月上涨 0.8%",
+      "suggestedCaption": "比上月上涨 0.2%",
+      "changes": [
+        {
+          "claimText": "比上月上涨 0.8%",
+          "original": "比上月上涨 0.8%",
+          "suggested": "比上月上涨 0.2%",
+          "kind": "replace-value",
+          "reason": "「比上月」即环比；所引国家统计局 2025 年 12 月资料写的是「12月份，全国居民消费价格环比上涨0.2%」，环比口径的数值应为 0.2%，而非 0.8%（0.8% 是同比口径）。",
+          "sourceIds": [
+            "stats-cpi-2025-12"
+          ],
+          "status": "source-mismatch",
+          "origin": "model",
+          "rejectedReason": null,
+          "applied": true
+        }
+      ],
+      "rejectedProposals": [],
+      "notes": [],
+      "fingerprint": "3f8b59dfb7e2e64d"
+    },
+    "investigationId": "0e0d393a-ada4-411d-9f2f-eaa4565859d5",
+    "inputFingerprint": "b7e6470ae233a458d075b1ae501d810a54815f8a51af2a1641e8285c34b4ef5e"
+  }
+}

@@ -32,6 +32,20 @@ function statusClass(status: ClaimSourceStatus): string {
 
 const stateClass = computed(() => (props.conclusion ? statusClass(props.conclusion.status) : "source-state-pending"));
 
+/** 只就近展示当前结论已有的有效数值依据，不为待核对项补造数字或引用。 */
+const valueEvidence = computed(() => {
+  const conclusion = props.conclusion;
+  if (!conclusion || conclusion.officialValue === null || props.claim.value === null) return null;
+  for (const sourceId of conclusion.citedSourceIds) {
+    if (!props.acceptedCitations.some((citation) => citation.sourceId === sourceId && citation.role === "value-basis")) continue;
+    const document = props.hits.find((hit) => hit.document.id === sourceId)?.document;
+    const measure = document?.measures.find((entry) => BASIS_LABELS[entry.basis] === conclusion.basisLabel
+      && entry.value === conclusion.officialValue && (entry.period ?? document.basis.period) === props.claim.period);
+    if (document && measure) return { document, measure };
+  }
+  return null;
+});
+
 function basisText(basis: SourceClaim["basis"]): string {
   if (basis) return BASIS_LABELS[basis];
   return props.claim.fromImage ? "图上未写比较方式" : "未说明比较方式";
@@ -78,6 +92,14 @@ const coverageText = computed(() => {
       </span>
     </div>
 
+    <p v-if="conclusion" class="source-conclusion-summary">{{ conclusion.summary }}</p>
+    <div v-if="valueEvidence && conclusion" class="source-value-evidence" data-testid="value-evidence">
+      <p><strong>仅数值对照 · {{ claim.period }} · {{ conclusion.basisLabel }}</strong></p>
+      <p>原文 {{ claim.value }}{{ valueEvidence.measure.unit }} → 所引发布 {{ conclusion.officialValue }}{{ valueEvidence.measure.unit }}</p>
+      <p class="source-value-excerpt">依据原句：{{ valueEvidence.measure.excerpt }}</p>
+      <a :href="`#source-document-${valueEvidence.document.id}`">查看这条来源依据</a>
+    </div>
+
     <details class="source-claim-details">
       <summary>展开依据、推断缺口与未解决项</summary>
 
@@ -98,7 +120,6 @@ const coverageText = computed(() => {
       <p v-if="conclusion?.periodNote" class="source-period-note">口径补全：{{ conclusion.periodNote }}</p>
 
       <div v-if="conclusion" class="source-conclusion" :class="stateClass">
-        <p class="source-conclusion-summary">{{ conclusion.summary }}</p>
         <div v-if="conclusion.revisionReview" class="source-revision-review" data-testid="revision-review">
           <strong>版本复查：</strong>
           所引《<a :href="conclusion.revisionReview.fromUrl" target="_blank" rel="noreferrer noopener">{{ conclusion.revisionReview.fromTitle }}</a>》

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { tabTo } from "./keyboard.js";
 
 // 页面路径用替身响应覆盖：真实模型调用另见 docs/evidence/stage-4-source-audit-2026-09-29.md。
 // 替身只替换网络响应，页面与程序校验仍走真实实现。
@@ -364,13 +365,71 @@ test.beforeAll(async ({ request }) => {
     .toBe(200);
 });
 
+test("来源结论、依据展开、补证及采用建议可用键盘完成并恢复焦点", async ({ page }, testInfo) => {
+  let initial = 0;
+  let resumes = 0;
+  await page.route("**/api/source-audit/investigate", async (route) => {
+    initial += 1;
+    await route.fulfill({ json: { investigation: { ...FULL_INVESTIGATION, investigationId: "keyboard-stub", clarification: {
+      question: "请确认比较方式是同比还是环比？", purpose: "仅用于确定口径，不是官方来源。", field: "basis", claimText: CAPTION_CLAIM.claimText,
+    } } } });
+  });
+  await page.route("**/api/source-audit/resume", async (route) => {
+    resumes += 1;
+    expect(route.request().postData()).toContain("环比");
+    await route.fulfill({ json: { investigation: { ...FULL_INVESTIGATION, investigationId: "keyboard-stub" } } });
+  });
+  await page.goto("/source-audit?sample=cpi-2025-12");
+  await expect(page.locator(".source-image-stage img")).toBeVisible();
+  await tabTo(page, page.getByTestId("run-source-audit"));
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "本次核验结果" })).toBeFocused();
+  const answer = page.getByTestId("clarification-answer");
+  await tabTo(page, answer);
+  await page.keyboard.insertText("环比");
+  await tabTo(page, page.getByTestId("submit-clarification"));
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "本次核验结果" })).toBeFocused();
+  const imageDetails = page.locator(".source-claim-card").filter({ hasText: IMAGE_CLAIM.claimText }).locator(".source-claim-details");
+  const evidence = imageDetails.locator("summary");
+  await tabTo(page, evidence);
+  await page.keyboard.press("Enter");
+  await expect(imageDetails).toHaveAttribute("open", "");
+  await expect(imageDetails).toContainText("图上抄录");
+  await page.keyboard.press("Enter");
+  const trace = page.locator(".source-tool-details summary");
+  await tabTo(page, trace);
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("tool-trace")).toBeVisible();
+  await page.keyboard.press("Enter");
+  // 截图明确标为替身，并使用独立缓存路径，CI 不写交付文档。
+  await page.evaluate(() => {
+    const note = document.createElement("p");
+    note.textContent = "离线 UI 测试 · 模型结果替身 · 不代表真实模型复验";
+    note.style.cssText = "padding:12px;background:#fff1d2;color:#142b41;font-weight:700";
+    document.querySelector(".source-result")?.prepend(note);
+  });
+  await page.locator(".source-result").evaluate((element) => element.scrollIntoView({ block: "start" }));
+  await page.screenshot({ path: testInfo.outputPath("source-result-stub.png") });
+  await page.locator(".source-result").screenshot({ path: testInfo.outputPath("source-result-full-stub.png") });
+  await tabTo(page, page.getByTestId("adopt-suggestion"));
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#source-audit-caption")).toBeFocused();
+  await expect(page.locator("#source-audit-caption")).toHaveValue("比上月上涨 0.2%");
+  await expect(page.getByTestId("adopted-notice")).toHaveAttribute("role", "status");
+  await expect(page.getByTestId("history-section")).toContainText("已采用建议");
+  await expect(page.locator(".source-result")).toHaveCount(0);
+  expect(initial).toBe(1);
+  expect(resumes).toBe(1);
+});
+
 test("从自制图与配文走到带引用与工具轨迹的来源结论", async ({ page }) => {
   await page.route("**/api/source-audit/investigate", async (route) => {
     await route.fulfill({ status: 200, json: { investigation: FULL_INVESTIGATION } });
   });
 
   await page.goto("/source-audit");
-  await expect(page.getByRole("heading", { name: "CPI 图文主张的来源核验" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "核对配文与公开来源" })).toBeVisible();
   // 未选择图片时先给出可操作提示，不发请求。
   await page.getByTestId("run-source-audit").click();
   await expect(page.locator(".error-message")).toContainText("请先上传图表图片");
@@ -381,10 +440,13 @@ test("从自制图与配文走到带引用与工具轨迹的来源结论", async
 
   await page.getByTestId("run-source-audit").click();
 
-  // 运行摘要与停止原因。
+  // 运行摘要按需展开；停止原因始终可见。
+  await page.getByText("查看模型与运行统计", { exact: true }).click();
   await expect(page.locator(".source-run-summary")).toContainText("stub-source-model");
   await expect(page.locator(".source-run-summary")).toContainText("工具调用：2 / 6");
   await expect(page.getByTestId("stop-reason")).toContainText("看完工具结果后给出汇总");
+  await expect(page.getByTestId("source-overview")).toContainText("配文：1 条与来源不一致");
+  await expect(page.getByTestId("source-overview")).toContainText("图内观察：1 条来源待核对");
 
   // 图内观察：口径缺失被标为来源待核对，不假装确认。
   const imageCard = page.locator(".source-claim-card").filter({ hasText: IMAGE_CLAIM.claimText });
@@ -396,6 +458,9 @@ test("从自制图与配文走到带引用与工具轨迹的来源结论", async
 
   // 配文主张：与官方发布记载的环比不一致。
   const captionCard = page.locator(".source-claim-card").filter({ hasText: CAPTION_CLAIM.claimText });
+  await expect(captionCard.getByTestId("value-evidence")).toContainText("原文 0.8% → 所引发布 0.2%");
+  await expect(captionCard.getByTestId("value-evidence")).toContainText("12月份，全国居民消费价格环比上涨0.2%");
+  await expect(imageCard.getByTestId("value-evidence")).toHaveCount(0);
   await expect(captionCard.locator(".source-state-pill")).toHaveText("与来源不一致");
   await expect(captionCard).toContainText("环比 0.2%");
   await expect(captionCard).toContainText("相差 0.6 个百分点");
@@ -405,6 +470,9 @@ test("从自制图与配文走到带引用与工具轨迹的来源结论", async
   // 引用指向本次命中的官方发布，带原始链接与发布日期。
   const citedDocument = page.locator(".source-document-card.is-cited");
   await expect(citedDocument).toHaveCount(1);
+  await tabTo(page, captionCard.getByRole("link", { name: "查看这条来源依据" }));
+  await page.keyboard.press("Enter");
+  await expect(citedDocument).toBeFocused();
   // 引用角色可见：这份材料是用作数值依据的。
   await expect(citedDocument.getByTestId("cited-badge")).toContainText("用作数值依据");
   await expect(citedDocument).toContainText("国家统计局");
@@ -421,6 +489,7 @@ test("从自制图与配文走到带引用与工具轨迹的来源结论", async
   await expect(excludedSources).toContainText("只用于说明同比与环比的差别");
 
   // 工具轨迹展示实际事件、状态与拒绝原因。
+  await page.getByText("查看工具轨迹与调用预算", { exact: true }).click();
   const trace = page.getByTestId("tool-trace").locator("li");
   await expect(trace).toHaveCount(3);
   await expect(trace.nth(0)).toContainText("检索资料库");

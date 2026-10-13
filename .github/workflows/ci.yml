@@ -41,8 +41,30 @@ jobs:
       - name: 单元与 API 行为测试
         run: npm test
 
+      - name: 实录预算恢复回归（不调用模型）
+        run: npm run test:recording
+
       - name: 固定样例评测（不调用模型）
         run: npm run eval:samples
+
+      - name: 独立预留题冻结与三臂替身验证（不调用模型）
+        run: |
+          npm run eval:holdout -- --verify
+          npm run eval:holdout -- --offline --output .cache/holdout/ci-offline-fixture.json
+          npm run eval:preflight -- --prepare .cache/holdout/ci-candidate.json
+          npm run eval:preflight -- --verify .cache/holdout/ci-candidate.json
+
+      - name: 保存三臂离线替身记录（不是模型成绩）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: holdout-offline-fixture
+          path: |
+            .cache/holdout/ci-offline-fixture.json
+            .cache/holdout/ci-candidate.json
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: SVG→PNG 同源核对
         # 该脚本逐字节比对 SHA-256，结果依赖本机 Edge 版本的字体栅格化；
