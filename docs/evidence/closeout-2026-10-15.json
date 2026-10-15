@@ -1,0 +1,156 @@
+{
+  "date": "2026-10-15",
+  "kind": "offline-read-only-reconciliation",
+  "baselineSha": "a5ebf1b3dc01f80100b20c0481fa0517efcab149",
+  "modelHttpRequestsThisAudit": 0,
+  "candidate": {
+    "path": "docs/evidence/final-candidate-2026-10-07-round2.json",
+    "fileSha256": "59634f174d11f1382c57700219b7aa86f9a5b9d238e8b2d181d88aff728eb6b9",
+    "jsonStringifyHash": "9cf0bc57c3fec2b54b9cc21dd8f42163c6749aa9838689e69d5fcb5f585bf526",
+    "schemaParsedJsonStringifyHash": "afb7459d5dd00232eee19a0a4b14c28af694778a2082449d6696919eb939c84e",
+    "currentVerification": "rejected: candidate runtime file changed: .github/workflows/ci.yml; historical lock preserved"
+  },
+  "observation": "No local process matched run-exploratory-holdout, run-demo-http or run-holdout-http. This does not resolve provider-side delivery or billing.",
+  "ownerReviewStatus": "pending",
+  "batches": [
+    {
+      "name": "final-demo-live-2026-10-07-round1",
+      "sourceHashes": {
+        "report.json": "937c1a1d427f888dc4f39c5d49433e2df02106a406c10c0958fec20c3a20bef3",
+        "events.jsonl": "ae5ef6afcb2104131be70d6835d8334048e8b411c2bd1efb5e7d8aecfc892bee"
+      },
+      "storedTransportState": "completed",
+      "reportCandidateHash": "afb7459d5dd00232eee19a0a4b14c28af694778a2082449d6696919eb939c84e",
+      "reportRequests": {
+        "slots": 47,
+        "statuses": {
+          "ok": 47
+        },
+        "confirmedAttempted": 47,
+        "knownInputTokens": 226820,
+        "knownOutputTokens": 108240,
+        "unknownUsageSequences": []
+      },
+      "journalRequests": {
+        "slots": 47,
+        "statuses": {
+          "ok": 47
+        },
+        "confirmedAttempted": 47,
+        "knownInputTokens": 226820,
+        "knownOutputTokens": 108240,
+        "unknownUsageSequences": []
+      },
+      "lastEventAt": "2026-10-07T02:32:34.631Z",
+      "stages": {
+        "plannedTotal": 18,
+        "statuses": {
+          "ok": 16,
+          "blocked": 2
+        }
+      },
+      "comparisons": null,
+      "scoredStagePass": {
+        "passed": 10,
+        "total": 18,
+        "rate": 0.5555555555555556
+      },
+      "fullPathPass": {
+        "passed": 9,
+        "total": 15,
+        "rate": 0.6
+      },
+      "questionPaths": [
+        {
+          "id": "q04-caption-yoy-value-as-mom",
+          "passed": 3,
+          "total": 3
+        },
+        {
+          "id": "q05-caption-wrong-month-distractor",
+          "passed": 1,
+          "total": 3
+        },
+        {
+          "id": "q13-inference-mom-contradicted",
+          "passed": 2,
+          "total": 3
+        },
+        {
+          "id": "q18-clarify-basis-resume",
+          "passed": 1,
+          "total": 3
+        },
+        {
+          "id": "q20-rewrite-replace-and-qualify",
+          "passed": 2,
+          "total": 3
+        }
+      ],
+      "unfinishedHttp": [],
+      "cost": null
+    },
+    {
+      "name": "holdout-exploratory-live-2026-10-07-round1",
+      "sourceHashes": {
+        "report.json": "bc48eca1e5df38292ddae5b922abb0a5008f907202a9bfd17d9cb106ecff3ec0",
+        "events.jsonl": "d5db5523aca9502ecbec4d48045ae4d02d7b05401c6a8aee28a58343dc380260"
+      },
+      "storedTransportState": "running",
+      "reportCandidateHash": "afb7459d5dd00232eee19a0a4b14c28af694778a2082449d6696919eb939c84e",
+      "reportRequests": {
+        "slots": 10,
+        "statuses": {
+          "ok": 10
+        },
+        "confirmedAttempted": 10,
+        "knownInputTokens": 41442,
+        "knownOutputTokens": 22939,
+        "unknownUsageSequences": []
+      },
+      "journalRequests": {
+        "slots": 13,
+        "statuses": {
+          "ok": 12,
+          "running": 1
+        },
+        "confirmedAttempted": 12,
+        "knownInputTokens": 52196,
+        "knownOutputTokens": 25312,
+        "unknownUsageSequences": [
+          13
+        ]
+      },
+      "lastEventAt": "2026-10-07T02:35:05.044Z",
+      "stages": {
+        "plannedTotal": 126,
+        "statuses": {
+          "failed": 4,
+          "ok": 2,
+          "planned": 120
+        }
+      },
+      "comparisons": {
+        "no-gain": 4,
+        "not-completed": 68
+      },
+      "scoredStagePass": null,
+      "fullPathPass": null,
+      "questionPaths": null,
+      "unfinishedHttp": [
+        {
+          "sequence": 13,
+          "questionId": "h03",
+          "arm": "C-tools",
+          "startedAt": "2026-10-07T02:35:05.044Z",
+          "attemptedFlag": false,
+          "delivery": "unknown",
+          "completion": "unknown",
+          "usage": null,
+          "cost": null
+        }
+      ],
+      "cost": null
+    }
+  ]
+}

@@ -33,11 +33,11 @@ export async function prepareCandidate(): Promise<CandidateLock> {
   const catalog = JSON.parse(await readFile("samples/source-audit-questions.json", "utf8")) as SourceAuditQuestions;
   for (const id of DEMO_IDS) if (!catalog.questions.some(q => q.id === id)) throw new Error(`演示题号不存在：${id}`);
   const files = Object.fromEntries(await Promise.all((await runtimeFiles()).map(async path => [path, runtimeSha256(await readFile(path))])));
-  return { schemaVersion: 1, kind: "candidate-preflight", createdAt: new Date().toISOString(), holdoutManifestHash: bundle.manifestHash,
+  return lockSchema.parse({ schemaVersion: 1, kind: "candidate-preflight", createdAt: new Date().toISOString(), holdoutManifestHash: bundle.manifestHash,
     files, provenance: await captureProvenance(catalog),
     plans: { holdout: { repeats: 3, paths: 108, stages: 126, maxHttpRequests: 360 },
       demo: { ids: DEMO_IDS, repeats: 3, arm: "retrieval", initialStages: 15, maxRecoveryStages: 3 } },
-    blockers: ["负责人逐题抽查并签字", "指定实际HTTP调用上限或落实另行金额控制并授权运行", "当前候选代码尚未在线复验", "演示视频、评审访问、真实团队信息及另一台Windows回执待人工提供"], modelRequests: 0 };
+    blockers: ["负责人逐题抽查并签字", "指定实际HTTP调用上限或落实另行金额控制并授权运行", "当前候选代码尚未在线复验", "演示视频、评审访问、真实团队信息及另一台Windows回执待人工提供"], modelRequests: 0 });
 }
 export async function verifyCandidate(value: unknown): Promise<CandidateLock> {
   const lock = lockSchema.parse(value); const bundle = await loadBundle();

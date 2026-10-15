@@ -38,6 +38,20 @@ describe("候选冻结预检与执行停止", () => {
     review.questions[0].id = ids[1]; expect(() => verifyReview(review, candidate, ids)).toThrow("12题");
   });
 
+  it("准备时提供的签字哈希在候选落盘并重新核验后仍可使用", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "tuzheng-candidate-review-"));
+    try {
+      const candidate = await prepareCandidate();
+      const ids = (await loadBundle()).questions.map(question => question.id);
+      const review = { candidateHash: sha256(JSON.stringify(candidate)), reviewer: "负责人测试替身", reviewedAt: "2026-10-15",
+        questions: ids.map(id => ({ id, approved: true, note: "仅验证准备与验签闭环，不是真实签字" })) };
+      const path = join(directory, "candidate.json");
+      await writeNewJson(path, candidate);
+      const verified = await verifyCandidate(JSON.parse(await readFile(path, "utf8")));
+      expect(verifyReview(review, verified, ids).questions).toHaveLength(12);
+    } finally { await rm(directory, { recursive: true, force: true }); }
+  });
+
   it("到HTTP上限立即停止，126阶段预分配保留未执行planned，脱敏日志可独立核对", async () => {
     const directory = await mkdtemp(join(tmpdir(), "web-match-http-eval-"));
     try {
