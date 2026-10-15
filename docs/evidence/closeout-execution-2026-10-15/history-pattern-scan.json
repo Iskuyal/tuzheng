@@ -1,0 +1,17 @@
+{
+  "kind": "limited-pattern-history-scan",
+  "sourceSha": "0333fc1f80eb5557868785353b8bb88341ec5760",
+  "reachableCommits": 121,
+  "uniqueReachableBlobs": 1022,
+  "textBlobsScanned": 911,
+  "blobBytesRead": 73524616,
+  "detectors": [
+    "private-key",
+    "provider-key-shape",
+    "github-token-shape",
+    "aws-access-key-shape"
+  ],
+  "findings": [],
+  "limits": "Pattern scan of reachable Git text blobs only. It does not prove absence of all secrets or private content; ignored local configuration and dangling objects are outside scope. No raw matching values are exported.",
+  "visibilityChanged": false
+}

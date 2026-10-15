@@ -1,0 +1,22 @@
+{
+  "kind": "public-rules-browser-recheck",
+  "date": "2026-10-15",
+  "url": "https://www.boxuegu.com/matchTrack/detail/?id=10037",
+  "method": "Headless system Edge with Python Playwright; networkidle; public body text without login",
+  "httpStatus": 200,
+  "bodyUtf8Sha256": "d96fb15a46bc3acfee8136d0d6baeeec3a1e3fac80841a72ed6d914a98b0b08c",
+  "bodyCharacters": 10827,
+  "provinceDeadline": "2026-11-18",
+  "nationalDeadline": "2026-12-27",
+  "videoMinutes": [
+    5,
+    8
+  ],
+  "videoFormat": "MP4",
+  "videoMinimumHeight": 1080,
+  "pdfMaximumPages": 30,
+  "repoAccess": "public-or-reviewer-access",
+  "gitHistoryRequired": true,
+  "apiSecretConfiguration": "environment variables",
+  "rulesSnapshotIsNotSubmissionReceipt": true
+}

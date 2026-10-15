@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "kind": "human-acceptance-template-not-results",
+  "sourceSha": null,
+  "reviewer": null,
+  "reviewedAt": null,
+  "team": {
+    "status": "pending",
+    "registrationInformationConfirmed": false
+  },
+  "secondWindows": {
+    "status": "pending",
+    "isDifferentMachine": null,
+    "operator": null,
+    "environment": null,
+    "scriptReportPath": null,
+    "manualWalkthroughEvidence": [],
+    "liveModelPath": "not-run"
+  },
+  "reviewerAccess": {
+    "status": "pending",
+    "method": null,
+    "actualReviewerOrAnonymousAccessChecked": false,
+    "evidence": null
+  },
+  "formalVideo": {
+    "status": "pending",
+    "pathOrUrl": null,
+    "sha256": null,
+    "seconds": null,
+    "width": null,
+    "height": null,
+    "thirteenItemWalkthroughComplete": false
+  },
+  "unknownHttp13": {
+    "status": "pending",
+    "providerDelivery": "unknown",
+    "inputTokens": null,
+    "outputTokens": null,
+    "chargedAmount": null,
+    "currency": null,
+    "providerEvidenceReference": null,
+    "accountOwnerDecision": null
+  },
+  "ownerReview": {
+    "status": "pending",
+    "candidateHash": null,
+    "signedTwelveQuestionReviewPath": null
+  },
+  "contestSubmission": {
+    "status": "pending",
+    "currentRulesCheckedAt": null,
+    "submittedAt": null,
+    "receiptReference": null,
+    "submittedFilesAndHashes": []
+  }
+}

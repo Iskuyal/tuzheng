@@ -40,6 +40,8 @@ Vite 与 Vitest 的项目根仍是仓库根；Vite 页面根为 `web/`。Playwri
 
 90 秒实际项目实录入口在 `docs/submission/code-demo/`，成片和完整录屏保存在 `docs/submission/`，当次请求与产品结果在 `docs/evidence/product-live-demo-2026-10-13/`。已保存原件支持离线重新剪辑，不需要再调用模型。录制时的专用服务只监听 `127.0.0.1:7109`，不改变正常 API 端口；当前授权已结束。`npm run test:recording` 只验收请求预算恢复和停机规则，使用测试请求函数，不读取密钥、不调用模型，CI 在现有单元测试之后运行，无新增产物上传路径或 TypeScript 引用。
 
+固定交付与第二环境接管工具在 `docs/submission/closeout/`：`prepare-package.mjs` 基于干净 HEAD 输出 `.cache/closeout-packages/<SHA>/`，`verify-windows.mjs` 串行执行既有离线命令，结果写入 `.cache/windows-acceptance/<时间>/`。没有新增 npm 脚本、TS 引用或 CI 产物路径；默认和自定义端口通过既有配置矩阵验收。模板保持 pending，不将本机演练当成第二台机器回执。
+
 阶段进度以 [PHASES.md](PHASES.md) 为准；架构决定在 [adr/](adr/)；在线记录在 [evidence/](evidence/)；技术 PDF 与演示脚本在 [submission/](submission/)；维护结论在 [reviews/](reviews/)。历史实测中的旧路径表示当时的结构，后续操作使用本文件与 npm 脚本中的现行路径。
 
 本次根目录已跟踪文件从 **18 个降到 9 个**。运行 `npm run docs:check` 检查 Markdown 与提交 HTML 中的本地文件链接；它只检查文件存在，不证明网络可达、锚点存在或内容通过验收。

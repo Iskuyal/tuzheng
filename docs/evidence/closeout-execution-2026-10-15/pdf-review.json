@@ -1,0 +1,13 @@
+{
+  "kind": "read-only-existing-pdf-inspection",
+  "date": "2026-10-15",
+  "file": "docs/submission/web-match-competition-report.pdf",
+  "sha256": "bebd7d2e2632c9cd412ee1c27a3d8e8f50e769be78ca85d1e7fd29cbaa849168",
+  "pages": 16,
+  "linkAnnotations": 21,
+  "nonHttpsLinks": 0,
+  "renderedPages": 16,
+  "visualInspection": "Four contact sheets inspected for all pages; no visible clipping, overlapping tables or blank pages. Fine print remains at original PDF scale.",
+  "contentBaseline": "00a6268; printed local-test figures are historical, not replaced by this review.",
+  "pdfModified": false
+}
