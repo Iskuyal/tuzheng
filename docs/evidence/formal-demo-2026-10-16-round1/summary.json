@@ -1,0 +1,19 @@
+{
+  "mode": "actual-product-formal-recording",
+  "provider": "anthropic",
+  "model": "deepseek-flash",
+  "maxActualHttpRequests": 24,
+  "reservedRequests": 15,
+  "actualHttpRequests": 15,
+  "inputTokens": 22716,
+  "outputTokens": 7851,
+  "failedHttp": 0,
+  "stopReason": null,
+  "balanceReadRequests": 32,
+  "cost": null,
+  "operationStatus": "complete",
+  "startingBalanceCny": 9.65,
+  "finalBalanceCny": 9.58,
+  "observedBalanceDecreaseCny": 0.07,
+  "balanceDecreaseIsNotItemizedBilling": true
+}

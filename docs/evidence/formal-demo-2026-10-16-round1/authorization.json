@@ -1,0 +1,15 @@
+{
+  "authorizedOn": "2026-10-16",
+  "userAuthorization": "自行灵活判断复用或重新录制；允许使用模型请求，用 DeepSeek 官方，账户接近十元；用户提供了测试用官方密钥。",
+  "scope": "Silent formal product video; actual production browser paths, not a benchmark.",
+  "agentSelectedMaxActualHttpRequests": 24,
+  "userSpecifiedMonetaryCap": null,
+  "agentSelectedObservedBalanceDrawdownStop": 1,
+  "agentSelectedBalanceFloor": 2,
+  "balanceGuardLimit": "Balance observations are a stop signal, not a guaranteed per-request monetary cap or an itemized bill.",
+  "provider": "anthropic",
+  "baseUrl": "https://api.deepseek.com/anthropic/v1",
+  "model": "deepseek-flash",
+  "createdAt": "2026-10-16T08:16:49.492Z",
+  "previousGatewayUnknownRequest": "Unresolved and preserved; this is a separately authorized official-provider recording batch."
+}

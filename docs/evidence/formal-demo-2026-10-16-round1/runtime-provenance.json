@@ -1,0 +1,16 @@
+{
+  "sourceSha": "56bc9212d92c3d67854f71db075e800d9f755395",
+  "createdAt": "2026-10-16T08:16:49.839Z",
+  "model": "deepseek-flash",
+  "baseUrl": "https://api.deepseek.com/anthropic/v1",
+  "files": {
+    "dist/client/index.html": "23768dd9a661ec7f9d5581128fa9b8cb5e5c4c5295f5387a8a15ff155c1b50a0",
+    "web/pages/AuditPage.vue": "f956f233e0e0b7a14c16d0aa4a503a2fcf11dc3be459b49ee3030d182f7f281a",
+    "web/pages/SourceAuditPage.vue": "0440fc2cc7e05e706e0eebb6f8756b6898604fa2870b0fc22e7824a00955c9c6",
+    "server/app.ts": "208fccbfefc507707c66e34c1688ba46f2fe8695f96f0b79d87b095f4254dfeb",
+    "server/anthropic-vision.ts": "ebf1df58ad3cfec181975c4149de65ed5e3a054b6b09d1349fb9356ec6c4564a",
+    "server/source-investigation.ts": "9a21bfcc5907176e7e06519b7fef3e33c88caaa4b05874dc434eb02f7b60fb23",
+    "shared/source-audit.ts": "669b10f2f90d842b09d5e3ca03acebb25a977f7105313545f944397aa28a34f6"
+  },
+  "responseFixtures": false
+}

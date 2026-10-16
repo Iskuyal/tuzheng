@@ -1,0 +1,178 @@
+[
+  {
+    "time": 0.79,
+    "label": "chapter-start",
+    "chapter": "intro",
+    "title": "从截图开始"
+  },
+  {
+    "time": 18.919,
+    "label": "chapter-end",
+    "chapter": "intro"
+  },
+  {
+    "time": 18.92,
+    "label": "chapter-start",
+    "chapter": "vision",
+    "title": "实际上传与模型读数"
+  },
+  {
+    "time": 28.322,
+    "label": "model-wait-start",
+    "scenario": "growth-image"
+  },
+  {
+    "time": 29.996,
+    "label": "model-wait-end",
+    "scenario": "growth-image",
+    "status": 200
+  },
+  {
+    "time": 71.147,
+    "label": "chapter-end",
+    "chapter": "vision"
+  },
+  {
+    "time": 71.148,
+    "label": "chapter-start",
+    "chapter": "claims",
+    "title": "人工更正与缺证据"
+  },
+  {
+    "time": 107.729,
+    "label": "chapter-end",
+    "chapter": "claims"
+  },
+  {
+    "time": 107.73,
+    "label": "chapter-start",
+    "chapter": "source",
+    "title": "来源核验与实际工具轨迹"
+  },
+  {
+    "time": 118.685,
+    "label": "model-wait-start",
+    "scenario": "cpi-basis-mismatch"
+  },
+  {
+    "time": 129.37,
+    "label": "model-wait-end",
+    "scenario": "cpi-basis-mismatch",
+    "status": 200
+  },
+  {
+    "time": 174.471,
+    "label": "chapter-end",
+    "chapter": "source"
+  },
+  {
+    "time": 174.472,
+    "label": "chapter-start",
+    "chapter": "inference",
+    "title": "数字与推断分开核对"
+  },
+  {
+    "time": 180.77,
+    "label": "model-wait-start",
+    "scenario": "cpi-inference"
+  },
+  {
+    "time": 189.934,
+    "label": "model-wait-end",
+    "scenario": "cpi-inference",
+    "status": 200
+  },
+  {
+    "time": 211.676,
+    "label": "chapter-end",
+    "chapter": "inference"
+  },
+  {
+    "time": 211.676,
+    "label": "chapter-start",
+    "chapter": "clarify",
+    "title": "追问口径与恢复调查"
+  },
+  {
+    "time": 217.99,
+    "label": "model-wait-start",
+    "scenario": "cpi-clarify-before"
+  },
+  {
+    "time": 228.058,
+    "label": "model-wait-end",
+    "scenario": "cpi-clarify-before",
+    "status": 200
+  },
+  {
+    "time": 251.493,
+    "label": "model-wait-start",
+    "scenario": "cpi-clarify-resume"
+  },
+  {
+    "time": 255.85,
+    "label": "model-wait-end",
+    "scenario": "cpi-clarify-resume",
+    "status": 200
+  },
+  {
+    "time": 282.563,
+    "label": "chapter-end",
+    "chapter": "clarify"
+  },
+  {
+    "time": 282.563,
+    "label": "chapter-start",
+    "chapter": "rewrite",
+    "title": "带引用改写与失效"
+  },
+  {
+    "time": 288.865,
+    "label": "model-wait-start",
+    "scenario": "cpi-rewrite-and-qualify"
+  },
+  {
+    "time": 300.275,
+    "label": "model-wait-end",
+    "scenario": "cpi-rewrite-and-qualify",
+    "status": 200
+  },
+  {
+    "time": 343.681,
+    "label": "chapter-end",
+    "chapter": "rewrite"
+  },
+  {
+    "time": 343.682,
+    "label": "chapter-start",
+    "chapter": "cross",
+    "title": "跨图口径与冲突"
+  },
+  {
+    "time": 378.727,
+    "label": "chapter-end",
+    "chapter": "cross"
+  },
+  {
+    "time": 378.727,
+    "label": "chapter-start",
+    "chapter": "axis",
+    "title": "纵轴风险与对照"
+  },
+  {
+    "time": 411.863,
+    "label": "chapter-end",
+    "chapter": "axis"
+  },
+  {
+    "time": 411.864,
+    "label": "chapter-start",
+    "chapter": "outro",
+    "title": "证据范围与下一步"
+  },
+  {
+    "time": 428.917,
+    "label": "chapter-end",
+    "chapter": "outro"
+  }
+]

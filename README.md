@@ -19,7 +19,7 @@
 | 代码仓库 | <https://github.com/Iskuyal/tuzheng> | **当前为私有仓库**：评审访问前须设为 Public 或开通访问权限，见[访问检查记录](docs/submission/accessibility-check.md) |
 | README（介绍、架构、安装、团队） | 本文件 | 就绪 |
 | 赛事技术文档（PDF，≤30 页） | [web-match-competition-report.pdf](docs/submission/web-match-competition-report.pdf) | **16 页赛事阅读版**，按官网评分重点组织，突出技术链、案例和验证边界；重建：`node docs/submission/build-report.mjs --competition`；源文件 [competition-report.html](docs/submission/competition-report.html) |
-| 演示视频（5—8 分钟，1080p MP4） | 待补链接 | **待团队人工录制**；脚本、分镜与逐条走查清单见 [demo-video-script.md](docs/submission/demo-video-script.md) |
+| 演示视频（5—8 分钟，1080p MP4） | [7 分 29 秒实机画面版](docs/submission/tuzheng-formal-demo-silent.mp4) · [配音稿与时间轴](docs/submission/formal-demo/README.md) | **画面版完成，待用户配音及最终人工走查**。原生 1080p/30 fps、无音轨；模型段为 2026-10-16 DeepSeek 官方 15 次真实 HTTP，预置样例段明确标记；全片解码及播放检查通过 |
 | 90 秒产品演示（真实项目实录，1080p MP4） | [tuzheng-product-demo-90s.mp4](docs/submission/tuzheng-product-demo-90s.mp4) · [完整原始录屏](docs/submission/tuzheng-product-demo-uncut.webm) | 真实页面与当次模型请求，读取失败与待核对项保留；实际 HTTP 4 次，金额未知。等待加速已标注；录制工程与证据见 [code-demo](docs/submission/code-demo/README.md) |
 | 材料访问检查记录 | [accessibility-check.md](docs/submission/accessibility-check.md) | 就绪（含仓库可见性、链接可达性与公网演示决定） |
 | 真实模型证据索引 | [docs/evidence/](docs/evidence/) 与[路线图](docs/PHASES.md) | 就绪 |

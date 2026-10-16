@@ -1,0 +1,12 @@
+{
+  "complete": true,
+  "durationWallSeconds": 431.928,
+  "viewport": [
+    1920,
+    1080
+  ],
+  "rawFile": ".cache/formal-demo-2026-10-16/actual-formal-uncut.webm",
+  "responseFixtures": false,
+  "browserHeadless": true,
+  "sourceOfAllFrames": "Actual production Vue browser viewport; no generated interface or inserted results."
+}

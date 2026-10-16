@@ -1,0 +1,100 @@
+[
+  {
+    "id": "intro",
+    "title": "从截图开始",
+    "start": 0.782,
+    "end": 18.919,
+    "result": null
+  },
+  {
+    "id": "vision",
+    "title": "实际上传与模型读数",
+    "start": 18.92,
+    "end": 71.147,
+    "result": {
+      "actualUploadModelSucceeded": true
+    }
+  },
+  {
+    "id": "claims",
+    "title": "人工更正与缺证据",
+    "start": 71.148,
+    "end": 107.729,
+    "result": {
+      "inputOrigin": "explicitly-labelled-preset-sample",
+      "modelRequests": 0
+    }
+  },
+  {
+    "id": "source",
+    "title": "来源核验与实际工具轨迹",
+    "start": 107.73,
+    "end": 174.471,
+    "result": {
+      "states": [
+        "source-mismatch",
+        "source-pending",
+        "source-pending"
+      ],
+      "hasSuggestion": true
+    }
+  },
+  {
+    "id": "inference",
+    "title": "数字与推断分开核对",
+    "start": 174.472,
+    "end": 211.675,
+    "result": {
+      "hasResult": true
+    }
+  },
+  {
+    "id": "clarify",
+    "title": "追问口径与恢复调查",
+    "start": 211.676,
+    "end": 282.563,
+    "result": {
+      "clarificationRequested": true,
+      "resumeSucceeded": true
+    }
+  },
+  {
+    "id": "rewrite",
+    "title": "带引用改写与失效",
+    "start": 282.563,
+    "end": 343.681,
+    "result": {
+      "hasSuggestion": true,
+      "reverifiedAfterEdit": false
+    }
+  },
+  {
+    "id": "cross",
+    "title": "跨图口径与冲突",
+    "start": 343.682,
+    "end": 378.726,
+    "result": {
+      "inputOrigin": "explicitly-labelled-preset-samples",
+      "modelRequests": 0
+    }
+  },
+  {
+    "id": "axis",
+    "title": "纵轴风险与对照",
+    "start": 378.727,
+    "end": 411.863,
+    "result": {
+      "inputOrigin": "explicitly-labelled-preset-samples",
+      "modelRequests": 0
+    }
+  },
+  {
+    "id": "outro",
+    "title": "证据范围与下一步",
+    "start": 411.864,
+    "end": 428.916,
+    "result": {
+      "currentInputHasNotBeenReverified": true
+    }
+  }
+]

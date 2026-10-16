@@ -1,0 +1,57 @@
+{
+  "method": "Actual system Edge HTML video playback and seeking",
+  "metadata": {
+    "width": 1920,
+    "height": 1080,
+    "duration": 448.766667,
+    "advanced": true
+  },
+  "seeks": [
+    {
+      "time": 25,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 105,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 160,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 235,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 305,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 365,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 405,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 418,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 440,
+      "readyState": 4,
+      "error": null
+    }
+  ],
+  "pageErrors": []
+}

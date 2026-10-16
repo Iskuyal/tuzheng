@@ -1,0 +1,184 @@
+{
+  "kind": "formal-video-silent-picture-master",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 30,
+  "frames": 13463,
+  "seconds": 448.766667,
+  "audioTracks": 0,
+  "fullDecode": "passed",
+  "sha256": "6027678a23ba455c1896cdb72c4a900ab13164dfdffa2a614cc4be0a12e8645e",
+  "bytes": 40893651,
+  "rawSha256": "b4b0402d073a967fb67c590023e4a776b530494217eccccaea86a422b273499c",
+  "rawSeconds": 428.92,
+  "recoveryRawSha256": "f66acc8d6c142563564fcf6e4671ba783d923ced354417a953bd2fd6e1b49a4f",
+  "recoveryRawSeconds": 20.64,
+  "waitingSpeed": 1.0,
+  "pictureContent": "Actual browser recording only; source labels and chapter captions are editing overlays.",
+  "responseFixtures": false,
+  "voiceover": "pending-user-production",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "从截图开始",
+      "start": 0.0,
+      "end": 17.337,
+      "result": null
+    },
+    {
+      "id": "vision",
+      "title": "实际上传与模型读数",
+      "start": 17.338,
+      "end": 69.56500000000001,
+      "result": {
+        "actualUploadModelSucceeded": true
+      }
+    },
+    {
+      "id": "claims",
+      "title": "人工更正与缺证据",
+      "start": 69.566,
+      "end": 106.147,
+      "result": {
+        "inputOrigin": "explicitly-labelled-preset-sample",
+        "modelRequests": 0
+      }
+    },
+    {
+      "id": "source",
+      "title": "来源核验与实际工具轨迹",
+      "start": 106.14800000000001,
+      "end": 172.889,
+      "result": {
+        "states": [
+          "source-mismatch",
+          "source-pending",
+          "source-pending"
+        ],
+        "hasSuggestion": true
+      }
+    },
+    {
+      "id": "inference",
+      "title": "数字与推断分开核对",
+      "start": 172.89,
+      "end": 210.09300000000002,
+      "result": {
+        "hasResult": true
+      }
+    },
+    {
+      "id": "clarify",
+      "title": "追问口径与恢复调查",
+      "start": 210.094,
+      "end": 280.981,
+      "result": {
+        "clarificationRequested": true,
+        "resumeSucceeded": true
+      }
+    },
+    {
+      "id": "rewrite",
+      "title": "带引用改写与失效",
+      "start": 280.981,
+      "end": 342.099,
+      "result": {
+        "hasSuggestion": true,
+        "reverifiedAfterEdit": false
+      }
+    },
+    {
+      "id": "cross",
+      "title": "跨图口径与冲突",
+      "start": 342.1,
+      "end": 377.144,
+      "result": {
+        "inputOrigin": "explicitly-labelled-preset-samples",
+        "modelRequests": 0
+      }
+    },
+    {
+      "id": "axis",
+      "title": "纵轴风险与对照",
+      "start": 377.145,
+      "end": 410.281,
+      "result": {
+        "inputOrigin": "explicitly-labelled-preset-samples",
+        "modelRequests": 0
+      }
+    },
+    {
+      "id": "recovery",
+      "title": "格式错误与输入恢复",
+      "start": 410.282,
+      "end": 430.92199999999997,
+      "result": {
+        "modelRequests": 0,
+        "recoveryScope": "unsupported format to valid image input"
+      }
+    },
+    {
+      "id": "outro",
+      "title": "证据范围与下一步",
+      "start": 430.92199999999997,
+      "end": 447.974,
+      "result": {
+        "currentInputHasNotBeenReverified": true
+      }
+    }
+  ],
+  "editSegments": [
+    {
+      "start": 0.8,
+      "end": 117.903,
+      "rate": 1
+    },
+    {
+      "start": 117.903,
+      "end": 128.588,
+      "scenario": "cpi-basis-mismatch",
+      "rate": 1.0
+    },
+    {
+      "start": 128.588,
+      "end": 217.208,
+      "rate": 1
+    },
+    {
+      "start": 217.208,
+      "end": 227.27599999999998,
+      "scenario": "cpi-clarify-before",
+      "rate": 1.0
+    },
+    {
+      "start": 227.27599999999998,
+      "end": 288.083,
+      "rate": 1
+    },
+    {
+      "start": 288.083,
+      "end": 299.493,
+      "scenario": "cpi-rewrite-and-qualify",
+      "rate": 1.0
+    },
+    {
+      "start": 299.493,
+      "end": 411.082,
+      "rate": 1
+    },
+    {
+      "input": 1,
+      "start": 0,
+      "end": 20.64,
+      "rate": 1,
+      "chapter": "recovery"
+    },
+    {
+      "start": 411.082,
+      "end": 428.92,
+      "rate": 1
+    }
+  ]
+}

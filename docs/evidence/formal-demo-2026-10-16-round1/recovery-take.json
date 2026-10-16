@@ -1,0 +1,20 @@
+{
+  "events": [
+    {
+      "time": 2.28,
+      "label": "actual-format-error"
+    },
+    {
+      "time": 9.985,
+      "label": "valid-image-input-recovered-no-model-request"
+    }
+  ],
+  "viewport": [
+    1920,
+    1080
+  ],
+  "modelRequests": 0,
+  "durationWallSeconds": 23.66984680001042,
+  "responseFixtures": false,
+  "recoveryScope": "Client input format error to a valid image input; not an upstream model-error recovery."
+}
