@@ -2,12 +2,14 @@
 import hashlib
 import json
 import subprocess
+from shutil import copyfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[3]
 OUT=ROOT/'.cache/formal-demo-2026-10-16'
 EVIDENCE=ROOT/'docs/evidence/formal-demo-2026-10-16-round1'
 TARGET=ROOT/'docs/submission/tuzheng-formal-demo-silent.mp4'
+REVISION=ROOT/'docs/submission/tuzheng-formal-demo-silent-v2.mp4'
 RAW=OUT/'actual-formal-uncut.webm'
 RECOVERY=OUT/'actual-recovery-uncut.webm'
 if not RAW.exists():RAW=ROOT/'docs/submission/tuzheng-formal-demo-uncut.webm'
@@ -91,7 +93,7 @@ PlayResY: 1080
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Origin,Microsoft YaHei,18,&H00FFFFFF,&H00FFFFFF,&H702B2416,&H702B2416,0,0,0,0,100,100,0,0,3,6,0,9,22,22,84,1
+Style: Origin,Microsoft YaHei,20,&H00FFFFFF,&H00FFFFFF,&H702B2416,&H702B2416,-1,0,0,0,100,100,0,0,3,6,0,9,22,22,84,1
 Style: Chapter,Microsoft YaHei,23,&H00FFFFFF,&H00FFFFFF,&H702B2416,&H702B2416,0,0,0,0,100,100,0,0,3,7,0,1,24,24,22,1
 
 [Events]
@@ -103,10 +105,12 @@ def dialogue(start,end,style,text):
     return f'Dialogue: 0,{ts(start)},{ts(end)},{style},,0,0,0,,{text}\n'
 ass=header
 for index,chapter in enumerate(timeline,1):
-    if chapter['id'] in ['claims','cross','axis']:origin='实机操作录屏\\N预置样例 · 程序计算'
-    elif chapter['id']=='recovery':origin='实机操作录屏\\N格式校验 · 无模型请求'
-    elif chapter['id'] in ['intro','outro']:origin='实机操作录屏\\N2026-10-16'
-    else:origin='实机操作录屏\\NDeepSeek 官方\\N本次真实模型请求'
+    # ASS opaque-box backgrounds are painted per line. Keep this badge on one line
+    # so one line's backing cannot cover the preceding line's glyphs.
+    if chapter['id'] in ['claims','cross','axis']:origin='预置示例 · 程序计算'
+    elif chapter['id']=='recovery':origin='格式校验 · 无模型请求'
+    elif chapter['id'] in ['intro','outro']:origin='实机录屏 · 2026-10-16'
+    else:origin='DeepSeek 官方 · 实际请求'
     ass+=dialogue(chapter['start'],chapter['end'],'Origin',origin)
     ass+=dialogue(chapter['start'],min(chapter['end'],chapter['start']+4),'Chapter',f'{index:02}  {chapter["title"]}')
 if speed>1:
@@ -125,11 +129,12 @@ stream=next(s for s in result['streams'] if s['codec_type']=='video')
 assert stream['width']==1920 and stream['height']==1080 and stream['avg_frame_rate']=='30/1'
 assert not any(s['codec_type']=='audio' for s in result['streams'])
 assert 300<=float(result['format']['duration'])<=480
+copyfile(TARGET,REVISION)
 proof={'kind':'formal-video-silent-picture-master','resolution':[1920,1080],'fps':30,
   'frames':int(stream['nb_read_frames']),'seconds':float(result['format']['duration']),
   'audioTracks':0,'fullDecode':'passed','sha256':digest(TARGET),'bytes':TARGET.stat().st_size,
   'rawSha256':digest(RAW),'rawSeconds':duration,'recoveryRawSha256':digest(RECOVERY),'recoveryRawSeconds':recovery_duration,'waitingSpeed':speed,'pictureContent':'Actual browser recording only; source labels and chapter captions are editing overlays.',
-  'responseFixtures':False,'voiceover':'pending-user-production','chapters':timeline,'editSegments':segments}
+  'responseFixtures':False,'voiceover':'pending-user-production','publishedRevision':'docs/submission/tuzheng-formal-demo-silent-v2.mp4','chapters':timeline,'editSegments':segments}
 (EVIDENCE/'video-verification.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 for i,c in enumerate(timeline,1):
     t=min(c['end']-.5,c['start']+max(5,(c['end']-c['start'])/2))

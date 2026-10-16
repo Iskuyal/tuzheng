@@ -9,8 +9,8 @@
   "seconds": 448.766667,
   "audioTracks": 0,
   "fullDecode": "passed",
-  "sha256": "6027678a23ba455c1896cdb72c4a900ab13164dfdffa2a614cc4be0a12e8645e",
-  "bytes": 40893651,
+  "sha256": "80c4545087a930e3737a3eff4cfdc9cb87e0cdf64317d602f8175d2389c97807",
+  "bytes": 40843731,
   "rawSha256": "b4b0402d073a967fb67c590023e4a776b530494217eccccaea86a422b273499c",
   "rawSeconds": 428.92,
   "recoveryRawSha256": "f66acc8d6c142563564fcf6e4671ba783d923ced354417a953bd2fd6e1b49a4f",
@@ -180,5 +180,6 @@
       "end": 428.92,
       "rate": 1
     }
-  ]
+  ],
+  "publishedRevision": "docs/submission/tuzheng-formal-demo-silent-v2.mp4"
 }

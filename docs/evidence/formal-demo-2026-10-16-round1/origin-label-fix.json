@@ -1,0 +1,950 @@
+{
+  "kind": "origin-label-overlap-fix",
+  "cause": "Multiline ASS BorderStyle=3 opaque-box backgrounds covered adjacent glyphs; small light-weight text made encoded strokes faint.",
+  "fix": "Single-line 20px bold source badge; category and provenance remain visible.",
+  "modelRequestsDuringFix": 0,
+  "before": {
+    "kind": "actual-encoded-origin-label-regression",
+    "video": ".cache\\formal-demo-2026-10-16\\before-origin-label-fix.mp4",
+    "videoSha256": "6027678a23ba455c1896cdb72c4a900ab13164dfdffa2a614cc4be0a12e8645e",
+    "criterion": "One visible text line, at most 24px tall and 275px wide, inside the reserved right margin.",
+    "passed": false,
+    "checks": [
+      {
+        "chapter": "intro",
+        "sample": "start",
+        "time": 0.5,
+        "textBoundsInCrop": [
+          187,
+          18,
+          255,
+          46
+        ],
+        "legibleGlyphPixels": 58,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "intro",
+        "sample": "middle",
+        "time": 8.6685,
+        "textBoundsInCrop": [
+          182,
+          18,
+          257,
+          46
+        ],
+        "legibleGlyphPixels": 61,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "intro",
+        "sample": "end",
+        "time": 16.837,
+        "textBoundsInCrop": [
+          182,
+          18,
+          254,
+          46
+        ],
+        "legibleGlyphPixels": 59,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "vision",
+        "sample": "start",
+        "time": 17.838,
+        "textBoundsInCrop": [
+          163,
+          18,
+          254,
+          64
+        ],
+        "legibleGlyphPixels": 37,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "vision",
+        "sample": "middle",
+        "time": 43.45150000000001,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          62
+        ],
+        "legibleGlyphPixels": 23,
+        "textHeight": 44,
+        "passed": false
+      },
+      {
+        "chapter": "vision",
+        "sample": "end",
+        "time": 69.06500000000001,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 57,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "claims",
+        "sample": "start",
+        "time": 70.066,
+        "textBoundsInCrop": [
+          142,
+          18,
+          254,
+          47
+        ],
+        "legibleGlyphPixels": 41,
+        "textHeight": 29,
+        "passed": false
+      },
+      {
+        "chapter": "claims",
+        "sample": "middle",
+        "time": 87.85650000000001,
+        "textBoundsInCrop": [
+          180,
+          20,
+          251,
+          41
+        ],
+        "legibleGlyphPixels": 7,
+        "textHeight": 21,
+        "passed": false
+      },
+      {
+        "chapter": "claims",
+        "sample": "end",
+        "time": 105.647,
+        "textBoundsInCrop": [
+          140,
+          18,
+          256,
+          46
+        ],
+        "legibleGlyphPixels": 47,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "source",
+        "sample": "start",
+        "time": 106.64800000000001,
+        "textBoundsInCrop": [
+          155,
+          18,
+          252,
+          66
+        ],
+        "legibleGlyphPixels": 58,
+        "textHeight": 48,
+        "passed": false
+      },
+      {
+        "chapter": "source",
+        "sample": "middle",
+        "time": 139.51850000000002,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 57,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "source",
+        "sample": "end",
+        "time": 172.389,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 57,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "inference",
+        "sample": "start",
+        "time": 173.39,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 37,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "inference",
+        "sample": "middle",
+        "time": 191.4915,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 57,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "inference",
+        "sample": "end",
+        "time": 209.59300000000002,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 46,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "clarify",
+        "sample": "start",
+        "time": 210.594,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 58,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "clarify",
+        "sample": "middle",
+        "time": 245.5375,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 48,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "clarify",
+        "sample": "end",
+        "time": 280.481,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 56,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "rewrite",
+        "sample": "start",
+        "time": 281.481,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 45,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "rewrite",
+        "sample": "middle",
+        "time": 311.53999999999996,
+        "textBoundsInCrop": [
+          152,
+          18,
+          257,
+          66
+        ],
+        "legibleGlyphPixels": 299,
+        "textHeight": 48,
+        "passed": false
+      },
+      {
+        "chapter": "rewrite",
+        "sample": "end",
+        "time": 341.599,
+        "textBoundsInCrop": [
+          155,
+          18,
+          256,
+          64
+        ],
+        "legibleGlyphPixels": 57,
+        "textHeight": 46,
+        "passed": false
+      },
+      {
+        "chapter": "cross",
+        "sample": "start",
+        "time": 342.6,
+        "textBoundsInCrop": [
+          140,
+          18,
+          254,
+          47
+        ],
+        "legibleGlyphPixels": 47,
+        "textHeight": 29,
+        "passed": false
+      },
+      {
+        "chapter": "cross",
+        "sample": "middle",
+        "time": 359.622,
+        "textBoundsInCrop": [
+          140,
+          18,
+          256,
+          46
+        ],
+        "legibleGlyphPixels": 47,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "cross",
+        "sample": "end",
+        "time": 376.644,
+        "textBoundsInCrop": [
+          140,
+          18,
+          256,
+          46
+        ],
+        "legibleGlyphPixels": 47,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "axis",
+        "sample": "start",
+        "time": 377.645,
+        "textBoundsInCrop": [
+          140,
+          18,
+          256,
+          46
+        ],
+        "legibleGlyphPixels": 40,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "axis",
+        "sample": "middle",
+        "time": 393.71299999999997,
+        "textBoundsInCrop": [
+          139,
+          18,
+          256,
+          48
+        ],
+        "legibleGlyphPixels": 25,
+        "textHeight": 30,
+        "passed": false
+      },
+      {
+        "chapter": "axis",
+        "sample": "end",
+        "time": 409.781,
+        "textBoundsInCrop": [
+          139,
+          18,
+          256,
+          48
+        ],
+        "legibleGlyphPixels": 33,
+        "textHeight": 30,
+        "passed": false
+      },
+      {
+        "chapter": "recovery",
+        "sample": "start",
+        "time": 410.782,
+        "textBoundsInCrop": [
+          141,
+          18,
+          254,
+          46
+        ],
+        "legibleGlyphPixels": 42,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "recovery",
+        "sample": "middle",
+        "time": 420.602,
+        "textBoundsInCrop": [
+          126,
+          18,
+          256,
+          47
+        ],
+        "legibleGlyphPixels": 48,
+        "textHeight": 29,
+        "passed": false
+      },
+      {
+        "chapter": "recovery",
+        "sample": "end",
+        "time": 430.42199999999997,
+        "textBoundsInCrop": [
+          126,
+          18,
+          256,
+          47
+        ],
+        "legibleGlyphPixels": 48,
+        "textHeight": 29,
+        "passed": false
+      },
+      {
+        "chapter": "outro",
+        "sample": "start",
+        "time": 431.42199999999997,
+        "textBoundsInCrop": [
+          182,
+          18,
+          257,
+          46
+        ],
+        "legibleGlyphPixels": 61,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "outro",
+        "sample": "middle",
+        "time": 439.448,
+        "textBoundsInCrop": [
+          182,
+          18,
+          257,
+          46
+        ],
+        "legibleGlyphPixels": 61,
+        "textHeight": 28,
+        "passed": false
+      },
+      {
+        "chapter": "outro",
+        "sample": "end",
+        "time": 447.474,
+        "textBoundsInCrop": [
+          182,
+          18,
+          257,
+          46
+        ],
+        "legibleGlyphPixels": 48,
+        "textHeight": 28,
+        "passed": false
+      }
+    ]
+  },
+  "after": {
+    "kind": "actual-encoded-origin-label-regression",
+    "video": "F:\\VibeCoding\\web-match\\docs\\submission\\tuzheng-formal-demo-silent.mp4",
+    "videoSha256": "80c4545087a930e3737a3eff4cfdc9cb87e0cdf64317d602f8175d2389c97807",
+    "criterion": "One visible text line, at most 24px tall and 275px wide, inside the reserved right margin.",
+    "passed": true,
+    "checks": [
+      {
+        "chapter": "intro",
+        "sample": "start",
+        "time": 0.5,
+        "textBoundsInCrop": [
+          95,
+          18,
+          257,
+          31
+        ],
+        "legibleGlyphPixels": 476,
+        "textHeight": 13,
+        "passed": true
+      },
+      {
+        "chapter": "intro",
+        "sample": "middle",
+        "time": 8.6685,
+        "textBoundsInCrop": [
+          95,
+          18,
+          257,
+          32
+        ],
+        "legibleGlyphPixels": 518,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "intro",
+        "sample": "end",
+        "time": 16.837,
+        "textBoundsInCrop": [
+          95,
+          18,
+          257,
+          32
+        ],
+        "legibleGlyphPixels": 513,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "vision",
+        "sample": "start",
+        "time": 17.838,
+        "textBoundsInCrop": [
+          73,
+          18,
+          256,
+          33
+        ],
+        "legibleGlyphPixels": 349,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "vision",
+        "sample": "middle",
+        "time": 43.45150000000001,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          32
+        ],
+        "legibleGlyphPixels": 495,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "vision",
+        "sample": "end",
+        "time": 69.06500000000001,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 562,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "claims",
+        "sample": "start",
+        "time": 70.066,
+        "textBoundsInCrop": [
+          122,
+          18,
+          256,
+          32
+        ],
+        "legibleGlyphPixels": 395,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "claims",
+        "sample": "middle",
+        "time": 87.85650000000001,
+        "textBoundsInCrop": [
+          122,
+          18,
+          256,
+          32
+        ],
+        "legibleGlyphPixels": 462,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "claims",
+        "sample": "end",
+        "time": 105.647,
+        "textBoundsInCrop": [
+          121,
+          18,
+          256,
+          32
+        ],
+        "legibleGlyphPixels": 529,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "source",
+        "sample": "start",
+        "time": 106.64800000000001,
+        "textBoundsInCrop": [
+          73,
+          18,
+          256,
+          33
+        ],
+        "legibleGlyphPixels": 469,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "source",
+        "sample": "middle",
+        "time": 139.51850000000002,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 610,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "source",
+        "sample": "end",
+        "time": 172.389,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 562,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "inference",
+        "sample": "start",
+        "time": 173.39,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 487,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "inference",
+        "sample": "middle",
+        "time": 191.4915,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 562,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "inference",
+        "sample": "end",
+        "time": 209.59300000000002,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 628,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "clarify",
+        "sample": "start",
+        "time": 210.594,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 557,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "clarify",
+        "sample": "middle",
+        "time": 245.5375,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          32
+        ],
+        "legibleGlyphPixels": 602,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "clarify",
+        "sample": "end",
+        "time": 280.481,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 556,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "rewrite",
+        "sample": "start",
+        "time": 281.481,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 571,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "rewrite",
+        "sample": "middle",
+        "time": 311.53999999999996,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 793,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "rewrite",
+        "sample": "end",
+        "time": 341.599,
+        "textBoundsInCrop": [
+          73,
+          18,
+          257,
+          33
+        ],
+        "legibleGlyphPixels": 562,
+        "textHeight": 15,
+        "passed": true
+      },
+      {
+        "chapter": "cross",
+        "sample": "start",
+        "time": 342.6,
+        "textBoundsInCrop": [
+          122,
+          18,
+          256,
+          32
+        ],
+        "legibleGlyphPixels": 484,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "cross",
+        "sample": "middle",
+        "time": 359.622,
+        "textBoundsInCrop": [
+          122,
+          18,
+          256,
+          32
+        ],
+        "legibleGlyphPixels": 521,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "cross",
+        "sample": "end",
+        "time": 376.644,
+        "textBoundsInCrop": [
+          122,
+          18,
+          256,
+          32
+        ],
+        "legibleGlyphPixels": 521,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "axis",
+        "sample": "start",
+        "time": 377.645,
+        "textBoundsInCrop": [
+          122,
+          18,
+          256,
+          32
+        ],
+        "legibleGlyphPixels": 520,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "axis",
+        "sample": "middle",
+        "time": 393.71299999999997,
+        "textBoundsInCrop": [
+          122,
+          18,
+          256,
+          32
+        ],
+        "legibleGlyphPixels": 555,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "axis",
+        "sample": "end",
+        "time": 409.781,
+        "textBoundsInCrop": [
+          122,
+          18,
+          256,
+          32
+        ],
+        "legibleGlyphPixels": 552,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "recovery",
+        "sample": "start",
+        "time": 410.782,
+        "textBoundsInCrop": [
+          106,
+          18,
+          256,
+          31
+        ],
+        "legibleGlyphPixels": 474,
+        "textHeight": 13,
+        "passed": true
+      },
+      {
+        "chapter": "recovery",
+        "sample": "middle",
+        "time": 420.602,
+        "textBoundsInCrop": [
+          106,
+          18,
+          257,
+          32
+        ],
+        "legibleGlyphPixels": 569,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "recovery",
+        "sample": "end",
+        "time": 430.42199999999997,
+        "textBoundsInCrop": [
+          106,
+          18,
+          257,
+          32
+        ],
+        "legibleGlyphPixels": 569,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "outro",
+        "sample": "start",
+        "time": 431.42199999999997,
+        "textBoundsInCrop": [
+          95,
+          18,
+          257,
+          32
+        ],
+        "legibleGlyphPixels": 530,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "outro",
+        "sample": "middle",
+        "time": 439.448,
+        "textBoundsInCrop": [
+          95,
+          18,
+          257,
+          32
+        ],
+        "legibleGlyphPixels": 489,
+        "textHeight": 14,
+        "passed": true
+      },
+      {
+        "chapter": "outro",
+        "sample": "end",
+        "time": 447.474,
+        "textBoundsInCrop": [
+          95,
+          18,
+          257,
+          32
+        ],
+        "legibleGlyphPixels": 493,
+        "textHeight": 14,
+        "passed": true
+      }
+    ]
+  },
+  "rawSourcesUnchanged": true,
+  "revision": "docs/submission/tuzheng-formal-demo-silent-v2.mp4"
+}

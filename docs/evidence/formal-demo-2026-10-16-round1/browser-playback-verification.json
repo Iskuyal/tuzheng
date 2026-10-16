@@ -1,5 +1,7 @@
 {
   "method": "Actual system Edge HTML video playback and seeking",
+  "video": "docs/submission/tuzheng-formal-demo-silent-v2.mp4",
+  "videoSha256": "80c4545087a930e3737a3eff4cfdc9cb87e0cdf64317d602f8175d2389c97807",
   "metadata": {
     "width": 1920,
     "height": 1080,
@@ -13,7 +15,7 @@
       "error": null
     },
     {
-      "time": 105,
+      "time": 85,
       "readyState": 4,
       "error": null
     },

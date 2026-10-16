@@ -1,6 +1,8 @@
 # 正式实机演示：无配音画面版
 
-用户负责后期配音，本目录提供已经剪好的实际项目画面、分镜与可编辑讲稿。主文件为 [tuzheng-formal-demo-silent.mp4](../tuzheng-formal-demo-silent.mp4)，实际 448.767 秒（约 7 分 29 秒）、13,463 帧；哈希与逐段时间映射见[视频检查](../../evidence/formal-demo-2026-10-16-round1/video-verification.json)。
+用户负责后期配音，本目录提供已经剪好的实际项目画面、分镜与可编辑讲稿。当前使用[修正版 v2](../tuzheng-formal-demo-silent-v2.mp4)，实际 448.767 秒（约 7 分 29 秒）、13,463 帧；[原文件名](../tuzheng-formal-demo-silent.mp4)也已同步为相同字节。哈希与逐段时间映射见[视频检查](../../evidence/formal-demo-2026-10-16-round1/video-verification.json)。
+
+**角标修正：**初版多行 ASS 背景框相互覆盖，用户指出后已改为单行20号加粗标签。新文件名避免复用旧播放器缓存；同一像素检查在旧版33处失败、修正版33处通过，覆盖11段各自开头/中间/结尾。记录见[角标回归](../../evidence/formal-demo-2026-10-16-round1/origin-label-fix.json)，本次修正0次模型请求。上一轮整页缩略抽帧没有识别此缺陷，不能继续作为初版角标通过的依据。
 
 - 1920×1080 原生视口录制，成片 30 fps，H.264/yuv420p MP4，无音轨，便于直接加入人声和后期音乐。
 - 全部底图来自实际 Vue 生产构建与产品 API 的操作录屏，没有重绘界面、替身响应或补写模型结果。只叠加片段标题与素材来源标记。
@@ -18,9 +20,12 @@
 
 ```powershell
 python -X utf8 docs/submission/formal-demo/render.py
+python -X utf8 docs/submission/formal-demo/check-origin-labels.py
 ```
 
 录制代码是本次固定批次的原始工程，不是无授权重录入口。`capture-server.mjs` 使用用户为本次提供的官方密钥，放在 LocalAppData 的专用临时配置中；密钥不在本目录、视频或证据日志中。录制进程已关闭，专用密钥配置已清理，主用户配置保持原样。已完成批次拒绝重新启用，新增付费录制必须新建批次与授权。
+
+角标检查额外使用 Python Pillow 与 FFmpeg，直接抽取成片右上角实际像素，不只校验 ASS 文本；检查不调用模型。
 
 ## 请求与版本记录
 

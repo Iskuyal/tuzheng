@@ -6,13 +6,15 @@
 
 | 内容 | 位置与实际结果 |
 | --- | --- |
-| 无配音成片 | [MP4](../submission/tuzheng-formal-demo-silent.mp4)，448.767秒，1920×1080，30fps，13,463帧，无音轨，40,893,651字节 |
+| 无配音成片 | [MP4 v2](../submission/tuzheng-formal-demo-silent-v2.mp4)，448.767秒，1920×1080，30fps，13,463帧，无音轨，40,843,731字节 |
 | 配音资料 | [讲稿](../submission/formal-demo/voiceover-draft.md)、[章节SRT](../submission/formal-demo/chapters.srt)，按实际时间轴写作，可自行改写 |
 | 原始素材 | [连续主录屏](../submission/tuzheng-formal-demo-uncut.webm)、[格式恢复镜头](../submission/formal-demo/raw-input-recovery.webm)，原生1080p WebM |
 | 工程 | [录制、导出与证据说明](../submission/formal-demo/README.md) |
 | 验证 | [视频技术检查/原件哈希/剪辑映射](../evidence/formal-demo-2026-10-16-round1/video-verification.json)、[浏览器播放及跳转](../evidence/formal-demo-2026-10-16-round1/browser-playback-verification.json) |
 
-MP4 SHA-256：`6027678a23ba455c1896cdb72c4a900ab13164dfdffa2a614cc4be0a12e8645e`。全部底图来自实际生产 Vue 页面与产品 API，浏览器为本机系统 Edge、headless 自动操作，不能称人工手持或真人用户研究。后期只插入同为实际录制的格式恢复镜头并叠加片段标题/来源标签；没有虚构界面、替身响应或补写结果，没有加速实际操作或模型等待。
+MP4 v2 SHA-256：`80c4545087a930e3737a3eff4cfdc9cb87e0cdf64317d602f8175d2389c97807`。全部底图来自实际生产 Vue 页面与产品 API，浏览器为本机系统 Edge、headless 自动操作，不能称人工手持或真人用户研究。后期只插入同为实际录制的格式恢复镜头并叠加片段标题/来源标签；没有虚构界面、替身响应或补写结果，没有加速实际操作或模型等待。
+
+**用户反馈后的角标修正：**初版右上角多行背景框相互覆盖，上一轮缩略抽帧检查遗漏了这个问题。已用实际MP4像素复现（11段×开头/中间/结尾，33处失败），改为单行20号加粗标签后同一检查33处通过；原文件名同步修复，新增v2链接避免旧缓存。原始录屏、时长、帧数、音轨、配音时间轴和历史模型记录不变，本轮修正0次模型调用；前后文件哈希与检查见[回归记录](../evidence/formal-demo-2026-10-16-round1/origin-label-fix.json)。
 
 内容包括真实上传/模型观察/确认计算/手动更正、预置多主张独立核对、真实CPI来源核验、工具轨迹、推断方向、必要追问与恢复、逐处改写和采用后失效、预置跨图与纵轴对照、格式输入错误恢复。错误恢复只到合法图片输入，不是上游模型故障恢复；真实额外追问、重复主张与恢复后未再汇报项保留，不剪成模型每次都完美。
 
