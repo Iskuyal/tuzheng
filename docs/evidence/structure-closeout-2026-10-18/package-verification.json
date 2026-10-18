@@ -1,0 +1,11 @@
+{
+  "scope": "Isolated Git fixture for package mechanism; not a final package or candidate for the user workspace.",
+  "schema2PrepareAndVerify": true,
+  "schema2IncludesCurrentMaterials": 19,
+  "tamperedVoiceoverRejected": true,
+  "restoredPackagePassed": true,
+  "schema1MaterialSetCompatibility": true,
+  "fixtureSourceSha": "a2fcb58408831e8f967505ea48f58c0f3e366474",
+  "modelRequests": 0,
+  "userWorkspaceCommitted": false
+}

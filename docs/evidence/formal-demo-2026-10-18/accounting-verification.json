@@ -1,0 +1,60 @@
+{
+  "actualHttp": 7,
+  "httpStatuses": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+  ],
+  "requestedModels": [
+    "deepseek-flash"
+  ],
+  "responseModels": [
+    "deepseek-flash"
+  ],
+  "allUsageKnown": true,
+  "inputTokens": 9190,
+  "outputTokens": 2649,
+  "journalTerminalStatesMatch": true,
+  "productRequests": [
+    {
+      "path": "/api/audit/image",
+      "status": 200
+    },
+    {
+      "path": "/api/audit/check",
+      "status": 200
+    },
+    {
+      "path": "/api/audit/check",
+      "status": 200
+    },
+    {
+      "path": "/api/audit/check",
+      "status": 200
+    },
+    {
+      "path": "/api/source-audit/investigate",
+      "status": 200
+    },
+    {
+      "path": "/api/source-audit/investigate",
+      "status": 200
+    }
+  ],
+  "officialBalanceReads": 9,
+  "observedBalanceCny": [
+    9.54,
+    9.52
+  ],
+  "observedDifferenceIsNotItemizedBilling": true,
+  "priorUnknownGatewayRequest": "Still unresolved; not included or overwritten.",
+  "secretScan": {
+    "scope": "This batch project and evidence files at time of verification",
+    "files": 29,
+    "exactKeyMatches": 0
+  }
+}

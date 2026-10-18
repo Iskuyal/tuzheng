@@ -1,0 +1,37 @@
+[
+  {
+    "id": "intro",
+    "title": "从截图出发，看见依据",
+    "start": 0.0,
+    "end": 30.129,
+    "rawPart": "offline",
+    "result": {
+      "actualProductUI": true,
+      "modelRequests": 0
+    }
+  },
+  {
+    "id": "recovery",
+    "title": "错误输入与恢复",
+    "start": 30.137,
+    "end": 55.189,
+    "rawPart": "offline",
+    "result": {
+      "modelRequests": 0,
+      "errorObserved": true,
+      "validImageRestored": true,
+      "scope": "Client input format only; no upstream model-error claim."
+    }
+  },
+  {
+    "id": "outro",
+    "title": "让结论有据可查",
+    "start": 55.191,
+    "end": 76.071,
+    "rawPart": "offline",
+    "result": {
+      "modelRequests": 0,
+      "actualProductUI": true
+    }
+  }
+]

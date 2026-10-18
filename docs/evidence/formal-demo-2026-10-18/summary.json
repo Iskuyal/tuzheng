@@ -1,0 +1,1 @@
+{"model":"deepseek-flash","maxActualHttp":18,"actualHttpRequests":7,"reservations":7,"inputTokens":9190,"outputTokens":2649,"failedHttp":0,"stopReason":null,"balanceReads":9,"itemizedCost":null,"responseFixtures":false,"operationStatus":"complete","startingBalanceCny":9.54,"finalBalanceCny":9.52,"observedBalanceDecreaseCny":0.02}

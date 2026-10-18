@@ -1,0 +1,213 @@
+{
+  "kind": "current-production-UI-silent-competition-video",
+  "path": "docs\\submission\\tuzheng-competition-demo-2026-10-18-silent.mp4",
+  "seconds": 398.23333333333335,
+  "frames": 11947,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 30,
+  "codec": "h264",
+  "pixelFormat": "yuv420p",
+  "audioTracks": 0,
+  "bytes": 30447883,
+  "sha256": "74813f4e688da1d49780c1ba92a818b3fff68001b3ed1702997b6fa9d76169ae",
+  "fullDecode": "passed",
+  "voiceover": "pending-user",
+  "responseFixtures": false,
+  "oldVideoReused": false,
+  "playbackRate": 1,
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "从截图出发，看见依据",
+      "start": 0.0,
+      "end": 28.933333333333334,
+      "rawPart": "offline",
+      "result": {
+        "actualProductUI": true,
+        "modelRequests": 0
+      },
+      "index": 1,
+      "frames": 868,
+      "rawStart": 1.2,
+      "rawEnd": 30.129,
+      "playbackRate": 1,
+      "originLabel": "实机操作 · 无模型请求",
+      "segment": ".cache\\demo-2026-10-18\\01-intro.mp4"
+    },
+    {
+      "id": "vision",
+      "title": "实际上传、模型读数与人工核对",
+      "start": 28.933333333333334,
+      "end": 99.0,
+      "rawPart": "live",
+      "result": {
+        "actualModelUpload": true,
+        "manualRecalculation": true,
+        "responseKeys": [
+          "observation",
+          "modelRead"
+        ]
+      },
+      "index": 2,
+      "frames": 2102,
+      "rawStart": 0.166,
+      "rawEnd": 70.243,
+      "playbackRate": 1,
+      "originLabel": "DeepSeek 官方 · 本次实录",
+      "segment": ".cache\\demo-2026-10-18\\02-vision.mp4"
+    },
+    {
+      "id": "source",
+      "title": "图文主张与来源判断",
+      "start": 99.0,
+      "end": 169.06666666666666,
+      "rawPart": "live",
+      "result": {
+        "states": [
+          "source-mismatch",
+          "source-pending",
+          "source-pending"
+        ],
+        "hasSuggestion": true
+      },
+      "index": 3,
+      "frames": 2102,
+      "rawStart": 70.244,
+      "rawEnd": 140.324,
+      "playbackRate": 1,
+      "originLabel": "DeepSeek 官方 · 本次实录",
+      "segment": ".cache\\demo-2026-10-18\\03-source.mp4"
+    },
+    {
+      "id": "citations",
+      "title": "可追溯引用与资料范围",
+      "start": 169.06666666666666,
+      "end": 209.13333333333333,
+      "rawPart": "live",
+      "result": {
+        "actualCitations": true,
+        "fixedLibraryNotOpenWebSearch": true
+      },
+      "index": 4,
+      "frames": 1202,
+      "rawStart": 140.326,
+      "rawEnd": 180.402,
+      "playbackRate": 1,
+      "originLabel": "DeepSeek 官方 · 本次实录",
+      "segment": ".cache\\demo-2026-10-18\\04-citations.mp4"
+    },
+    {
+      "id": "trace",
+      "title": "实际工具调用与停止边界",
+      "start": 209.13333333333333,
+      "end": 254.2,
+      "rawPart": "live",
+      "result": {
+        "toolEvents": 4,
+        "actualProductResponse": true
+      },
+      "index": 5,
+      "frames": 1352,
+      "rawStart": 180.403,
+      "rawEnd": 225.492,
+      "playbackRate": 1,
+      "originLabel": "DeepSeek 官方 · 本次实录",
+      "segment": ".cache\\demo-2026-10-18\\05-trace.mp4"
+    },
+    {
+      "id": "rewrite",
+      "title": "逐处修改与旧结果失效",
+      "start": 254.2,
+      "end": 294.26666666666665,
+      "rawPart": "live",
+      "result": {
+        "hasSuggestion": true,
+        "adopted": true,
+        "reverified": false
+      },
+      "index": 6,
+      "frames": 1202,
+      "rawStart": 225.493,
+      "rawEnd": 265.577,
+      "playbackRate": 1,
+      "originLabel": "DeepSeek 官方 · 本次实录",
+      "segment": ".cache\\demo-2026-10-18\\06-rewrite.mp4"
+    },
+    {
+      "id": "clarify",
+      "title": "口径不明时保留待核对",
+      "start": 294.26666666666665,
+      "end": 352.3333333333333,
+      "rawPart": "live",
+      "result": {
+        "clarificationAsked": false,
+        "resumed": false,
+        "states": [
+          "source-pending",
+          "source-pending",
+          "source-pending"
+        ]
+      },
+      "index": 7,
+      "frames": 1742,
+      "rawStart": 265.578,
+      "rawEnd": 323.668,
+      "playbackRate": 1,
+      "originLabel": "DeepSeek 官方 · 本次实录",
+      "segment": ".cache\\demo-2026-10-18\\07-clarify.mp4"
+    },
+    {
+      "id": "recovery",
+      "title": "错误输入与恢复",
+      "start": 352.3333333333333,
+      "end": 377.3666666666667,
+      "rawPart": "offline",
+      "result": {
+        "modelRequests": 0,
+        "errorObserved": true,
+        "validImageRestored": true,
+        "scope": "Client input format only; no upstream model-error claim."
+      },
+      "index": 8,
+      "frames": 751,
+      "rawStart": 30.137,
+      "rawEnd": 55.189,
+      "playbackRate": 1,
+      "originLabel": "实机操作 · 无模型请求",
+      "segment": ".cache\\demo-2026-10-18\\08-recovery.mp4"
+    },
+    {
+      "id": "outro",
+      "title": "让结论有据可查",
+      "start": 377.3666666666667,
+      "end": 398.23333333333335,
+      "rawPart": "offline",
+      "result": {
+        "modelRequests": 0,
+        "actualProductUI": true
+      },
+      "index": 9,
+      "frames": 626,
+      "rawStart": 55.191,
+      "rawEnd": 76.071,
+      "playbackRate": 1,
+      "originLabel": "实机操作 · 无模型请求",
+      "segment": ".cache\\demo-2026-10-18\\09-outro.mp4"
+    }
+  ],
+  "raw": {
+    "offline": {
+      "path": "docs\\submission\\demo-2026-10-18\\raw-offline.webm",
+      "sha256": "ea26efab1f6ef4fdd8ba79022ff78a8907a46404d0f9f1522dc8b142c3762c71",
+      "seconds": 77.44
+    },
+    "live": {
+      "path": "docs\\submission\\demo-2026-10-18\\raw-live.webm",
+      "sha256": "e90530ebc8d11effebb1a5ed98a7955a14b2b20553b13d46f1569f116ec7710a",
+      "seconds": 337.0
+    }
+  }
+}

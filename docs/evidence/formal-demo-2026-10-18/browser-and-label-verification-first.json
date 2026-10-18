@@ -1,0 +1,387 @@
+{
+  "videoSha256": "74813f4e688da1d49780c1ba92a818b3fff68001b3ed1702997b6fa9d76169ae",
+  "originBadges": [
+    {
+      "chapter": "intro",
+      "phase": "start",
+      "glyphPixels": 711,
+      "bounds": [
+        30,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "intro",
+      "phase": "middle",
+      "glyphPixels": 839,
+      "bounds": [
+        10,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "intro",
+      "phase": "end",
+      "glyphPixels": 706,
+      "bounds": [
+        175,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "vision",
+      "phase": "start",
+      "glyphPixels": 744,
+      "bounds": [
+        141,
+        0,
+        334,
+        25
+      ],
+      "passed": true
+    },
+    {
+      "chapter": "vision",
+      "phase": "middle",
+      "glyphPixels": 1438,
+      "bounds": [
+        0,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "vision",
+      "phase": "end",
+      "glyphPixels": 1148,
+      "bounds": [
+        0,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "source",
+      "phase": "start",
+      "glyphPixels": 1161,
+      "bounds": [
+        0,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "source",
+      "phase": "middle",
+      "glyphPixels": 758,
+      "bounds": [
+        141,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "source",
+      "phase": "end",
+      "glyphPixels": 844,
+      "bounds": [
+        40,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "citations",
+      "phase": "start",
+      "glyphPixels": 779,
+      "bounds": [
+        132,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "citations",
+      "phase": "middle",
+      "glyphPixels": 1001,
+      "bounds": [
+        32,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "citations",
+      "phase": "end",
+      "glyphPixels": 759,
+      "bounds": [
+        141,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "trace",
+      "phase": "start",
+      "glyphPixels": 2387,
+      "bounds": [
+        0,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "trace",
+      "phase": "middle",
+      "glyphPixels": 771,
+      "bounds": [
+        16,
+        0,
+        334,
+        44
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "trace",
+      "phase": "end",
+      "glyphPixels": 767,
+      "bounds": [
+        38,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "rewrite",
+      "phase": "start",
+      "glyphPixels": 793,
+      "bounds": [
+        132,
+        0,
+        334,
+        34
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "rewrite",
+      "phase": "middle",
+      "glyphPixels": 2465,
+      "bounds": [
+        0,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "rewrite",
+      "phase": "end",
+      "glyphPixels": 803,
+      "bounds": [
+        36,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "clarify",
+      "phase": "start",
+      "glyphPixels": 765,
+      "bounds": [
+        141,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "clarify",
+      "phase": "middle",
+      "glyphPixels": 4721,
+      "bounds": [
+        0,
+        0,
+        346,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "clarify",
+      "phase": "end",
+      "glyphPixels": 901,
+      "bounds": [
+        0,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "recovery",
+      "phase": "start",
+      "glyphPixels": 711,
+      "bounds": [
+        166,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "recovery",
+      "phase": "middle",
+      "glyphPixels": 883,
+      "bounds": [
+        32,
+        0,
+        334,
+        45
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "recovery",
+      "phase": "end",
+      "glyphPixels": 708,
+      "bounds": [
+        175,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "outro",
+      "phase": "start",
+      "glyphPixels": 713,
+      "bounds": [
+        166,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    },
+    {
+      "chapter": "outro",
+      "phase": "middle",
+      "glyphPixels": 704,
+      "bounds": [
+        175,
+        0,
+        334,
+        24
+      ],
+      "passed": true
+    },
+    {
+      "chapter": "outro",
+      "phase": "end",
+      "glyphPixels": 706,
+      "bounds": [
+        175,
+        0,
+        334,
+        32
+      ],
+      "passed": false
+    }
+  ],
+  "allBadgesPassed": false,
+  "browser": "System Edge headless",
+  "dimensions": {
+    "width": 1920,
+    "height": 1080,
+    "duration": 398.233333
+  },
+  "playbackAdvancedSeconds": 1.566783,
+  "seeks": [
+    {
+      "chapter": "intro",
+      "target": 14.466666666666667,
+      "passed": true
+    },
+    {
+      "chapter": "vision",
+      "target": 63.96666666666667,
+      "passed": true
+    },
+    {
+      "chapter": "source",
+      "target": 134.03333333333333,
+      "passed": true
+    },
+    {
+      "chapter": "citations",
+      "target": 189.1,
+      "passed": true
+    },
+    {
+      "chapter": "trace",
+      "target": 231.66666666666666,
+      "passed": true
+    },
+    {
+      "chapter": "rewrite",
+      "target": 274.23333333333335,
+      "passed": true
+    },
+    {
+      "chapter": "clarify",
+      "target": 323.29999999999995,
+      "passed": true
+    },
+    {
+      "chapter": "recovery",
+      "target": 364.85,
+      "passed": true
+    },
+    {
+      "chapter": "outro",
+      "target": 387.8,
+      "passed": true
+    }
+  ],
+  "pageErrors": [],
+  "voiceover": "Not present: user will record it later.",
+  "visualReview": "Contact sheet and selected full-resolution frames require agent inspection."
+}

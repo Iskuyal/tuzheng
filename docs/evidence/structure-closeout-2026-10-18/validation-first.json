@@ -1,0 +1,6 @@
+{
+  "firstConfigMatrix": "failed: old live service occupied default ports; GET returned anthropic instead of temporary openai-responses fixture",
+  "cause": "Verification launched after the stop-owner assertion had failed.",
+  "resolution": "Identify node concurrently.js exactly, release all verification ports, keep expectations unchanged, then rerun serially.",
+  "modelRequests": 0
+}

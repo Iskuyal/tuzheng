@@ -1,0 +1,13 @@
+{
+  "complete": true,
+  "rawFile": "docs\\submission\\demo-2026-10-18\\raw-live.webm",
+  "durationWallSeconds": 348.354,
+  "viewport": [
+    1920,
+    1080
+  ],
+  "responseFixtures": false,
+  "browser": "System Edge, headless, Playwright actions",
+  "pageErrors": [],
+  "pictureSource": "Actual current production Vue browser viewport, no generated interface or substituted responses."
+}

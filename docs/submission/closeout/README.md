@@ -2,6 +2,8 @@
 
 本目录让接管者拿到明确版本、材料哈希与可执行离线检查。它不代替正式视频、评审账号访问、账户核账或赛事提交。
 
+当前材料选择与人工事项见[提交材料页](../README.md)，历史日期清单按原基线解释。先在工作区执行 `npm run verify:materials`，确认新版无声正式视频、配音稿、时间轴、PDF 与交付说明齐备；此预检不要求工作区干净，不生成版本包，也不调用模型。等价入口为 `node --import tsx docs/submission/closeout/prepare-package.mjs --check-materials`，加 `--json` 可读出完整文件指纹。
+
 ## 固定交付包
 
 在仓库根目录、工作区干净且依赖已安装时执行：
@@ -13,7 +15,7 @@ node --import tsx docs/submission/closeout/prepare-package.mjs --prepare
 产物保存到 `.cache/closeout-packages/<完整提交SHA>/`：
 
 - `source.zip`：由 `git archive` 导出该提交的已跟踪源码、证据与材料；不包含忽略的本机配置、依赖、缓存，也不包含 `.git` 历史。历史继续保留在原 GitHub 仓库。
-- `materials/`：README、赛事 PDF/源稿、90 秒实录/原件、正式视频脚本与接管材料，逐项从同一提交读取。
+- `materials/`：由 [materials.json](../materials.json)列出的当前 README/说明、赛事 PDF/源稿、新版正式无声视频、配音稿、精确时间轴、录制证明及接管材料，逐项从同一提交读取。旧 90 秒片段作为历史素材继续保存在源码归档中。
 - `candidate.json`：基于干净 HEAD 的新候选预检锁；不是负责人签字或模型成绩。
 - `manifest.json`：完整源码 SHA、候选哈希、每个产物的大小和 SHA-256，以及尚未完成的人工验收状态。
 
@@ -24,6 +26,8 @@ node --import tsx docs/submission/closeout/prepare-package.mjs --verify .cache/c
 ```
 
 验证会检查材料字节与 Git 提交一致、预检锁有效、工作区干净。交付包只存本机缓存，不会自动上传或提交 ZIP。PDF 正文的旧“代码参考”仍指向原材料基线，不能因生成新包就声称正文覆盖新版本的全部验收。
+
+新包使用 schema 2，正式视频状态记为 `picture-complete-voiceover-pending`。schema 1 旧包沿用原材料集核验，旧文件与哈希保持原样；在它原来的干净源码版本上操作。材料齐备不自动完成配音、负责人签字或赛事提交。
 
 ## 第二台 Windows
 
@@ -48,6 +52,6 @@ node docs/submission/closeout/verify-windows.mjs --install
 
 ## 账户、视频与最终验收
 
-中断请求的核对入口见[账户核账交接](accounting-handoff.md)。正式录制仍按[视频脚本](../demo-video-script.md)与[当前收尾条件](../closeout-2026-10-15.md)执行；现有 90 秒实录只能作参考，不能替代 5—8 分钟正式视频或新的现场模型响应。
+中断请求的核对入口见[账户核账交接](accounting-handoff.md)。新版[398.233 秒无声实录及讲稿](../demo-2026-10-18/README.md)已完成，接下来由用户加入普通话人声并最终走查。旧[录制方案](../demo-video-script.md)和短片仅作备选；实际配音以新版讲稿和最终帧时间为准。
 
 真实成员信息、评审权限选择、正式成片走查、负责人抽查与赛事平台回执，由负责人完成后填回执。所有字段初始为 pending/null，模板不是验收结果。

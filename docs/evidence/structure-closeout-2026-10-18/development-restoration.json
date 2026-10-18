@@ -1,0 +1,31 @@
+{
+  "developmentRestored": true,
+  "ports": [
+    3001,
+    5173
+  ],
+  "pages": [
+    {
+      "route": "/",
+      "status": 200
+    },
+    {
+      "route": "/audit",
+      "status": 200
+    },
+    {
+      "route": "/source-audit",
+      "status": 200
+    },
+    {
+      "route": "/settings",
+      "status": 200
+    }
+  ],
+  "provider": "anthropic",
+  "baseUrl": "https://api.deepseek.com/anthropic/v1",
+  "model": "deepseek-flash",
+  "keyConfigured": true,
+  "modelRequests": 0,
+  "scope": "Read-only settings and page requests after restoring the project dev server."
+}

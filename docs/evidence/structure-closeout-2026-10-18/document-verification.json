@@ -1,0 +1,122 @@
+{
+  "pdfPages": 17,
+  "pdfSha256": "dcc4855aa5a4f7b10171d162662ebc105e9931faac2537856582395049e8838f",
+  "renderedPages": 17,
+  "pages": [
+    {
+      "page": 1,
+      "textStart": "A I W E B 网页开发挑战赛 · 作品技术报告 图证 图表证据审计台 从一张截图，走到一条 有计算、有来源、可复查的结论。 多模态读取 受限工具调查 引用与口径校验 一个看起来相同、含",
+      "textChars": 472
+    },
+    {
+      "page": 2,
+      "textStart": "更新 / 2 0 2 6 - 1 0 - 1 8 当前交付与验证边界 当前界面为暖纸色与靛蓝，覆盖首页、来源核验、图内工作台和模型设置。下文保留原技术方案和注明日期的历史评测；旧界 面图用于",
+      "textChars": 754
+    },
+    {
+      "page": 3,
+      "textStart": "0 1 / 项目概述 让每个结论都能复查 图证面向只有图表截图的普通读者，把“这张图是否说得通”拆成图内计算与来源核验两类问 题，展示每条结论的依据和适用范围。 只有截图 模型抄录图上数字，",
+      "textChars": 690
+    },
+    {
+      "page": 4,
+      "textStart": "0 2 / 需求分析 先回答读者能核查什么 读者通常拿不到原始表格。直接让大模型判断“真假”，容易把看不清的标签、口径缺失或模型记忆包装成确定结论。图 证把每一步需要的依据显示出来。 用户需",
+      "textChars": 760
+    },
+    {
+      "page": 5,
+      "textStart": "0 3 / 系统架构 模型负责理解，程序负责校验 将多模态与语言判断放在模型接口之后，将计算、引用、口径和输入版本绑定放在可重复测试的 领域层。 浏览器 · Vue 3 图片与配文输入 / ",
+      "textChars": 919
+    },
+    {
+      "page": 6,
+      "textStart": "0 4 / A I 技术方案 · 选型与读取 把可变输出收敛为可检查结构 模型与协议的选择 选择 理由与集成方式 验证边界 云端多模态模型 读取截图中的文字、数值与主张，同时理解配文，避免另",
+      "textChars": 1012
+    },
+    {
+      "page": 7,
+      "textStart": "0 4 / A I 技术方案 · 受限工具循环 行动可选择，执行有边界 模型依据图文决定下一步要检索、比较、追问还是汇总。服务端逐个校验工具与参数，执行后把结果回送模型，再按最终 结构组合结",
+      "textChars": 805
+    },
+    {
+      "page": 8,
+      "textStart": "0 4 / A I 技术方案 · 检索与引用 命中资料，还要匹配口径 采用固定领域资料的检索增强工作流：先按指标与别名筛选，再按月份、范围和词项匹配排序；命中结果携带适用性。五条材 料的规模",
+      "textChars": 711
+    },
+    {
+      "page": 9,
+      "textStart": "0 5 / 核心案例 · C P I 同样的 0.8%，不是同样的结论 输入团队自制 CPI 图，配文写“比上月上涨 0.8%”。模型需要分开识别图上读数与配文的比较 方式，再检索适用来源。",
+      "textChars": 688
+    },
+    {
+      "page": 10,
+      "textStart": "0 5 / 核心案例 · 必要补证与修改建议 让用户补口径，让证据约束改写 配文仅写“12 月 CPI 上涨 0.8%”时，同值不足以确定同比还是环比。先检索资料，再询问缺少的比较方式；回答",
+      "textChars": 559
+    },
+    {
+      "page": 11,
+      "textStart": "0 5 / 核心案例 · 官方修订与结论失效 依据变了，结论和建议一起更新 “社会消费品零售总额”的两份官方发布带有明确修订声明。系统据此识别旧发布被替代的逐月环比值，保存修订前后值 与两份",
+      "textChars": 739
+    },
+    {
+      "page": 12,
+      "textStart": "0 6 / 前端工程与体验 长耗时 AI 任务也要可操作 清晰的任务页面 首页、图内工作台、来源核验和设置页各有明确职责。按路由懒 加载；共享证据卡组件与 TypeScript 领域结果减少",
+      "textChars": 688
+    },
+    {
+      "page": 13,
+      "textStart": "0 7 / 测试与评测设计 检索有没有用，要保留对照 同一模型、图片、配文、参数和预算设置两条臂，只改变检索工具可用性及其必要说明，再依据 独立期望判定每次运行。 有检索臂 模型可搜索固定资",
+      "textChars": 843
+    },
+    {
+      "page": 14,
+      "textStart": "0 7 / 实际评测结果 展示结果，也保留失败 最新存档整组评测：22 题 ×2 臂 ×3 次，外加条件触发的补证恢复段。计划最多 138 次，实际记录 137 次；模型没有追 问的一次恢复",
+      "textChars": 676
+    },
+    {
+      "page": 15,
+      "textStart": "0 8 / 测试、运行与部署 可复现的本机 Web 应用 归档本地验证（2026-10-01） 检查 结果 证明范围 npm test 361/361，21 个文件 行为、API、结构与边界",
+      "textChars": 1189
+    },
+    {
+      "page": 16,
+      "textStart": "0 9 / 创新、局限与展望 把 AI 的判断变成有依据的操作 创新点 用户获得的价值 工程落点 按证据分级的图表阅读 知道哪一部分能核查，哪一部分仍不确定 图内、来源、推断与观点分别判定 ",
+      "textChars": 914
+    },
+    {
+      "page": 17,
+      "textStart": "附录 / 证据与复现索引 每个数字都有出处 在线数据采用仓库原始记录，指标口径按评测实现说明；本次材料核查不新增模型请求。截图用于展示界面，图注区分预置、替身与资料库展 示。 编号 材料 /",
+      "textChars": 1076
+    }
+  ],
+  "visualInspection": "Passed agent review of all 17 rendered page thumbnails, plus full-resolution updated page 2 and evidence page 17; no overflow or clipping observed.",
+  "historyProseAndNumbersPreserved": true,
+  "archiveLinkRebaseVerified": true,
+  "documentSizes": {
+    "README.md": {
+      "beforeBytes": 45079,
+      "afterBytes": 4893,
+      "beforeLines": 175,
+      "afterLines": 74
+    },
+    "docs/PHASES.md": {
+      "beforeBytes": 89129,
+      "afterBytes": 4194,
+      "beforeLines": 274,
+      "afterLines": 36
+    },
+    "docs/STRUCTURE.md": {
+      "beforeBytes": 8493,
+      "afterBytes": 5026,
+      "beforeLines": 49,
+      "afterLines": 65
+    }
+  },
+  "modelRequests": 0,
+  "firstPdfBuild": {
+    "sections": 17,
+    "pages": 18,
+    "published": false,
+    "resolution": "Bound only the new overview image height; final section count equals page count 17."
+  }
+}

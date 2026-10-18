@@ -1,0 +1,24 @@
+{
+  "status": "silent-picture-master-delivered",
+  "seconds": 398.23333333333335,
+  "sha256": "74813f4e688da1d49780c1ba92a818b3fff68001b3ed1702997b6fa9d76169ae",
+  "actualModelHttp": 7,
+  "fullDecode": "passed",
+  "browserSeeks": 9,
+  "badgeChecks": 27,
+  "allBadgesPassed": true,
+  "pageErrors": [],
+  "secretScanFiles": 39,
+  "exactSecretMatches": 0,
+  "docsCheck": {
+    "documents": 147,
+    "localLinks": 625,
+    "missing": 0
+  },
+  "voiceover": "Nine actual-timeline intervals and editable Mandarin script delivered; user recording pending",
+  "remaining": [
+    "User Mandarin voiceover and mix",
+    "Final human acceptance",
+    "Contest submission"
+  ]
+}

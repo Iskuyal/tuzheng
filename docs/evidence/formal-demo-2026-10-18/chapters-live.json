@@ -1,0 +1,82 @@
+[
+  {
+    "id": "vision",
+    "title": "实际上传、模型读数与人工核对",
+    "start": 0.166,
+    "end": 70.243,
+    "rawPart": "live",
+    "result": {
+      "actualModelUpload": true,
+      "manualRecalculation": true,
+      "responseKeys": [
+        "observation",
+        "modelRead"
+      ]
+    }
+  },
+  {
+    "id": "source",
+    "title": "图文主张与来源判断",
+    "start": 70.244,
+    "end": 140.324,
+    "rawPart": "live",
+    "result": {
+      "states": [
+        "source-mismatch",
+        "source-pending",
+        "source-pending"
+      ],
+      "hasSuggestion": true
+    }
+  },
+  {
+    "id": "citations",
+    "title": "可追溯引用与资料范围",
+    "start": 140.326,
+    "end": 180.402,
+    "rawPart": "live",
+    "result": {
+      "actualCitations": true,
+      "fixedLibraryNotOpenWebSearch": true
+    }
+  },
+  {
+    "id": "trace",
+    "title": "实际工具调用与停止边界",
+    "start": 180.403,
+    "end": 225.492,
+    "rawPart": "live",
+    "result": {
+      "toolEvents": 4,
+      "actualProductResponse": true
+    }
+  },
+  {
+    "id": "rewrite",
+    "title": "逐处修改与旧结果失效",
+    "start": 225.493,
+    "end": 265.577,
+    "rawPart": "live",
+    "result": {
+      "hasSuggestion": true,
+      "adopted": true,
+      "reverified": false
+    }
+  },
+  {
+    "id": "clarify",
+    "title": "必要追问、补证与恢复",
+    "start": 265.578,
+    "end": 335.668,
+    "rawPart": "live",
+    "result": {
+      "clarificationAsked": false,
+      "resumed": false,
+      "states": [
+        "source-pending",
+        "source-pending",
+        "source-pending"
+      ]
+    }
+  }
+]

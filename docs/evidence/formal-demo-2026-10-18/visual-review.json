@@ -1,0 +1,15 @@
+{
+  "videoSha256": "74813f4e688da1d49780c1ba92a818b3fff68001b3ed1702997b6fa9d76169ae",
+  "reviewed": "Nine-chapter contact sheet plus full-resolution encoded frames for growth calculation, rewrite, pending basis, and invalid format.",
+  "frameFiles": [
+    "check-02-middle.png",
+    "check-06-middle.png",
+    "check-07-end.png",
+    "check-08-start.png"
+  ],
+  "observations": [
+    "Key numbers, formulas, rewrite, pending status and input error visible.",
+    "Single-line origin badge stays in right margin and does not cover the product content."
+  ],
+  "scope": "Agent visual QA, not independent visual scoring or final owner acceptance."
+}

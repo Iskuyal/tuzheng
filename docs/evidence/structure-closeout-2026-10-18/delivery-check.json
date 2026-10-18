@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-18",
+  "status": "repository-structure-documentation-closeout-complete",
+  "sourceBaseline": "4b7f90bc196511f4d92bdb601cfb487f2519f490",
+  "workingTreeCommitted": false,
+  "remoteCIForThisWorkingTree": false,
+  "checks": {
+    "buildAndTypes": "passed",
+    "unitAndApi": {
+      "passed": 450,
+      "files": 28
+    },
+    "recordingBudgetRegression": {
+      "passed": 6
+    },
+    "browser": {
+      "passed": 140,
+      "skipped": 1
+    },
+    "modelConfigurationMatrix": {
+      "passed": 4,
+      "initialAttemptFailedAgainstOccupiedPorts": true
+    },
+    "sampleCases": {
+      "passed": 23
+    },
+    "frozenInputs": {
+      "developmentQuestions": 22,
+      "holdoutQuestions": 12,
+      "passed": true
+    },
+    "documentation": {
+      "files": 155,
+      "localLinks": 700,
+      "missing": 0
+    },
+    "currentMaterials": {
+      "files": 19,
+      "passed": true
+    },
+    "pdf": {
+      "pages": 17,
+      "rendered": 17,
+      "visualReview": "passed"
+    },
+    "packageMechanism": "schema 2 positive, tamper negative, restore positive and schema 1 material-set compatibility passed in isolated fixture"
+  },
+  "developmentServerRestored": true,
+  "newRealModelRequests": 0,
+  "cleanup": {
+    "temporaryFixtureRetained": true,
+    "reason": "Automatic approval rejected deletion; returned blocked by policy."
+  },
+  "humanAcceptance": "pending; see docs/submission/README.md",
+  "recordStage": "pre-commit-local-validation"
+}

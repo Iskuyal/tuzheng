@@ -1,0 +1,10 @@
+{
+  "status": "silent-picture-master-complete",
+  "fullCompetitionVideo": "398.233-second silent picture master complete; Mandarin voiceover pending user",
+  "voiceoverTimeline": "complete",
+  "actualModelHttp": 7,
+  "noOldVideoReuse": true,
+  "responseFixtures": false,
+  "configurationAdaptation": "User-saved official key, Messages-compatible protocol",
+  "evidence": "video-verification.json, browser-and-label-verification.json, accounting-verification.json"
+}

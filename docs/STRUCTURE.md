@@ -1,49 +1,65 @@
 # 项目结构
 
-根目录保留运行入口与全项目约定；其他内容按用途归档。使用根目录 `package.json` 的脚本启动、测试和构建。
+根目录提供使用、产品和协作入口。运行配置集中在 `config/`；代码按页面、API、共享领域规则分层；文档按当前说明、提交材料与历史证据组织。
 
-| 位置 | 职责 |
+```text
+web-match/
+├── README.md / PLAN.md / CONTEXT.md / AGENTS.md
+├── package.json / package-lock.json / tsconfig.json
+├── config/                 Vite、Vitest、Playwright、TypeScript
+├── web/                    Vue 页面、组件、主题、浏览器状态
+├── server/                 本机 API、模型适配、会话和来源工具
+├── shared/                 领域类型、确定性计算与固定资料
+├── scripts/                验证、评测、材料预检及记账工具
+├── tests/ / e2e/            单元/API 与浏览器验证
+├── samples/                冻结题、独立期望、图片/输入指纹
+├── docs/
+│   ├── README.md           按任务查阅文档
+│   ├── DEVELOPMENT.md      开发、端口、配置和检查
+│   ├── PHASES.md           当前阶段和证据入口
+│   ├── submission/         当前材料清单、视频/PDF、交付工具
+│   ├── evidence/           原始记录、截图与账本
+│   ├── reviews/            日期审查和交付报告
+│   ├── history/            完整历史路线图
+│   ├── adr/ / agents/      决策与任务约定
+│   └── competition/        赛事原文与注明日期的核对
+├── .scratch/               功能规格与带状态的任务
+└── .github/workflows/      离线 CI
+```
+
+## 代码和资源
+
+`web/pages/` 是当前四个路由，`web/components/` 保存复用组件。主题入口由 `web/main.ts` 加载：`style.css` 提供基础，`evidence-room.css` 与 `evidence-room-workspaces.css` 承载当前主题。静态团队自制图片在 `web/public/samples/`；独立期望和指纹在根 `samples/`，两者职责不同。
+
+API 入口为 `server/index.ts`，应用工厂在 `server/app.ts`。模型协议适配、来源工具与可恢复调查会话位于 `server/`，确定性规则与领域类型在 `shared/`。具体术语与设计决定查[领域上下文](../CONTEXT.md)及 [ADR](adr/)。
+
+## 脚本、类型与 CI
+
+所有命令从仓库根运行，以 `package.json` 为入口；按用途查[脚本导航](../scripts/README.md)。录制原始工程跟随日期材料保留，固定交付工具在 `docs/submission/closeout/`；当前交付文件由 `docs/submission/materials.json` 统一列出，材料预检和打包共用 `scripts/submission-materials.ts`。
+
+根 `tsconfig.json` 引用 `config/tsconfig.web.json`、`config/tsconfig.server.json` 和 `config/tsconfig.e2e.json`。服务端层已覆盖 `server/**/*.ts`、`shared/**/*.ts`、`scripts/**/*.ts`、`tests/**/*.ts`；新增材料工具不需要另建编译工程。前端构建目录为 `dist/client/`，编译后的服务端入口为 `dist/server/server/index.js`。
+
+CI 运行文档/材料检查、类型检查、构建、行为/API、录制预算恢复、冻结样例和三视口浏览器验证。材料检查仅核对已保存字节和录制指纹，不发模型请求。离线三臂/候选产物仍由 `holdout-offline-fixture` artifact 收集；失败浏览器 trace 仍在既有路径，无新增上传范围。
+
+## 端口和配置
+
+默认 API 为 `3001`，网页为 `5173`，均仅在 `127.0.0.1` 上使用；根 `.env` 或进程变量 `PORT`、`WEB_PORT` 可覆盖。Vite 代理消费同一个 API 端口，网页启用 `strictPort`。开发与端口验证方法见[开发指南](DEVELOPMENT.md)。
+
+模型默认通过设置页存于当前 Windows 用户 LocalAppData，显式 `env` 模式整份读取协议、地址、模型和密钥。密钥不随仓库或交付包分发；完整契约见[模型配置](MODEL-CONFIG.md)。
+
+## 产物与保留策略
+
+| 目录 | 用途 |
 | --- | --- |
-| `README.md`、`AGENTS.md`、`PLAN.md`、`CONTEXT.md` | 使用入口、工作约定、产品计划、领域术语 |
-| `package.json`、`package-lock.json`、`tsconfig.json` | npm 入口、锁定依赖、编辑器 TypeScript 方案入口 |
-| `config/` | Vite、Vitest、Playwright 与分层 TypeScript 配置 |
-| `web/`、`server/`、`shared/` | Vue 页面、本机 API 与模型适配、共享领域逻辑 |
-| `tests/`、`e2e/` | 单元/API 行为测试、浏览器测试与界面截图脚本 |
-| `samples/`、`web/public/samples/` | 独立期望与图片指纹、团队自制图片 |
-| `samples/holdout-v1/`、`docs/evaluations/` | 12题独立预留冻结包、三臂离线验证与真实运行计划 |
-| `scripts/` | 评测、图片同源核对、文档链接检查、启动前端口预检 |
-| `docs/` | 路线图、阶段交接、ADR、证据、审查报告与提交材料 |
-| `docs/competition/` | [赛事要求原文](competition/AI-WEB网页开发挑战赛文档.md) |
-| `.scratch/` | 仓库内功能规格与任务，按功能目录管理 |
-| `.github/` | GitHub Actions 流水线 |
-| `.cache/`、`dist/`、`node_modules/` | 忽略的缓存、编译产物与依赖 |
+| `.cache/playwright/test-results/` | 当前 Playwright 失败 trace，CI 沿用此路径 |
+| `.cache/typescript/` | TypeScript 构建信息 |
+| `.cache/closeout-packages/<SHA>/` | 干净提交的源码、当前材料、候选锁和哈希清单 |
+| `.cache/windows-acceptance/<时间>/` | 第二环境检查或明确标注的本机演练 |
+| `docs/evidence/<批次>/` | 需随项目保留的原始证据、失败和账本 |
+| `docs/submission/` | 选中的主材料、原片与历史材料；角色见目录索引 |
 
-## 配置与产物
+`.cache/`、`dist/`、`node_modules/`、`test-results/` 和本机配置为忽略产物；`.idea/`、`.zcode/`、`.firecrawl/` 是本机工作状态。本次按文档职责归档，原视频分享路径、冻结样例和旧批次指纹保留。
 
-2026-10-18 全站 UI 使用 `web/evidence-room.css`（首页与来源路径）和 `web/evidence-room-workspaces.css`（设置与图内工作台），统一由 `web/main.ts` 导入；既有布局/行为基础保留在 `style.css`。`npm run verify:ui -- --states --text-200` 调用 `scripts/verify-ui-theme.mjs`，按真实路由枚举四页及状态，默认输出 `docs/evidence/evidence-room-full-2026-10-18/current/`，可用 `--output=` 指定归档位置、`UI_BASE_URL` 指定已启动的本机验证服务。检查使用假设置/替身连接，不透传真实模型或配置写入。没有迁移 TS 或 CI 产物路径；默认/自定义 API 与网页端口仍用现行 `verify:model-config` 验证。
+## 修改目录时
 
-根目录 `tsconfig.json` 只引用 `config/tsconfig.web.json`、`config/tsconfig.server.json` 与 `config/tsconfig.e2e.json`，让编辑器分别采用 DOM、Node 与浏览器测试所需的类型。`config/tsconfig.base.json` 保存共用选项，服务端编译配置独立保存在 `config/tsconfig.server.build.json`。
-
-Vite 与 Vitest 的项目根仍是仓库根；Vite 页面根为 `web/`。Playwright 的用例目录相对于配置文件为 `../e2e/`，产物在 `.cache/playwright/test-results/`，CI 从同一路径收集失败 trace，并在这个狭窄路径内启用隐藏文件上传。TypeScript 构建信息在 `.cache/typescript/`。原测试产物保存在 `.cache/playwright/previous-test-results/`，原构建信息以 `legacy-` 前缀保留在缓存目录。
-
-前端构建输出 `dist/client/`，服务端入口输出 `dist/server/server/index.js`。`.env.example` 记录可选的 API 端口 `PORT`（默认 3001）与网页端口 `WEB_PORT`（默认 5173）；API 与 Vite 代理均读取根目录 `.env` 的 `PORT`，启动进程中的同名变量优先。**网页端口固定、`strictPort: true`**：被占用时直接失败而不是静默换到 5174。`npm run dev` 会先执行 `npm run dev:ports`（`scripts/check-ports.ts`）做启动前预检——为什么需要它：`tsx watch` 在子进程退出后仍会守着不退出，只靠服务端自己的 `EADDRINUSE` 处理会留下「API 已退出、命令还挂着、页面继续跑」的半启动状态；服务端与 Vite 各自也保留了兜底处理。模型配置默认由设置页与本机用户配置文件管理；显式 `MODEL_CONFIG_SOURCE=env` 时，服务端从环境变量一次完整读取协议、地址、模型、密钥，不写回、不混用，规则见[模型配置说明](MODEL-CONFIG.md)。端口变量独立于模型配置源。`npm run verify:model-config` 用临时用户目录与假密钥验收默认／自定义端口及 Vite 代理。
-
-`.idea/`、`.zcode/` 是忽略的编辑器状态，`.firecrawl/` 是忽略的调研缓存。它们属于本机工具，不进入 Git；维护时保留已有内容，避免丢失本机工作状态。源码、测试与规格已有各自职责，本次维持这些目录以减少路径变更。
-
-`npm run eval:holdout`只提供冻结核验、三臂替身执行和已有报告重算，不读取密钥、不调用收费模型。默认临时记录在`.cache/holdout/`；CI的替身记录归档路径为`.cache/holdout/ci-offline-fixture.json`（独立artifact，明确标为替身）。交付的离线原始记录在`docs/evidence/holdout-offline-2026-10-02.json`。新增TypeScript脚本与测试由现有`scripts/**/*.ts`、`tests/**/*.ts`引用覆盖，无产物目录迁移，默认/自定义API端口继续使用现行脚本。
-
-## 查阅入口
-
-2026-10-07新增 `eval:preflight`（本地候选锁prepare/verify）、`eval:holdout:http`（显式执行的三臂受控HTTP）、`eval:demo:http`（显式执行的五题受控HTTP）及 `study:readers`（匿名模板/描述性统计）。旧 `eval:holdout` 继续离线；两个HTTP入口仅在另行授权真实调用时使用。脚本/测试仍由现有TypeScript引用覆盖，没有端口迁移。CI在既有离线步骤生成/核验 `.cache/holdout/ci-candidate.json`，归档在既有 `holdout-offline-fixture` artifact，同原替身记录分别保存，不增加模型密钥或在线步骤。当前候选锁在 `docs/evidence/final-candidate-2026-10-07-round2.json`，初版锁保留；用户材料在 `docs/submission/reader-study/`，接管见 [执行说明](evaluations/candidate-runbook.md)。
-
-来源主入口的离线生产验证脚本为 `scripts/verify-source-ui.mjs`：先构建，再以 `serve` 启动固定 `127.0.0.1:5173` 的内存配置服务并拦截模型入口，`before`／`after`／`after-final`／`after-review`／`after-evidence` 分轮采集性能与截图。该脚本不读取本机密钥；原始结果在 `docs/evidence/source-entry-ui-2026-10-03/`，验收报告在 [reviews/2026-10-03-source-entry-ui.md](reviews/2026-10-03-source-entry-ui.md)。它是专用本机验证服务，不更改正常开发的默认／自定义 API 端口、npm 脚本、TS 引用或 CI 产物路径。
-
-赛事提交入口为 `docs/submission/web-match-competition-report.pdf`（16 页），源文件 `competition-report.html`，使用 `node docs/submission/build-report.mjs --competition` 重建。`--competition --check` 只检查已保存 PDF 的页数。旧 `technical-report.html` 与 `web-match-technical-report.pdf` 保留为开发技术记录，原不带 `--competition` 的生成命令继续可用。官网核对记录在 `docs/competition/`，完整评估在 `docs/reviews/2026-10-01-competition-assessment.md`。
-
-90 秒实际项目实录入口在 `docs/submission/code-demo/`，成片和完整录屏保存在 `docs/submission/`，当次请求与产品结果在 `docs/evidence/product-live-demo-2026-10-13/`。已保存原件支持离线重新剪辑，不需要再调用模型。录制时的专用服务只监听 `127.0.0.1:7109`，不改变正常 API 端口；当前授权已结束。`npm run test:recording` 只验收请求预算恢复和停机规则，使用测试请求函数，不读取密钥、不调用模型，CI 在现有单元测试之后运行，无新增产物上传路径或 TypeScript 引用。
-
-固定交付与第二环境接管工具在 `docs/submission/closeout/`：`prepare-package.mjs` 基于干净 HEAD 输出 `.cache/closeout-packages/<SHA>/`，`verify-windows.mjs` 串行执行既有离线命令，结果写入 `.cache/windows-acceptance/<时间>/`。没有新增 npm 脚本、TS 引用或 CI 产物路径；默认和自定义端口通过既有配置矩阵验收。模板保持 pending，不将本机演练当成第二台机器回执。
-
-阶段进度以 [PHASES.md](PHASES.md) 为准；架构决定在 [adr/](adr/)；在线记录在 [evidence/](evidence/)；技术 PDF 与演示脚本在 [submission/](submission/)；维护结论在 [reviews/](reviews/)。历史实测中的旧路径表示当时的结构，后续操作使用本文件与 npm 脚本中的现行路径。
-
-本次根目录已跟踪文件从 **18 个降到 9 个**。运行 `npm run docs:check` 检查 Markdown 与提交 HTML 中的本地文件链接；它只检查文件存在，不证明网络可达、锚点存在或内容通过验收。
+先检查导入路径、npm 命令、TypeScript 引用和 CI 产物，再更新文档索引及材料清单。运行 `docs:check`、`verify:materials`、相关测试、构建和默认/自定义端口验证。新提交重新生成候选锁，保留旧版本记录；本地链接存在、远端可访问和验收通过分别确认。

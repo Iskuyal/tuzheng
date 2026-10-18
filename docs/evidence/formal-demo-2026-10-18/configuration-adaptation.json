@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-18",
+  "reason": "User saved the official endpoint and authorized recording; align selected protocol with the previously verified official Messages recording adapter.",
+  "previousProvider": "openai-responses",
+  "previousBaseUrl": "https://api.deepseek.com/v1",
+  "provider": "anthropic",
+  "baseUrl": "https://api.deepseek.com/anthropic/v1",
+  "model": "deepseek-flash",
+  "keySource": "Existing user-saved official configuration; no key copied into recording artifacts.",
+  "modelRequests": 0
+}

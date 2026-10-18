@@ -1,0 +1,32 @@
+[
+  {
+    "time": 0.0,
+    "label": "chapter-start",
+    "id": "intro"
+  },
+  {
+    "time": 30.137,
+    "label": "chapter-end",
+    "id": "intro"
+  },
+  {
+    "time": 30.137,
+    "label": "chapter-start",
+    "id": "recovery"
+  },
+  {
+    "time": 55.19,
+    "label": "chapter-end",
+    "id": "recovery"
+  },
+  {
+    "time": 55.191,
+    "label": "chapter-start",
+    "id": "outro"
+  },
+  {
+    "time": 76.072,
+    "label": "chapter-end",
+    "id": "outro"
+  }
+]

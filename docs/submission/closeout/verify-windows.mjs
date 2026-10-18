@@ -34,7 +34,7 @@ const save = () => writeFileSync(resolve(directory, 'report.json'), JSON.stringi
 save();
 const steps = [
   ...(args.includes('--install') ? [['ci']] : []),
-  ['run', 'docs:check'], ['test'], ['run', 'test:recording'], ['run', 'eval:samples'],
+  ['run', 'docs:check'], ['run', 'verify:materials'], ['test'], ['run', 'test:recording'], ['run', 'eval:samples'],
   ['run', 'eval:holdout', '--', '--verify'], ['run', 'eval:source-audit', '--', '--check-only'],
   ['run', 'build'], ['run', 'verify:model-config'], ['run', 'test:e2e'],
 ];

@@ -1,0 +1,9 @@
+{"phase":"recording-start","at":"2026-10-18T06:03:20.062Z","balanceCny":9.54}
+{"phase":"before-http-1","at":"2026-10-18T06:03:31.637Z","balanceCny":9.54}
+{"phase":"before-http-2","at":"2026-10-18T06:04:52.774Z","balanceCny":9.54}
+{"phase":"before-http-3","at":"2026-10-18T06:04:54.660Z","balanceCny":9.54}
+{"phase":"before-http-4","at":"2026-10-18T06:04:55.972Z","balanceCny":9.54}
+{"phase":"before-http-5","at":"2026-10-18T06:07:54.784Z","balanceCny":9.52}
+{"phase":"before-http-6","at":"2026-10-18T06:07:56.176Z","balanceCny":9.52}
+{"phase":"before-http-7","at":"2026-10-18T06:07:57.495Z","balanceCny":9.52}
+{"phase":"recording-complete","at":"2026-10-18T06:08:55.711Z","balanceCny":9.52}

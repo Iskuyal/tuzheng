@@ -1,0 +1,95 @@
+[
+  {
+    "time": 0.166,
+    "label": "chapter-start",
+    "id": "vision"
+  },
+  {
+    "time": 11.547,
+    "label": "model-wait-start",
+    "scenario": "actual-upload-growth"
+  },
+  {
+    "time": 12.86,
+    "label": "model-wait-end",
+    "scenario": "actual-upload-growth",
+    "status": 200
+  },
+  {
+    "time": 70.244,
+    "label": "chapter-end",
+    "id": "vision"
+  },
+  {
+    "time": 70.244,
+    "label": "chapter-start",
+    "id": "source"
+  },
+  {
+    "time": 92.73,
+    "label": "model-wait-start",
+    "scenario": "cpi-caption-basis-mismatch"
+  },
+  {
+    "time": 99.855,
+    "label": "model-wait-end",
+    "scenario": "cpi-caption-basis-mismatch",
+    "status": 200
+  },
+  {
+    "time": 140.325,
+    "label": "chapter-end",
+    "id": "source"
+  },
+  {
+    "time": 140.326,
+    "label": "chapter-start",
+    "id": "citations"
+  },
+  {
+    "time": 180.403,
+    "label": "chapter-end",
+    "id": "citations"
+  },
+  {
+    "time": 180.403,
+    "label": "chapter-start",
+    "id": "trace"
+  },
+  {
+    "time": 225.493,
+    "label": "chapter-end",
+    "id": "trace"
+  },
+  {
+    "time": 225.493,
+    "label": "chapter-start",
+    "id": "rewrite"
+  },
+  {
+    "time": 265.577,
+    "label": "chapter-end",
+    "id": "rewrite"
+  },
+  {
+    "time": 265.578,
+    "label": "chapter-start",
+    "id": "clarify"
+  },
+  {
+    "time": 274.733,
+    "label": "model-wait-start",
+    "scenario": "cpi-clarification-before"
+  },
+  {
+    "time": 280.545,
+    "label": "model-wait-end",
+    "scenario": "cpi-clarification-before",
+    "status": 200
+  },
+  {
+    "time": 335.669,
+    "label": "chapter-end",
+    "id": "clarify"
+  }
+]

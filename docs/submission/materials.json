@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "technicalReport": {
+    "path": "docs/submission/web-match-competition-report.pdf",
+    "source": "docs/submission/competition-report.html"
+  },
+  "formalVideo": {
+    "path": "docs/submission/tuzheng-competition-demo-2026-10-18-silent.mp4",
+    "verification": "docs/evidence/formal-demo-2026-10-18/video-verification.json",
+    "voiceover": "docs/submission/demo-2026-10-18/voiceover.md",
+    "chapters": "docs/submission/demo-2026-10-18/chapters.srt",
+    "status": "picture-complete-voiceover-pending"
+  },
+  "files": [
+    "README.md",
+    "docs/README.md",
+    "docs/DEVELOPMENT.md",
+    "docs/STRUCTURE.md",
+    "docs/PHASES.md",
+    "docs/submission/README.md",
+    "docs/submission/materials.json",
+    "docs/submission/web-match-competition-report.pdf",
+    "docs/submission/competition-report.html",
+    "docs/submission/tuzheng-competition-demo-2026-10-18-silent.mp4",
+    "docs/submission/demo-2026-10-18/README.md",
+    "docs/submission/demo-2026-10-18/voiceover.md",
+    "docs/submission/demo-2026-10-18/chapters.srt",
+    "docs/evidence/formal-demo-2026-10-18/video-verification.json",
+    "docs/evidence/formal-demo-2026-10-18/accounting-verification.json",
+    "docs/submission/closeout/README.md",
+    "docs/submission/closeout/accounting-handoff.md",
+    "docs/submission/closeout/acceptance-receipt.json",
+    "docs/submission/closeout/verify-windows.mjs"
+  ]
+}

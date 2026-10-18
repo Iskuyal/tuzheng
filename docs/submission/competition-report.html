@@ -22,6 +22,7 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 .compact{font-size:9.2pt}.compact table{font-size:8.5pt}
 .collaboration img[src$="source-suggestion.png"]{max-height:72mm;object-fit:contain}
 .collaboration img[src$="source-clarify.png"]{max-height:32mm;object-fit:contain}
+.current-delivery img{max-height:65mm;width:auto;max-width:100%;margin:0 auto}
 </style>
 </head>
 <body>
@@ -41,11 +42,25 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 </div>
 <div class="grid three">
 <div><div class="stat">22</div><p class="small">固定开发评测题<br>两臂、每题三次</p></div>
-<div><div class="stat">89.7%</div><p class="small">历史检索臂运行通过率<br>61 / 68，非泛化准确率</p></div>
-<div><div class="stat">361</div><p class="small">本次本地行为 / API 测试<br>90 次浏览器测试另计</p></div>
+<div><div class="stat">12</div><p class="small">独立冻结预留题<br>离线机制已验证，正式盲审待完成</p></div>
+<div><div class="stat">6:38</div><p class="small">新版实机画面母版<br>1080p，待普通话配音</p></div>
 </div>
-<div class="meta">Vue 3 · TypeScript · Node.js / Express<br>Windows 本机 Web 应用 · 固定国家统计局资料库<br>材料核对日期：2026-10-01 · 代码参考：__COMMIT__</div>
-<p class="small" style="margin-top:5mm">在线数字来自既有真实模型记录；本次材料核查未重新调用模型。图内一致只说明截图自洽，来源一致只说明与所引发布一致。</p>
+<div class="meta">Vue 3 · TypeScript · Node.js / Express<br>Windows 本机 Web 应用 · 固定国家统计局资料库<br>材料整理：2026-10-18 · 代码基线：__COMMIT__（含后续材料工作区更新）</div>
+<p class="small" style="margin-top:5mm">文档整理新增模型请求为 0；新版实录另有独立官方请求。历史整组评测、离线验证与演示分别统计。图内一致只说明截图自洽，来源一致只说明与所引发布一致。</p>
+</section>
+
+<section class="sheet compact current-delivery">
+<div class="kicker">更新 / 2026-10-18</div><h2>当前交付与验证边界</h2><div class="rule"></div>
+<p>当前界面为暖纸色与靛蓝，覆盖首页、来源核验、图内工作台和模型设置。下文保留原技术方案和注明日期的历史评测；旧界面图用于说明流程，当前外观以下图及新版实录为准。</p>
+<figure><img src="../evidence/evidence-room-indigo-2026-10-18/current/home-1440.png" alt="当前图证首页"><figcaption>当前首页静态截图。示例卡明确是预览，不是一次模型运行结果。</figcaption></figure>
+<table><thead><tr><th>交付</th><th>实际结果</th><th>边界</th></tr></thead><tbody>
+<tr><td>新版实机视频</td><td>398.233 秒、1920×1080、30 fps，无音轨；附九段配音区间及讲稿</td><td>普通话配音、混音和最终人工走查待用户完成</td></tr>
+<tr><td>本批真实模型</td><td>DeepSeek 官方 deepseek-flash，7 次模型 HTTP；输入 9,190 / 输出 2,649 tokens</td><td>是产品路径演示，不是独立盲审或稳定性结果；余额差额不作为逐笔收费</td></tr>
+<tr><td>主线离线交付</td><td>2026-10-18 归档：445 项单元/API、140 项浏览器通过/1 项不适用跳过、四组配置端口通过</td><td>假密钥/替身不当作真实模型或另一台 Windows 验收</td></tr>
+<tr><td>独立预留包</td><td>12 题及三臂执行、候选锁、预算与逐请求记录机制已实现</td><td>正式完整运行及负责人抽查尚未完成；历史探索失败、未知用量及待办保留</td></tr>
+</tbody></table>
+<p>实录展示 80→100 的 25% 计算、更正为 96 后的 20%、CPI 环比 0.8% 与所引发布 0.2% 的不一致、引用、工具轨迹及采用建议后旧结果失效。缺口径案例本次没有触发追问或执行恢复，保留待核对；格式恢复只到合法图片输入。</p>
+<p class="source">当前材料、配音与人工事项：docs/submission/README.md；原片及请求证据：[E8]；UI 主线交付：[E9]。后续文档/工具检查单列，不以基线 CI 代替未提交工作的验证。</p>
 </section>
 
 <section class="sheet">
@@ -57,20 +72,20 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 </div>
 <h3>评审阅读导航</h3>
 <div class="toc">
-<div>项目概述与需求 <b>2-3</b></div><div>系统架构 <b>4</b></div>
-<div>AI 选型与结构化读取 <b>5</b></div><div>工具调查与检索校验 <b>6-7</b></div>
-<div>核心案例与人机协作 <b>8-10</b></div><div>前端工程与交互 <b>11</b></div>
-<div>评测设计与实际结果 <b>12-13</b></div><div>测试、运行与部署 <b>14</b></div>
-<div>创新、局限与展望 <b>15</b></div><div>证据与复现索引 <b>16</b></div>
+<div>项目概述与需求 <b>3-4</b></div><div>系统架构 <b>5</b></div>
+<div>AI 选型与结构化读取 <b>6</b></div><div>工具调查与检索校验 <b>7-8</b></div>
+<div>核心案例与人机协作 <b>9-11</b></div><div>前端工程与交互 <b>12</b></div>
+<div>评测设计与实际结果 <b>13-14</b></div><div>测试、运行与部署 <b>15</b></div>
+<div>创新、局限与展望 <b>16</b></div><div>证据与复现索引 <b>17</b></div>
 </div>
 <h3>与官网评分维度的对应</h3>
 <table><thead><tr><th>维度 / 权重</th><th>本报告展示的核心内容</th><th>页码</th></tr></thead><tbody>
-<tr><td>AI 技术深度 / 35%</td><td>多模态结构化输出、模型自选工具、检索增益、引用与改写校验</td><td>5-10、12-13</td></tr>
-<tr><td>创新性 / 25%</td><td>结论按证据分级，必要补证与失效机制，官方修订贯通建议</td><td>3、8-10、15</td></tr>
-<tr><td>前端工程质量 / 10%</td><td>类型约束、按路由拆包、请求隔离、三视口自动化</td><td>4、11、14</td></tr>
-<tr><td>实用性 / 10%</td><td>从算术矛盾到同比 / 环比误读的可操作案例</td><td>3、8-10</td></tr>
-<tr><td>用户体验 / 10%</td><td>逐条确认、补证说明、历史结论、失败恢复</td><td>9、11</td></tr>
-<tr><td>社会价值与商业潜力 / 10%</td><td>数据素养与信息阅读场景；应用方向与验证条件</td><td>15</td></tr>
+<tr><td>AI 技术深度 / 35%</td><td>多模态结构化输出、模型自选工具、检索增益、引用与改写校验</td><td>6-11、13-14</td></tr>
+<tr><td>创新性 / 25%</td><td>结论按证据分级，必要补证与失效机制，官方修订贯通建议</td><td>4、9-11、16</td></tr>
+<tr><td>前端工程质量 / 10%</td><td>类型约束、按路由拆包、请求隔离、三视口自动化</td><td>5、12、15</td></tr>
+<tr><td>实用性 / 10%</td><td>从算术矛盾到同比 / 环比误读的可操作案例</td><td>4、9-11</td></tr>
+<tr><td>用户体验 / 10%</td><td>逐条确认、补证说明、历史结论、失败恢复</td><td>10、12</td></tr>
+<tr><td>社会价值与商业潜力 / 10%</td><td>数据素养与信息阅读场景；应用方向与验证条件</td><td>16</td></tr>
 </tbody></table>
 <p class="source">评分权重于 2026-10-01 读取<a href="https://www.boxuegu.com/matchTrack/detail/?id=10037">官网赛道详情</a>核实。这里只映射材料与评分项，不预测赛事得分。</p>
 </section>
@@ -306,7 +321,7 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 
 <section class="sheet compact">
 <div class="kicker">08 / 测试、运行与部署</div><h2>可复现的本机 Web 应用</h2><div class="rule"></div>
-<h3>本次本地验证（2026-10-01）</h3>
+<h3>归档本地验证（2026-10-01）</h3>
 <table><thead><tr><th>检查</th><th>结果</th><th>证明范围</th></tr></thead><tbody>
 <tr><td>npm test</td><td>361/361，21 个文件</td><td>行为、API、结构与边界回归；不调用真实模型</td></tr>
 <tr><td>npm run test:e2e</td><td>90/90，30 用例 ×3 视口</td><td>替身 / 预置数据下的浏览器路径</td></tr>
@@ -342,14 +357,14 @@ npm run dev
 <p>图证将算术、统计口径和来源辨识变成可操作的读图过程，可用于数据素养教学、资讯阅读和编辑自查。商业方向可探索教学案例工具或编辑辅助模块；目前没有付费用户、市场规模或节省时间的实测，不能据此声称商业模式成立。</p>
 <h3>已经知道的局限</h3>
 <ul>
-<li>资料库只有五条材料、两类指标，图表与评测题均为团队开发样例，没有独立预留集。</li>
+<li>资料库只有五条材料、两类指标。除 22 道开发题外，已有 12 道独立冻结预留题及离线三臂机制；正式完整评测和负责人盲审仍未完成。</li>
 <li>主张分类、追问时机和改写仍有模型漂移；固定词表与数值规则无法覆盖全部语言表达。</li>
 <li>来源一致不是事实真实性保证；同口径来源分歧、开放检索与通用知识库尚未实现。</li>
 <li>完整工具循环在线证据只覆盖指定 Messages 配置；换协议、端点或模型需重新验证。</li>
 <li>没有真实用户可用性研究、生产部署压测或长期可用性承诺；实时工具流式展示尚未实现。</li>
 </ul>
 <h3>总结与下一步</h3>
-<p>当前已形成截图确认、工具检索、引用核对、必要补证与修改建议的完整路径。继续验证时，应先补齐当前代码的在线复验和独立预留题，再按有适用来源的场景扩展资料库；用户研究与公共演示以各自实测为完成条件。</p>
+<p>当前已形成截图确认、工具检索、引用核对、必要补证与修改建议的完整路径。继续验证时，应在解决旧未知请求后，对新候选执行已冻结预留题的正式三臂运行和负责人抽查，再按适用场景扩展资料库；用户研究与公共演示以各自实测为完成条件。</p>
 <div class="box dark"><strong>核心成果</strong><p>AI 将图文转换成可调查的主张；程序把来源、口径和计算组合为可复查结论；用户决定是否补充与采用修改。</p></div>
 <p class="source">能力与验证范围交叉核对 PLAN.md、CONTEXT.md、docs/PHASES.md、代码、测试及 [E1]-[E7]。创新点描述产品机制，不声称算法首创。</p>
 </section>
@@ -364,7 +379,9 @@ npm run dev
 <tr><td>E4</td><td><a href="../evidence/stage-4-source-audit-rewrite-2026-09-30.md">20 题改写评测</a> / <a href="../evidence/stage-4-source-audit-eval-2026-09-30-rewrite.json">原始 JSON</a></td><td>58/62；73 条模型提议中 31 采用、42 拒绝；124 次有效运行的独立不变量复算</td></tr>
 <tr><td>E5</td><td><a href="../STAGE-1.md">单图视觉记录</a>、<a href="../evidence/stage-3-live-vision-2026-09-27.md">跨图在线记录</a></td><td>视觉路径的历史验收；与工具循环分开计数</td></tr>
 <tr><td>E6</td><td><a href="../evidence/stage-5-05-demo-path-live-2026-09-30.md">五题演示路径抽样</a></td><td>检索臂一次抽样 6/6，不代替整组或当前版本复验</td></tr>
-<tr><td>E7</td><td><a href="../reviews/2026-10-01-competition-assessment.md">本次完整项目评估</a><br><span class="small">docs/reviews/2026-10-01-competition-assessment.md</span></td><td>本地 361/361、90/90，GitHub 状态、材料核查、尚缺证据</td></tr>
+<tr><td>E7</td><td><a href="../reviews/2026-10-01-competition-assessment.md">2026-10-01 项目评估</a></td><td>归档本地 361/361、90/90；按当时基线解释</td></tr>
+<tr><td>E8</td><td><a href="demo-2026-10-18/README.md">新版实录与配音</a> / <a href="../evidence/formal-demo-2026-10-18/accounting-verification.json">请求核对</a></td><td>398.233 秒无声实录、7 次真实模型 HTTP；配音及最终走查待办</td></tr>
+<tr><td>E9</td><td><a href="../reviews/2026-10-18-main-delivery.md">2026-10-18 UI 主线交付</a></td><td>离线 445 项单元/API、140 项浏览器通过/1 项跳过；不证明真实用户收益</td></tr>
 <tr><td>R1</td><td><a href="https://www.boxuegu.com/matchTrack/detail/?id=10037">官网赛道详情</a> / <a href="../competition/official-rules-verification-2026-10-01.md">核对记录</a></td><td>评分权重、PDF ≤30 页、视频 5-8 分钟 / 1080p、评审访问及密钥配置要求</td></tr>
 </tbody></table>
 <h3>固定官方资料的原始链接</h3>

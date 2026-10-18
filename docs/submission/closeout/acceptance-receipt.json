@@ -30,6 +30,8 @@
     "seconds": null,
     "width": null,
     "height": null,
+    "mandarinVoiceoverComplete": false,
+    "audioMixReviewed": false,
     "thirteenItemWalkthroughComplete": false
   },
   "unknownHttp13": {

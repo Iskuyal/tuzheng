@@ -32,6 +32,9 @@ jobs:
       - name: 文档本地链接
         run: npm run docs:check
 
+      - name: 当前提交材料与录制指纹（不调用模型）
+        run: npm run verify:materials
+
       - name: 类型检查
         run: npm run typecheck
 
