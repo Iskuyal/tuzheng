@@ -1,0 +1,101 @@
+[
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 40,
+    "issues": [],
+    "file": "01-home-desktop.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 48,
+    "issues": [],
+    "file": "02-workspace-desktop.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 61,
+    "issues": [],
+    "file": "03-result-desktop.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 28,
+    "issues": [],
+    "file": "04-home-mobile.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 34,
+    "issues": [],
+    "file": "05-workspace-mobile.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 40,
+    "issues": [],
+    "file": "06-result-mobile.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 40,
+    "issues": [],
+    "file": "07-states.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 35,
+    "issues": [],
+    "file": "08-foundations.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 21,
+    "issues": [],
+    "file": "09-image-preview-mobile.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 15,
+    "issues": [],
+    "file": "10-clarification-mobile.svg"
+  },
+  {
+    "fonts": {
+      "serif": true,
+      "sans": true
+    },
+    "textCount": 24,
+    "issues": [],
+    "file": "11-error-mobile.svg"
+  }
+]

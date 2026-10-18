@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
-import { queueLandingUpload } from "../upload-transfer.js";
+import { queueLandingUpload, requestLandingSourceSample } from "../upload-transfer.js";
 
 interface SampleSummary {
   id: string;
@@ -48,7 +48,7 @@ function openSample(id: string): void {
   void router.push({ name: "audit", query: { sample: id } });
 }
 
-function uploadScreenshot(event: Event): void {
+function uploadScreenshot(event: Event, destination: "audit" | "source-audit" = "audit"): void {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = "";
@@ -64,8 +64,8 @@ function uploadScreenshot(event: Event): void {
   }
 
   uploadError.value = "";
-  queueLandingUpload(file);
-  void router.push({ name: "audit" });
+  queueLandingUpload(file, destination);
+  void router.push({ name: destination });
 }
 
 function sampleTone(id: string): string {
@@ -80,103 +80,53 @@ onMounted(loadSamples);
 </script>
 
 <template>
-  <div class="landing-page">
+  <div class="landing-page evidence-room">
     <SiteHeader />
-
-    <main>
-      <section class="landing-hero">
-        <div class="hero-copy">
-          <p class="hero-kicker">图表证据审计台 / 来源核验</p>
-          <h1>图表与配文，<br /><span>有来源支持吗？</span></h1>
-          <p class="hero-description">把截图与配文对照公开来源，逐条查看支持、矛盾或待核对的依据。先用 CPI 自制样例体验；只有截图时，也能做图内检查。</p>
-          <div class="hero-actions">
-            <RouterLink class="pixel-button primary-action" to="/source-audit?sample=cpi-2025-12">试用 CPI 来源核验样例 <span aria-hidden="true">→</span></RouterLink>
-            <label class="pixel-button primary-upload-action" for="landing-upload">
-              上传我的截图 <span aria-hidden="true">↑</span>
-              <input id="landing-upload" type="file" accept="image/png,image/jpeg,image/webp" @change="uploadScreenshot" />
-            </label>
-            <a class="pixel-button secondary-sample-action" href="#sample-dock">浏览自制样例 <span aria-hidden="true">↓</span></a>
+    <main class="room-container">
+      <section class="room-hero">
+        <div class="room-hero-copy">
+          <p class="room-kicker">图表、主张与它们的依据</p>
+          <h1>看见数字，<br />也看见依据。</h1>
+          <p class="room-hero-description">把图表与配文放在一起，看看哪里值得再问一句。<br class="room-desktop-break" />从图内矛盾，到适用来源，每一步都说明为什么。</p>
+          <div class="room-hero-actions">
+            <RouterLink class="room-button" to="/source-audit?sample=cpi-2025-12" @click="event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) requestLandingSourceSample(); }">试用 CPI 来源核验样例 <span aria-hidden="true">→</span></RouterLink>
+            <RouterLink class="room-inline-link" to="/audit">只有截图？先做图内检查 ↗</RouterLink>
           </div>
-          <p class="upload-support-note">样例入口只载入图片和配文，点击「运行来源核验」才调用模型。</p>
-          <p class="upload-support-note">上传截图进入图内检查。支持 PNG、JPG、WebP；单张不超过 5 MB。</p>
+          <p class="room-support">载入团队自制 CPI 样例，点击运行后才调用模型。</p>
+          <label class="room-upload" for="landing-source-upload">
+            <span class="room-upload-icon" aria-hidden="true">＋</span>
+            <span><strong>图表＋配文：进入来源核验</strong><small>只查收录资料 · PNG / JPG / WebP，最大 5 MB</small></span><span class="room-upload-arrow" aria-hidden="true">→</span>
+            <input id="landing-source-upload" type="file" accept="image/png,image/jpeg,image/webp" @change="uploadScreenshot($event, 'source-audit')" />
+          </label>
+          <p class="room-coverage">当前收录 CPI、社会消费品零售等少量公开资料；不覆盖时保留待核对。<RouterLink to="/source-audit#source-library">查看范围 ↗</RouterLink></p>
           <p v-if="uploadError" class="landing-error" role="alert">{{ uploadError }}</p>
-          <div class="signal-strip" aria-label="来源核验顺序：图文、来源、逐条核对">
-            <span>图文</span><i></i><span>来源</span><i></i><span>逐条核对</span>
-          </div>
         </div>
-
-        <div class="hero-scene" aria-label="静态来源示意：2025 年 12 月全国 CPI 同比 0.8%、环比 0.2%；自制图，不是运行结果">
-          <div class="scene-topline">
-            <span>来源核验 / 自制示意</span>
-            <span class="scene-live">非运行结果</span>
+        <div class="room-specimen" aria-label="静态来源示意，自制图，不是模型运行结果">
+          <div class="room-specimen-inner">
+            <div class="room-specimen-top"><span class="room-tag">示例预览</span><span>团队自制 · 非运行结果</span></div>
+            <h2>2025 年 12 月 · 全国 CPI</h2>
+            <p class="room-big-number">0.8<span>%</span></p>
+            <p class="room-support">图上没有标明：与什么时候比较？</p>
+            <div class="room-specimen-claim"><span>配文说</span><p>“<u>比上月</u>上涨 0.8%”</p><span class="room-tag conflict">比较方式有疑点</span></div>
+            <p class="room-support">来源中的两种比较</p>
+            <div class="room-comparisons"><div><strong>同比 0.8%</strong><span>与去年同月比较</span></div><div><strong>环比 0.2%</strong><span>与上个月比较</span></div></div>
+            <a class="room-specimen-source" href="https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html" target="_blank" rel="noopener noreferrer">来源：国家统计局 · 2026-01-09 ↗</a>
           </div>
-          <div class="scene-screen">
-            <div class="scene-title-row">
-              <span>配文：比上月上涨</span>
-              <strong>0.8%</strong>
-            </div>
-            <div class="scene-chart">
-              <div class="scene-axis-labels" aria-hidden="true"><span>1.2</span><span>0.8</span><span>0.4</span><span>0</span></div>
-              <svg class="scene-chart-svg" viewBox="0 0 520 264" role="img" aria-label="2025 年 12 月全国 CPI 同比上涨 0.8%，环比上涨 0.2%">
-                <g class="scene-grid-lines">
-                  <path d="M28 26H500M28 90H500M28 154H500M28 218H500" />
-                </g>
-                <g class="scene-bars" shape-rendering="crispEdges">
-                  <rect x="116" y="90" width="102" height="128" />
-                  <rect x="310" y="186" width="102" height="32" />
-                </g>
-                <g class="scene-chart-values">
-                  <text x="167" y="76">0.8%</text><text x="361" y="172">0.2%</text>
-                  <text x="167" y="250">同比</text><text x="361" y="250">环比</text>
-                </g>
-              </svg>
-            </div>
-            <div class="scene-verdict">
-              <div class="scene-verdict-mark" aria-hidden="true"><span></span><span></span><span></span></div>
-              <div><span>所引发布的环比数值</span><strong>上涨 0.2%</strong></div>
-              <span class="scene-flag">比较方式不同</span>
-            </div>
-          </div>
-          <div class="scene-footline"><a href="https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html" target="_blank" rel="noopener noreferrer">来源：国家统计局 · 2025 年 12 月</a><span>不是官方原图</span></div>
         </div>
       </section>
-
-      <section id="sample-dock" class="sample-section">
-        <div class="section-title-row">
-          <div>
-            <p class="section-kicker">图内检查 / 团队自制</p>
-            <h2>只有截图？先检查图内关系</h2>
-          </div>
-          <span class="section-count">{{ String(samples.length).padStart(2, "0") }} 个样例</span>
-        </div>
-
-        <div v-if="loadError" class="landing-error" role="alert">{{ loadError }}</div>
-        <p v-else-if="samplesLoading" class="sample-loading" role="status">正在载入图内样例…</p>
-        <div v-else class="sample-dock">
-          <button
-            v-for="(sample, index) in samples"
-            :key="sample.id"
-            class="sample-tile"
-            :class="`tone-${sampleTone(sample.id)}`"
-            @click="openSample(sample.id)"
-          >
-            <div class="sample-tile-top">
-              <span class="sample-tile-index">{{ String(index + 1).padStart(2, "0") }}</span>
-            <span class="sample-tile-kind">{{ sampleKind(sample.id) }}</span>
-            </div>
-            <div class="sample-thumb"><img :src="sample.imageUrl" :alt="sample.name" loading="lazy" /></div>
-            <div class="sample-tile-bottom">
-              <div><h3>{{ sample.name }}</h3><p>{{ sample.description }}</p></div>
-              <span class="sample-open">使用此样例 <span aria-hidden="true">→</span></span>
-            </div>
-          </button>
-        </div>
+      <section id="how-it-works" class="room-how">
+        <h2>从一个疑问，走到一条可复查的结论。</h2>
+        <ol><li><span>01</span><div><h3>放入图表与配文</h3><p>一张截图就能开始。没有来源时，<br />结论停留在图内检查。</p></div></li><li><span>02</span><div><h3>逐条看清依据</h3><p>把说法、数值与适用来源对应，<br />区分矛盾、风险和仍待确认的部分。</p></div></li><li><span>03</span><div><h3>带着依据继续</h3><p>核对修改建议，或补一条关键信息，<br />再看看判断如何变化。</p></div></li></ol>
       </section>
-
-      <footer class="landing-footer">
-        <span>图证 / 图内检查与来源核验</span>
-        <RouterLink to="/audit?sample=conflict">试跑矛盾样例 <span aria-hidden="true">→</span></RouterLink>
-      </footer>
+      <details id="sample-dock" class="room-samples">
+        <summary>只有截图？浏览 {{ samples.length }} 个团队自制图内样例 <span aria-hidden="true">＋</span></summary>
+        <p class="room-support">只检查截图内的关系，不将其当作来源核验。</p>
+        <label class="room-button secondary" for="landing-upload">上传截图做图内检查<input id="landing-upload" class="room-file-input" type="file" accept="image/png,image/jpeg,image/webp" @change="uploadScreenshot($event)" /></label>
+        <div v-if="loadError" class="landing-error" role="alert">{{ loadError }} <button type="button" @click="loadSamples">重新载入</button></div>
+        <p v-else-if="samplesLoading" role="status">正在载入图内样例…</p>
+        <div v-else class="room-sample-grid"><button v-for="item in samples" :key="item.id" type="button" class="room-sample" @click="openSample(item.id)"><img :src="item.imageUrl" :alt="item.name" loading="lazy" /><span class="room-tag">{{ sampleKind(item.id) }}</span><strong>{{ item.name }}</strong><span>{{ item.description }}</span></button></div>
+      </details>
+      <footer class="room-footer"><span>图证 · 每一项判断，都留下依据。</span><a href="#how-it-works">了解检查范围与用法 ↑</a></footer>
     </main>
   </div>
 </template>

@@ -365,6 +365,19 @@ test.beforeAll(async ({ request }) => {
     .toBe(200);
 });
 
+test("建议说明引用了当前配文没有的文字时，保留原记录并提示未对齐", async ({ page }) => {
+  await page.route("**/api/source-audit/investigate", (route) => route.fulfill({ json: { investigation: FULL_INVESTIGATION } }));
+  await page.goto("/source-audit?sample=cpi-2025-12");
+  await expect(page.locator(".source-image-stage img")).toBeVisible();
+  await page.getByTestId("run-source-audit").click();
+  await expect(page.getByTestId("suggestion-notes")).toContainText("物价压力缓解");
+  await expect(page.getByTestId("suggestion-note-unmatched")).toContainText("未在当前配文中找到", { timeout: 2500 });
+  const rawNote = page.getByText("配文还有 1 处内容没有核验：「物价压力缓解」。", { exact: true });
+  await expect(rawNote).not.toBeVisible();
+  await page.getByText("查看未对齐附注原记录", { exact: true }).click();
+  await expect(rawNote).toBeVisible();
+});
+
 test("来源结论、依据展开、补证及采用建议可用键盘完成并恢复焦点", async ({ page }, testInfo) => {
   let initial = 0;
   let resumes = 0;
@@ -429,7 +442,7 @@ test("从自制图与配文走到带引用与工具轨迹的来源结论", async
   });
 
   await page.goto("/source-audit");
-  await expect(page.getByRole("heading", { name: "核对配文与公开来源" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /先把图表与配文/ })).toBeVisible();
   // 未选择图片时先给出可操作提示，不发请求。
   await page.getByTestId("run-source-audit").click();
   await expect(page.locator(".error-message")).toContainText("请先上传图表图片");
@@ -804,7 +817,7 @@ test("没有模型密钥时给出可操作提示，并列出固定资料库", as
   await page.getByTestId("run-source-audit").click();
 
   await expect(page.locator(".error-message")).toContainText("请前往模型设置页");
-  await expect(page.getByRole("link", { name: "前往模型设置并测试连接" })).toHaveAttribute("href", "/settings");
+  await expect(page.getByRole("link", { name: "前往模型设置并测试连接" })).toHaveAttribute("href", "/settings?returnTo=/source-audit");
   await expect(page.locator(".source-result")).toHaveCount(0);
 
   // 资料库清单可展开，且标明干扰项。

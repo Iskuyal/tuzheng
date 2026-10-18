@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1130" viewBox="0 0 1440 1130" role="img" aria-labelledby="sheet-title sheet-desc">
+<title id="sheet-title">输入检查工作台 · 桌面 · 1440</title>
+<desc id="sheet-desc">图证新 UI 静态设计稿。示例结果不代表本次模型运行。全部文字与图形均为可编辑矢量对象。</desc>
+<defs><pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.7" fill="#D6D9CF" opacity="0.5"/></pattern></defs>
+<rect x="0" y="0" width="1440" height="1130" rx="0" fill="#F5F2EB" />
+<g transform="translate(72 28) scale(1)"><path d="M0 8V0h9M23 0h9v8M32 24v8h-9M9 32H0v-8" fill="none" stroke="#173F35" stroke-width="2.2"/><path d="M8 23V15m8 8V9m8 14V4" fill="none" stroke="#173F35" stroke-width="3.2"/><circle cx="27" cy="27" r="4" fill="#AE4634"/></g>
+<text x="116" y="25" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="30" font-weight="600" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="116" dy="0">图证</tspan></text>
+<line x1="199" y1="29" x2="199" y2="60" stroke="#D6D9CF" stroke-width="1" />
+<text x="219" y="36" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="219" dy="0">让结论有据可查</tspan></text>
+<text x="852" y="39" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="852" dy="0">开始</tspan></text>
+<text x="947" y="39" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="947" dy="0">图内检查</tspan></text>
+<text x="1070" y="39" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="1070" dy="0">使用说明</tspan></text>
+<rect x="1195" y="26" width="173" height="40" rx="4" fill="#FFFEFA" stroke="#7C8F80" stroke-width="1" />
+<text x="1281.5" y="46.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#173F35" data-max-width="149">模型设置  ↗</text>
+<line x1="72" y1="88" x2="1368" y2="88" stroke="#D6D9CF" stroke-width="1" />
+<text x="72" y="119" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="72" dy="0">开始  /  来源核验</tspan></text>
+<rect x="1223" y="110" width="145" height="28" rx="3" fill="#E7EDE3" />
+<text x="1235" y="116" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="123"><tspan x="1235" dy="0">CPI 自制样例</tspan></text>
+<text x="72" y="166" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="38" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="72" dy="0">先把图表与配文放在一起。</tspan></text>
+<text x="74" y="227" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="15" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="74" dy="0">我们会逐条核对说法，并把依据与未能确认的部分分开。</tspan></text>
+<line x1="72" y1="279" x2="1368" y2="279" stroke="#D6D9CF" stroke-width="1" />
+<text x="74" y="301" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="16" font-weight="400" fill="#AE4634" text-anchor="start" dominant-baseline="hanging"><tspan x="74" dy="0">01</tspan></text>
+<text x="108" y="301" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="108" dy="0">整理材料</tspan></text>
+<text x="511" y="301" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="16" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="511" dy="0">02</tspan></text>
+<text x="545" y="301" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="545" dy="0">核验主张</tspan></text>
+<text x="947" y="301" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="16" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="947" dy="0">03</tspan></text>
+<text x="981" y="301" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="981" dy="0">阅读依据</tspan></text>
+<text x="73" y="365" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="20" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="73" dy="0">图表图片</tspan></text>
+<text x="824" y="372" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#173F35" text-anchor="end" dominant-baseline="hanging"><tspan x="824" dy="0">替换图片  ↗</tspan></text>
+<rect x="72" y="411" width="754" height="548" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<svg x="93" y="431" width="712" height="474.6666666666667" viewBox="0 0 960 640">
+  
+  
+  <rect width="960" height="640" fill="#edf2f0"/>
+  <rect width="960" height="12" fill="#143c46"/>
+  <text x="54" y="56" fill="#176b68" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" font-weight="700">图表摘录　/　团队自制</text>
+  <text x="54" y="112" fill="#132d3b" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="36" font-weight="700">2025 年 12 月全国 CPI 上涨 0.8%</text>
+  <text x="54" y="148" fill="#64777a" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">全国居民消费价格 · 月度数据示意图</text>
+  <rect x="54" y="183" width="852" height="385" rx="8" fill="#ffffff" stroke="#d7e0dc"/>
+  <text x="88" y="222" fill="#41585d" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">居民消费价格（CPI）涨幅</text>
+  <text x="872" y="222" fill="#64777a" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14" text-anchor="end">单位：%</text>
+  <text x="88" y="392" fill="#1c7471" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="140" font-weight="700">0.8%</text>
+  <text x="88" y="442" fill="#41585d" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="20">全国 · 2025 年 12 月</text>
+  <rect x="88" y="468" width="784" height="1" fill="#e4eae7"/>
+  <text x="88" y="504" fill="#64777a" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">本卡片只写出当月涨幅数值。</text>
+  <text x="88" y="532" fill="#64777a" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">未标注比较基准，也未标注数据发布机构。</text>
+  <text x="54" y="606" fill="#52646b" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">团队自制示意图，不是国家统计局原图　/　供口径核验演示使用</text>
+</svg>
+
+<text x="95" y="926" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="95" dy="0">cpi-2025-12.png</tspan></text>
+<text x="803" y="926" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" fill="#173F35" text-anchor="end" dominant-baseline="hanging"><tspan x="803" dy="0">放大查看原图  ↗</tspan></text>
+<text x="74" y="980" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="74" dy="0">请保留图表中的标题、时间、单位和比较方式。</tspan></text>
+<rect x="858" y="358" width="510" height="641" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="885" y="386" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="20" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="885" dy="0">要核对的配文</tspan></text>
+<rect x="1247" y="381" width="95" height="28" rx="3" fill="#E7EDE3" />
+<text x="1259" y="387" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="73"><tspan x="1259" dy="0">用户提供</tspan></text>
+<text x="886" y="432" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="886" dy="0">粘贴图表旁边的说法；它可能与来源不一致。</tspan></text>
+<rect x="885" y="465" width="456" height="137" rx="3" fill="#F5F2EB" stroke="#7C8F80" stroke-width="1" />
+<text x="904" y="486" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="19" font-weight="400" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="414"><tspan x="904" dy="0">2025 年 12 月全国 CPI</tspan><tspan x="904" dy="34">比上月上涨 0.8%。</tspan></text>
+<text x="1322" y="579" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="10" font-weight="400" fill="#5B6B62" text-anchor="end" dominant-baseline="hanging"><tspan x="1322" dy="0">示例配文</tspan></text>
+<text x="886" y="627" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="886" dy="0">本次会核对什么</tspan></text>
+<circle cx="891" cy="672" r="2.5" fill="#AE4634"/>
+<text x="906" y="667" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="906" dy="0">主张与口径</tspan></text>
+<text x="1024" y="667" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="300"><tspan x="1024" dy="0">月份、范围、同比或环比</tspan></text>
+<circle cx="891" cy="711" r="2.5" fill="#AE4634"/>
+<text x="906" y="706" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="906" dy="0">适用来源</tspan></text>
+<text x="1024" y="706" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="300"><tspan x="1024" dy="0">项目收录的公开 CPI 资料</tspan></text>
+<circle cx="891" cy="750" r="2.5" fill="#AE4634"/>
+<text x="906" y="745" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="906" dy="0">证据边界</tspan></text>
+<text x="1024" y="745" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="300"><tspan x="1024" dy="0">资料不适用时，保留待核对项</tspan></text>
+<line x1="885" y1="790" x2="1341" y2="790" stroke="#D6D9CF" stroke-width="1" />
+<rect x="885" y="813" width="456" height="52" rx="4" fill="#173F35" />
+<text x="1113.0" y="839.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#FFFEFA" data-max-width="432">运行来源核验   →</text>
+<text x="887" y="886" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="442"><tspan x="887" dy="0">点击后才向所配模型发送图片与配文。</tspan><tspan x="887" dy="25">仅在收录资料内查找，不是全网事实核查。</tspan></text>
+<text x="887" y="952" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="887" dy="0">运行前，可到模型设置检查连接  ↗</tspan></text>
+<line x1="72" y1="1043" x2="1368" y2="1043" stroke="#D6D9CF" stroke-width="1" />
+<text x="72" y="1063" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="72" dy="0">图证 · 每一项判断，都留下依据。</tspan></text>
+<text x="1368" y="1063" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="10" font-weight="400" fill="#5B6B62" text-anchor="end" dominant-baseline="hanging"><tspan x="1368" dy="0">静态设计稿 / 示例结果</tspan></text>
+</svg>

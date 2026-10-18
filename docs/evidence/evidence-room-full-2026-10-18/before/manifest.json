@@ -1,0 +1,271 @@
+{
+  "routes": [
+    "/",
+    "/audit",
+    "/source-audit",
+    "/settings"
+  ],
+  "sourceHashes": {
+    "web/router.ts": "bf3d549b35df499a9905295726c243185d8a0b7095ad15bfab540043e1ed89f9",
+    "web/main.ts": "816b75a32811999c6df520ded077e05be26add96fa528ebcad0776062b235281",
+    "web/style.css": "dd03ae9616ee39c70c673091f35aff950b66f506e1fa14eba64d028d68666fd0",
+    "web/evidence-room.css": "50f6592d1388c3d70363ea587fa6b3bf8b140df500c9fc15d680bc11e5f28e2b",
+    "web/pages/LandingPage.vue": "5fc67ebcb9af80c2ff775bdbebd65d2e3aba039fc987c756259a7dd8bdcf0a5c",
+    "web/pages/AuditPage.vue": "f956f233e0e0b7a14c16d0aa4a503a2fcf11dc3be459b49ee3030d182f7f281a",
+    "web/pages/SourceAuditPage.vue": "d5552c238a60e99aaeedb45ceb405c5c768745623a5b4749ef6ff1b05b84ee0b",
+    "web/pages/SettingsPage.vue": "05f4dc01d7cd5ae677388009de8b8c39a57f29f56c265c867430444a44bcca32"
+  },
+  "version": "1e88accc3ad47f78f92b50b263b57c2a71573e10cabdf4ec8146c29abe07a016",
+  "viewportCount": 3,
+  "records": [
+    {
+      "route": "/",
+      "width": 320,
+      "file": "home-320.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "0b74890cdfea7803abf191d66d0c92ced9060514fe3a2f353bb48528c10246d9",
+      "settingsIdentity": null
+    },
+    {
+      "route": "/audit",
+      "width": 320,
+      "file": "audit-320.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+      "headingColor": "rgb(20, 43, 65)",
+      "overflow": 0,
+      "legacyPaints": [
+        {
+          "element": "LABEL",
+          "className": "upload-button",
+          "background": "rgb(201, 234, 112)"
+        }
+      ],
+      "problems": [
+        "主标题仍是旧字体体系",
+        "主标题未使用当前墨绿语义色",
+        "仍有 1 处旧主题大块背景"
+      ],
+      "sha256": "a1bc912b491beb3ba5d056aa7aa6ade70ae9850348c9ad6f5c5625c628028db9",
+      "settingsIdentity": null
+    },
+    {
+      "route": "/source-audit",
+      "width": 320,
+      "file": "source-320.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "6f519feb1389272de1096c4b77d0d8d7e9595f1fc8744f8c2397f37851dd90a1",
+      "settingsIdentity": null
+    },
+    {
+      "route": "/settings",
+      "width": 320,
+      "file": "settings-320.png",
+      "canvas": "rgb(230, 239, 240)",
+      "headingFont": "\"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+      "headingColor": "rgb(16, 36, 58)",
+      "overflow": 0,
+      "legacyPaints": [
+        {
+          "element": "SECTION",
+          "className": "settings-evidence",
+          "background": "rgb(232, 235, 255)"
+        },
+        {
+          "element": "BUTTON",
+          "className": "pixel-button primary-action save-settings",
+          "background": "rgb(201, 234, 112)"
+        }
+      ],
+      "problems": [
+        "页面画布没有采用已确认的米白主题",
+        "主标题仍是旧字体体系",
+        "主标题未使用当前墨绿语义色",
+        "仍有 2 处旧主题大块背景"
+      ],
+      "sha256": "0fa8da843a969ec7634a899243a4464c7b64294c0d304c4f6d3a033e67ecb31a",
+      "settingsIdentity": "假设置，不是用户实际模型或密钥"
+    },
+    {
+      "route": "/",
+      "width": 390,
+      "file": "home-390.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "baa470e97a606d06d481849f2da24adb4771f727ab87804a69a51e56dac14d5c",
+      "settingsIdentity": null
+    },
+    {
+      "route": "/audit",
+      "width": 390,
+      "file": "audit-390.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+      "headingColor": "rgb(20, 43, 65)",
+      "overflow": 0,
+      "legacyPaints": [
+        {
+          "element": "LABEL",
+          "className": "upload-button",
+          "background": "rgb(201, 234, 112)"
+        }
+      ],
+      "problems": [
+        "主标题仍是旧字体体系",
+        "主标题未使用当前墨绿语义色",
+        "仍有 1 处旧主题大块背景"
+      ],
+      "sha256": "9b00547a54b4ad613065ff6ad1a8eb3667337103883e8cd3eff32ef253647042",
+      "settingsIdentity": null
+    },
+    {
+      "route": "/source-audit",
+      "width": 390,
+      "file": "source-390.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "fc6f7ab5b33047dd020d1f5577ca39220285fcf3a741bf24d87e712994c85913",
+      "settingsIdentity": null
+    },
+    {
+      "route": "/settings",
+      "width": 390,
+      "file": "settings-390.png",
+      "canvas": "rgb(230, 239, 240)",
+      "headingFont": "\"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+      "headingColor": "rgb(16, 36, 58)",
+      "overflow": 0,
+      "legacyPaints": [
+        {
+          "element": "SECTION",
+          "className": "settings-evidence",
+          "background": "rgb(232, 235, 255)"
+        },
+        {
+          "element": "BUTTON",
+          "className": "pixel-button primary-action save-settings",
+          "background": "rgb(201, 234, 112)"
+        }
+      ],
+      "problems": [
+        "页面画布没有采用已确认的米白主题",
+        "主标题仍是旧字体体系",
+        "主标题未使用当前墨绿语义色",
+        "仍有 2 处旧主题大块背景"
+      ],
+      "sha256": "7a8c06acf9547bec4ba574343d670fc6bef2f1026790b91107fd8fc00dbf5dc0",
+      "settingsIdentity": "假设置，不是用户实际模型或密钥"
+    },
+    {
+      "route": "/",
+      "width": 1440,
+      "file": "home-1440.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "8dfb478aa0989f97ed4a668cd482b1f938bfadb298b8419c627a7fe03de4ee12",
+      "settingsIdentity": null
+    },
+    {
+      "route": "/audit",
+      "width": 1440,
+      "file": "audit-1440.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+      "headingColor": "rgb(20, 43, 65)",
+      "overflow": 0,
+      "legacyPaints": [
+        {
+          "element": "LABEL",
+          "className": "upload-button",
+          "background": "rgb(201, 234, 112)"
+        }
+      ],
+      "problems": [
+        "主标题仍是旧字体体系",
+        "主标题未使用当前墨绿语义色",
+        "仍有 1 处旧主题大块背景"
+      ],
+      "sha256": "840bfd38b58d48e510b7923ce6099d6b8eed534a3d5d7a04c4e7265feeba67b6",
+      "settingsIdentity": null
+    },
+    {
+      "route": "/source-audit",
+      "width": 1440,
+      "file": "source-1440.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "b2efe6a919119d99c294c82e13b561cb2b9acd70c2c514012b4727e61942f321",
+      "settingsIdentity": null
+    },
+    {
+      "route": "/settings",
+      "width": 1440,
+      "file": "settings-1440.png",
+      "canvas": "rgb(230, 239, 240)",
+      "headingFont": "\"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+      "headingColor": "rgb(16, 36, 58)",
+      "overflow": 0,
+      "legacyPaints": [
+        {
+          "element": "ASIDE",
+          "className": "settings-rail",
+          "background": "rgb(16, 36, 58)"
+        },
+        {
+          "element": "DIV",
+          "className": "rail-art",
+          "background": "rgb(23, 47, 70)"
+        },
+        {
+          "element": "SECTION",
+          "className": "settings-evidence",
+          "background": "rgb(232, 235, 255)"
+        },
+        {
+          "element": "BUTTON",
+          "className": "pixel-button primary-action save-settings",
+          "background": "rgb(201, 234, 112)"
+        }
+      ],
+      "problems": [
+        "页面画布没有采用已确认的米白主题",
+        "主标题仍是旧字体体系",
+        "主标题未使用当前墨绿语义色",
+        "仍有 4 处旧主题大块背景"
+      ],
+      "sha256": "cf2354e7365778dc36abb2e8ab8dfbbe7fe7fc7a228ae8b1a33b5771169d1e86",
+      "settingsIdentity": "假设置，不是用户实际模型或密钥"
+    }
+  ],
+  "pageErrors": [],
+  "unexpectedPosts": 6,
+  "realModelRequests": 0,
+  "identity": "实际本机页面；设置为假配置，未运行模型",
+  "failedScreens": 6
+}

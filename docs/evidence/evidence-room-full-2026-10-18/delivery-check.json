@@ -1,0 +1,106 @@
+{
+  "uiVersion": "74793479985a2a89da5f7ae6329b679354622e1f960140f3b2fbf06f1ad3d3b6",
+  "sourceFiles": 71,
+  "currentSourcesMatch": true,
+  "reviewedManifestMatches": true,
+  "screenshotHashesMatch": true,
+  "routeScreens": 12,
+  "stateScreens": 24,
+  "supplementalSourceResultScreens": 3,
+  "routes": [
+    "/",
+    "/audit",
+    "/source-audit",
+    "/settings"
+  ],
+  "widths": [
+    320,
+    390,
+    1440
+  ],
+  "themeAndTextChecks": {
+    "passed": 36,
+    "failed": 0,
+    "pageErrors": 0,
+    "unexpectedWrites": 0,
+    "text200": {
+      "checkedScreens": 12,
+      "passed": 12,
+      "identity": "四路由正常页的字号与行高 200% 注入检查；非全部状态、非原生缩放、非完整无障碍审计"
+    }
+  },
+  "validation": {
+    "unit": {
+      "command": "npm test",
+      "passed": 445,
+      "failed": 0,
+      "files": 27
+    },
+    "build": {
+      "command": "npm run build",
+      "passed": true
+    },
+    "e2e": {
+      "command": "npm run test:e2e",
+      "passed": 140,
+      "failed": 0,
+      "skipped": 1,
+      "total": 141
+    },
+    "configuration": {
+      "command": "npm run verify:model-config",
+      "passed": 4,
+      "total": 4,
+      "sources": [
+        "file",
+        "env"
+      ],
+      "ports": [
+        "3001/5173",
+        "3107/5187"
+      ],
+      "identity": "真实 API/Vite 临时配置进程，假密钥，无模型调用"
+    },
+    "docs": {
+      "command": "npm run docs:check",
+      "passed": true
+    },
+    "diff": {
+      "command": "git diff --check",
+      "passed": true
+    }
+  },
+  "independentReview": {
+    "feedback": "review-2/feedback.md",
+    "staticScore": 8,
+    "count": 1,
+    "promptSha256": "fb76bafc352d54fbd97bc3d84855d16d296cb1677f72200d96a4d63ee0f27a4c",
+    "mode": "普通改版，无分数门槛；静态视觉意见",
+    "briefCorrection": "P1 所依赖的仅 CPI 前提是作者简报错误；实际固定库有两条社零发布，原始评分和反馈不改写",
+    "scopeEvidence": "library-scope-check.json"
+  },
+  "requests": {
+    "realModel": 0,
+    "uiStubConnections": 6,
+    "identity": "设置 GET 为假配置，连接与来源模型响应为离线替身；仅图内样例/计算 POST 透传至本机"
+  },
+  "preservedFailures": {
+    "invalidBaseline": "before/manifest.json",
+    "validBaseline": "before-corrected/manifest.json",
+    "validBaselineFailedScreens": 6,
+    "firstFullE2e": {
+      "passed": 138,
+      "failed": 2,
+      "skipped": 1
+    },
+    "cause": "框选画布落在视口外；未修改原回归断言，进入框选后滚入视口修复"
+  },
+  "notVerified": [
+    "真实模型在线能力",
+    "真机",
+    "屏幕阅读器",
+    "真实用户研究",
+    "部署及团队人工验收"
+  ],
+  "git": "本地未提交，未推送"
+}

@@ -1,0 +1,35 @@
+{
+  "version": "873543749da9868aa49ab62cad8e408c9667fe1c7b420fb8b849597e7bf83b80",
+  "baselineVersion": "35c638ac0076a576d7e7c7ea56c09e0fbd83935352d54722646128e82bb04571",
+  "sourceFiles": 71,
+  "sourcesAndImagesMatch": true,
+  "screenChecks": {
+    "passed": 36,
+    "failed": 0,
+    "additionalSourceResultScreens": 3
+  },
+  "text200": {
+    "passed": 12,
+    "total": 12,
+    "identity": "正常页面的计算字号/行高注入，非原生缩放或完整无障碍"
+  },
+  "colorChecks": {
+    "pairs": 32,
+    "passed": true,
+    "greenUiInFourNormalPages": 0,
+    "evidence": "palette-check.json",
+    "initialFailure": "first-green-scan.json"
+  },
+  "browser": {
+    "passed": 11,
+    "skipped": 1,
+    "total": 12,
+    "scope": "原图键盘、窄屏导航、模型连接反馈、来源结果/依据/补证/采用；两组定向运行"
+  },
+  "build": "passed",
+  "realModelRequests": 0,
+  "stubConnectionRequests": 6,
+  "settings": "假配置；未改用户配置",
+  "independentScore": "轻量调色，未重新独立评分；历史评分不适用于本版",
+  "git": "本地未提交，未推送"
+}

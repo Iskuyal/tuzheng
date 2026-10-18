@@ -1,0 +1,68 @@
+[
+  {
+    "file": "01-home-desktop.svg",
+    "width": 1440,
+    "height": 1180,
+    "title": "开始页 · 桌面 · 1440"
+  },
+  {
+    "file": "02-workspace-desktop.svg",
+    "width": 1440,
+    "height": 1130,
+    "title": "输入检查工作台 · 桌面 · 1440"
+  },
+  {
+    "file": "03-result-desktop.svg",
+    "width": 1440,
+    "height": 1510,
+    "title": "结果与证据 · 桌面 · 1440"
+  },
+  {
+    "file": "04-home-mobile.svg",
+    "width": 390,
+    "height": 1470,
+    "title": "开始页 · 窄屏 · 390"
+  },
+  {
+    "file": "05-workspace-mobile.svg",
+    "width": 390,
+    "height": 1530,
+    "title": "输入检查工作台 · 窄屏 · 390"
+  },
+  {
+    "file": "06-result-mobile.svg",
+    "width": 390,
+    "height": 2160,
+    "title": "结果与证据 · 窄屏 · 390"
+  },
+  {
+    "file": "07-states.svg",
+    "width": 1440,
+    "height": 1480,
+    "title": "状态与恢复 · 设计说明"
+  },
+  {
+    "file": "08-foundations.svg",
+    "width": 1440,
+    "height": 1050,
+    "title": "视觉规范与组件 · 设计说明"
+  },
+  {
+    "file": "09-image-preview-mobile.svg",
+    "width": 390,
+    "height": 1100,
+    "title": "原图预览与缩放 · 窄屏 · 390"
+  },
+  {
+    "file": "10-clarification-mobile.svg",
+    "width": 390,
+    "height": 1190,
+    "title": "补证与暂不补充 · 窄屏 · 390"
+  },
+  {
+    "file": "11-error-mobile.svg",
+    "width": 390,
+    "height": 1080,
+    "title": "失败与输入保留 · 窄屏 · 390"
+  }
+]

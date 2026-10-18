@@ -580,6 +580,11 @@ function toggleCropMode(): void {
   cropMode.value = true;
 }
 
+// 布局变化后工具栏可能可见、画布却仍在视口之外；进入框选时把操作对象带入视口。
+watch(cropMode, (active) => {
+  if (active) imageStage.value?.querySelector(".crop-overlay")?.scrollIntoView({ block: "center", behavior: "instant" });
+}, { flush: "post" });
+
 function cropPoint(event: PointerEvent): { x: number; y: number } | null {
   const image = previewImage.value;
   const overlay = event.currentTarget as HTMLDivElement | null;
@@ -1271,10 +1276,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell evidence-room">
     <SiteHeader />
 
-    <main id="top" class="page-shell">
+    <main id="top" class="page-shell room-audit">
       <section class="intro" aria-labelledby="page-title">
         <div>
           <p class="eyebrow">图表截图自检</p>
@@ -1415,13 +1420,17 @@ onBeforeUnmount(() => {
                 <h2 id="image-viewer-title">放大核对图表</h2>
                 <p>放大后可左右滚动查看两侧，也可用方向按钮移动。</p>
               </div>
+              <button type="button" class="image-viewer-close" @click="closeImageViewer">关闭</button>
               <div class="image-viewer-controls">
-                <button v-if="imageZoom > 1" type="button" aria-label="向左查看图表" @click="panImageViewer(-1)">←</button>
-                <button type="button" aria-label="缩小图表" :disabled="imageZoom <= 1" @click="changeImageZoom(-0.5)">−</button>
-                <output>{{ Math.round(imageZoom * 100) }}%</output>
-                <button type="button" aria-label="放大图表" :disabled="imageZoom >= 3" @click="changeImageZoom(0.5)">＋</button>
-                <button v-if="imageZoom > 1" type="button" aria-label="向右查看图表" @click="panImageViewer(1)">→</button>
-                <button type="button" class="image-viewer-close" @click="closeImageViewer">关闭</button>
+                <div class="image-viewer-control-group" role="group" aria-label="图表缩放">
+                  <button type="button" aria-label="缩小图表" :disabled="imageZoom <= 1" @click="changeImageZoom(-0.5)">−</button>
+                  <output>{{ Math.round(imageZoom * 100) }}%</output>
+                  <button type="button" aria-label="放大图表" :disabled="imageZoom >= 3" @click="changeImageZoom(0.5)">＋</button>
+                </div>
+                <div v-if="imageZoom > 1" class="image-viewer-control-group" role="group" aria-label="移动图表">
+                  <button type="button" aria-label="向左查看图表" @click="panImageViewer(-1)">←</button>
+                  <button type="button" aria-label="向右查看图表" @click="panImageViewer(1)">→</button>
+                </div>
               </div>
             </div>
             <div

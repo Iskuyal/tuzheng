@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import SiteHeader from "../components/SiteHeader.vue";
+import OriginalImageViewer from "../components/OriginalImageViewer.vue";
+import { takeLandingUpload, takeLandingSourceSampleRequest } from "../upload-transfer.js";
 import SourceClaimCard from "../components/SourceClaimCard.vue";
 import {
   CAPTION_CHANGE_LABELS,
@@ -39,6 +41,42 @@ interface HistoryEntry {
 }
 
 const route = useRoute();
+const imageViewerOpen = ref(false);
+const clarificationDeferred = ref(false);
+const settingsLocation = computed(() => ({ name: "settings", query: { returnTo: route.fullPath.split("#")[0] } }));
+
+function focusMaterials(): void {
+  const input = document.getElementById("source-audit-caption");
+  input?.scrollIntoView({ block: "center", behavior: "instant" });
+  input?.focus({ preventScroll: true });
+}
+function navigateSection(id: string): void {
+  const target = document.getElementById(id);
+  if (target instanceof HTMLDetailsElement) {
+    target.open = true;
+    target.querySelector("summary")?.focus({ preventScroll: true });
+  }
+  target?.scrollIntoView({ block: "start", behavior: "instant" });
+  target?.focus({ preventScroll: true });
+}
+
+onActivated(() => {
+  const file = takeLandingUpload("source-audit");
+  const sampleRequested = takeLandingSourceSampleRequest();
+  if (!file) {
+    if (sampleRequested && sample.value) void loadSampleImage();
+    return;
+  }
+  invalidateCurrentResult("已更换图片，旧结果已失效");
+  setPendingImage(file, file.name);
+  caption.value = "";
+  errorMessage.value = "";
+  errorCode.value = "";
+});
+onDeactivated(() => {
+  if (busy.value) cancelRun();
+  imageViewerOpen.value = false;
+});
 const library = ref<PublicSourceLibraryEntry[]>([]);
 const sampleLoading = ref(true);
 const inputNotice = ref("");
@@ -57,6 +95,9 @@ const result = ref<SourceInvestigationResult | null>(null);
 const history = ref<HistoryEntry[]>([]);
 const clarificationAnswer = ref("");
 const libraryOpen = ref(false);
+watch(() => route.hash, (hash) => {
+  if (route.name === "source-audit" && hash === "#source-library") libraryOpen.value = true;
+}, { immediate: true });
 let timer: number | null = null;
 let controller: AbortController | null = null;
 /** 请求序号：输入改动或取消时递增，在途响应若序号过期直接丢弃，不写回旧结论。 */
@@ -97,6 +138,7 @@ function retireCurrentResult(reason: string, adopted = false): void {
   history.value.unshift({ result: result.value, reason, adopted });
   result.value = null;
   clarificationAnswer.value = "";
+  clarificationDeferred.value = false;
 }
 
 /**
@@ -186,6 +228,23 @@ function summarizeClaims(label: string, rows: ClaimRow[]): string {
   return `${label}：${Array.from(counts, ([status, count]) => `${count} 条${CLAIM_STATUS_LABELS[status]}`).join("；")}。`;
 }
 const resultOverview = computed(() => [summarizeClaims("配文", captionClaims.value), summarizeClaims("图内观察", imageClaims.value)]);
+const primaryFinding = computed(() => {
+  if (result.value?.clarification) return result.value.clarification.question;
+  const rows = captionClaims.value;
+  const row = rows.find((entry) => entry.conclusion?.status !== "source-match") ?? rows[0] ?? imageClaims.value[0];
+  return row?.conclusion
+    ? `${row.claim.fromImage ? "图上" : "配文"}「${row.claim.claimText}」：${CLAIM_STATUS_LABELS[row.conclusion.status]}。`
+    : "本次没有形成可用结论，请查看停止原因和工具记录。";
+});
+/** 只检查附注的可见引文，不把字面匹配当成语义或来源核验。 */
+const unmatchedNoteQuotes = computed(() => {
+  const current = caption.value.replace(/\s/g, "");
+  const proposed = result.value?.captionSuggestion?.suggestedCaption.replace(/\s/g, "") ?? "";
+  const quotes = (result.value?.captionSuggestion?.notes ?? []).flatMap((note) => Array.from(note.matchAll(/「([^」]+)」/g), (match) => match[1]));
+  return [...new Set(quotes.filter((quote) => !current.includes(quote.replace(/\s/g, "")) && !proposed.includes(quote.replace(/\s/g, ""))))];
+});
+const unmatchedSuggestionNotes = computed(() => (result.value?.captionSuggestion?.notes ?? []).filter((note) => unmatchedNoteQuotes.value.some((quote) => note.includes(`「${quote}」`))));
+const matchedSuggestionNotes = computed(() => (result.value?.captionSuggestion?.notes ?? []).filter((note) => !unmatchedSuggestionNotes.value.includes(note)));
 
 const citedSourceIds = computed(() => new Set(
   (result.value?.acceptedCitations ?? []).map((citation) => citation.sourceId),
@@ -215,15 +274,10 @@ function citationRoleLabel(sourceId: string): string {
 function onFileChange(event: Event): void {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0] ?? null;
+  if (!file) return;
   errorMessage.value = "";
   errorCode.value = "";
   adoptedNotice.value = "";
-  if (!file) {
-    pendingFile.value = null;
-    selectedFileName.value = "";
-    invalidateCurrentResult("图片已改动，结论已失效");
-    return;
-  }
   if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
     errorMessage.value = "请上传 PNG、JPG 或 WebP 图片。";
     input.value = "";
@@ -236,6 +290,7 @@ function onFileChange(event: Event): void {
   }
   invalidateCurrentResult("图片已改动，结论已失效");
   setPendingImage(file, file.name);
+  input.value = "";
 }
 
 function setPendingImage(file: File, name: string): void {
@@ -416,23 +471,20 @@ function adoptSuggestion(): void {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell evidence-room">
     <SiteHeader />
-    <main class="page-shell source-audit-page">
-      <section class="intro">
-        <div>
-          <p class="eyebrow">公开来源核验</p>
-          <h1>核对配文与公开来源</h1>
-          <p class="intro-copy">
-            上传图表并填写配文，逐条查看与来源一致、不一致或仍待核对的内容，以及引用和修改建议。
-            当前对照固定国家统计局资料库，只核验资料覆盖的指标、月份和范围；缺少适用依据时保留不确定性。
-          </p>
-        </div>
-        <div class="scope-stamp">
-          <span class="scope-stamp-mark" aria-hidden="true">源</span>
-          <span><strong>固定资料库</strong><br />不抓取开放网络</span>
-        </div>
+    <main class="page-shell source-audit-page room-source" :class="{ 'has-result': result }">
+      <section class="room-intro">
+        <p class="room-breadcrumb"><RouterLink to="/">开始</RouterLink> / 来源核验 <span v-if="result"> / 阅读结果</span></p>
+        <h1><template v-if="result">每一项判断，<br class="room-mobile-break" />都回到依据。</template><template v-else>先把图表与配文<br class="room-mobile-break" />放在一起。</template></h1>
+        <p>逐条核对说法，把适用来源和仍待确认的部分分开。</p>
+        <button v-if="result" type="button" class="room-button secondary room-back" @click="focusMaterials">← 回到材料</button>
       </section>
+      <aside v-if="errorMessage || adoptedNotice" class="room-state-overview" :class="{ 'is-error': errorMessage }" aria-label="当前任务状态">
+        <strong>{{ adoptedNotice ? "配文已更新，等待重新核验。" : "本次未形成新结论，材料已保留。" }}</strong>
+        <button type="button" class="room-inline-button" @click="focusMaterials">{{ adoptedNotice ? "查看配文并重新核验 ↓" : "返回材料，重试或编辑 ↓" }}</button>
+      </aside>
+      <ol v-if="!result" class="room-steps" aria-label="核验步骤"><li aria-current="step"><span>01</span> 整理材料</li><li><span>02</span> 核验主张</li><li><span>03</span> 阅读依据</li></ol>
 
       <details class="source-mechanism">
         <summary>查看核验机制与使用边界</summary>
@@ -441,7 +493,8 @@ function adoptSuggestion(): void {
         <p>图片和配文仅在点击「运行来源核验」后发送到所配模型服务。工具轨迹在响应返回后显示，不代表实时进度。</p>
       </details>
 
-      <section class="source-input-grid" aria-label="核验输入">
+      <div class="room-source-layout">
+      <section id="source-materials" class="source-input-grid" aria-label="核验输入">
         <div class="source-panel">
           <div class="section-heading">
             <div>
@@ -466,7 +519,7 @@ function adoptSuggestion(): void {
               <span>上传自制图表截图，或载入团队自制 CPI 样例。</span>
             </div>
           </div>
-          <p class="source-file-name">当前图片：{{ selectedFileName || "尚未选择" }}</p>
+          <div class="room-file-row"><p class="source-file-name">当前图片：{{ selectedFileName || "尚未选择" }}</p><button v-if="previewUrl" type="button" class="room-inline-button" @click="imageViewerOpen = true">放大查看原图</button></div>
           <div class="source-sample-row">
             <button
               type="button"
@@ -499,10 +552,19 @@ function adoptSuggestion(): void {
               aria-describedby="source-caption-hint"
             ></textarea>
           </label>
+          <p class="room-field-note">用户提供 · 点击运行后才向所配模型发送图片与配文。</p>
           <p id="source-caption-hint" class="source-caption-hint">
             比较方式、月份或范围不清楚时会保留待核对项；只有适用来源才能支持结论。
           </p>
-          <p v-if="!busy && !result" class="source-input-notice" role="status">{{ inputNotice || "尚未开始核验。请先选择图片并填写配文。" }}</p>
+          <p v-if="!busy && !result && !errorMessage && !adoptedNotice" class="source-input-notice" role="status">{{ inputNotice || "尚未开始核验。请先选择图片并填写配文。" }}</p>
+          <p v-if="errorMessage" class="error-message room-error" role="alert">
+            {{ errorMessage }}
+            <RouterLink v-if="errorCode === 'MODEL_NOT_CONFIGURED'" class="source-settings-link" :to="settingsLocation">
+              前往模型设置并测试连接
+            </RouterLink>
+          </p>
+          <div v-if="errorMessage" class="room-recovery"><button type="button" class="room-inline-button" @click="focusMaterials">返回材料，继续编辑</button><span>材料已保留；可修改后再运行。</span></div>
+          <div v-if="adoptedNotice" class="source-adopted-notice" role="status" data-testid="adopted-notice"><strong>当前结果已失效</strong><p>{{ adoptedNotice }}</p><p>当前配文：{{ caption }}</p><a href="#source-history" @click.prevent="navigateSection('source-history')">查看上次结果（历史） ↓</a></div>
           <div class="source-run-row">
             <button
               type="button"
@@ -511,25 +573,25 @@ function adoptSuggestion(): void {
               :disabled="busy"
               @click="runInvestigation"
             >
-              {{ busy ? `正在核验（${elapsedSeconds} 秒）` : "运行来源核验" }}
+              {{ busy ? `正在核验（${elapsedSeconds} 秒）` : errorMessage ? "重试核验" : adoptedNotice ? "重新核验" : "运行来源核验" }}
             </button>
             <button v-if="busy" type="button" class="read-cancel-button" @click="cancelRun">取消核验</button>
-            <span v-if="busy" class="source-run-note">模型可能多轮调用工具，通常需要 5—30 秒。</span>
+            <span v-if="busy" class="source-run-note">工具记录在结果返回后展示，期间可以取消。</span>
           </div>
           <p class="sr-only" role="status">{{ busy ? "正在等待模型核验，可取消。工具记录在响应返回后显示。" : result ? "核验已返回，请查看逐条结论与未解决项。" : "" }}</p>
-          <p v-if="errorMessage" class="error-message" role="alert">
-            {{ errorMessage }}
-            <RouterLink v-if="errorCode === 'MODEL_NOT_CONFIGURED'" class="source-settings-link" to="/settings">
-              前往模型设置并测试连接
-            </RouterLink>
-          </p>
-          <p v-if="adoptedNotice" class="source-adopted-notice" role="status" data-testid="adopted-notice">{{ adoptedNotice }}</p>
+
+
+          <RouterLink class="source-settings-link room-settings-link" data-testid="source-model-settings" :to="settingsLocation">前往模型设置并检查连接 ↗</RouterLink>
+
         </div>
       </section>
 
       <section v-if="result" class="source-result" aria-label="核验结果">
         <h2 id="source-result-title" tabindex="-1">本次核验结果</h2>
+        <p class="room-result-boundary">仅核对当前主张与适用的收录来源；未确认整张图、原始数据或制作过程的真实性。</p>
+        <nav class="room-result-directory" aria-label="本页结果目录"><span>接下来</span><a href="#source-claims">查看依据 ↓</a><a href="#source-citations">引用来源 ↓</a><a v-if="result.captionSuggestion" href="#source-suggestions">查看修改建议 ↓</a><a v-if="result.clarification && !clarificationDeferred" href="#source-clarification">补充回答 ↓</a><a href="#source-process" @click.prevent="navigateSection('source-process')">核验过程 ↓</a></nav>
         <div class="source-overview" data-testid="source-overview">
+          <p class="room-primary-finding">{{ primaryFinding }}</p>
           <p v-for="line in resultOverview" :key="line">{{ line }}</p>
         </div>
         <details class="source-run-details">
@@ -550,8 +612,8 @@ function adoptSuggestion(): void {
           模型没有给出可用的汇总，本次没有生成任何来源结论；上面的停止原因与工具轨迹记录了实际发生的事。
         </p>
 
-        <div v-if="result.clarification" class="source-clarification" data-testid="clarification-block">
-          <p class="eyebrow">模型请求确认（本次调查仅此一次）</p>
+        <div v-if="result.clarification && !clarificationDeferred" id="source-clarification" class="source-clarification" data-testid="clarification-block">
+          <p class="eyebrow">再确认一项信息</p>
           <p class="source-clarification-question">{{ result.clarification.question }}</p>
           <p class="source-clarification-purpose">用途：{{ result.clarification.purpose }}</p>
           <p v-if="result.clarification.claimText" class="source-clarification-claim">
@@ -575,9 +637,11 @@ function adoptSuggestion(): void {
             :disabled="busy"
             @click="submitClarification"
           >
-            {{ busy ? `正在恢复（${elapsedSeconds} 秒）` : "提交补充并恢复调查" }}
-          </button>
+            {{ busy ? `正在恢复（${elapsedSeconds} 秒）` : "提交补充，继续核验" }}
+          </button><button type="button" class="room-inline-button room-defer" :disabled="busy" @click="clarificationDeferred = true">暂不补充，保留待核对</button>
         </div>
+
+        <p v-if="result.clarification && clarificationDeferred" class="room-deferred" role="status">尚未补充，结论保持待核对。<button type="button" class="room-inline-button" @click="clarificationDeferred = false">继续补充</button></p>
 
         <div v-if="result.supplement" class="source-supplement" data-testid="supplement-block">
           <p class="eyebrow">补证记录</p>
@@ -618,7 +682,7 @@ function adoptSuggestion(): void {
           </ul>
         </div>
 
-        <div class="source-section">
+        <div id="source-claims" class="source-section room-caption-claims">
           <div class="section-heading">
             <div>
               <p class="eyebrow">结果</p>
@@ -654,7 +718,70 @@ function adoptSuggestion(): void {
           />
         </div>
 
-        <div v-if="result.captionSuggestion" class="source-section source-suggestion" data-testid="caption-suggestion">
+        <div id="source-citations" class="source-section room-citations">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">证据</p>
+              <h2>引用与检索命中</h2>
+            </div>
+          </div>
+          <p class="source-section-note">
+            只有本次命中的材料可以被引用；被引用的材料标明原始链接与发布日期。
+          </p>
+          <component
+            :is="citedSourceIds.has(hit.document.id) ? 'article' : 'details'"
+            v-for="hit in result.hits"
+            :key="hit.document.id"
+            :id="`source-document-${hit.document.id}`"
+            :tabindex="citedSourceIds.has(hit.document.id) ? -1 : undefined"
+            class="source-document-card"
+            :class="{ 'is-cited': citedSourceIds.has(hit.document.id) }"
+          >
+            <summary v-if="!citedSourceIds.has(hit.document.id)" class="room-uncited-summary">未采用：{{ hit.document.title }}</summary>
+            <div class="source-document-head">
+              <h3>{{ hit.document.title }}</h3>
+              <span v-if="citedSourceIds.has(hit.document.id)" class="source-cited-badge" data-testid="cited-badge">
+                本次引用 · {{ citationRoleLabel(hit.document.id) }}
+              </span>
+              <span v-else class="source-excluded-badge">未采用</span>
+            </div>
+            <p class="source-document-meta">
+              {{ hit.document.publisher }} · 发布 {{ hit.document.publishedAt }} ·
+              {{ hit.document.kind === "data-release" ? "数据发布" : "术语解释" }}
+              <template v-if="hit.document.basis.period"> · 适用 {{ hit.document.basis.period }}</template>
+            </p>
+            <p class="source-document-excerpt">{{ hit.document.excerpt }}</p>
+            <details class="room-source-proof">
+            <summary>适用性与内容指纹</summary>
+            <ul class="source-reason-list">
+              <li v-for="reason in hit.matchReasons" :key="reason">{{ reason }}</li>
+            </ul>
+            <p class="source-document-fingerprint">内容指纹 {{ hit.document.fingerprint }}</p>
+            </details>
+            <a class="source-document-link" :href="hit.document.url" target="_blank" rel="noreferrer noopener">
+              查看原始链接
+            </a>
+          </component>
+          <details v-if="result.excludedSources.length" class="source-excluded" data-testid="excluded-sources">
+            <summary>查看被排除材料及原因（{{ result.excludedSources.length }}）</summary>
+            <h3>本次排除的材料及原因</h3>
+            <ul>
+              <li v-for="excluded in result.excludedSources" :key="excluded.sourceId">
+                <strong>{{ excluded.title }}</strong>：{{ excluded.reason }}
+              </li>
+            </ul>
+          </details>
+          <div v-if="result.citationsRejected.length" class="source-excluded" data-testid="rejected-citations">
+            <h3>被拒绝的引用</h3>
+            <ul>
+              <li v-for="(rejected, index) in result.citationsRejected" :key="`${rejected.sourceId}-${index}`">
+                <strong>{{ rejected.sourceId }}</strong>：{{ rejected.reason }}
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div v-if="result.captionSuggestion" id="source-suggestions" class="source-section source-suggestion" data-testid="caption-suggestion">
           <div class="section-heading">
             <div>
               <p class="eyebrow">建议</p>
@@ -673,6 +800,8 @@ function adoptSuggestion(): void {
               {{ result.captionSuggestion.suggestedCaption }}
             </p>
           </div>
+          <details class="room-suggestion-details">
+          <summary>逐处查看改动、理由与引用</summary>
           <ul class="source-suggestion-changes" data-testid="suggestion-changes">
             <li v-for="(change, index) in result.captionSuggestion.changes" :key="`${change.claimText}-${index}`">
               <div class="source-suggestion-head">
@@ -705,16 +834,22 @@ function adoptSuggestion(): void {
               </li>
             </ul>
           </div>
-          <ul
+          </details>
+          <div
             v-if="result.captionSuggestion.notes.length"
             class="source-suggestion-notes"
             data-testid="suggestion-notes"
           >
-            <li v-for="note in result.captionSuggestion.notes" :key="note">{{ note }}</li>
-          </ul>
-          <p class="source-suggestion-fingerprint">
+            <ul v-if="matchedSuggestionNotes.length"><li v-for="note in matchedSuggestionNotes" :key="note">{{ note }}</li></ul>
+            <div v-if="unmatchedSuggestionNotes.length" class="room-note-warning">
+              <strong>未匹配到当前配文的附注（{{ unmatchedSuggestionNotes.length }}）</strong>
+              <p data-testid="suggestion-note-unmatched">「{{ unmatchedNoteQuotes.join("」、「") }}」未在当前配文中找到，也未出现在建议配文中；不计入当前配文的未核验项。</p>
+              <details><summary>查看未对齐附注原记录</summary><ul><li v-for="note in unmatchedSuggestionNotes" :key="note">{{ note }}</li></ul><p>原记录保留供复查，不作为当前配文的说明。</p></details>
+            </div>
+          </div>
+          <details class="room-suggestion-fingerprint"><summary>查看建议依据快照</summary><p class="source-suggestion-fingerprint">
             依据快照指纹 {{ result.captionSuggestion.fingerprint }}：输入、补证或引用一变，这条建议即失效并转入历史。
-          </p>
+          </p></details>
           <button
             type="button"
             class="read-image-button"
@@ -722,7 +857,7 @@ function adoptSuggestion(): void {
             @click="adoptSuggestion"
           >
             采用这条建议（写入配文输入框）
-          </button>
+          </button><p class="room-adopt-explainer">仅更新配文，旧结果转入历史；须再次主动运行，才有新结论。</p>
         </div>
 
         <div
@@ -754,64 +889,9 @@ function adoptSuggestion(): void {
           </p>
         </div>
 
-        <div class="source-section">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">证据</p>
-              <h2>引用与检索命中</h2>
-            </div>
-          </div>
-          <p class="source-section-note">
-            只有本次命中的材料可以被引用；被引用的材料标明原始链接与发布日期。
-          </p>
-          <article
-            v-for="hit in result.hits"
-            :key="hit.document.id"
-            :id="`source-document-${hit.document.id}`"
-            tabindex="-1"
-            class="source-document-card"
-            :class="{ 'is-cited': citedSourceIds.has(hit.document.id) }"
-          >
-            <div class="source-document-head">
-              <h3>{{ hit.document.title }}</h3>
-              <span v-if="citedSourceIds.has(hit.document.id)" class="source-cited-badge" data-testid="cited-badge">
-                本次引用 · {{ citationRoleLabel(hit.document.id) }}
-              </span>
-              <span v-else class="source-excluded-badge">未采用</span>
-            </div>
-            <p class="source-document-meta">
-              {{ hit.document.publisher }} · 发布 {{ hit.document.publishedAt }} ·
-              {{ hit.document.kind === "data-release" ? "数据发布" : "术语解释" }}
-              <template v-if="hit.document.basis.period"> · 适用 {{ hit.document.basis.period }}</template>
-            </p>
-            <p class="source-document-excerpt">{{ hit.document.excerpt }}</p>
-            <ul class="source-reason-list">
-              <li v-for="reason in hit.matchReasons" :key="reason">{{ reason }}</li>
-            </ul>
-            <p class="source-document-fingerprint">内容指纹 {{ hit.document.fingerprint }}</p>
-            <a class="source-document-link" :href="hit.document.url" target="_blank" rel="noreferrer noopener">
-              查看原始链接
-            </a>
-          </article>
-          <div v-if="result.excludedSources.length" class="source-excluded" data-testid="excluded-sources">
-            <h3>本次排除的材料及原因</h3>
-            <ul>
-              <li v-for="excluded in result.excludedSources" :key="excluded.sourceId">
-                <strong>{{ excluded.title }}</strong>：{{ excluded.reason }}
-              </li>
-            </ul>
-          </div>
-          <div v-if="result.citationsRejected.length" class="source-excluded" data-testid="rejected-citations">
-            <h3>被拒绝的引用</h3>
-            <ul>
-              <li v-for="(rejected, index) in result.citationsRejected" :key="`${rejected.sourceId}-${index}`">
-                <strong>{{ rejected.sourceId }}</strong>：{{ rejected.reason }}
-              </li>
-            </ul>
-          </div>
-        </div>
 
-        <details class="source-section source-tool-details">
+
+        <details id="source-process" class="source-section source-tool-details">
           <summary>查看工具轨迹与调用预算</summary>
           <p class="source-section-note">
             每轮最多 3 次工具调用，单次调查共 6 次；检索、比较与追问计入预算，汇总不计入。
@@ -847,7 +927,9 @@ function adoptSuggestion(): void {
         </div>
       </section>
 
-      <section v-if="history.length" class="source-history" aria-label="历史结论" data-testid="history-section">
+      </div>
+
+      <section v-if="history.length" id="source-history" tabindex="-1" class="source-history" aria-label="历史结论" data-testid="history-section">
         <div class="section-heading">
           <div>
             <p class="eyebrow">历史</p>
@@ -890,17 +972,18 @@ function adoptSuggestion(): void {
         </details>
       </section>
 
-      <section v-if="library.length" class="source-library" aria-label="固定资料库">
+      <section id="source-library" class="source-library" aria-label="固定资料库">
         <div class="section-heading">
           <div>
             <p class="eyebrow">可复查</p>
             <h2>固定资料库（{{ library.length }} 条）</h2>
           </div>
-          <button type="button" class="ghost-button" :aria-expanded="libraryOpen" @click="libraryOpen = !libraryOpen">
+          <button type="button" class="ghost-button" :aria-expanded="libraryOpen" :disabled="!library.length" @click="libraryOpen = !libraryOpen">
             {{ libraryOpen ? "收起资料库" : "展开资料库" }}
           </button>
         </div>
-        <ul v-if="libraryOpen" class="source-library-list">
+        <p v-if="!library.length" class="source-section-note" role="status">{{ sampleLoading ? "正在载入资料库范围…" : "资料库清单暂不可用，核验时仍须有适用来源才能给出结论。" }}</p>
+        <ul v-if="libraryOpen && library.length" class="source-library-list">
           <li v-for="entry in library" :key="entry.id">
             <a :href="entry.url" target="_blank" rel="noreferrer noopener">{{ entry.title }}</a>
             <span class="source-library-meta">
@@ -917,6 +1000,8 @@ function adoptSuggestion(): void {
           </li>
         </ul>
       </section>
+      <footer class="room-footer"><span>图证 · 每一项判断，都留下依据。</span><RouterLink to="/audit">仅核对截图：图内检查 ↗</RouterLink></footer>
+      <OriginalImageViewer v-model:open="imageViewerOpen" :src="previewUrl" :name="selectedFileName" />
     </main>
   </div>
 </template>

@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import SiteHeader from "../components/SiteHeader.vue";
+import { useRoute } from "vue-router";
+const route = useRoute();
+const sourceReturn = computed(() => {
+  const path = typeof route.query.returnTo === "string" ? route.query.returnTo : "";
+  return path === "/source-audit" || path.startsWith("/source-audit?") ? path : null;
+});
 import type { ModelProvider } from "../../shared/model-providers.js";
 import { presetsFor, type ModelPreset } from "../../shared/model-presets.js";
 
@@ -224,13 +230,14 @@ onMounted(loadSettings);
 </script>
 
 <template>
-  <div class="settings-page">
+  <div class="settings-page evidence-room">
     <SiteHeader />
 
-    <main class="settings-shell">
+    <main class="settings-shell room-settings">
+      <RouterLink v-if="sourceReturn" class="room-return-link" :to="sourceReturn">← 返回来源核验材料</RouterLink>
       <section class="settings-intro">
         <div>
-          <p class="section-kicker">本机连接 / 仅服务端读取</p>
+          <p class="section-kicker"><RouterLink to="/">开始</RouterLink> / 模型设置</p>
           <h1>模型设置</h1>
           <p class="settings-lede">支持 OpenAI Responses 兼容或 Anthropic Messages 协议。默认在本机保存两种协议的配置；显式启用服务端环境配置时，本页显示当前配置并锁定编辑。</p>
         </div>
@@ -238,11 +245,8 @@ onMounted(loadSettings);
 
       <div class="settings-layout">
         <aside class="settings-rail">
-          <div class="rail-art" aria-hidden="true">
-            <span class="rail-pixel-lock"><i></i><b></b></span>
-          </div>
           <p class="section-kicker">连接说明</p>
-          <h2>密钥留在这台电脑</h2>
+          <h2>密钥留在本机，<br />图片按需发送。</h2>
           <ul class="settings-notes">
             <li><strong>所配模型必须支持图片输入（多模态）。</strong>应用要靠模型读图；预设只收录支持图片输入的型号，手填时请自行确认型号的输入模态。</li>
             <li>{{ configuration?.source === 'env' ? '当前配置由服务端环境变量完整提供，密钥仅在服务端内存使用。' : '浏览器提交后，由本机 Node 服务端写入当前 Windows 用户的 LocalAppData。' }}</li>
@@ -267,18 +271,7 @@ onMounted(loadSettings);
             <p v-if="configuration?.readOnly" class="settings-test-note">请修改服务端环境变量并重启服务。连接测试只使用当前环境配置。</p>
           </div>
 
-          <section class="settings-evidence" aria-labelledby="settings-evidence-title">
-            <h3 id="settings-evidence-title">本项目的验证范围</h3>
-            <p>历史实测只证明当时的端点、模型和任务，不能代表当前配置或其他预设已通过。</p>
-            <details v-for="preset in testedPresets" :key="preset.id">
-              <summary>{{ preset.label }} · 历史实测记录</summary>
-              <p>{{ preset.note }}</p>
-            </details>
-            <p class="settings-protocol-boundary">{{ selectedProvider === 'openai-responses'
-              ? 'Responses 有历史连接与单图读取记录；来源调查工具循环尚无与 Messages 同等的整组在线证据。'
-              : 'Messages 的来源调查另有历史评测记录；不代表每个兼容端点都已通过完整流程。' }}</p>
-            <p>文档预设未完成本项目在线验收；文档说明或未鉴权路由探测不等于读图、工具循环通过。</p>
-          </section>
+
 
           <form v-if="!(configuration?.readOnly && !activeDraft.hasApiKey)" class="settings-form" @submit.prevent="saveSettings">
             <label class="settings-field">
@@ -355,8 +348,27 @@ onMounted(loadSettings);
               </button>
               <span v-else-if="clearApiKey" class="clear-key-pending">保存后清除 Key</span>
             </div>
-            <p class="settings-test-note">测试时向{{ configuration?.readOnly ? '当前环境配置的' : '所填' }}服务发送一条短文本请求和当前密钥，以检查{{ providerMeta.structuredOutputLabel }}；不发送图片，也不保存表单改动。<strong>测试通过不代表能读图</strong>：纯文本模型也可能测通，读图能力必须上传样例核验。</p>
           </form>
+
+          <p v-if="loading" class="settings-feedback" role="status">正在读取本机设置…</p>
+          <p v-if="successMessage" class="settings-feedback success-feedback" role="status">{{ successMessage }}</p>
+          <p v-if="errorMessage" class="settings-feedback error-feedback" role="alert">{{ errorMessage }}</p>
+          <p v-if="connectionMessage" class="settings-feedback" :class="connectionStatus === 'success' ? 'success-feedback' : 'error-feedback'" :role="connectionStatus === 'success' ? 'status' : 'alert'">{{ connectionMessage }}</p>
+          <p class="settings-test-note settings-test-explanation">测试时向{{ configuration?.readOnly ? '当前环境配置的' : '所填' }}服务发送一条短文本请求和当前密钥，以检查{{ providerMeta.structuredOutputLabel }}；不发送图片，也不保存表单改动。<strong>测试通过不代表能读图</strong>：纯文本模型也可能测通，读图能力必须上传样例核验。</p>
+
+          <details class="settings-evidence" aria-label="历史记录与验证范围">
+            <summary>历史实测与文档预设说明</summary>
+            <h3 id="settings-evidence-title">本项目的验证范围</h3>
+            <p>历史实测只证明当时的端点、模型和任务，不能代表当前配置或其他预设已通过。</p>
+            <details v-for="preset in testedPresets" :key="preset.id">
+              <summary>{{ preset.label }} · 历史实测记录</summary>
+              <p>{{ preset.note }}</p>
+            </details>
+            <p class="settings-protocol-boundary">{{ selectedProvider === 'openai-responses'
+              ? 'Responses 有历史连接与单图读取记录；来源调查工具循环尚无与 Messages 同等的整组在线证据。'
+              : 'Messages 的来源调查另有历史评测记录；不代表每个兼容端点都已通过完整流程。' }}</p>
+            <p>文档预设未完成本项目在线验收；文档说明或未鉴权路由探测不等于读图、工具循环通过。</p>
+          </details>
 
           <details class="settings-mobile-details settings-form-details">
             <summary><span>查看配置来源与图片发送范围</span><span class="disclosure-cue" aria-hidden="true"></span></summary>
@@ -370,10 +382,6 @@ onMounted(loadSettings);
             <div class="settings-protocol"><span class="protocol-led"></span>{{ providerMeta.badge }}</div>
           </details>
 
-          <p v-if="loading" class="settings-feedback" role="status">正在读取本机设置…</p>
-          <p v-if="successMessage" class="settings-feedback success-feedback" role="status">{{ successMessage }}</p>
-          <p v-if="errorMessage" class="settings-feedback error-feedback" role="alert">{{ errorMessage }}</p>
-          <p v-if="connectionMessage" class="settings-feedback" :class="connectionStatus === 'success' ? 'success-feedback' : 'error-feedback'" :role="connectionStatus === 'success' ? 'status' : 'alert'">{{ connectionMessage }}</p>
         </section>
       </div>
 

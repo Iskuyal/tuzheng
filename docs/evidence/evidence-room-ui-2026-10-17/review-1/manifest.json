@@ -1,0 +1,173 @@
+{
+  "version": "1f10a328b72328e2b5883261aa4637459b7b8a981132ef4e013fcb980b1abde3",
+  "sourceFiles": [
+    "web/App.vue",
+    "web/main.ts",
+    "web/evidence-room.css",
+    "web/router.ts",
+    "web/upload-transfer.ts",
+    "web/pages/LandingPage.vue",
+    "web/pages/SourceAuditPage.vue",
+    "web/pages/SettingsPage.vue",
+    "web/components/SiteHeader.vue",
+    "web/components/SourceClaimCard.vue",
+    "web/components/OriginalImageViewer.vue"
+  ],
+  "screens": [
+    {
+      "file": "home-1440.png",
+      "state": "开始页",
+      "width": 1440,
+      "fixture": false,
+      "sha256": "fa863e555b036b316e0d638641427ac719e4a958945b40a81868f6de785eecfc",
+      "overflow": 0,
+      "height": 1364
+    },
+    {
+      "file": "workspace-1440.png",
+      "state": "输入态，未运行",
+      "width": 1440,
+      "fixture": false,
+      "sha256": "c893b298d39f5699f5f70a4558b05a346f92aeaef997258af86bc2fbca1318aa",
+      "overflow": 0,
+      "height": 1454
+    },
+    {
+      "file": "result-1440.png",
+      "state": "来源结果，替身响应",
+      "width": 1440,
+      "fixture": true,
+      "sha256": "c93eb0a7db91a25bc95a20a022179dd39ed94da9690be9191ec0d6040cbc03c6",
+      "overflow": 0,
+      "height": 4454
+    },
+    {
+      "file": "summary-1440.png",
+      "state": "结果局部，替身响应",
+      "width": 1440,
+      "fixture": true,
+      "sha256": "579cd7ff7b4c7a8a7edfc1f1aaf4385540740d8b5d80ef36d443f08d1a004f6d"
+    },
+    {
+      "file": "claim-1440.png",
+      "state": "结果局部，替身响应",
+      "width": 1440,
+      "fixture": true,
+      "sha256": "fe8a087b72a8e038a3218d7f494447d3d94e4e9157fceb4927672e0fed605982"
+    },
+    {
+      "file": "citations-1440.png",
+      "state": "结果局部，替身响应",
+      "width": 1440,
+      "fixture": true,
+      "sha256": "cafbbc5e7942950abaa66b27bf801f7a99820a430c24090d0df43c35616b2cf8"
+    },
+    {
+      "file": "suggestion-1440.png",
+      "state": "结果局部，替身响应",
+      "width": 1440,
+      "fixture": true,
+      "sha256": "9b3c55fbb77b9c91695c023b58656604587ec4409b16d12225e6254a32fb10da"
+    },
+    {
+      "file": "adopted-1440.png",
+      "state": "采用后失效，原结果为替身",
+      "width": 1440,
+      "fixture": true,
+      "sha256": "daa6198694cf3a2e0cee2a049f150ffa59224d69354050de76a1e7b681d96f0a",
+      "overflow": 0,
+      "height": 1874
+    },
+    {
+      "file": "home-390.png",
+      "state": "开始页",
+      "width": 390,
+      "fixture": false,
+      "sha256": "2e2fef170b8ffbf119e15150275cdde815488a67675c59d9bae17a9e03cdc6b8",
+      "overflow": 0,
+      "height": 2129
+    },
+    {
+      "file": "workspace-390.png",
+      "state": "输入态，未运行",
+      "width": 390,
+      "fixture": false,
+      "sha256": "b0dce19152195264a5193660af01d9635374597843bcfb1bd05de002930caaa0",
+      "overflow": 0,
+      "height": 1928
+    },
+    {
+      "file": "result-390.png",
+      "state": "来源结果，替身响应",
+      "width": 390,
+      "fixture": true,
+      "sha256": "5698e479411fe49f4ee5e7e64cfe094ceab880fc21dd966956a4924a344ff3cf",
+      "overflow": 0,
+      "height": 6499
+    },
+    {
+      "file": "summary-390.png",
+      "state": "结果局部，替身响应",
+      "width": 390,
+      "fixture": true,
+      "sha256": "e885d6f1253f1e20b7f7e701ab1712141879bf151344f2aaeca8709081fa6be2"
+    },
+    {
+      "file": "claim-390.png",
+      "state": "结果局部，替身响应",
+      "width": 390,
+      "fixture": true,
+      "sha256": "27fd72c9d63b49cb765387184adcb0a70c0fe2fc8c88cdf537504416ae671387"
+    },
+    {
+      "file": "citations-390.png",
+      "state": "结果局部，替身响应",
+      "width": 390,
+      "fixture": true,
+      "sha256": "8b4f8bcbe51ac487f79f3616cc7157a1a2c273efb5f7926721d173bc601261a7"
+    },
+    {
+      "file": "suggestion-390.png",
+      "state": "结果局部，替身响应",
+      "width": 390,
+      "fixture": true,
+      "sha256": "f92aa7a8b642adc317d56530181ce39e1da44f610e5e8078836017b3e42fbf90"
+    },
+    {
+      "file": "adopted-390.png",
+      "state": "采用后失效，原结果为替身",
+      "width": 390,
+      "fixture": true,
+      "sha256": "cea3ffe9796d629c92cd36838a9dd6235e92d7f28e21b8aae7538e4ad8e94411",
+      "overflow": 0,
+      "height": 2575
+    },
+    {
+      "file": "error-390.png",
+      "state": "失败恢复，替身错误",
+      "width": 390,
+      "fixture": true,
+      "sha256": "8168b7fa54d899fff9170cf5d65cbd5d43e9237f02a06066c555b41f89df04c8",
+      "overflow": 0,
+      "height": 2121
+    },
+    {
+      "file": "preview-390.png",
+      "state": "原图预览",
+      "width": 390,
+      "fixture": false,
+      "sha256": "468ed566e6a31b8f4d1ccb051ff5b7b63feee3bf70498b67e8af41654ea674bf",
+      "overflow": 0,
+      "height": 2121
+    },
+    {
+      "file": "clarification-390.png",
+      "state": "补证状态，替身响应",
+      "width": 390,
+      "fixture": true,
+      "sha256": "e399c4934c6f6d9980199fbbec676e93cb74a6ab06c5847be02e05977521da29",
+      "overflow": 0,
+      "height": 7020
+    }
+  ]
+}

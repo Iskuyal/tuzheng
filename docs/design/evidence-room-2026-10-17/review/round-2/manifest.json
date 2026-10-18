@@ -1,0 +1,86 @@
+{
+  "version": "8a5c5788d54a3dae48eccd14bca00f166f0cb4b426c78299fec126a991e1fc7f",
+  "promptSha256": "fb76bafc352d54fbd97bc3d84855d16d296cb1677f72200d96a4d63ee0f27a4c",
+  "reviewerCount": 1,
+  "mode": "普通设计，无分数门槛",
+  "evidence": "静态 SVG 设计稿的浏览器渲染，不是实际产品截图",
+  "screens": [
+    {
+      "page": "01-home-desktop",
+      "width": 1440,
+      "height": 1180,
+      "file": "01-home-desktop.png",
+      "sha256": "1060a673e07b76d1319490a4866b0c06ae4069c94d31f55f5bf92ec46a69dc2f"
+    },
+    {
+      "page": "02-workspace-desktop",
+      "width": 1440,
+      "height": 1130,
+      "file": "02-workspace-desktop.png",
+      "sha256": "a42a4164bfbfcfede6ac340216d395d9e404a925ac738bfec528745c8d020db1"
+    },
+    {
+      "page": "03-result-desktop",
+      "width": 1440,
+      "height": 1510,
+      "file": "03-result-desktop.png",
+      "sha256": "d690f0dd8e93c62f290e50cb2b141932a5b83a824cab7982e8af52a579423d2a"
+    },
+    {
+      "page": "04-home-mobile",
+      "width": 390,
+      "height": 1470,
+      "file": "04-home-mobile.png",
+      "sha256": "768ac8238e2eadb1504e8fe8b72ab6ea645dbae1679c5378e0204c7ee1a22a30"
+    },
+    {
+      "page": "05-workspace-mobile",
+      "width": 390,
+      "height": 1530,
+      "file": "05-workspace-mobile.png",
+      "sha256": "6328c8df8335531a72eef3c60076ded9abeab42afb0710a98aa8379b5e683d8b"
+    },
+    {
+      "page": "06-result-mobile",
+      "width": 390,
+      "height": 2160,
+      "file": "06-result-mobile.png",
+      "sha256": "e79a7564a997885435cb6d5e0226fb9bfea01659ee6e64f7c92fe68fdd107711"
+    },
+    {
+      "page": "07-states",
+      "width": 1440,
+      "height": 1480,
+      "file": "07-states.png",
+      "sha256": "a30d8d72beb9bb5692a4042ebf81ea08b4648360cc0d77612620f312e001d9ec"
+    },
+    {
+      "page": "08-foundations",
+      "width": 1440,
+      "height": 1050,
+      "file": "08-foundations.png",
+      "sha256": "7b50b00a3965d6f9a147106ab8442429801a5f53cfdb57cbfe5f9fd9f3e1b7a0"
+    },
+    {
+      "page": "09-image-preview-mobile",
+      "width": 390,
+      "height": 1100,
+      "file": "09-image-preview-mobile.png",
+      "sha256": "ac892cc4247b6842c08f22ccc3802771142e97e23ed57d4ac3282a3cece966bb"
+    },
+    {
+      "page": "10-clarification-mobile",
+      "width": 390,
+      "height": 1190,
+      "file": "10-clarification-mobile.png",
+      "sha256": "8794bcf95c433a9badcc33b7e11d9ceee6f139d1086f3408ba9169ce18fd50e5"
+    },
+    {
+      "page": "11-error-mobile",
+      "width": 390,
+      "height": 1080,
+      "file": "11-error-mobile.png",
+      "sha256": "969d245a93d353bf71e0681ea811a8e8089e30c4c55c939e99d57b4f641a822a"
+    }
+  ]
+}

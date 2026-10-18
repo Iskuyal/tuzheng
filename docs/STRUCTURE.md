@@ -20,6 +20,8 @@
 
 ## 配置与产物
 
+2026-10-18 全站 UI 使用 `web/evidence-room.css`（首页与来源路径）和 `web/evidence-room-workspaces.css`（设置与图内工作台），统一由 `web/main.ts` 导入；既有布局/行为基础保留在 `style.css`。`npm run verify:ui -- --states --text-200` 调用 `scripts/verify-ui-theme.mjs`，按真实路由枚举四页及状态，默认输出 `docs/evidence/evidence-room-full-2026-10-18/current/`，可用 `--output=` 指定归档位置、`UI_BASE_URL` 指定已启动的本机验证服务。检查使用假设置/替身连接，不透传真实模型或配置写入。没有迁移 TS 或 CI 产物路径；默认/自定义 API 与网页端口仍用现行 `verify:model-config` 验证。
+
 根目录 `tsconfig.json` 只引用 `config/tsconfig.web.json`、`config/tsconfig.server.json` 与 `config/tsconfig.e2e.json`，让编辑器分别采用 DOM、Node 与浏览器测试所需的类型。`config/tsconfig.base.json` 保存共用选项，服务端编译配置独立保存在 `config/tsconfig.server.build.json`。
 
 Vite 与 Vitest 的项目根仍是仓库根；Vite 页面根为 `web/`。Playwright 的用例目录相对于配置文件为 `../e2e/`，产物在 `.cache/playwright/test-results/`，CI 从同一路径收集失败 trace，并在这个狭窄路径内启用隐藏文件上传。TypeScript 构建信息在 `.cache/typescript/`。原测试产物保存在 `.cache/playwright/previous-test-results/`，原构建信息以 `legacy-` 前缀保留在缓存目录。

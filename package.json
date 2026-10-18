@@ -27,6 +27,7 @@
     "study:readers": "tsx scripts/user-study.ts",
     "verify:sample-renders": "node scripts/verify-sample-renders.mjs",
     "verify:model-config": "tsx scripts/verify-model-config.ts",
+    "verify:ui": "node scripts/verify-ui-theme.mjs",
     "docs:check": "node scripts/check-docs.mjs"
   },
   "dependencies": {

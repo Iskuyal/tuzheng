@@ -1,0 +1,136 @@
+{
+  "checks": [
+    {
+      "width": 320,
+      "route": "/",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 0,
+      "offenders": []
+    },
+    {
+      "width": 320,
+      "route": "/source-audit?sample=cpi-2025-12",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 0,
+      "offenders": []
+    },
+    {
+      "width": 320,
+      "route": "/audit?sample=multi-claims",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 50,
+      "offenders": [
+        {
+          "tag": "SECTION",
+          "cls": "image-column",
+          "text": "选择检查对象图表截图＋ 上传我的截图 增长说法对不上图中 80 到 100，标题写增长 40%。标题与数字相符同一组数字，标题写增"
+        },
+        {
+          "tag": "DIV",
+          "cls": "section-heading",
+          "text": "选择检查对象图表截图＋ 上传我的截图 "
+        },
+        {
+          "tag": "LABEL",
+          "cls": "upload-button",
+          "text": "＋ 上传我的截图 "
+        },
+        {
+          "tag": "DIV",
+          "cls": "mobile-sample-picker",
+          "text": "当前检查对象多项主张图内核对切换自制样例增长说法对不上标题与数字相符关键数字看不清多项主张图内核对跨图基准：营业收入 25%跨图对"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "text": "增长说法对不上标题与数字相符关键数字看不清多项主张图内核对跨图基准：营业收入 25%跨图对照：说法对得上跨图对照：说法对不上跨图对"
+        },
+        {
+          "tag": "FIGURE",
+          "cls": "image-stage",
+          "text": "原图预览来源：团队自制样例框选证据区域放大查看团队自制没有对应的真实业务数据"
+        },
+        {
+          "tag": "DIV",
+          "cls": "image-stage-head",
+          "text": "原图预览来源：团队自制样例框选证据区域放大查看"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "zoom-image-button",
+          "text": "放大查看"
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "route": "/settings",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 85,
+      "offenders": []
+    },
+    {
+      "width": 390,
+      "route": "/",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 0,
+      "offenders": []
+    },
+    {
+      "width": 390,
+      "route": "/source-audit?sample=cpi-2025-12",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 0,
+      "offenders": []
+    },
+    {
+      "width": 390,
+      "route": "/audit?sample=multi-claims",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 0,
+      "offenders": []
+    },
+    {
+      "width": 390,
+      "route": "/settings",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 15,
+      "offenders": []
+    },
+    {
+      "width": 1440,
+      "route": "/",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 0,
+      "offenders": []
+    },
+    {
+      "width": 1440,
+      "route": "/source-audit?sample=cpi-2025-12",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 0,
+      "offenders": []
+    },
+    {
+      "width": 1440,
+      "route": "/audit?sample=multi-claims",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 0,
+      "offenders": []
+    },
+    {
+      "width": 1440,
+      "route": "/settings",
+      "normalOverflow": 0,
+      "text200PercentOverflow": 0,
+      "offenders": []
+    }
+  ],
+  "pageErrors": [],
+  "unexpectedHttpRequests": [],
+  "libraryLink": {
+    "url": "http://127.0.0.1:5173/source-audit#source-library",
+    "expanded": true
+  },
+  "textEnlargementMethod": "直接把可见文字节点的计算字号及行高放大到200%；不是浏览器原生缩放或完整WCAG审计"
+}

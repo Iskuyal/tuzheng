@@ -1,0 +1,152 @@
+{
+  "version": "9ace014e45716780e7886a6221563d5be3b9f9faf56808135a443882691ab880",
+  "pages": [
+    {
+      "path": "/",
+      "colors": {
+        "ink": "#2b3551",
+        "muted": "#596174",
+        "canvas": "#e9e2d5",
+        "paper": "#f7f1e6",
+        "teal-pale": "#dfe2eb",
+        "red": "#a33e2e",
+        "red-pale": "#f2dfd1",
+        "amber": "#79551f",
+        "amber-pale": "#ecdfbf",
+        "header": "rgb(43, 53, 81)",
+        "nav": "rgb(205, 210, 226)",
+        "focus": "rgb(225, 194, 142)"
+      },
+      "greenUi": [],
+      "ratios": {
+        "ink/canvas": 9.420105384313816,
+        "muted/canvas": 4.813956202400083,
+        "ink/paper": 10.792608462254888,
+        "muted/paper": 5.515346413582833,
+        "red/red-pale": 4.945880446177776,
+        "amber/amber-pale": 5.068031154268185,
+        "nav/header": 8.038396888284186,
+        "focus/header": 7.111738277931179
+      }
+    },
+    {
+      "path": "/audit",
+      "colors": {
+        "ink": "#2b3551",
+        "muted": "#596174",
+        "canvas": "#e9e2d5",
+        "paper": "#f7f1e6",
+        "teal-pale": "#dfe2eb",
+        "red": "#a33e2e",
+        "red-pale": "#f2dfd1",
+        "amber": "#79551f",
+        "amber-pale": "#ecdfbf",
+        "header": "rgb(43, 53, 81)",
+        "nav": "rgb(205, 210, 226)",
+        "focus": "rgb(225, 194, 142)"
+      },
+      "greenUi": [
+        {
+          "tag": "SPAN",
+          "className": "source-badge preset-example",
+          "prop": "color",
+          "color": "rgb(66, 99, 94)"
+        },
+        {
+          "tag": "SPAN",
+          "className": "source-badge preset-example",
+          "prop": "borderTopColor",
+          "color": "rgb(201, 216, 210)"
+        },
+        {
+          "tag": "SPAN",
+          "className": "source-badge preset-example",
+          "prop": "borderRightColor",
+          "color": "rgb(201, 216, 210)"
+        },
+        {
+          "tag": "SPAN",
+          "className": "source-badge preset-example",
+          "prop": "borderBottomColor",
+          "color": "rgb(201, 216, 210)"
+        },
+        {
+          "tag": "SPAN",
+          "className": "source-badge preset-example",
+          "prop": "borderLeftColor",
+          "color": "rgb(201, 216, 210)"
+        }
+      ],
+      "ratios": {
+        "ink/canvas": 9.420105384313816,
+        "muted/canvas": 4.813956202400083,
+        "ink/paper": 10.792608462254888,
+        "muted/paper": 5.515346413582833,
+        "red/red-pale": 4.945880446177776,
+        "amber/amber-pale": 5.068031154268185,
+        "nav/header": 8.038396888284186,
+        "focus/header": 7.111738277931179
+      }
+    },
+    {
+      "path": "/source-audit",
+      "colors": {
+        "ink": "#2b3551",
+        "muted": "#596174",
+        "canvas": "#e9e2d5",
+        "paper": "#f7f1e6",
+        "teal-pale": "#dfe2eb",
+        "red": "#a33e2e",
+        "red-pale": "#f2dfd1",
+        "amber": "#79551f",
+        "amber-pale": "#ecdfbf",
+        "header": "rgb(43, 53, 81)",
+        "nav": "rgb(205, 210, 226)",
+        "focus": "rgb(225, 194, 142)"
+      },
+      "greenUi": [],
+      "ratios": {
+        "ink/canvas": 9.420105384313816,
+        "muted/canvas": 4.813956202400083,
+        "ink/paper": 10.792608462254888,
+        "muted/paper": 5.515346413582833,
+        "red/red-pale": 4.945880446177776,
+        "amber/amber-pale": 5.068031154268185,
+        "nav/header": 8.038396888284186,
+        "focus/header": 7.111738277931179
+      }
+    },
+    {
+      "path": "/settings",
+      "colors": {
+        "ink": "#2b3551",
+        "muted": "#596174",
+        "canvas": "#e9e2d5",
+        "paper": "#f7f1e6",
+        "teal-pale": "#dfe2eb",
+        "red": "#a33e2e",
+        "red-pale": "#f2dfd1",
+        "amber": "#79551f",
+        "amber-pale": "#ecdfbf",
+        "header": "rgb(43, 53, 81)",
+        "nav": "rgb(205, 210, 226)",
+        "focus": "rgb(225, 194, 142)"
+      },
+      "greenUi": [],
+      "ratios": {
+        "ink/canvas": 9.420105384313816,
+        "muted/canvas": 4.813956202400083,
+        "ink/paper": 10.792608462254888,
+        "muted/paper": 5.515346413582833,
+        "red/red-pale": 4.945880446177776,
+        "amber/amber-pale": 5.068031154268185,
+        "nav/header": 8.038396888284186,
+        "focus/header": 7.111738277931179
+      }
+    }
+  ],
+  "contrastPairs": 32,
+  "passed": false,
+  "identity": "四路由正常页面的实际渲染色值；28组文字>=4.5、4组导航焦点>=3；绿色扫描排除图片/SVG，非完整无障碍审计",
+  "realModelRequests": 0
+}

@@ -95,7 +95,11 @@ const coverageText = computed(() => {
     <p v-if="conclusion" class="source-conclusion-summary">{{ conclusion.summary }}</p>
     <div v-if="valueEvidence && conclusion" class="source-value-evidence" data-testid="value-evidence">
       <p><strong>仅数值对照 · {{ claim.period }} · {{ conclusion.basisLabel }}</strong></p>
-      <p>原文 {{ claim.value }}{{ valueEvidence.measure.unit }} → 所引发布 {{ conclusion.officialValue }}{{ valueEvidence.measure.unit }}</p>
+      <p class="sr-only">原文 {{ claim.value }}{{ valueEvidence.measure.unit }} → 所引发布 {{ conclusion.officialValue }}{{ valueEvidence.measure.unit }}</p>
+      <div class="room-value-comparison" :class="{ 'is-mismatch': conclusion.status === 'source-mismatch' }">
+        <div><span>原文 · {{ conclusion.basisLabel }}</span><strong>{{ claim.value }}{{ valueEvidence.measure.unit }}</strong></div>
+        <div><span>适用来源 · {{ conclusion.basisLabel }}</span><strong>{{ conclusion.officialValue }}{{ valueEvidence.measure.unit }}</strong></div>
+      </div>
       <p class="source-value-excerpt">依据原句：{{ valueEvidence.measure.excerpt }}</p>
       <a :href="`#source-document-${valueEvidence.document.id}`">查看这条来源依据</a>
     </div>

@@ -1,0 +1,541 @@
+{
+  "routes": [
+    "/",
+    "/audit",
+    "/source-audit",
+    "/settings"
+  ],
+  "sourceHashes": {
+    "web/router.ts": "bf3d549b35df499a9905295726c243185d8a0b7095ad15bfab540043e1ed89f9",
+    "web/main.ts": "84b9c64cd2d3a2849af02b8175df950ba20631ce186b9589673cd60abda47636",
+    "web/style.css": "dd03ae9616ee39c70c673091f35aff950b66f506e1fa14eba64d028d68666fd0",
+    "web/evidence-room.css": "50f6592d1388c3d70363ea587fa6b3bf8b140df500c9fc15d680bc11e5f28e2b",
+    "web/evidence-room-workspaces.css": "7f0c73a1d6c5eef7eb0e870d397cd1cae20ddf7b7d6051fd18f1e7bc8486acf4",
+    "web/pages/LandingPage.vue": "5fc67ebcb9af80c2ff775bdbebd65d2e3aba039fc987c756259a7dd8bdcf0a5c",
+    "web/pages/AuditPage.vue": "da3a6b1cd5744c99f7bc3f65eb671e0a2cebd6568934fdac78f08a0439da9e85",
+    "web/pages/SourceAuditPage.vue": "d5552c238a60e99aaeedb45ceb405c5c768745623a5b4749ef6ff1b05b84ee0b",
+    "web/pages/SettingsPage.vue": "14255a83b3e9026b2a148fac22e3ef43d630dafa09bf5c22cb48fedbfdd5b1ba"
+  },
+  "version": "ff205a77e331872e25299ad8ebf3ba58428cc665ebc40e506fb6342b21e163cf",
+  "viewportCount": 3,
+  "records": [
+    {
+      "route": "/",
+      "width": 320,
+      "file": "home-320.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "0b74890cdfea7803abf191d66d0c92ced9060514fe3a2f353bb48528c10246d9",
+      "settingsIdentity": null,
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/audit",
+      "width": 320,
+      "file": "audit-320.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "e2282df192cf131589c0cb41de8515bbcf0d8bf72b3c7425ddcb32c41e1ba581",
+      "settingsIdentity": null,
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/source-audit",
+      "width": 320,
+      "file": "source-320.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "6f519feb1389272de1096c4b77d0d8d7e9595f1fc8744f8c2397f37851dd90a1",
+      "settingsIdentity": null,
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/settings",
+      "width": 320,
+      "file": "settings-320.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "c01250d373de040b8d32ed0bacef036f4476f362b9b0cb717ee7d03acc5159d1",
+      "settingsIdentity": "假设置，不是用户实际模型或密钥",
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/audit",
+      "state": "multi-result",
+      "width": 320,
+      "file": "audit-multi-result-320.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "6db0454a4586414c9652c168e375c97eddb10ff16ddbd78b974ec7fbdf289dd9",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/audit",
+      "state": "image-viewer",
+      "width": 320,
+      "file": "audit-image-viewer-320.png",
+      "clip": "dialog[open]",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "3aee5037d3259f9d7923e3a1f182d408edcaf918c6213d5222a933a47f04f6c9",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/audit",
+      "state": "axis",
+      "width": 320,
+      "file": "audit-axis-320.png",
+      "clip": ".axis-section",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "794c7b19f214f20ac4097aee611e9d5a2497a3fec3025aea75d2e0ef952a9caf",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/audit",
+      "state": "cross-result",
+      "width": 320,
+      "file": "audit-cross-result-320.png",
+      "clip": ".cross-section",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "fa43ee26c3b62414aa9c9dbc3c6e40ee7ca06d69afdfd429eba2f6929f1bd137",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "readonly-fixture",
+      "width": 320,
+      "file": "settings-readonly-fixture-320.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "09595a947d0502dfaeaf1eb7fd58e41df723b06ed89310ceea3d520be0b82a59",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "connection-success-fixture",
+      "width": 320,
+      "file": "settings-connection-success-fixture-320.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "52903c211dfba1277484eea1d27673ae7caeb3063f6cdbf63380f9bd449a8200",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "connection-error-fixture",
+      "width": 320,
+      "file": "settings-connection-error-fixture-320.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "05af15cd917b441d3176c40e1ad80809b4d67726357f78350a6730f2926564dc",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "clear-pending-fixture",
+      "width": 320,
+      "file": "settings-clear-pending-fixture-320.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "b7d29630c47e035f7329c0a4c8fde4444648f64be102cc3d455243cd15cf24a8",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/",
+      "width": 390,
+      "file": "home-390.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "baa470e97a606d06d481849f2da24adb4771f727ab87804a69a51e56dac14d5c",
+      "settingsIdentity": null,
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/audit",
+      "width": 390,
+      "file": "audit-390.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "7e78a48cc3cdc7c1c4e00398f77ace1bcc16020d9686b30e313ccc8f5e00bb0d",
+      "settingsIdentity": null,
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/source-audit",
+      "width": 390,
+      "file": "source-390.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "fc6f7ab5b33047dd020d1f5577ca39220285fcf3a741bf24d87e712994c85913",
+      "settingsIdentity": null,
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/settings",
+      "width": 390,
+      "file": "settings-390.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "052bd831851244c55b64af4d2e345157a473f73f8f01eacdfd23aebfd99fbe9d",
+      "settingsIdentity": "假设置，不是用户实际模型或密钥",
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/audit",
+      "state": "multi-result",
+      "width": 390,
+      "file": "audit-multi-result-390.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "42f3ee942ad8b3f5f2be58c2cbb146a6e416e525f9d8ef4aebe78af7e801636b",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/audit",
+      "state": "image-viewer",
+      "width": 390,
+      "file": "audit-image-viewer-390.png",
+      "clip": "dialog[open]",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "f0387cbb2f16e1bbc82b20a7c1de1b72485a0b9cca152c116d46532ee76fa4a7",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/audit",
+      "state": "axis",
+      "width": 390,
+      "file": "audit-axis-390.png",
+      "clip": ".axis-section",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "61c1629fd142702a697de1b44d88507341f814adcbc2c1e2bdeae7a487a5b81c",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/audit",
+      "state": "cross-result",
+      "width": 390,
+      "file": "audit-cross-result-390.png",
+      "clip": ".cross-section",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "203b9918cbe1464bb72217840ef11b8c742a2dd4c4eed28afa0f8d5d57d96301",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "readonly-fixture",
+      "width": 390,
+      "file": "settings-readonly-fixture-390.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "2198e062e2d9aa5cac08ed08688d98b43b3920a9e75fa321d8e54906903a4125",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "connection-success-fixture",
+      "width": 390,
+      "file": "settings-connection-success-fixture-390.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "60856f2809458a2fe2e7cd338d2416d044c72d3f9ef545a2e82a09ea048c3221",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "connection-error-fixture",
+      "width": 390,
+      "file": "settings-connection-error-fixture-390.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "66aeac0a15e139fda943103e949b7036e97af6b91f7c5f3b50950df27baa02df",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "clear-pending-fixture",
+      "width": 390,
+      "file": "settings-clear-pending-fixture-390.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "4b1b1a2034876af62f5d33a210a19a04b9bcc76e73bdce13177ab299fa6d25c7",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/",
+      "width": 1440,
+      "file": "home-1440.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "8dfb478aa0989f97ed4a668cd482b1f938bfadb298b8419c627a7fe03de4ee12",
+      "settingsIdentity": null,
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/audit",
+      "width": 1440,
+      "file": "audit-1440.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "72bc308b6c178de90f0212805a120ee862917a4bd28416a8abb73742e08b022a",
+      "settingsIdentity": null,
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/source-audit",
+      "width": 1440,
+      "file": "source-1440.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "b2efe6a919119d99c294c82e13b561cb2b9acd70c2c514012b4727e61942f321",
+      "settingsIdentity": null,
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/settings",
+      "width": 1440,
+      "file": "settings-1440.png",
+      "canvas": "rgb(245, 242, 235)",
+      "headingFont": "\"Noto Serif SC\", SimSun, serif",
+      "headingColor": "rgb(23, 63, 53)",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "09a86877c7ffffceeacd893e4125f721ed88abf0e3b4a88ab0effbf3336e5982",
+      "settingsIdentity": "假设置，不是用户实际模型或密钥",
+      "text200Percent": {
+        "overflow": 0,
+        "offenders": []
+      }
+    },
+    {
+      "route": "/audit",
+      "state": "multi-result",
+      "width": 1440,
+      "file": "audit-multi-result-1440.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "9dc71e5f426fe90c4ce7bcf9925c21bb8f748039cd267c1c10e133addd6a52ee",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/audit",
+      "state": "image-viewer",
+      "width": 1440,
+      "file": "audit-image-viewer-1440.png",
+      "clip": "dialog[open]",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "b301b90ed24e57a60bd9d660620f83f14ee30e16fefc5d390c2635322d7e6bd3",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/audit",
+      "state": "axis",
+      "width": 1440,
+      "file": "audit-axis-1440.png",
+      "clip": ".axis-section",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "fbf462e4ab0d6da30564c78cafebf99621bd7fe031c910bae023d81b54d4015b",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/audit",
+      "state": "cross-result",
+      "width": 1440,
+      "file": "audit-cross-result-1440.png",
+      "clip": ".cross-section",
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "bb20250bb1fd9eb66f3929e4d4a39c30c5dc3113da8e3dbe43ef269eb98b90c3",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "readonly-fixture",
+      "width": 1440,
+      "file": "settings-readonly-fixture-1440.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "c17a4dc57dbdc5cf3df03283a92c2e863ec84267f1aa2184ad6aa8e36668250b",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "connection-success-fixture",
+      "width": 1440,
+      "file": "settings-connection-success-fixture-1440.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "916fec3d909a7297d817fcfb5ff811b9419882e5c382a820b1d11bb0dec2a1e5",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "connection-error-fixture",
+      "width": 1440,
+      "file": "settings-connection-error-fixture-1440.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "cae8d6ca7d0e4bfa63859b6dc53f21490f5a20db08204ad829c477ba154581a6",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    },
+    {
+      "route": "/settings",
+      "state": "clear-pending-fixture",
+      "width": 1440,
+      "file": "settings-clear-pending-fixture-1440.png",
+      "clip": null,
+      "overflow": 0,
+      "legacyPaints": [],
+      "problems": [],
+      "sha256": "009cb1d0a68c0277855843aad218cab6b9062c0efe4e8681da64fe9af361aad8",
+      "identity": "实际页面；自制图或假配置；连接响应为替身"
+    }
+  ],
+  "pageErrors": [],
+  "unexpectedPosts": 0,
+  "stubConnectionRequests": 6,
+  "realModelRequests": 0,
+  "identity": "实际本机页面；设置为假配置，未运行模型",
+  "failedScreens": 0,
+  "additionalEvidence": [
+    {
+      "file": "source-result-e2e-320.png",
+      "width": 320,
+      "identity": "同版浏览器 e2e 的来源结果局部截图；已标注替身，非真实模型结果",
+      "sha256": "44bb36347c9a0e6adb4865308cb214ba981aa397919869da3a6c89eaf3ef82cf"
+    },
+    {
+      "file": "source-result-e2e-390.png",
+      "width": 390,
+      "identity": "同版浏览器 e2e 的来源结果局部截图；已标注替身，非真实模型结果",
+      "sha256": "651081adbf8796ab313582c5a4660885d8ef604587d288a4c012d7efd76eaef5"
+    },
+    {
+      "file": "source-result-e2e-1280.png",
+      "width": 1280,
+      "identity": "同版浏览器 e2e 的来源结果局部截图；已标注替身，非真实模型结果",
+      "sha256": "aedaaae16db30ef14c9ff6563185a74ae40fe2cd4e9dfdbe284f6fdad69d4d7c"
+    }
+  ]
+}

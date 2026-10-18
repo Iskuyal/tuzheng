@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1050" viewBox="0 0 1440 1050" role="img" aria-labelledby="sheet-title sheet-desc">
+<title id="sheet-title">视觉规范与组件 · 设计说明</title>
+<desc id="sheet-desc">图证新 UI 静态设计稿。示例结果不代表本次模型运行。全部文字与图形均为可编辑矢量对象。</desc>
+<defs><pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.7" fill="#D6D9CF" opacity="0.5"/></pattern></defs>
+<rect x="0" y="0" width="1440" height="1050" rx="0" fill="#F5F2EB" />
+<g transform="translate(60 52) scale(1)"><path d="M0 8V0h9M23 0h9v8M32 24v8h-9M9 32H0v-8" fill="none" stroke="#173F35" stroke-width="2.2"/><path d="M8 23V15m8 8V9m8 14V4" fill="none" stroke="#173F35" stroke-width="3.2"/><circle cx="27" cy="27" r="4" fill="#AE4634"/></g>
+<text x="108" y="46" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="40" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="108" dy="0">证据阅读室</tspan></text>
+<text x="61" y="115" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="61" dy="0">图证 / 新 UI 视觉基础 / 静态设计规范</tspan></text>
+<line x1="60" y1="166" x2="1380" y2="166" stroke="#D6D9CF" stroke-width="1" />
+<text x="60" y="202" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="18" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="60" dy="0">语义色彩</tspan></text>
+<rect x="60" y="251" width="202" height="97" rx="4" fill="#F5F2EB" stroke="#D6D9CF" stroke-width="1" />
+<text x="60" y="367" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#293D34" text-anchor="start" dominant-baseline="hanging"><tspan x="60" dy="0">纸面 / 画布</tspan></text>
+<text x="60" y="395" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="60" dy="0">#F5F2EB</tspan></text>
+<rect x="282" y="251" width="202" height="97" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="282" y="367" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#293D34" text-anchor="start" dominant-baseline="hanging"><tspan x="282" dy="0">内容表面</tspan></text>
+<text x="282" y="395" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="282" dy="0">#FFFEFA</tspan></text>
+<rect x="504" y="251" width="202" height="97" rx="4" fill="#173F35" stroke="#D6D9CF" stroke-width="1" />
+<text x="504" y="367" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#293D34" text-anchor="start" dominant-baseline="hanging"><tspan x="504" dy="0">正文与动作</tspan></text>
+<text x="504" y="395" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="504" dy="0">#173F35</tspan></text>
+<rect x="726" y="251" width="202" height="97" rx="4" fill="#AE4634" stroke="#D6D9CF" stroke-width="1" />
+<text x="726" y="367" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#293D34" text-anchor="start" dominant-baseline="hanging"><tspan x="726" dy="0">矛盾 / 重点</tspan></text>
+<text x="726" y="395" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="726" dy="0">#AE4634</tspan></text>
+<rect x="948" y="251" width="202" height="97" rx="4" fill="#815D25" stroke="#D6D9CF" stroke-width="1" />
+<text x="948" y="367" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#293D34" text-anchor="start" dominant-baseline="hanging"><tspan x="948" dy="0">待确认</tspan></text>
+<text x="948" y="395" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="948" dy="0">#815D25</tspan></text>
+<rect x="1170" y="251" width="202" height="97" rx="4" fill="#E7EDE3" stroke="#D6D9CF" stroke-width="1" />
+<text x="1170" y="367" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#293D34" text-anchor="start" dominant-baseline="hanging"><tspan x="1170" dy="0">建议与辅助</tspan></text>
+<text x="1170" y="395" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="1170" dy="0">#E7EDE3</tspan></text>
+<line x1="60" y1="447" x2="1380" y2="447" stroke="#D6D9CF" stroke-width="1" />
+<text x="60" y="483" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="18" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="60" dy="0">字体与阅读节奏</tspan></text>
+<text x="60" y="532" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="46" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="60" dy="0">让结论回到依据。</tspan></text>
+<text x="61" y="604" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="61" dy="0">展示标题：Noto Serif SC；中文回退：宋体。</tspan></text>
+<text x="61" y="641" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="61" dy="0">正文：Noto Sans SC；回退：微软雅黑。14–17 px / 1.6 行高。</tspan></text>
+<text x="61" y="685" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="43" font-weight="400" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="61" dy="0">0.8% → 0.2%</tspan></text>
+<text x="61" y="754" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="61" dy="0">关键数字：Georgia。数字的变化总是对应具体口径。</tspan></text>
+<text x="797" y="483" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="18" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="797" dy="0">动作与状态</tspan></text>
+<rect x="797" y="532" width="249" height="48" rx="4" fill="#173F35" />
+<text x="921.5" y="556.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#FFFEFA" data-max-width="225">运行来源核验   →</text>
+<rect x="1063" y="532" width="249" height="48" rx="4" fill="#FFFEFA" stroke="#7C8F80" stroke-width="1" />
+<text x="1187.5" y="556.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#173F35" data-max-width="225">回到材料</text>
+<rect x="797" y="609" width="139" height="28" rx="3" fill="#E7EDE3" />
+<text x="809" y="615" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="117"><tspan x="809" dy="0">与来源一致</tspan></text>
+<rect x="951" y="609" width="164" height="28" rx="3" fill="#F7E8DF" />
+<text x="963" y="615" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#AE4634" text-anchor="start" dominant-baseline="hanging" data-max-width="142"><tspan x="963" dy="0">与来源不一致</tspan></text>
+<rect x="1130" y="609" width="146" height="28" rx="3" fill="#F3EBD8" />
+<text x="1142" y="615" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#815D25" text-anchor="start" dominant-baseline="hanging" data-max-width="124"><tspan x="1142" dy="0">来源待核对</tspan></text>
+<rect x="797" y="676" width="515" height="90" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="814" y="695" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="814" dy="0">状态名称与来源同时出现</tspan></text>
+<text x="814" y="729" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="481"><tspan x="814" dy="0">不把判断只交给红绿，不用“真实 / 虚假”概括整张图。</tspan></text>
+<line x1="60" y1="816" x2="1380" y2="816" stroke="#D6D9CF" stroke-width="1" />
+<text x="60" y="851" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="16" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="60" dy="0">布局</tspan></text>
+<text x="60" y="891" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="60" dy="0">桌面 1440 / 内容边距 72 / 分栏间隔 32</tspan><tspan x="60" dy="27">窄屏 390 / 内容边距 22 / 主操作高度 46–52</tspan></text>
+<text x="797" y="851" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="16" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="797" dy="0">界面边界</tspan></text>
+<text x="797" y="891" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="580"><tspan x="797" dy="0">图内检查与来源核验始终分开；样例载入不调用模型。</tspan><tspan x="797" dy="27">本轮只交付静态设计，尚无可运行交互或独立用户验证。</tspan></text>
+<line x1="72" y1="984" x2="1368" y2="984" stroke="#D6D9CF" stroke-width="1" />
+<text x="72" y="1004" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="72" dy="0">图证 · 每一项判断，都留下依据。</tspan></text>
+<text x="1368" y="1004" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="10" font-weight="400" fill="#5B6B62" text-anchor="end" dominant-baseline="hanging"><tspan x="1368" dy="0">静态设计稿 / 示例结果</tspan></text>
+</svg>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="2160" viewBox="0 0 390 2160" role="img" aria-labelledby="sheet-title sheet-desc">
+<title id="sheet-title">结果与证据 · 窄屏 · 390</title>
+<desc id="sheet-desc">图证新 UI 静态设计稿。示例结果不代表本次模型运行。全部文字与图形均为可编辑矢量对象。</desc>
+<defs><pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.7" fill="#D6D9CF" opacity="0.5"/></pattern></defs>
+<rect x="0" y="0" width="390" height="2160" rx="0" fill="#F5F2EB" />
+<g transform="translate(22 23) scale(0.75)"><path d="M0 8V0h9M23 0h9v8M32 24v8h-9M9 32H0v-8" fill="none" stroke="#173F35" stroke-width="2.2"/><path d="M8 23V15m8 8V9m8 14V4" fill="none" stroke="#173F35" stroke-width="3.2"/><circle cx="27" cy="27" r="4" fill="#AE4634"/></g>
+<text x="57" y="21" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="24" font-weight="600" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="57" dy="0">图证</tspan></text>
+<text x="299" y="28" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="299" dy="0">菜单</tspan></text>
+<line x1="346" y1="28" x2="365" y2="28" stroke="#173F35" stroke-width="1" />
+<line x1="346" y1="35" x2="365" y2="35" stroke="#173F35" stroke-width="1" />
+<line x1="22" y1="74" x2="368" y2="74" stroke="#D6D9CF" stroke-width="1" />
+<text x="22" y="102" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="22" dy="0">← 回到材料</tspan></text>
+<rect x="213" y="93" width="155" height="28" rx="3" fill="#E7EDE3" />
+<text x="225" y="99" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="133"><tspan x="225" dy="0">示例结果 · 设计稿</tspan></text>
+<text x="22" y="153" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="33" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="346"><tspan x="22" dy="0">0.8% 是同比，</tspan><tspan x="22" dy="48">环比应为 0.2%。</tspan></text>
+<rect x="22" y="280" width="346" height="225" rx="4" fill="#F7E8DF" />
+<rect x="22" y="280" width="3" height="225" rx="0" fill="#AE4634" />
+<rect x="39" y="298" width="144" height="28" rx="3" fill="#FFFEFA" />
+<text x="51" y="304" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#AE4634" text-anchor="start" dominant-baseline="hanging" data-max-width="122"><tspan x="51" dy="0">与来源不一致</tspan></text>
+<text x="39" y="347" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="20" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="311"><tspan x="39" dy="0">“比上月上涨 0.8%”</tspan><tspan x="39" dy="31">与适用来源不一致。</tspan></text>
+<text x="40" y="426" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#293D34" text-anchor="start" dominant-baseline="hanging"><tspan x="40" dy="0">适用来源的环比数值为 0.2%。</tspan></text>
+<text x="40" y="459" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#AE4634" text-anchor="start" dominant-baseline="hanging" data-max-width="310"><tspan x="40" dy="0">仅核对这条配文与收录来源；</tspan><tspan x="40" dy="22">未确认整张图的真实性。</tspan></text>
+<g transform="translate(0 64)">
+<text x="22" y="498" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="22" dy="0">本页目录</tspan></text>
+<text x="111" y="498" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="111" dy="0">依据 ↓</tspan></text>
+<text x="210" y="498" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="210" dy="0">建议 ↓</tspan></text>
+<text x="306" y="498" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="306" dy="0">过程 ↓</tspan></text>
+<line x1="22" y1="531" x2="368" y2="531" stroke="#D6D9CF" stroke-width="1" />
+<text x="23" y="562" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="23" dy="0">核对的主张</tspan></text>
+<text x="23" y="590" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="20" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="344"><tspan x="23" dy="0">2025 年 12 月全国 CPI</tspan><tspan x="23" dy="32">比上月上涨 0.8%。</tspan></text>
+<text x="24" y="679" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#293D34" text-anchor="start" dominant-baseline="hanging" data-max-width="342"><tspan x="24" dy="0">“比上月”对应环比，</tspan><tspan x="24" dy="25">不能沿用同比的 0.8%。</tspan></text>
+<rect x="22" y="755" width="164" height="120" rx="3" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="37" y="776" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="134"><tspan x="37" dy="0">配文所说 · 环比</tspan></text>
+<text x="37" y="808" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="34" font-weight="400" fill="#AE4634" text-anchor="start" dominant-baseline="hanging"><tspan x="37" dy="0">0.8%</tspan></text>
+<rect x="204" y="755" width="164" height="120" rx="3" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="219" y="776" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="134"><tspan x="219" dy="0">适用来源 · 环比</tspan></text>
+<text x="219" y="808" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="34" font-weight="400" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="219" dy="0">0.2%</tspan></text>
+<text x="23" y="917" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="16" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="23" dy="0">[1]  这一判断的来源</tspan></text>
+<rect x="22" y="961" width="346" height="330" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="40" y="982" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="40" dy="0">国家统计局</tspan></text>
+<text x="40" y="1013" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="40" dy="0">发布于 2026-01-09</tspan></text>
+<text x="40" y="1051" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="19" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="310"><tspan x="40" dy="0">2025年12月份居民消费价格</tspan><tspan x="40" dy="30">同比上涨0.8%</tspan></text>
+<rect x="40" y="1132" width="189" height="28" rx="3" fill="#E7EDE3" />
+<text x="52" y="1138" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="167"><tspan x="52" dy="0">全国 · 2025 年 12 月</tspan></text>
+<line x1="40" y1="1180" x2="350" y2="1180" stroke="#D6D9CF" stroke-width="1" />
+<text x="40" y="1200" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#293D34" text-anchor="start" dominant-baseline="hanging" data-max-width="310"><tspan x="40" dy="0">资料内容：同比 0.8%；环比 0.2%。</tspan></text>
+<text x="40" y="1243" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="40" dy="0">资料快照 · stats.gov.cn</tspan></text>
+<text x="349" y="1242" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" fill="#173F35" text-anchor="end" dominant-baseline="hanging"><tspan x="349" dy="0">原文  ↗</tspan></text>
+<rect x="22" y="1323" width="346" height="262" rx="4" fill="#E7EDE3" />
+<text x="40" y="1344" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="15" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="40" dy="0">建议这样写</tspan></text>
+<text x="40" y="1384" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="21" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="309"><tspan x="40" dy="0">2025 年 12 月全国 CPI</tspan><tspan x="40" dy="33">环比上涨 0.2%。[1]</tspan></text>
+<rect x="40" y="1464" width="310" height="46" rx="4" fill="#173F35" />
+<text x="195.0" y="1487.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#FFFEFA" data-max-width="286">采用建议，写入配文</text>
+<text x="40" y="1528" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="310"><tspan x="40" dy="0">仅更新配文，旧结果转入历史。</tspan><tspan x="40" dy="23">须再次主动运行，才有新结论。</tspan></text>
+<line x1="22" y1="1614" x2="368" y2="1614" stroke="#D6D9CF" stroke-width="1" />
+<text x="24" y="1636" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="24" dy="0">查看原图与配文，可放大</tspan></text>
+<text x="348" y="1636" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="17" font-weight="400" fill="#5B6B62" text-anchor="end" dominant-baseline="hanging"><tspan x="348" dy="0">＋</tspan></text>
+<line x1="22" y1="1683" x2="368" y2="1683" stroke="#D6D9CF" stroke-width="1" />
+<text x="24" y="1706" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="24" dy="0">查看核验过程与停止原因</tspan></text>
+<text x="348" y="1706" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="17" font-weight="400" fill="#5B6B62" text-anchor="end" dominant-baseline="hanging"><tspan x="348" dy="0">＋</tspan></text>
+<line x1="22" y1="1753" x2="368" y2="1753" stroke="#D6D9CF" stroke-width="1" />
+<text x="23" y="1790" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="15" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="23" dy="0">这次没有确认的部分</tspan></text>
+<text x="24" y="1834" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="342"><tspan x="24" dy="0">图表背后的原始数据、制作过程，</tspan><tspan x="24" dy="26">以及资料范围外的其他主张。</tspan><tspan x="24" dy="26"></tspan><tspan x="24" dy="26">这不是对整张图的真实性背书。</tspan></text>
+</g>
+<line x1="22" y1="2055" x2="368" y2="2055" stroke="#D6D9CF" stroke-width="1" />
+<text x="22" y="2075" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="22" dy="0">图证 · 每一项判断，都留下依据。</tspan></text>
+<text x="22" y="2099" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="10" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="22" dy="0">静态设计稿 / 示例结果</tspan></text>
+</svg>

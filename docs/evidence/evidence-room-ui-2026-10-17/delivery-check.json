@@ -1,0 +1,36 @@
+{
+  "version": "0896124d298a755c162f2e4cab7d19e3a14e01cf0da9371b318c982e1531bc00",
+  "reviewedVersionMatches": true,
+  "screenshotHashesMatch": true,
+  "screens": 19,
+  "unitTests": {
+    "passed": 445,
+    "failed": 0
+  },
+  "browserTests": {
+    "passed": 140,
+    "skipped": 1,
+    "failed": 0,
+    "projects": [
+      320,
+      390,
+      1280
+    ]
+  },
+  "build": "passed",
+  "modelConfigPortMatrix": "file/env x default 3001/5173 and custom 3107/5187 passed with fake keys",
+  "liveModelRequests": 0,
+  "blockedUnexpectedModelRequests": 0,
+  "independentStaticReview": {
+    "score": 8.2,
+    "version": "0896124d298a755c162f2e4cab7d19e3a14e01cf0da9371b318c982e1531bc00",
+    "feedback": "review-actual-4/feedback.md"
+  },
+  "notVerified": [
+    "live model",
+    "screen reader",
+    "real device",
+    "owner acceptance",
+    "cloud deployment"
+  ]
+}

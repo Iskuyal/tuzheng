@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1480" viewBox="0 0 1440 1480" role="img" aria-labelledby="sheet-title sheet-desc">
+<title id="sheet-title">状态与恢复 · 设计说明</title>
+<desc id="sheet-desc">图证新 UI 静态设计稿。示例结果不代表本次模型运行。全部文字与图形均为可编辑矢量对象。</desc>
+<defs><pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.7" fill="#D6D9CF" opacity="0.5"/></pattern></defs>
+<rect x="0" y="0" width="1440" height="1480" rx="0" fill="#F5F2EB" />
+<text x="60" y="56" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="36" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="60" dy="0">任务没有顺利完成时，也知道下一步。</tspan></text>
+<text x="62" y="119" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="62" dy="0">关键状态示意 / 同一套材料与控件语言 / 下列均为静态设计状态</tspan></text>
+<rect x="60" y="178" width="632" height="375" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="84" y="200" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="500" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="84" dy="0">01 · 首次为空</tspan></text>
+<rect x="748" y="178" width="632" height="375" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="772" y="200" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="500" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="772" dy="0">02 · 核验进行中</tspan></text>
+<rect x="60" y="595" width="632" height="415" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="84" y="617" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="500" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="84" dy="0">03 · 服务失败</tspan></text>
+<rect x="748" y="595" width="632" height="415" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="772" y="617" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="500" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="772" dy="0">04 · 需要你确认</tspan></text>
+<rect x="60" y="1050" width="632" height="300" rx="4" fill="#FFFEFA" stroke="#D6D9CF" stroke-width="1" />
+<text x="84" y="1072" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="500" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="84" dy="0">05 · 采用后，等待重新核验</tspan></text>
+<rect x="84" y="245" width="584" height="146" rx="4" fill="#F5F2EB" stroke="#D6D9CF" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="106" y="269" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="23" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="106" dy="0">把图表放进来</tspan></text>
+<text x="107" y="310" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="107" dy="0">上传截图，或先试一个团队自制样例。</tspan></text>
+<rect x="105" y="345" width="158" height="34" rx="4" fill="#173F35" />
+<text x="184.0" y="362.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#FFFEFA" data-max-width="134">选择图片</text>
+<text x="108" y="421" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="108" dy="0">支持 PNG / JPG / WebP，最大 5 MB。</tspan></text>
+<text x="108" y="463" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="108" dy="0">选图后仍需填写配文，再主动运行。</tspan></text>
+<circle cx="787" cy="271" r="10" fill="#E7EDE3"/>
+<circle cx="787" cy="271" r="4" fill="#173F35"/>
+<text x="810" y="259" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="23" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="810" dy="0">正在核验图片与配文</tspan></text>
+<text x="786" y="310" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="786" dy="0">正在等待模型返回，当前结果尚未生成。</tspan></text>
+<text x="786" y="359" font-family="Georgia, &quot;Noto Serif SC&quot;, serif" font-size="32" font-weight="400" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="786" dy="0">00:12</tspan></text>
+<text x="914" y="373" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="10" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="914" dy="0">耗时示例</tspan></text>
+<text x="786" y="414" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="786" dy="0">工具记录在结果返回后显示。</tspan><tspan x="786" dy="24">可以取消；取消后保留图片与配文。</tspan></text>
+<rect x="786" y="484" width="168" height="42" rx="4" fill="#FFFEFA" stroke="#7C8F80" stroke-width="1" />
+<text x="870.0" y="505.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#173F35" data-max-width="144">取消核验</text>
+<rect x="84" y="651" width="129" height="28" rx="3" fill="#F7E8DF" />
+<text x="96" y="657" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#AE4634" text-anchor="start" dominant-baseline="hanging" data-max-width="107"><tspan x="96" dy="0">核验未完成</tspan></text>
+<text x="84" y="702" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="25" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="84" dy="0">材料还在，可以再试一次。</tspan></text>
+<text x="85" y="751" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="85" dy="0">模型服务暂时不可用。</tspan><tspan x="85" dy="26">本次未生成来源结论，图片与配文均已保留。</tspan></text>
+<rect x="84" y="838" width="186" height="44" rx="4" fill="#173F35" />
+<text x="177.0" y="860.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#FFFEFA" data-max-width="162">重试核验</text>
+<rect x="286" y="838" width="169" height="44" rx="4" fill="#FFFEFA" stroke="#7C8F80" stroke-width="1" />
+<text x="370.5" y="860.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#173F35" data-max-width="145">模型设置  ↗</text>
+<text x="85" y="916" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="582"><tspan x="85" dy="0">若尚未配置模型，显示「前往模型设置并测试连接」。</tspan></text>
+<rect x="772" y="651" width="110" height="28" rx="3" fill="#F3EBD8" />
+<text x="784" y="657" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#815D25" text-anchor="start" dominant-baseline="hanging" data-max-width="88"><tspan x="784" dy="0">需要确认</tspan></text>
+<text x="772" y="700" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="24" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="584"><tspan x="772" dy="0">这次“上涨”，和哪个时间比较？</tspan></text>
+<text x="773" y="745" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="582"><tspan x="773" dy="0">配文只写“上涨 0.8%”，还缺少比较方式。</tspan></text>
+<text x="773" y="786" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="773" dy="0">补充回答（用户提供）</tspan></text>
+<rect x="772" y="815" width="584" height="60" rx="3" fill="#F5F2EB" stroke="#7C8F80" stroke-width="1" />
+<text x="788" y="837" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="788" dy="0">例如：与去年同月比较（同比）</tspan></text>
+<text x="773" y="892" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="582"><tspan x="773" dy="0">只用于确定口径，不是官方来源；不确定时可先保留待核对。</tspan></text>
+<rect x="772" y="940" width="256" height="44" rx="4" fill="#173F35" />
+<text x="900.0" y="962.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#FFFEFA" data-max-width="232">提交补充并继续核验</text>
+<text x="1050" y="956" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="13" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="1050" dy="0">暂不补充，保留待核对</tspan></text>
+<rect x="84" y="1107" width="165" height="28" rx="3" fill="#F3EBD8" />
+<text x="96" y="1113" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="500" fill="#815D25" text-anchor="start" dominant-baseline="hanging" data-max-width="143"><tspan x="96" dy="0">当前结果已失效</tspan></text>
+<text x="84" y="1157" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="24" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging" data-max-width="584"><tspan x="84" dy="0">配文已更新，旧结果转入历史。</tspan></text>
+<text x="85" y="1205" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="12" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="85" dy="0">修改建议已写入配文；尚未重新调用模型。</tspan></text>
+<rect x="84" y="1264" width="220" height="44" rx="4" fill="#173F35" />
+<text x="194.0" y="1286.0" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="500" text-anchor="middle" dominant-baseline="central" fill="#FFFEFA" data-max-width="196">运行来源核验   →</text>
+<text x="750" y="1093" font-family="&quot;Noto Serif SC&quot;, &quot;SimSun&quot;, serif" font-size="23" font-weight="500" fill="#173F35" text-anchor="start" dominant-baseline="hanging"><tspan x="750" dy="0">状态的共同规则</tspan></text>
+<text x="752" y="1143" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="14" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging" data-max-width="580"><tspan x="752" dy="0">输入始终保留，结果与当前材料保持对应。</tspan><tspan x="752" dy="28"></tspan><tspan x="752" dy="28">颜色之外，始终有清楚的状态名称。</tspan><tspan x="752" dy="28"></tspan><tspan x="752" dy="28">从未运行、未完成和已失效，都不显示核验成功。</tspan></text>
+<line x1="72" y1="1400" x2="1368" y2="1400" stroke="#D6D9CF" stroke-width="1" />
+<text x="72" y="1420" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="11" font-weight="400" fill="#5B6B62" text-anchor="start" dominant-baseline="hanging"><tspan x="72" dy="0">图证 · 每一项判断，都留下依据。</tspan></text>
+<text x="1368" y="1420" font-family="&quot;Noto Sans SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif" font-size="10" font-weight="400" fill="#5B6B62" text-anchor="end" dominant-baseline="hanging"><tspan x="1368" dy="0">静态设计稿 / 示例结果</tspan></text>
+</svg>

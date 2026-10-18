@@ -1,0 +1,123 @@
+{
+  "version": "35c638ac0076a576d7e7c7ea56c09e0fbd83935352d54722646128e82bb04571",
+  "pages": [
+    {
+      "path": "/",
+      "colors": {
+        "ink": "#173f35",
+        "muted": "#536153",
+        "canvas": "#e9e2d5",
+        "paper": "#f7f1e6",
+        "teal-pale": "#dce3d3",
+        "red": "#a33e2e",
+        "red-pale": "#f2dfd1",
+        "amber": "#79551f",
+        "amber-pale": "#ecdfbf",
+        "header": "rgb(23, 63, 53)",
+        "nav": "rgb(203, 213, 197)",
+        "focus": "rgb(225, 194, 142)"
+      },
+      "ratios": {
+        "ink/canvas": 9.063654927459769,
+        "muted/canvas": 5.090916535627714,
+        "ink/paper": 10.384223411337771,
+        "muted/paper": 5.8326596828249055,
+        "red/red-pale": 4.945880446177776,
+        "amber/amber-pale": 5.068031154268185,
+        "nav/header": 7.706758088908049,
+        "focus/header": 6.842634881018426
+      }
+    },
+    {
+      "path": "/audit",
+      "colors": {
+        "ink": "#173f35",
+        "muted": "#536153",
+        "canvas": "#e9e2d5",
+        "paper": "#f7f1e6",
+        "teal-pale": "#dce3d3",
+        "red": "#a33e2e",
+        "red-pale": "#f2dfd1",
+        "amber": "#79551f",
+        "amber-pale": "#ecdfbf",
+        "header": "rgb(23, 63, 53)",
+        "nav": "rgb(203, 213, 197)",
+        "focus": "rgb(225, 194, 142)"
+      },
+      "ratios": {
+        "ink/canvas": 9.063654927459769,
+        "muted/canvas": 5.090916535627714,
+        "ink/paper": 10.384223411337771,
+        "muted/paper": 5.8326596828249055,
+        "red/red-pale": 4.945880446177776,
+        "amber/amber-pale": 5.068031154268185,
+        "nav/header": 7.706758088908049,
+        "focus/header": 6.842634881018426
+      }
+    },
+    {
+      "path": "/source-audit",
+      "colors": {
+        "ink": "#173f35",
+        "muted": "#536153",
+        "canvas": "#e9e2d5",
+        "paper": "#f7f1e6",
+        "teal-pale": "#dce3d3",
+        "red": "#a33e2e",
+        "red-pale": "#f2dfd1",
+        "amber": "#79551f",
+        "amber-pale": "#ecdfbf",
+        "header": "rgb(23, 63, 53)",
+        "nav": "rgb(203, 213, 197)",
+        "focus": "rgb(225, 194, 142)"
+      },
+      "ratios": {
+        "ink/canvas": 9.063654927459769,
+        "muted/canvas": 5.090916535627714,
+        "ink/paper": 10.384223411337771,
+        "muted/paper": 5.8326596828249055,
+        "red/red-pale": 4.945880446177776,
+        "amber/amber-pale": 5.068031154268185,
+        "nav/header": 7.706758088908049,
+        "focus/header": 6.842634881018426
+      }
+    },
+    {
+      "path": "/settings",
+      "colors": {
+        "ink": "#173f35",
+        "muted": "#536153",
+        "canvas": "#e9e2d5",
+        "paper": "#f7f1e6",
+        "teal-pale": "#dce3d3",
+        "red": "#a33e2e",
+        "red-pale": "#f2dfd1",
+        "amber": "#79551f",
+        "amber-pale": "#ecdfbf",
+        "header": "rgb(23, 63, 53)",
+        "nav": "rgb(203, 213, 197)",
+        "focus": "rgb(225, 194, 142)"
+      },
+      "ratios": {
+        "ink/canvas": 9.063654927459769,
+        "muted/canvas": 5.090916535627714,
+        "ink/paper": 10.384223411337771,
+        "muted/paper": 5.8326596828249055,
+        "red/red-pale": 4.945880446177776,
+        "amber/amber-pale": 5.068031154268185,
+        "nav/header": 7.706758088908049,
+        "focus/header": 6.842634881018426
+      }
+    }
+  ],
+  "checkedPairs": 32,
+  "passed": true,
+  "identity": "真实渲染计算色值；28组文字对比>=4.5，4组导航焦点对比>=3；并非完整 WCAG 或读屏验收",
+  "initialTrial": {
+    "foreground": "#ae4634",
+    "background": "#f2dfd1",
+    "ratio": 4.3622906634241545,
+    "outcome": "低于4.5；将文字朱红加深后复测"
+  },
+  "realModelRequests": 0
+}

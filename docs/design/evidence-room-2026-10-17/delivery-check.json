@@ -1,0 +1,107 @@
+{
+  "artifactVersion": "8f7d2739c0796775ff7f7cca7cdf7c789d9d6e3d9dda138bfd9cfc1c521e8cbe",
+  "reviewedVersionMatches": true,
+  "reviewedScreenshotHashesMatch": true,
+  "screenCount": 11,
+  "contrastPairs": [
+    {
+      "foreground": "ink",
+      "background": "bg",
+      "ratio": 10.44,
+      "threshold": 4.5,
+      "pass_": true
+    },
+    {
+      "foreground": "text",
+      "background": "paper",
+      "ratio": 11.49,
+      "threshold": 4.5,
+      "pass_": true
+    },
+    {
+      "foreground": "muted",
+      "background": "bg",
+      "ratio": 5.04,
+      "threshold": 4.5,
+      "pass_": true
+    },
+    {
+      "foreground": "muted",
+      "background": "paper",
+      "ratio": 5.59,
+      "threshold": 4.5,
+      "pass_": true
+    },
+    {
+      "foreground": "muted",
+      "background": "pale",
+      "ratio": 4.73,
+      "threshold": 4.5,
+      "pass_": true
+    },
+    {
+      "foreground": "red",
+      "background": "redp",
+      "ratio": 4.71,
+      "threshold": 4.5,
+      "pass_": true
+    },
+    {
+      "foreground": "amber",
+      "background": "amberp",
+      "ratio": 5.02,
+      "threshold": 4.5,
+      "pass_": true
+    },
+    {
+      "foreground": "paper",
+      "background": "ink",
+      "ratio": 11.57,
+      "threshold": 4.5,
+      "pass_": true
+    },
+    {
+      "foreground": "red",
+      "background": "bg",
+      "ratio": 5.04,
+      "threshold": 4.5,
+      "pass_": true
+    },
+    {
+      "foreground": "control",
+      "background": "paper",
+      "ratio": 3.41,
+      "threshold": 3,
+      "pass_": true
+    },
+    {
+      "foreground": "control",
+      "background": "bg",
+      "ratio": 3.08,
+      "threshold": 3,
+      "pass_": true
+    }
+  ],
+  "gallery": [
+    {
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "images": 11,
+      "loaded": true,
+      "anchor": "#02-workspace-desktop",
+      "remoteHttpRequests": 0
+    },
+    {
+      "viewport": 390,
+      "scrollWidth": 390,
+      "images": 11,
+      "loaded": true,
+      "anchor": "#02-workspace-desktop",
+      "remoteHttpRequests": 0
+    }
+  ],
+  "missingLocalTargets": [],
+  "productCodeChanged": false,
+  "liveModelRequests": 0,
+  "scope": "静态稿件、选定色对、审阅入口；不是产品运行、完整WCAG、用户研究或设备验收"
+}

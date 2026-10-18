@@ -1,0 +1,65 @@
+{
+  "version": "d9ba3a7f98bd3551d3a068ff95df54ee52ec0201a77ca821e68eced063b466ad",
+  "promptSha256": "fb76bafc352d54fbd97bc3d84855d16d296cb1677f72200d96a4d63ee0f27a4c",
+  "reviewerCount": 1,
+  "mode": "普通设计，无分数门槛",
+  "evidence": "静态 SVG 设计稿的浏览器渲染，不是实际产品截图",
+  "screens": [
+    {
+      "page": "01-home-desktop",
+      "width": 1440,
+      "height": 1180,
+      "file": "01-home-desktop.png",
+      "sha256": "dae92dbb9ca631761e2fb67926672e86489aeb06f606a2b3e8ee4f7fe98af01b"
+    },
+    {
+      "page": "02-workspace-desktop",
+      "width": 1440,
+      "height": 1130,
+      "file": "02-workspace-desktop.png",
+      "sha256": "7122617de4557d707a6b6839c8f10b8ed21524294c54c8dc2b9462ec3b66b0d5"
+    },
+    {
+      "page": "03-result-desktop",
+      "width": 1440,
+      "height": 1510,
+      "file": "03-result-desktop.png",
+      "sha256": "96d31301aef9fef09767d736d5f99055ec833dbb3677bcb171fb1c284dcfcf8b"
+    },
+    {
+      "page": "04-home-mobile",
+      "width": 390,
+      "height": 1470,
+      "file": "04-home-mobile.png",
+      "sha256": "ef4e2101c0ac83ce65947b9a903ba36869a3dda6f33735d32d372e45544d300b"
+    },
+    {
+      "page": "05-workspace-mobile",
+      "width": 390,
+      "height": 1530,
+      "file": "05-workspace-mobile.png",
+      "sha256": "c577ba37be082cd8591f04bd7e1d188374f5f31120c7baffe4baa394003a1fe2"
+    },
+    {
+      "page": "06-result-mobile",
+      "width": 390,
+      "height": 2160,
+      "file": "06-result-mobile.png",
+      "sha256": "298f875f2bcb5332615937e95bfcf45aec858091004baa7dd59bb3efe8412e9f"
+    },
+    {
+      "page": "07-states",
+      "width": 1440,
+      "height": 1480,
+      "file": "07-states.png",
+      "sha256": "44a69d67fb7f2b34cee8a5430f8068cbcca10743abd30828e9d77e4550ebab5d"
+    },
+    {
+      "page": "08-foundations",
+      "width": 1440,
+      "height": 1050,
+      "file": "08-foundations.png",
+      "sha256": "da37369ffbe86182335e72285d587fe32da9258f8ecada6568a001c8650e5c73"
+    }
+  ]
+}
