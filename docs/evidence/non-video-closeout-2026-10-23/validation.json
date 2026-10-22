@@ -268,5 +268,23 @@
     "frozenInputs": "12 holdout questions and 22 source questions verified",
     "build": "passed",
     "secondWindows": "not-attested; local rehearsal only"
+  },
+  "postReviewChecks": {
+    "candidateHintChange": "Only replace the stale team/access blocker text with a pointer to the current material checklist; no schema or execution change",
+    "candidatePreflightTests": {
+      "passed": 7
+    },
+    "typecheck": "passed",
+    "docs": {
+      "documents": 159,
+      "localLinks": 746,
+      "missing": 0
+    },
+    "materials": {
+      "files": 31,
+      "state": "passed"
+    },
+    "candidatePreflightSha256": "7320eab7e6f28e6b3757cb8cecb331667091de4d79379963394422f3f148e706",
+    "fullSuite": "not repeated locally after message-only change; remote CI will verify delivered commit"
   }
 }

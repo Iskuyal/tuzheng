@@ -37,7 +37,7 @@ export async function prepareCandidate(): Promise<CandidateLock> {
     files, provenance: await captureProvenance(catalog),
     plans: { holdout: { repeats: 3, paths: 108, stages: 126, maxHttpRequests: 360 },
       demo: { ids: DEMO_IDS, repeats: 3, arm: "retrieval", initialStages: 15, maxRecoveryStages: 3 } },
-    blockers: ["负责人逐题抽查并签字", "指定实际HTTP调用上限或落实另行金额控制并授权运行", "当前候选代码尚未在线复验", "演示视频、评审访问、真实团队信息及另一台Windows回执待人工提供"], modelRequests: 0 });
+    blockers: ["负责人逐题抽查并签字", "指定实际HTTP调用上限或落实另行金额控制并授权运行", "当前候选代码尚未在线复验", "最终材料验收按 docs/submission/README.md 的当前未完成条件执行"], modelRequests: 0 });
 }
 export async function verifyCandidate(value: unknown): Promise<CandidateLock> {
   const lock = lockSchema.parse(value); const bundle = await loadBundle();

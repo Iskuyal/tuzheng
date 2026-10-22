@@ -25,7 +25,7 @@
 
 ## 第二台 Windows 的直接操作
 
-先取得该私有仓库访问权限，安装标准 Node.js 24（含 npm）及系统 Edge。由真实操作者克隆仓库，检出所选包 `manifest.json` 的完整 `sourceSha`。若新提交尚未推送，克隆端无法取得它，应先使用已交付远端版本或等待交付；不能把新包 SHA 换成旧版本冒充。
+从公开仓库直接克隆，安装标准 Node.js 24（含 npm）及系统 Edge。由真实操作者检出所选包 `manifest.json` 的完整 `sourceSha`。若新提交尚未推送，克隆端无法取得它，应先使用已交付远端版本或等待交付；不能把新包 SHA 换成旧版本冒充。
 
 ```powershell
 git clone https://github.com/Iskuyal/tuzheng.git
