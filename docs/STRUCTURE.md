@@ -37,6 +37,8 @@ API 入口为 `server/index.ts`，应用工厂在 `server/app.ts`。模型协议
 
 所有命令从仓库根运行，以 `package.json` 为入口；按用途查[脚本导航](../scripts/README.md)。录制原始工程跟随日期材料保留，固定交付工具在 `docs/submission/closeout/`；当前交付文件由 `docs/submission/materials.json` 统一列出，材料预检和打包共用 `scripts/submission-materials.ts`。
 
+材料清单可通过 `acceptanceRecord` 引用已取得的非视频记录。预检只采用团队资料已提供和归档匿名访问通过两项，访问证据的远端 SHA 随固定包单独记录；原始人工模板和其余验收条件保持独立。
+
 根 `tsconfig.json` 引用 `config/tsconfig.web.json`、`config/tsconfig.server.json` 和 `config/tsconfig.e2e.json`。服务端层已覆盖 `server/**/*.ts`、`shared/**/*.ts`、`scripts/**/*.ts`、`tests/**/*.ts`；新增材料工具不需要另建编译工程。前端构建目录为 `dist/client/`，编译后的服务端入口为 `dist/server/server/index.js`。
 
 CI 运行文档/材料检查、类型检查、构建、行为/API、录制预算恢复、冻结样例和三视口浏览器验证。材料检查仅核对已保存字节和录制指纹，不发模型请求。离线三臂/候选产物仍由 `holdout-offline-fixture` artifact 收集；失败浏览器 trace 仍在既有路径，无新增上传范围。

@@ -1,0 +1,272 @@
+{
+  "kind": "non-video-offline-validation",
+  "state": "passed",
+  "baselineSha": "4d37f74c45862006880edf53b0b19fd6f8b8cc30",
+  "workingTree": "Baseline plus this round changes; dirty=true as recorded. Later documentation-only closeout must rerun docs/material checks.",
+  "modelRequests": 0,
+  "regression": {
+    "before": "1 failed / 5 passed; old schema rejects acceptanceRecord",
+    "after": "7 passed",
+    "typecheck": "passed"
+  },
+  "rehearsal": {
+    "schemaVersion": 1,
+    "kind": "offline-windows-checks",
+    "startedAt": "2026-10-22T18:37:49.999Z",
+    "sourceSha": "4d37f74c45862006880edf53b0b19fd6f8b8cc30",
+    "dirty": true,
+    "environment": {
+      "platform": "win32",
+      "windowsRelease": "10.0.26300",
+      "arch": "x64",
+      "node": "v24.16.0"
+    },
+    "context": "local-rehearsal",
+    "secondMachineAttested": false,
+    "modelRequests": 0,
+    "humanProductWalkthrough": "pending",
+    "steps": [
+      {
+        "command": [
+          "npm",
+          "run",
+          "docs:check"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "verify:materials"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      },
+      {
+        "command": [
+          "npm",
+          "test"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "test:recording"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "eval:samples"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "eval:holdout",
+          "--",
+          "--verify"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "eval:source-audit",
+          "--",
+          "--check-only"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "verify:model-config"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "test:e2e"
+        ],
+        "exitCode": 0,
+        "signal": null,
+        "passed": true
+      }
+    ],
+    "state": "offline-checks-passed",
+    "completedAt": "2026-10-22T18:40:13.008Z"
+  },
+  "localRawDirectory": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z",
+  "logs": [
+    {
+      "command": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-1.txt",
+      "sha256": "f606b5ae82593b33e31efa7ba39c738da6d9731b285eb208b45808499613478d"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify:materials"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-2.txt",
+      "sha256": "25bc21f87487d6974824051e4b96b5744bd46bebf5d3a6858febbfe7bd371704"
+    },
+    {
+      "command": [
+        "npm",
+        "test"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-3.txt",
+      "sha256": "3969fc18dcf82cbc3a9a0bc8b8fa263301011ebeec67842ff502899063a1f254"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:recording"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-4.txt",
+      "sha256": "80d086347443b9b253155acb1bb835e9764b8e0e5fdecbddf1a180b2b93b1556"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "eval:samples"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-5.txt",
+      "sha256": "01b3153c90e2550aa66d6a58819bb638ec9dfead3becd17c0f12698b594ddd12"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "eval:holdout",
+        "--",
+        "--verify"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-6.txt",
+      "sha256": "26618bd1412f7999af71111f8886f593d1760c8ca42937c06425a92e8fd8d1a8"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "eval:source-audit",
+        "--",
+        "--check-only"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-7.txt",
+      "sha256": "c36d86ee3ee5858a9e3b68dcc6abae9965f1d285fd60a9033fbe3704764181cc"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-8.txt",
+      "sha256": "4944186eccdda95c2c15d9dc9c197df79f5212eddb5513e1594eabb0d86bda1c"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify:model-config"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-9.txt",
+      "sha256": "438bfc5bb2e02fd9b1522d06e45c109ac54050595c2f896ec8ea2f4abcb87c25"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:e2e"
+      ],
+      "path": ".cache/windows-acceptance/2026-10-22T18-37-49-998Z/step-10.txt",
+      "sha256": "8d1f897b0c590659a0c6b4af3a07c7fdb7b1d923e5fed0c192ebe295626fbf4d"
+    }
+  ],
+  "implementationHashes": [
+    {
+      "path": "scripts/submission-materials.ts",
+      "sha256": "ee2d3029eccfdff82051297b3ef16fe7ab9e62afd387fda77630e1d92669f264"
+    },
+    {
+      "path": "tests/submission-materials.test.ts",
+      "sha256": "842c3630f3096abd204f867edd063f5b0fe1a79fef2f328046b2f167014378b7"
+    },
+    {
+      "path": "docs/submission/closeout/prepare-package.mjs",
+      "sha256": "f4e917c3bb6c9a2f13163274ab43be03ca50f6d05f588b51ad3153fa4bc2c0ca"
+    }
+  ],
+  "summary": {
+    "unitAndApi": {
+      "passed": 452,
+      "files": 28
+    },
+    "recordingBudget": {
+      "passed": 6
+    },
+    "samples": {
+      "passed": 23,
+      "total": 23
+    },
+    "browser": {
+      "passed": 140,
+      "skipped": 1,
+      "viewports": [
+        320,
+        390,
+        1280
+      ]
+    },
+    "configuration": "file/env x default/custom ports; four groups passed",
+    "frozenInputs": "12 holdout questions and 22 source questions verified",
+    "build": "passed",
+    "secondWindows": "not-attested; local rehearsal only"
+  }
+}

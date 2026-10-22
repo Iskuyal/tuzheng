@@ -1,18 +1,19 @@
 # 当前提交材料与收尾事项
 
-更新：2026-10-18。这里维护当前材料选择和仍需负责人完成的事项；旧日期的报告保留当时事实。机器可校验的材料清单为 [materials.json](materials.json)。
+更新：2026-10-23。用户将视频制作留到稍后；本轮先完成非视频材料和可执行检查。机器可校验的材料清单为 [materials.json](materials.json)，已提供的团队信息及访问证据见[非视频记录](closeout/non-video-record-2026-10-23.json)，原始人工回执模板继续保留。
 
 ## 当前材料
 
 | 材料 | 入口 | 状态 |
 | --- | --- | --- |
-| 项目说明与运行 | [README](../../README.md)、[开发指南](../DEVELOPMENT.md) | 本机运行和配置说明齐备；真实团队信息待填 |
-| 赛事技术报告 | [PDF](web-match-competition-report.pdf)、[HTML 源](competition-report.html) | 17 页，已补充 2026-10-18 当前交付；历史模型结论按原轮次解释 |
+| 项目说明与运行 | [README](../../README.md)、[开发指南](../DEVELOPMENT.md) | 已写入岭南凤翔团队、梁钦健/梁智量、岭南职业技术学院（清远校区）和 C组；个人电话邮箱未提供 |
+| 赛事技术报告 | [PDF](web-match-competition-report.pdf)、[HTML 源](competition-report.html) | 17 页，2026-10-23 补入团队及公开访问状态；历史模型结论按原轮次解释 |
 | 正式视频画面母版 | [新版 MP4](tuzheng-competition-demo-2026-10-18-silent.mp4) | 398.233 秒、1920×1080/30 fps，无音轨；等待用户普通话配音和最终走查 |
 | 配音资料 | [九段时间轴与完整讲稿](demo-2026-10-18/voiceover.md)、[章节 SRT](demo-2026-10-18/chapters.srt) | 已按最终成片对齐 |
 | 实录工程与证明 | [工程及原片](demo-2026-10-18/README.md)、[视频检查](../evidence/formal-demo-2026-10-18/video-verification.json) | 当次官方模型 7 次实际 HTTP；当前图文路径演示，非独立评测 |
-| 版本交付与人工回执 | [固定交付工具](closeout/README.md)、[空白回执](closeout/acceptance-receipt.json) | 工具可用；模板不是人工验收结果 |
-| 代码访问 | [GitHub 仓库](https://github.com/Iskuyal/tuzheng) | 2026-10-18 只读核对为 PRIVATE；尚无本轮评审账号访问证明 |
+| 版本交付与人工回执 | [固定交付工具](closeout/README.md)、[非视频接管](closeout/non-video-handoff.md)、[空白回执](closeout/acceptance-receipt.json) | 基线固定包已重新验证；新提交的包以其 manifest 为准，模板不是人工验收结果 |
+| 代码访问 | [GitHub 仓库](https://github.com/Iskuyal/tuzheng)、[匿名访问证据](../evidence/non-video-closeout-2026-10-23/anonymous-access.json) | 用户授权后已设为 PUBLIC；当时远端 `4d37f74` 的仓库、README、PDF、无声视频和运行说明匿名访问通过 |
+| 赛事规则 | [2026-10-23 官网核对](../competition/official-rules-verification-2026-10-23.md) | 省赛截止 2026-11-18；提交入口在缴费后的个人中心；账号内具体限制仍待负责人核对 |
 
 视频的口径不明案例实际保留待核对，没有触发追问或执行 resume。格式恢复只到合法图片输入。配音请使用本次讲稿，不把旧录制脚本的期望动作当作本片已发生的动作。
 
@@ -24,7 +25,7 @@ npm run verify:materials
 node docs/submission/build-report.mjs --competition --check
 ```
 
-材料预检检查文件存在、PDF 文件头及无声视频与已归档验证记录的路径/大小/SHA-256 一致性；不重新执行媒体解码、不检查公网可达性、不签署人工回执。实际媒体验证在本批视频记录中。
+材料预检检查文件存在、PDF 文件头及无声视频与已归档验证记录的路径/大小/SHA-256 一致性。若清单指定非视频记录，还核对其中的匿名访问证明，将团队资料已提供、指定 SHA 的公开访问已验证带入交付包；其余人工条件继续独立保留。预检不重新联网、解码或签署回执。
 
 PDF 重建使用 `node docs/submission/build-report.mjs --competition`；无声视频重新导出见[录制工程](demo-2026-10-18/README.md)，复用现有原片无需模型请求。已完成的实录批次不会重复发起付费调用。
 
@@ -35,14 +36,15 @@ PDF 重建使用 `node docs/submission/build-report.mjs --competition`；无声�
 | 事项 | 完成依据 |
 | --- | --- |
 | 普通话配音、混音和最终视频走查 | 最终有声 MP4、13 项人工走查及该文件哈希；无声母版不替代此项 |
-| 真实团队信息 | 姓名、学校/单位、联系方式与赛事报名信息经本人核对 |
-| 评审访问 | 负责人选择公开或授予权限后，未登录或评审账号实际打开仓库与材料 |
+| 赛事报名与公开联系方式核对 | 团队名称、姓名、学校、C组已由用户提供并写入 README/PDF；个人中心实际报名及需向赛事提供的联系信息仍由本人核对。仓库 Issues 仅作项目反馈入口 |
 | 第二台 Windows | 另一台机器的环境、安装/运行输出、四页操作和操作者回执；本机演练不代签 |
-| 第 13 次旧网关请求核账 | 提供方记录与[原账本](closeout/accounting-handoff.md)对照，保留未知项及负责人处理决定 |
+| 第 13 次旧网关请求核账 | 用户回复暂无结果；提供方记录与[原账本](closeout/accounting-handoff.md)对照。未知用量/费用及未提供的处理决定继续保留 |
 | 最终候选、负责人抽查及材料冻结 | 新提交 SHA、新候选锁、对应材料哈希和逐题确认；历史锁继续保留 |
 | 赛事提交 | 核对当期入口和要求，提交最终材料并留存平台回执 |
 
 正式三臂盲审和真实读者收益声明分别需要完整评测及[真实读者记录](reader-study/README.md)。没有这些证据时，按已有能力与演示范围准备作品；实验的失败、阻塞与未知用量继续保留。
+
+用户确认目前无第二台 Windows 可连接环境，本机演练及远端 Windows CI 均不代替该机器的人工回执。公开访问证据绑定当时远端 SHA；后续提交完成交付后需重新确认最终材料地址。本轮检查与未完成条件详见[收尾报告](../reviews/2026-10-23-non-video-closeout.md)。
 
 ## 历史材料
 

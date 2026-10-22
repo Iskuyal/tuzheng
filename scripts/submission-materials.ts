@@ -11,8 +11,19 @@ const registrySchema = z.object({
   technicalReport: z.object({ path: z.string(), source: z.string() }).strict(),
   formalVideo: z.object({ path: z.string(), verification: z.string(), voiceover: z.string(), chapters: z.string(),
     status: z.literal("picture-complete-voiceover-pending") }).strict(),
+  acceptanceRecord: z.string().optional(),
   files: z.array(z.string()).min(1),
 }).strict();
+const closeoutSchema = z.object({
+  schemaVersion: z.literal(1), kind: z.literal("non-video-closeout-record"),
+  team: z.object({ status: z.literal("information-provided") }).passthrough(),
+  reviewerAccess: z.object({ status: z.literal("public-anonymous-verified"), evidence: z.string() }).passthrough(),
+}).passthrough();
+const accessProofSchema = z.object({
+  kind: z.literal("anonymous-reviewer-access-check"), state: z.literal("passed"),
+  sourceSha: z.string().regex(/^[a-f0-9]{40}$/),
+  checks: z.array(z.object({ status: z.literal(200), passed: z.literal(true) }).passthrough()).min(1),
+}).passthrough();
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
 function inside(root: string, path: string) {
@@ -25,7 +36,8 @@ function inside(root: string, path: string) {
 export async function verifySubmissionMaterials(root = process.cwd()) {
   const registry = registrySchema.parse(JSON.parse(await readFile(inside(root, registryPath), "utf8")));
   const required = [registryPath, ...Object.values(registry.technicalReport), registry.formalVideo.path,
-    registry.formalVideo.verification, registry.formalVideo.voiceover, registry.formalVideo.chapters];
+    registry.formalVideo.verification, registry.formalVideo.voiceover, registry.formalVideo.chapters,
+    ...(registry.acceptanceRecord ? [registry.acceptanceRecord] : [])];
   if (new Set(registry.files).size !== registry.files.length || required.some(path => !registry.files.includes(path))) {
     throw new Error("提交材料清单重复或遗漏 PDF、正式视频、配音稿、时间轴及验证记录。");
   }
@@ -48,11 +60,24 @@ export async function verifySubmissionMaterials(root = process.cwd()) {
     || !(proof.seconds >= 300 && proof.seconds <= 480) || proof.audioTracks !== 0 || proof.fullDecode !== "passed") {
     throw new Error("视频记录未满足 5–8 分钟、至少 1080p、已解码的无声母版要求。");
   }
+  let teamInformation = "pending";
+  let reviewerAccess = "pending";
+  let acceptanceEvidence;
+  if (registry.acceptanceRecord) {
+    const record = closeoutSchema.parse(JSON.parse(await readFile(inside(root, registry.acceptanceRecord), "utf8")));
+    if (!registry.files.includes(record.reviewerAccess.evidence)) throw new Error("匿名访问证明未收录在交付材料中。");
+    const access = accessProofSchema.parse(JSON.parse(await readFile(inside(root, record.reviewerAccess.evidence), "utf8")));
+    teamInformation = record.team.status;
+    reviewerAccess = record.reviewerAccess.status;
+    acceptanceEvidence = { record: registry.acceptanceRecord, reviewerAccessSourceSha: access.sourceSha,
+      scope: "Archived user information and anonymous access checks only; later commits and human acceptance require separate evidence." };
+  }
   return { schemaVersion: 1, kind: "submission-materials-preflight", registry: registryPath, modelRequests: 0,
     formalVideo: { path: video.path, seconds: proof.seconds, sha256: video.sha256, resolution: proof.resolution,
       verificationScope: "Matches archived recording metadata and bytes; no new decode or owner acceptance." },
-    acceptance: { formalVideo: registry.formalVideo.status, reviewerAccess: "pending", teamInformation: "pending",
-      secondWindows: "pending", ownerReview: "pending", unknownHttp13: "pending", contestSubmission: "pending" }, files };
+    acceptance: { formalVideo: registry.formalVideo.status, reviewerAccess, teamInformation,
+      secondWindows: "pending", ownerReview: "pending", unknownHttp13: "pending", contestSubmission: "pending" },
+    ...(acceptanceEvidence ? { acceptanceEvidence } : {}), files };
 }
 
 export function printMaterialCheck(result: Awaited<ReturnType<typeof verifySubmissionMaterials>>, json = false) {

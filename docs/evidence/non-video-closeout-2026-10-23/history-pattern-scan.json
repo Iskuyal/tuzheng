@@ -1,0 +1,20 @@
+{
+  "kind": "limited-pattern-history-scan",
+  "checkedAt": "2026-10-22T18:25:26.352Z",
+  "sourceSha": "4d37f74c45862006880edf53b0b19fd6f8b8cc30",
+  "commits": 127,
+  "uniqueBlobs": 1480,
+  "textBlobsScanned": 1098,
+  "binaryBlobsSkipped": 372,
+  "largeBlobsSkipped": 10,
+  "maximumBlobBytes": 4194304,
+  "patternGroups": [
+    "private-key",
+    "openai-or-anthropic",
+    "github",
+    "aws"
+  ],
+  "findings": [],
+  "limits": "Only text blobs reachable from sourceSha, at most 4 MiB each, without NUL in first 8000 bytes. No claim of all-secret or private-content absence. Ignored files, binary media and dangling objects are excluded. Raw matches are never exported.",
+  "modelRequests": 0
+}

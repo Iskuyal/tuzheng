@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | 启动与端口 | `dev`、`dev:ports` | 前后端启动前检查固定端口，实际配置见[开发指南](../docs/DEVELOPMENT.md) |
 | 构建与测试 | `build`、`typecheck`、`test`、`test:e2e`、`test:recording` | 行为、API、替身浏览器及录制预算恢复检查，0 次真实模型调用 |
-| 文档与材料 | `docs:check`、`verify:materials` | 本地链接；当前材料存在性、PDF 文件头及已保存视频指纹，不代签人工验收 |
+| 文档与材料 | `docs:check`、`verify:materials` | 本地链接、材料与视频指纹；可收录团队资料及指定 SHA 的匿名访问证据，不联网或代签其他人工条件 |
 | 配置与界面 | `verify:model-config`、`verify:ui` | 临时配置/假密钥、端口矩阵和替身界面；模型请求为 0 |
 | 样例 | `eval:samples`、`verify:sample-renders` | 规则固定评测与 SVG/PNG 同源核对；栅格哈希受字体环境影响 |
 | 冻结与离线三臂 | `eval:preflight`、`eval:holdout` | 候选锁、冻结包或替身机制，不能作为模型成绩 |

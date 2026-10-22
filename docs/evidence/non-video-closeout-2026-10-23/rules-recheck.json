@@ -1,0 +1,26 @@
+{
+  "kind": "official-rules-read",
+  "checkedAt": "2026-10-22T18:23:29.556Z",
+  "userFacingDate": "2026-10-23",
+  "url": "https://www.boxuegu.com/matchTrack/detail/?id=10037",
+  "httpStatus": 200,
+  "method": "system Edge / Playwright rendered body",
+  "provinceSubmissionDeadline": "2026-11-18",
+  "nationalSubmissionDeadline": "2026-12-27",
+  "video": {
+    "minutes": [
+      5,
+      8
+    ],
+    "format": "MP4",
+    "minimumResolution": "1080p",
+    "language": "普通话讲解"
+  },
+  "pdfPageLimit": 30,
+  "repositoryAccess": "public-or-reviewer-permission",
+  "onlineDemo": "optional",
+  "submissionPortal": "paid entrant personal center",
+  "submissionLimit": "no changes after submission without organizer handling",
+  "evidence": "official-page.txt",
+  "modelRequests": 0
+}

@@ -1,0 +1,58 @@
+{
+  "kind": "anonymous-reviewer-access-check",
+  "checkedAt": "2026-10-22T18:29:43.385Z",
+  "sourceSha": "4d37f74c45862006880edf53b0b19fd6f8b8cc30",
+  "method": "fresh Edge context without login; credential-free raw requests",
+  "visibilityChange": "User explicitly selected public on 2026-10-23; gh repo edit confirmed PUBLIC",
+  "checks": [
+    {
+      "url": "https://github.com/Iskuyal/tuzheng",
+      "status": 200,
+      "title": "GitHub - Iskuyal/tuzheng: 图证：AI 原生图表证据审计 Web 应用 · GitHub",
+      "passed": true
+    },
+    {
+      "url": "https://github.com/Iskuyal/tuzheng/blob/main/README.md",
+      "status": 200,
+      "title": "tuzheng/README.md at main · Iskuyal/tuzheng · GitHub",
+      "passed": true
+    },
+    {
+      "url": "https://github.com/Iskuyal/tuzheng/blob/main/docs/submission/web-match-competition-report.pdf",
+      "status": 200,
+      "title": "tuzheng/docs/submission/web-match-competition-report.pdf at main · Iskuyal/tuzheng · GitHub",
+      "passed": true
+    },
+    {
+      "url": "https://github.com/Iskuyal/tuzheng/blob/main/docs/submission/tuzheng-competition-demo-2026-10-18-silent.mp4",
+      "status": 200,
+      "title": "tuzheng/docs/submission/tuzheng-competition-demo-2026-10-18-silent.mp4 at main · Iskuyal/tuzheng · GitHub",
+      "passed": true
+    },
+    {
+      "url": "https://github.com/Iskuyal/tuzheng/blob/main/docs/DEVELOPMENT.md",
+      "status": 200,
+      "title": "tuzheng/docs/DEVELOPMENT.md at main · Iskuyal/tuzheng · GitHub",
+      "passed": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Iskuyal/tuzheng/main/docs/submission/web-match-competition-report.pdf",
+      "status": 200,
+      "contentType": "application/octet-stream",
+      "signature": "%PDF-",
+      "passed": true,
+      "scope": "first response chunk signature only, body cancelled; no remote media file saved"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Iskuyal/tuzheng/main/docs/submission/tuzheng-competition-demo-2026-10-18-silent.mp4",
+      "status": 200,
+      "contentType": "application/octet-stream",
+      "signature": "MP4 ftyp",
+      "passed": true,
+      "scope": "first response chunk signature only, body cancelled; no remote media file saved"
+    }
+  ],
+  "state": "passed",
+  "modelRequests": 0,
+  "limits": "Public access verified for remote main at the recorded SHA. Silent video remains awaiting voiceover. Later commits require delivery and fresh access verification."
+}

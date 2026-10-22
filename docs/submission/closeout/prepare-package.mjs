@@ -78,6 +78,7 @@ if (args[0] === '--check-materials' && (args.length === 1 || args.length === 2 &
     schemaVersion: 2, kind: 'tuzheng-local-handoff', sourceSha, createdAt: new Date().toISOString(),
     candidateHash: hash(JSON.stringify(candidate)), modelRequests: 0,
     acceptance: checked.acceptance,
+    ...(checked.acceptanceEvidence ? { acceptanceEvidence: checked.acceptanceEvidence } : {}),
     note: 'Local handoff only. Current silent formal video and voiceover material included; Mandarin audio and final human acceptance remain pending. GitHub retains Git history.', files,
   });
   await verify(directory);

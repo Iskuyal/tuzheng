@@ -30,6 +30,19 @@
     "docs/submission/closeout/README.md",
     "docs/submission/closeout/accounting-handoff.md",
     "docs/submission/closeout/acceptance-receipt.json",
-    "docs/submission/closeout/verify-windows.mjs"
-  ]
+    "docs/submission/closeout/verify-windows.mjs",
+    "docs/submission/closeout/non-video-handoff.md",
+    "docs/submission/closeout/non-video-record-2026-10-23.json",
+    "docs/competition/official-rules-verification-2026-10-23.md",
+    "docs/reviews/2026-10-23-non-video-closeout.md",
+    "docs/evidence/non-video-closeout-2026-10-23/anonymous-access.json",
+    "docs/evidence/non-video-closeout-2026-10-23/github-recheck.json",
+    "docs/evidence/non-video-closeout-2026-10-23/history-pattern-scan.json",
+    "docs/evidence/non-video-closeout-2026-10-23/rules-recheck.json",
+    "docs/evidence/non-video-closeout-2026-10-23/official-page.txt",
+    "docs/evidence/non-video-closeout-2026-10-23/validation.json",
+    "docs/evidence/non-video-closeout-2026-10-23/pdf-verification.json",
+    "docs/evidence/non-video-closeout-2026-10-23/pdf-contact-sheet.jpg"
+  ],
+  "acceptanceRecord": "docs/submission/closeout/non-video-record-2026-10-23.json"
 }

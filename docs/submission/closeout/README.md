@@ -2,7 +2,7 @@
 
 本目录让接管者拿到明确版本、材料哈希与可执行离线检查。它不代替正式视频、评审账号访问、账户核账或赛事提交。
 
-当前材料选择与人工事项见[提交材料页](../README.md)，历史日期清单按原基线解释。先在工作区执行 `npm run verify:materials`，确认新版无声正式视频、配音稿、时间轴、PDF 与交付说明齐备；此预检不要求工作区干净，不生成版本包，也不调用模型。等价入口为 `node --import tsx docs/submission/closeout/prepare-package.mjs --check-materials`，加 `--json` 可读出完整文件指纹。
+当前材料选择与人工事项见[提交材料页](../README.md)，本轮用户信息与权限证据见[非视频记录](non-video-record-2026-10-23.json)，具体接管步骤见[非视频接管](non-video-handoff.md)。先在工作区执行 `npm run verify:materials`，确认新版无声正式视频、配音稿、时间轴、PDF 与交付说明齐备；此预检不要求工作区干净，不生成版本包，也不调用模型。等价入口为 `node --import tsx docs/submission/closeout/prepare-package.mjs --check-materials`，加 `--json` 可读出完整文件指纹。
 
 ## 固定交付包
 
@@ -27,7 +27,7 @@ node --import tsx docs/submission/closeout/prepare-package.mjs --verify .cache/c
 
 验证会检查材料字节与 Git 提交一致、预检锁有效、工作区干净。交付包只存本机缓存，不会自动上传或提交 ZIP。PDF 正文的旧“代码参考”仍指向原材料基线，不能因生成新包就声称正文覆盖新版本的全部验收。
 
-新包使用 schema 2，正式视频状态记为 `picture-complete-voiceover-pending`。schema 1 旧包沿用原材料集核验，旧文件与哈希保持原样；在它原来的干净源码版本上操作。材料齐备不自动完成配音、负责人签字或赛事提交。
+新包使用 schema 2，正式视频状态记为 `picture-complete-voiceover-pending`。材料清单可指定 `acceptanceRecord`：只接纳团队资料已提供和归档匿名访问已验证两项，记录访问证明对应的远端 SHA；第二环境、负责人签字、未知请求和赛事提交仍待独立回执。schema 1 旧包沿用原材料集核验，旧文件与哈希保持原样；在它原来的干净源码版本上操作。
 
 ## 第二台 Windows
 
@@ -54,4 +54,4 @@ node docs/submission/closeout/verify-windows.mjs --install
 
 中断请求的核对入口见[账户核账交接](accounting-handoff.md)。新版[398.233 秒无声实录及讲稿](../demo-2026-10-18/README.md)已完成，接下来由用户加入普通话人声并最终走查。旧[录制方案](../demo-video-script.md)和短片仅作备选；实际配音以新版讲稿和最终帧时间为准。
 
-真实成员信息、评审权限选择、正式成片走查、负责人抽查与赛事平台回执，由负责人完成后填回执。所有字段初始为 pending/null，模板不是验收结果。
+2026-10-23 用户已提供成员资料并授权公开仓库，匿名访问通过；独立记录收录在当前材料中，不覆盖空白人工模板。个人中心报名/联系信息、正式成片走查、第二台 Windows、负责人抽查、旧请求核账与赛事平台回执继续按各自证据完成。

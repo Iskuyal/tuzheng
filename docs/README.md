@@ -10,6 +10,7 @@
 | 核对完成范围和下一步 | [当前路线图](PHASES.md) |
 | 准备视频配音、PDF 和最终提交 | [当前提交材料及剩余事项](submission/README.md) |
 | 检查交付清单、制作固定版本包 | [固定交付与人工回执](submission/closeout/README.md) |
+| 视频延期时接管其他材料 | [非视频接管](submission/closeout/non-video-handoff.md)、[2026-10-23 规则复核](competition/official-rules-verification-2026-10-23.md) |
 | 阅读模型和界面验证证据 | [证据索引](evidence/README.md)、[维护报告](reviews/) |
 | 查产品范围与术语 | [产品蓝图](../PLAN.md)、[术语表](../CONTEXT.md)、[架构决策](adr/) |
 | 接手具体开发任务 | [任务管理约定](agents/issue-tracker.md)、[仓库任务](../.scratch/) |

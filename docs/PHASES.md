@@ -1,6 +1,6 @@
 # 当前阶段与路线图
 
-更新：2026-10-18。规划、实现、实测和负责人验收分别记录。本文维护当前阶段；[历史路线图](history/PHASES-2026-10-18.md)保留整理前的完整日期记录、原始分母、失败与当时待办。
+更新：2026-10-23。规划、实现、实测和负责人验收分别记录。本文维护当前阶段；[历史路线图](history/PHASES-2026-10-18.md)保留整理前的完整日期记录、原始分母、失败与当时待办。
 
 ## 阶段状态
 
@@ -11,7 +11,7 @@
 | 2. 读者工作台 | 任务 01–07 已实现并本地验收：独立主张、修改/确认/重算、记录和重置 | [规格与任务](../.scratch/stage-2-reader-workbench/spec.md)；当前页面回归见主线交付报告 |
 | 3. 跨图与纵轴 | 任务 01–06 已实现并本地验收：口径门槛、冲突、轴起点及对照 | [规格与任务](../.scratch/stage-3-cross-image-and-axis/spec.md)；图内比较不升级为真实来源证明 |
 | 4. 来源核验 | 任务 01–05 已实现，有注明日期的在线证据；版本修订/替代部分已完成 | [来源规格](../.scratch/stage-4-source-audit/spec.md)；06 的同口径来源分歧仍 `needs-info`，需要适用来源对 |
-| 5. 稳定性与提交 | 异常处理、固定样例、模型配置、CI 和仓库侧材料已实现；新版无声实录/讲稿完成 | [任务 04](../.scratch/stage-5-stability-submission/issues/04-demo-and-technical-materials.md)、[任务 05](../.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md)保持 `ready-for-human`，配音及最终人工条件见[提交清单](submission/README.md) |
+| 5. 稳定性与提交 | 仓库侧实现及无声实录/讲稿完成；2026-10-23 补团队资料、按授权公开仓库并验证匿名访问 | [任务 04](../.scratch/stage-5-stability-submission/issues/04-demo-and-technical-materials.md)、[任务 05](../.scratch/stage-5-stability-submission/issues/05-final-acceptance-handoff.md)保持 `ready-for-human`；用户延后视频，第二环境等条件见[提交清单](submission/README.md) |
 
 来源核验是当前参赛主线；手填数据不自动成为公开来源，缺少适用资料时停止确定性结论。新需求依 [PLAN.md](../PLAN.md)和相应 `.scratch/` 任务推进，每次验收一条用户路径。
 
@@ -22,12 +22,13 @@
 | [2026-10-18 UI 主线交付](reviews/2026-10-18-main-delivery.md) | 445 项单元/API、构建、140 项浏览器通过/1 项不适用跳过、四组配置端口、36 个界面状态；`4b7f90b` 对应 [CI 成功](https://github.com/Iskuyal/tuzheng/actions/runs/39096159322) | 离线/替身检查，不是当次模型或团队验收；后续工作区改动需另验 |
 | [2026-10-18 新版实录](reviews/2026-10-18-competition-video.md) | 当前生产界面、398.233 秒/1080p/30 fps 无声 MP4，9 段讲稿；官方模型 7 次实际 HTTP | 缺口径案例没有触发追问，保留待核对；格式恢复仅到合法图片输入；等待普通话配音及最终走查 |
 | [2026-10-15 固定交付工具](reviews/2026-10-15-closeout-execution.md) | 原版本的源码/材料哈希包、正反完整性核对与本机离线演练 | 旧包当时收录短视频；新版本按当前材料清单生成，旧包不改写 |
+| [2026-10-23 非视频收尾](reviews/2026-10-23-non-video-closeout.md) | 团队资料、PUBLIC 与匿名访问证据、官网动态规则、基线 `4d37f74` 成功 CI 及固定包核验；材料预检可收录已取得的非视频事实 | 访问证据按其中远端 SHA 解释；用户无第二环境及核账结果，负责人签字和平台回执仍待完成 |
 
 本轮结构与文档收尾检查另见[整理报告](reviews/2026-10-18-structure-closeout.md)。实测以报告标注的代码状态为准，不用前一提交的绿灯覆盖未提交工作。
 
 ## 下一步与阻塞
 
-当前工作是材料和交接收尾。普通话配音、真实团队信息、评审账号访问、第二环境回执、负责人抽查和赛事平台回执各有独立完成依据，统一维护在[当前提交材料页](submission/README.md)，完成后再更新阶段五状态。
+当前工作是材料和交接收尾。用户已提供团队姓名、学校及 C组并授权公开，匿名访问已验证；视频按用户安排稍后制作。个人中心报名/联系人核对、第二环境回执、负责人抽查和赛事平台回执各有独立完成依据，统一维护在[当前提交材料页](submission/README.md)，完成后再更新阶段五状态。
 
 旧网关第 13 次请求仍需[账户核账](submission/closeout/accounting-handoff.md)；新版官方录制是独立授权批次，不覆盖该未知项。正式三臂和真实读者研究仍缺相应完整结果；已有离线机制、历史探索或实录不替代它们。
 

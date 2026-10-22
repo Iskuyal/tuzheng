@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "kind": "non-video-closeout-record",
+  "date": "2026-10-23",
+  "recordedBy": "Codex; automatic checks and user-provided information, not owner signoff",
+  "team": {
+    "status": "information-provided",
+    "name": "岭南凤翔团队",
+    "members": ["梁钦健", "梁智量"],
+    "school": "岭南职业技术学院（清远校区）",
+    "group": "C组",
+    "source": "用户于本次对话提供姓名、学校、团队名称和组别",
+    "registrationPortalChecked": false,
+    "individualRoles": "not provided",
+    "personalContact": null,
+    "projectContact": "https://github.com/Iskuyal/tuzheng/issues"
+  },
+  "reviewerAccess": {
+    "status": "public-anonymous-verified",
+    "method": "PUBLIC repository; fresh Edge context without login",
+    "authorization": "用户于本次对话明确选择将 Iskuyal/tuzheng 设为公开",
+    "evidence": "docs/evidence/non-video-closeout-2026-10-23/anonymous-access.json",
+    "scope": "Remote main at the SHA in the evidence; later local commits require delivery and another check"
+  },
+  "secondWindows": {
+    "status": "pending",
+    "userReply": "无",
+    "environmentAvailable": false,
+    "operatorAttestation": null
+  },
+  "unknownHttp13": {
+    "status": "pending",
+    "userReply": "无",
+    "providerDelivery": "unknown",
+    "inputTokens": null,
+    "outputTokens": null,
+    "chargedAmount": null,
+    "accountOwnerDecision": null,
+    "note": "无核账结果；用户未说明费用处理决定，保留未知，不重发请求"
+  },
+  "ownerReview": { "status": "pending", "signedReview": null },
+  "formalVideo": { "status": "deferred-by-user", "finalMandarinVideo": null },
+  "contestSubmission": { "status": "pending", "portalReceipt": null },
+  "modelRequests": 0
+}

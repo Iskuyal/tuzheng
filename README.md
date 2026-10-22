@@ -44,7 +44,7 @@ npm run dev
 
 2026-10-18 实录使用当前生产页面和 DeepSeek 官方真实请求：7 次模型 HTTP，用量完整。它是产品路径演示；模型效果评测、CI、人工验收和真实读者收益分别记录，见[证据索引](docs/evidence/README.md)。
 
-普通话配音、最终人工走查、真实团队信息、评审访问、第二台 Windows 回执及赛事提交仍待完成。2026-10-18 只读核对 [GitHub 仓库](https://github.com/Iskuyal/tuzheng)为 PRIVATE，评审账号实际访问尚无本轮证明。
+2026-10-23 已补入用户提供的团队信息，并经用户授权将 [GitHub 仓库](https://github.com/Iskuyal/tuzheng)设为 PUBLIC；未登录浏览器验证了当时远端主线的仓库、README、PDF、无声视频和运行说明可访问，见[访问证据](docs/evidence/non-video-closeout-2026-10-23/anonymous-access.json)。视频由用户决定稍后制作；第二台 Windows、旧网关核账、负责人签字与平台提交仍按[非视频接管](docs/submission/closeout/non-video-handoff.md)保留实际状态。
 
 ## 开发与检查
 
@@ -66,9 +66,13 @@ npm run test:e2e
 - [当前路线图](docs/PHASES.md)：阶段状态与最近实测；[历史记录](docs/history/PHASES-2026-10-18.md)保留旧轮次。
 - [产品蓝图](PLAN.md)、[领域术语](CONTEXT.md)、[项目结构](docs/STRUCTURE.md)。
 
-| 团队角色 | 工作范围 | 报名信息 |
+团队名称：**岭南凤翔团队**。以下信息由用户于 2026-10-23 提供，未代替赛事个人中心的报名核对；个人分工未另行推定。
+
+| 成员 | 学校 | 报名组别 |
 | --- | --- | --- |
-| 成员 A | 产品、样例、前端、交互和演示 | 姓名、学校/单位、联系方式待本人填写 |
-| 成员 B | 模型适配、来源核验、共享规则和服务端 | 姓名、学校/单位、联系方式待本人填写 |
+| 梁钦健 | 岭南职业技术学院（清远校区） | C组 |
+| 梁智量 | 岭南职业技术学院（清远校区） | C组 |
+
+项目问题与反馈可使用[仓库 Issues](https://github.com/Iskuyal/tuzheng/issues)。个人电话和邮箱未提供，不在材料中推定。
 
 技术标识和仓库名为 `tuzheng`。旧材料文件名中的 `web-match` 为历史标识，保留路径供追溯。

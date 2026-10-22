@@ -1,0 +1,14 @@
+{
+  "kind": "competition-pdf-verification",
+  "file": "docs/submission/web-match-competition-report.pdf",
+  "sha256": "f471da35386dd7e7805db58b486963fe6a5d982421e392995b14d3c13a4d3fbf",
+  "pages": 17,
+  "pageLimit": 30,
+  "allPagesRendered": 17,
+  "coverTeamText": "passed",
+  "visualInspection": "passed",
+  "contactSheet": "docs/evidence/non-video-closeout-2026-10-23/pdf-contact-sheet.jpg",
+  "fullPageRenders": ".cache/non-video-closeout-2026-10-23/pdf",
+  "modelRequests": 0,
+  "visualScope": "All 17 pages rendered and inspected in contact sheet; changed cover, current-delivery page 2 and source index page 17 inspected at full rendered size. No clipping, overlap or missing team glyphs observed."
+}

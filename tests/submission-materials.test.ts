@@ -70,4 +70,37 @@ describe("提交材料交接", () => {
     expect(result.acceptance.ownerReview).toBe("pending");
     expect(result.acceptance.contestSubmission).toBe("pending");
   }));
+
+  it("已提供的团队信息与匿名访问证据进入交付包，同时保留其余人工门槛", async () => withMaterials(async (root, registry) => {
+    const recordPath = "docs/non-video-closeout.json";
+    const proofPath = "docs/anonymous-access.json";
+    Object.assign(registry, { acceptanceRecord: recordPath });
+    registry.files.push(recordPath, proofPath);
+    await writeFile(join(root, recordPath), JSON.stringify({ schemaVersion: 1, kind: "non-video-closeout-record",
+      team: { status: "information-provided" }, reviewerAccess: { status: "public-anonymous-verified", evidence: proofPath },
+      ownerReview: { status: "passed" } }));
+    await writeFile(join(root, proofPath), JSON.stringify({ kind: "anonymous-reviewer-access-check", state: "passed",
+      sourceSha: "1234567890123456789012345678901234567890", checks: [{ status: 200, passed: true }] }));
+    await writeFile(join(root, "docs/submission/materials.json"), JSON.stringify(registry));
+    const result = await verifySubmissionMaterials(root);
+    expect(result.acceptance.teamInformation).toBe("information-provided");
+    expect(result.acceptance.reviewerAccess).toBe("public-anonymous-verified");
+    expect(result.acceptance.ownerReview).toBe("pending");
+    expect(result.acceptance.secondWindows).toBe("pending");
+    expect(result.acceptance.unknownHttp13).toBe("pending");
+    expect(result.acceptance.contestSubmission).toBe("pending");
+  }));
+
+  it("匿名访问有失败记录时不能把评审访问标为已验证", async () => withMaterials(async (root, registry) => {
+    const recordPath = "docs/non-video-closeout.json";
+    const proofPath = "docs/anonymous-access.json";
+    Object.assign(registry, { acceptanceRecord: recordPath });
+    registry.files.push(recordPath, proofPath);
+    await writeFile(join(root, recordPath), JSON.stringify({ schemaVersion: 1, kind: "non-video-closeout-record",
+      team: { status: "information-provided" }, reviewerAccess: { status: "public-anonymous-verified", evidence: proofPath } }));
+    await writeFile(join(root, proofPath), JSON.stringify({ kind: "anonymous-reviewer-access-check", state: "passed",
+      sourceSha: "1234567890123456789012345678901234567890", checks: [{ status: 404, passed: false }] }));
+    await writeFile(join(root, "docs/submission/materials.json"), JSON.stringify(registry));
+    await expect(verifySubmissionMaterials(root)).rejects.toThrow();
+  }));
 });

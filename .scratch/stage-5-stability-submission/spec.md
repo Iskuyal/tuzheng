@@ -1,6 +1,6 @@
 # 阶段五规格：稳定性、固定评测与提交准备
 
-Status: ready-for-human（仓库侧既有任务已完成，04视频/评审访问与05最终交接仍待人工；正文保留原规划）
+Status: ready-for-human（2026-10-23：团队资料和公开访问已补齐，视频由用户延期；05 的第二环境、核账、负责人及平台回执仍待完成。正文保留原规划，当前非视频任务见 issues/09-non-video-closeout.md）
 
 ## Problem Statement
 
