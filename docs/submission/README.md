@@ -14,6 +14,7 @@
 | 版本交付与人工回执 | [固定交付工具](closeout/README.md)、[非视频接管](closeout/non-video-handoff.md)、[空白回执](closeout/acceptance-receipt.json) | 基线固定包已重新验证；新提交的包以其 manifest 为准，模板不是人工验收结果 |
 | 代码访问 | [GitHub 仓库](https://github.com/Iskuyal/tuzheng)、[匿名访问证据](../evidence/non-video-closeout-2026-10-23/anonymous-access.json) | 用户授权后已设为 PUBLIC；当时远端 `4d37f74` 的仓库、README、PDF、无声视频和运行说明匿名访问通过 |
 | 报名、缴费与联系人 | [用户确认记录](closeout/progress-2026-10-23.json) | 用户确认“已报名缴费，联系人已核对”；未读取赛事个人中心，尚无作品提交回执 |
+| 旧网关第 13 次请求 | [处理决定与代查记录](closeout/accounting-handoff.md) | 按用户决定停止核账，不发送查询邮件；历史用量和费用仍未知，已移出当前待办 |
 | 赛事规则 | [2026-10-23 官网核对](../competition/official-rules-verification-2026-10-23.md) | 省赛截止 2026-11-18；提交入口在缴费后的个人中心；账号内具体限制仍待负责人核对 |
 
 视频中的口径不明案例仍为待核对，没有触发追问或执行 resume。格式恢复只演示到输入合法图片。配音使用本次讲稿；旧录制脚本中的预期动作，不能算作本片已演示的内容。
@@ -38,7 +39,6 @@ PDF 重建使用 `node docs/submission/build-report.mjs --competition`；无声�
 | --- | --- | --- |
 | 普通话配音、混音和最终视频走查 | 按用户安排暂缓 | 最终有声 MP4、13 项人工走查及该文件哈希；无声母版不替代此项 |
 | 第二台 Windows | 缺少可连接环境 | 取得另一台机器后，记录环境、安装/运行输出、四页操作和操作者回执；本机演练不代签 |
-| 第 13 次旧网关请求核账 | 已代查，未取得目标日期明细 | 按[查询草稿](closeout/accounting-inquiry-draft.md)向提供方索取 10 月 7 日明细，再与[原账本](closeout/accounting-handoff.md)对照；用量、费用及负责人决定继续未知 |
 | 最终候选、负责人抽查及材料冻结 | 固定包可生成并验证，12 题尚未签字 | 负责人核对绑定候选的逐题材料并填写真实意见；最终视频和其他回执齐备后再冻结材料，历史锁继续保留 |
 | 赛事提交 | 尚未提交作品 | 核对账号内上传形式、大小或链接限制，提交最终材料并留存平台回执 |
 
