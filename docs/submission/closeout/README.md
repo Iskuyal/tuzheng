@@ -1,6 +1,6 @@
 # 固定版本交付与人工验收入口
 
-本目录让接管者拿到明确版本、材料哈希与可执行离线检查。它不代替正式视频、评审账号访问、账户核账或赛事提交。
+这里提供固定版本、材料哈希和离线检查入口，供接管者核对。它不代替正式视频、评审账号访问、账户核账或赛事提交。
 
 当前材料选择与人工事项见[提交材料页](../README.md)，本轮用户信息与权限证据见[非视频记录](non-video-record-2026-10-23.json)，具体接管步骤见[非视频接管](non-video-handoff.md)。先在工作区执行 `npm run verify:materials`，确认新版无声正式视频、配音稿、时间轴、PDF 与交付说明齐备；此预检不要求工作区干净，不生成版本包，也不调用模型。等价入口为 `node --import tsx docs/submission/closeout/prepare-package.mjs --check-materials`，加 `--json` 可读出完整文件指纹。
 
@@ -25,7 +25,7 @@ node --import tsx docs/submission/closeout/prepare-package.mjs --prepare
 node --import tsx docs/submission/closeout/prepare-package.mjs --verify .cache/closeout-packages/<完整提交SHA>
 ```
 
-验证会检查材料字节与 Git 提交一致、预检锁有效、工作区干净。交付包只存本机缓存，不会自动上传或提交 ZIP。PDF 正文的旧“代码参考”仍指向原材料基线，不能因生成新包就声称正文覆盖新版本的全部验收。
+验证会检查材料字节是否与 Git 提交一致、预检锁是否有效，以及工作区是否干净。交付包只保存在本机缓存，不会自动上传或提交 ZIP。PDF 中旧的“代码参考”仍指向原材料基线；生成新包并不表示正文已经覆盖新版本的全部验收。
 
 新包使用 schema 2，正式视频状态记为 `picture-complete-voiceover-pending`。材料清单可指定 `acceptanceRecord`：只接纳团队资料已提供和归档匿名访问已验证两项，记录访问证明对应的远端 SHA；第二环境、负责人签字、未知请求和赛事提交仍待独立回执。schema 1 旧包沿用原材料集核验，旧文件与哈希保持原样；在它原来的干净源码版本上操作。
 
@@ -39,7 +39,7 @@ node docs/submission/closeout/verify-windows.mjs --install
 
 `--install` 使用现有锁文件执行 `npm ci`，需要 npm registry 网络；去掉该参数可复用已安装依赖。脚本只运行文档、行为/API、录屏预算、固定样例、题集冻结、构建、配置矩阵及三视口浏览器测试，不运行模型评测或连接测试。3001/5173/3107/5187 端口被占用时先报错，不终止他人进程，也不复用未知实例。任一命令失败就停止，保留已执行步骤及失败；输出位于 `.cache/windows-acceptance/<时间>/`。
 
-在当前机器演练时加 `--local-rehearsal`。即使全部离线检查通过，报告也不会自动确认“第二台机器”，仍需操作者提供环境回执和人工操作结果。
+在当前机器演练时加 `--local-rehearsal`。离线检查全部通过后，仍须由操作者提供环境回执和人工操作结果，才能确认是在“第二台机器”完成了验证。
 
 脚本结束后由团队在该机器执行 `npm run dev`，逐项记录：
 

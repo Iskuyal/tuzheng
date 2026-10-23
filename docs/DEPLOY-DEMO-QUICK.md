@@ -18,7 +18,7 @@
 
 ## ⚠️ 先读：三条不能碰的红线
 
-0. **所有 nginx 命令必须先 `cd` 进 nginx 目录。** Windows 版 nginx 用**当前工作目录**当 prefix，不是 exe 所在目录。从别处调用 `...\Nginx-1.30.3\nginx.exe -t`，它会去找 `<当前目录>\conf\nginx.conf` 并报 `test failed`——**命令看着执行了，实际作用在空气上**。
+0. **所有 nginx 命令必须先 `cd` 进 nginx 目录。** Windows 版 nginx 将**当前工作目录**作为 prefix，而非 exe 所在目录。从别处调用 `...\Nginx-1.30.3\nginx.exe -t` 时，它会查找 `<当前目录>\conf\nginx.conf` 并报 `test failed`，**无法验证预期的配置文件**。
    ```powershell
    cd C:\Users\Administrator\Desktop\web\Nginx-1.30.3
    .\nginx.exe -t
@@ -29,7 +29,7 @@
 1. **不要 `Start-Process ...\nginx.exe`** —— 你的 nginx 已经在跑 5 个站点，再启一个会端口冲突。
 2. **不要 `nginx -s stop`** —— 那会把 monitor / img / money / kebiao **一起停掉**。图证下线只需要关掉跑 Node 的那个窗口。
 
-配置改动一律用 **`nginx -s reload`**（热加载）。reload 时若配置有语法错误，nginx 会拒绝加载并**继续用旧配置运行**，另外 5 个站点不受影响——这正是我们要的行为。
+配置改动一律用 **`nginx -s reload`**（热加载）。若新配置有语法错误，nginx 会拒绝加载，并**继续用旧配置运行**，另外 5 个站点不受影响。
 
 ---
 
@@ -64,7 +64,7 @@ node dist\server\server\index.js      # ← 这个窗口不要关，最小化即
 node -v
 ```
 
-期望 `v24.x`（README 要求 24.x，或 22.12 以上的 22.x）。打印不出来就先解决 Node——这是整条链路上唯一无法靠读代码提前判断的环节。
+期望输出 `v24.x`（README 要求 24.x，或 22.12 以上的 22.x）。若没有输出，先解决 Node 的运行问题；这是整个部署过程中唯一无法仅靠阅读代码提前判断的环节。
 
 **Java 不需要**（本项目没有 Java 组件）；**Python 运行时也不需要**（只在重建提交材料 PDF 时可选用来读页码）。
 

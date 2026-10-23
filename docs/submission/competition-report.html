@@ -65,10 +65,10 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 
 <section class="sheet">
 <div class="kicker">01 / 项目概述</div><h2>让每个结论都能复查</h2><div class="rule"></div>
-<p class="lead">图证面向只有图表截图的普通读者，把“这张图是否说得通”拆成图内计算与来源核验两类问题，展示每条结论的依据和适用范围。</p>
+<p class="lead">图证面向只有图表截图的普通读者，分别检查图内计算和公开来源，说明每条结论依据什么、适用于什么范围。</p>
 <div class="grid">
 <div class="box"><strong>只有截图</strong><p>模型抄录图上数字，读者确认或更正，程序计算涨幅、核对跨图口径，并提示纵轴呈现风险。</p></div>
-<div class="box"><strong>具有可查来源</strong><p>图文主张进入固定官方资料库调查；检索、推断检查、关键补证和修改建议都保留过程与引用。</p></div>
+<div class="box"><strong>具有可查来源</strong><p>逐条对照固定官方资料库核验图文主张，保留检索、推断检查、关键补证及修改建议的过程与引用。</p></div>
 </div>
 <h3>评审阅读导航</h3>
 <div class="toc">
@@ -92,7 +92,7 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 
 <section class="sheet">
 <div class="kicker">02 / 需求分析</div><h2>先回答读者能核查什么</h2><div class="rule"></div>
-<p>读者通常拿不到原始表格。直接让大模型判断“真假”，容易把看不清的标签、口径缺失或模型记忆包装成确定结论。图证把每一步需要的依据显示出来。</p>
+<p>读者通常拿不到原始表格。直接让大模型判断“真假”，容易在标签看不清、口径缺失或只有模型记忆时给出确定结论。图证因此逐步展示判断所需的依据。</p>
 <table><thead><tr><th>用户需要</th><th>产品行为</th><th>验收观察点</th></tr></thead><tbody>
 <tr><td>核对标题涨幅</td><td>确认图上两值后用程序复算</td><td>80 → 100 得到 25%，与标题 40% 矛盾</td></tr>
 <tr><td>比较两张图</td><td>逐项核对指标、范围、时间、单位</td><td>口径不一致时先提示冲突</td></tr>
@@ -116,7 +116,7 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 
 <section class="sheet">
 <div class="kicker">03 / 系统架构</div><h2>模型负责理解，程序负责校验</h2><div class="rule"></div>
-<p class="lead">将多模态与语言判断放在模型接口之后，将计算、引用、口径和输入版本绑定放在可重复测试的领域层。</p>
+<p class="lead">模型接口负责多模态理解和语言判断；领域层负责计算、引用、口径校验及输入版本绑定，便于重复测试。</p>
 <div class="diagram">
 <div class="layer"><strong>浏览器 · Vue 3</strong>图片与配文输入 / 逐条确认 / 证据卡 / 工具轨迹 / 历史结果 / 模型设置</div>
 <span class="arrow">↓ HTTP / 本机 API ↑</span>
@@ -164,7 +164,7 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 
 <section class="sheet">
 <div class="kicker">04 / AI 技术方案 · 受限工具循环</div><h2>行动可选择，执行有边界</h2><div class="rule"></div>
-<p>模型依据图文决定下一步要检索、比较、追问还是汇总。服务端逐个校验工具与参数，执行后把结果回送模型，再按最终结构组合结论。</p>
+<p>模型根据图文选择检索、比较、追问或汇总。服务端逐个校验工具及参数，执行后将结果返回模型，再按规定的结构整理结论。</p>
 <div class="flow"><div>图文输入</div><div>模型选择工具</div><div>服务端校验执行</div><div>结果回送 / 汇总</div></div>
 <table><thead><tr><th>工具</th><th>职责</th><th>服务端限制</th></tr></thead><tbody>
 <tr><td>search_source_library</td><td>按指标、月份、范围与关键词检索</td><td>只读固定集合；结果标注适用与排除原因</td></tr>
@@ -181,7 +181,7 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 
 <section class="sheet compact">
 <div class="kicker">04 / AI 技术方案 · 检索与引用</div><h2>命中资料，还要匹配口径</h2><div class="rule"></div>
-<p>采用固定领域资料的检索增强工作流：先按指标与别名筛选，再按月份、范围和词项匹配排序；命中结果携带适用性。五条材料的规模适合确定性检索，无需引入向量数据库。</p>
+<p>检索增强工作流只使用固定领域资料：先按指标与别名筛选，再按月份、范围和词项匹配排序，同时说明命中材料是否适用。五条材料适合用确定性规则检索，无需引入向量数据库。</p>
 <table><thead><tr><th>资料</th><th>用途</th><th>不能支持什么</th></tr></thead><tbody>
 <tr><td>2025-12 CPI 发布</td><td>全国同比 0.8%、环比 0.2%</td><td>其他月份、城市范围的主张</td></tr>
 <tr><td>同比 / 环比解释页</td><td>解释比较方式</td><td>任何具体月份的数值结论</td></tr>
@@ -230,7 +230,7 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 <tr><td>待核对 / 推断依据不足</td><td>保留限定或建议删除</td><td>不把未解决项写成已证实</td></tr>
 </tbody></table>
 <figure><img src="assets/source-suggestion.png" alt="逐处修改建议"><figcaption>图 7 · 原句、建议、理由与引用并列，用户显式采用。替身响应界面截图。</figcaption></figure>
-<p>模型只提出建议，程序逐处验证；不合格提议保留拒绝原因并使用程序兜底。采用后写入配文，旧结论转入历史；更换输入或重新调查使旧建议失效。</p>
+<p>模型提出建议后，程序逐处验证；未通过的提议保留拒绝原因，并改用程序的备用结果。用户采用后才写入配文，旧结论转入历史；更换输入或重新调查会使旧建议失效。</p>
 <p class="source">实现：shared/source-audit.ts、server/source-sessions.ts；q18 / q20 在线记录 [E3][E4][E6]，页面测试 [E1]。</p>
 </section>
 
@@ -273,7 +273,7 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 
 <section class="sheet">
 <div class="kicker">07 / 测试与评测设计</div><h2>检索有没有用，要保留对照</h2><div class="rule"></div>
-<p class="lead">同一模型、图片、配文、参数和预算设置两条臂，只改变检索工具可用性及其必要说明，再依据独立期望判定每次运行。</p>
+<p class="lead">两臂使用相同的模型、图片、配文、参数和预算，只改变检索工具是否可用及相应的必要说明，再按独立期望判定每次运行。</p>
 <div class="grid"><div class="box"><strong>有检索臂</strong><p>模型可搜索固定资料库，引用本次命中材料，并接受程序口径校验。</p></div><div class="box"><strong>无检索臂</strong><p>不声明检索工具，拒绝检索请求；命中集合为空，不允许用模型记忆替代来源。</p></div></div>
 <table><thead><tr><th>控制项</th><th>设计</th></tr></thead><tbody>
 <tr><td>模型与协议</td><td>deepseek-flash；Anthropic Messages 兼容端点</td></tr>
@@ -306,7 +306,7 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 <tr><td>虚构引用 / 无适用来源越界</td><td>0 / 0</td><td>0 / 0</td></tr>
 <tr><td>平均耗时</td><td>6,723 ms</td><td>5,472 ms</td></tr>
 </tbody></table>
-<p class="small">两臂汇总差约 62.2 个百分点，分母因条件恢复不同而不相等。零违规是此有限题集的观察，不是对所有输入的安全保证。[E3]</p>
+<p class="small">两臂汇总结果相差约 62.2 个百分点；由于触发恢复的条件不同，分母也不同。零违规只是在这组有限题目中观察到的结果，不能保证所有输入都安全。[E3]</p>
 <h3>检索臂的七次未通过</h3>
 <table><thead><tr><th>题型</th><th>未通过数</th><th>实际问题</th></tr></thead><tbody>
 <tr><td>q06 范围错配</td><td>2</td><td>未产出可匹配的配文主张，含无结论运行</td></tr>
@@ -339,7 +339,7 @@ npm run dev
 <p>网页与 API 端口在 <code>.env</code> 配置（WEB_PORT、PORT）。启动先预检端口，被占用时直接提示；不静默更换端口。模型配置默认使用本机设置页，也支持显式启用完整服务端环境配置；离线样例、计算和固定样例评测不需要密钥。</p>
 <h3>CI 与部署状态</h3>
 <p>GitHub Actions 使用 Windows + Node 24，执行文档链接、类型、构建、行为测试和三视口浏览器测试；失败上传 trace。图片字节同源步骤受 Edge 栅格化差异影响，属于允许失败的信号，不能由 CI 总绿推断其通过。</p>
-<p>已验证的交付形态是本机运行。公网部署尚无上线或可用性证据，反向代理方案也不等于已部署；公共演示是赛事可选项，需另做访问、密钥隔离与额度管理。</p>
+<p>目前只验证了本机运行。公网部署尚无上线或可用性证据，现有反向代理方案也未证明已部署。公共演示是赛事可选项，需另行处理访问、密钥隔离及额度管理。</p>
 <div class="box warn"><strong>2026-10-02 环境密钥兼容（本地工作区补充）</strong><p>显式设置 MODEL_CONFIG_SOURCE=env，服务端一次完整读取 MODEL_PROVIDER、MODEL_BASE_URL、MODEL_NAME、MODEL_API_KEY。缺项或非法地址明确失败，不混用本机文件。环境密钥不写回、不回传、不进日志，设置页显示来源并只读。默认 file 模式保持本机设置。临时配置与假密钥下两种来源、默认／自定义端口及 Vite 代理通过；本轮 0 次真实模型调用，未证明在线调用或服务器部署。</p></div>
 <p class="source">本地命令、基线与 GitHub CI 核对见 [E7]；配置规则 docs/MODEL-CONFIG.md；离线验收 docs/evidence/model-config-env-2026-10-02.md；官网 [R1]。</p>
 </section>
@@ -354,7 +354,7 @@ npm run dev
 <tr><td>官方版本替代贯通</td><td>复查旧数值，同时保持结论与建议依据一致</td><td>明确修订声明、有效来源与版本记录</td></tr>
 </tbody></table>
 <h3>社会价值与应用方向</h3>
-<p>图证将算术、统计口径和来源辨识变成可操作的读图过程，可用于数据素养教学、资讯阅读和编辑自查。商业方向可探索教学案例工具或编辑辅助模块；目前没有付费用户、市场规模或节省时间的实测，不能据此声称商业模式成立。</p>
+<p>图证把算术、统计口径及来源辨识放进读图操作中，可用于数据素养教学、资讯阅读和编辑自查。后续可尝试教学案例工具或编辑辅助模块；目前没有付费用户、市场规模或节省时间的实测，尚不能证明商业模式成立。</p>
 <h3>已经知道的局限</h3>
 <ul>
 <li>资料库只有五条材料、两类指标。除 22 道开发题外，已有 12 道独立冻结预留题及离线三臂机制；正式完整评测和负责人盲审仍未完成。</li>
@@ -364,7 +364,7 @@ npm run dev
 <li>没有真实用户可用性研究、生产部署压测或长期可用性承诺；实时工具流式展示尚未实现。</li>
 </ul>
 <h3>总结与下一步</h3>
-<p>当前已形成截图确认、工具检索、引用核对、必要补证与修改建议的完整路径。继续验证时，应在解决旧未知请求后，对新候选执行已冻结预留题的正式三臂运行和负责人抽查，再按适用场景扩展资料库；用户研究与公共演示以各自实测为完成条件。</p>
+<p>当前已实现截图确认、工具检索、引用核对、必要补证及修改建议的完整流程。下一步应先处理旧请求的未知状态，再用已冻结的预留题对新候选进行正式三臂评测和负责人抽查，之后按适用场景扩展资料库。用户研究和公共演示仍需各自实测通过才能算完成。</p>
 <div class="box dark"><strong>核心成果</strong><p>AI 将图文转换成可调查的主张；程序把来源、口径和计算组合为可复查结论；用户决定是否补充与采用修改。</p></div>
 <p class="source">能力与验证范围交叉核对 PLAN.md、CONTEXT.md、docs/PHASES.md、代码、测试及 [E1]-[E7]。创新点描述产品机制，不声称算法首创。</p>
 </section>

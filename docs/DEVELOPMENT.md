@@ -36,11 +36,11 @@ npm run dev
 
 默认在设置页配置，服务端保存到 `%LOCALAPPDATA%\TuZheng\settings.json`。两种协议分别保留配置，密钥留空可保留原值，页面读取只返回“是否已配置”。
 
-2026-10-18 新版实录实际使用的组合为 `Anthropic Messages`、`https://api.deepseek.com/anthropic/v1`、`deepseek-flash`。这是注明日期的成功记录；预设列表中的其他协议和型号不因出现在列表里就算本次通过。
+2026-10-18 新版实录实际使用的组合为 `Anthropic Messages`、`https://api.deepseek.com/anthropic/v1`、`deepseek-flash`。这次成功只适用于当时记录的配置；预设列表中的其他协议和型号并未因此得到验证。
 
 仅选择样例或上传到输入区不会调用模型。主动读取新图、运行来源核验、提交补证和测试连接会调用配置的上游服务，可能产生费用；连接测试不发送图片，因此通过连接测试不能代替多模态读取验证。
 
-显式使用服务端环境配置时，从根 [.env.example](../.env.example)填写 `MODEL_CONFIG_SOURCE=env` 及整套 `MODEL_PROVIDER`、`MODEL_BASE_URL`、`MODEL_NAME`、`MODEL_API_KEY`，重启后生效。页面显示来源并只读，环境字段与本机文件整份选择。字段校验、密钥边界、文件损坏恢复与 HTTPS 约束统一见[模型配置说明](MODEL-CONFIG.md)。
+使用服务端环境配置时，参照根目录的 [.env.example](../.env.example)填写 `MODEL_CONFIG_SOURCE=env` 及整套 `MODEL_PROVIDER`、`MODEL_BASE_URL`、`MODEL_NAME`、`MODEL_API_KEY`，重启后生效。页面显示配置来源并保持只读；环境配置与本机文件二选一，不混用字段。字段校验、密钥处理、文件损坏恢复及 HTTPS 限制见[模型配置说明](MODEL-CONFIG.md)。
 
 预设的历史调研依据在[模型预设记录](../.scratch/model-presets-research/endpoints-2026-10-01.md)；使用时仍以服务商当期支持情况和自己的实际请求为准。
 
@@ -72,4 +72,4 @@ PDF 检查使用 `node docs/submission/build-report.mjs --competition --check`�
 
 `eval:source-audit` 不带 `--check-only` 时会真实调用模型；`eval:demo:http` 和 `eval:holdout:http` 需显式执行参数及独立批次授权。执行前核对未知请求、候选锁、预算、停止条件和负责人抽查，流程见[受控评测说明](evaluations/candidate-runbook.md)。保存结果的 replay 只重统计历史记录，不证明当前模型修复效果。
 
-[CI](../.github/workflows/ci.yml)执行离线检查、材料指纹、构建、固定样例和三视口测试，不配置模型密钥。测试、CI、实录、负责人验收、真实读者研究和第二台 Windows 是不同证据，查阅时按[证据索引](evidence/README.md)区分。
+[CI](../.github/workflows/ci.yml)执行离线检查、材料指纹、构建、固定样例和三视口测试，不配置模型密钥。测试、CI、实录、负责人验收、真实读者研究及第二台 Windows 的结果各有适用范围，查阅时见[证据索引](evidence/README.md)。

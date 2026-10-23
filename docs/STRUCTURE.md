@@ -1,6 +1,6 @@
 # 项目结构
 
-根目录提供使用、产品和协作入口。运行配置集中在 `config/`；代码按页面、API、共享领域规则分层；文档按当前说明、提交材料与历史证据组织。
+根目录存放使用说明、产品计划和协作约定。运行配置集中在 `config/`；代码分为页面、API 和共享领域规则三层，文档分为当前说明、提交材料和历史证据。
 
 ```text
 web-match/
@@ -35,9 +35,9 @@ API 入口为 `server/index.ts`，应用工厂在 `server/app.ts`。模型协议
 
 ## 脚本、类型与 CI
 
-所有命令从仓库根运行，以 `package.json` 为入口；按用途查[脚本导航](../scripts/README.md)。录制原始工程跟随日期材料保留，固定交付工具在 `docs/submission/closeout/`；当前交付文件由 `docs/submission/materials.json` 统一列出，材料预检和打包共用 `scripts/submission-materials.ts`。
+所有命令都从仓库根目录运行，入口在 `package.json`，具体用途见[脚本导航](../scripts/README.md)。录制原始工程随日期材料保留，固定交付工具位于 `docs/submission/closeout/`。当前交付文件列在 `docs/submission/materials.json`，材料预检和打包共用 `scripts/submission-materials.ts`。
 
-材料清单可通过 `acceptanceRecord` 引用已取得的非视频记录。预检只采用团队资料已提供和归档匿名访问通过两项，访问证据的远端 SHA 随固定包单独记录；原始人工模板和其余验收条件保持独立。
+材料清单可通过 `acceptanceRecord` 引用已有的非视频记录。预检只读取团队资料已提供、归档匿名访问已通过这两项状态，并在固定包中记录访问证据对应的远端 SHA。原始人工模板及其余验收条件另行保留。
 
 根 `tsconfig.json` 引用 `config/tsconfig.web.json`、`config/tsconfig.server.json` 和 `config/tsconfig.e2e.json`。服务端层已覆盖 `server/**/*.ts`、`shared/**/*.ts`、`scripts/**/*.ts`、`tests/**/*.ts`；新增材料工具不需要另建编译工程。前端构建目录为 `dist/client/`，编译后的服务端入口为 `dist/server/server/index.js`。
 

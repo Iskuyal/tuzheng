@@ -42,7 +42,14 @@
     "docs/evidence/non-video-closeout-2026-10-23/official-page.txt",
     "docs/evidence/non-video-closeout-2026-10-23/validation.json",
     "docs/evidence/non-video-closeout-2026-10-23/pdf-verification.json",
-    "docs/evidence/non-video-closeout-2026-10-23/pdf-contact-sheet.jpg"
+    "docs/evidence/non-video-closeout-2026-10-23/pdf-contact-sheet.jpg",
+    "docs/submission/technical-report.html",
+    "docs/submission/web-match-technical-report.pdf",
+    "docs/reviews/2026-10-23-document-language.md",
+    "docs/evidence/document-language-2026-10-23/pdf-check.json",
+    "docs/evidence/document-language-2026-10-23/text-protection.json",
+    "docs/evidence/document-language-2026-10-23/competition-pages.jpg",
+    "docs/evidence/document-language-2026-10-23/development-pages.jpg"
   ],
   "acceptanceRecord": "docs/submission/closeout/non-video-record-2026-10-23.json"
 }

@@ -1,0 +1,135 @@
+{
+  "kind": "editorial-text-protection-check",
+  "date": "2026-10-23",
+  "baselineSha": "78ca62a626724870003f59c8f164e2898071ce40",
+  "scannedProseFiles": 159,
+  "editedProseFiles": 21,
+  "retainedProseFiles": 138,
+  "state": "passed",
+  "protectedContent": [
+    "heading text and order",
+    "existing link targets and URLs",
+    "numeric literal sequence",
+    "Markdown fenced and inline code",
+    "Markdown tables",
+    "HTML tag and attribute sequence",
+    "HTML tables, code, script, style and preformatted blocks"
+  ],
+  "indexAddition": {
+    "path": "docs/submission/README.md",
+    "text": "文字修订和 PDF 检查记录见[本轮修订报告](../reviews/2026-10-23-document-language.md)。",
+    "scope": "This one new report link is excluded from the original-prose comparison."
+  },
+  "semanticReview": "Compared edited prose for attribution, scope, time, negation, certainty and completion state; this is an editorial review, not a machine proof of all meaning.",
+  "sourceOrRuntimeConfigChanges": [],
+  "registry": "Existing values and file entries retained; seven editorial evidence/archive entries appended.",
+  "files": [
+    {
+      "path": "CONTEXT.md",
+      "baselineTextSha256Lf": "c4f999253741d8182723d2cde93eab977eafd0893fb7fdf5d7586f669663c3f8",
+      "editedTextSha256Lf": "d6dbf9bd09bcfa870c69a7b844c38b39cd0349a8128ed812b4bcc28d2a665e20"
+    },
+    {
+      "path": "PLAN.md",
+      "baselineTextSha256Lf": "e95b8ab3bc55205840a1b11c15645d9bc1e4ad34fda674e47b73020a5594d9fb",
+      "editedTextSha256Lf": "f491ac4d8ee64eafcc6d285395fb5d9731933332f2ab9fcb8419e79188788614"
+    },
+    {
+      "path": "README.md",
+      "baselineTextSha256Lf": "f7b6b7a649e8e15ab39f1cb5d9d78df25a0251b2ec9514a2ce17afccb079b3ec",
+      "editedTextSha256Lf": "35b77f570dffab7856b561895d7e44da95dd8710fd86e4052f5f0fe343474744"
+    },
+    {
+      "path": "docs/DEPLOY-DEMO-QUICK.md",
+      "baselineTextSha256Lf": "2a5b0728f8c2b91266dc81e2c3c9985fdbe0020e782ba0177d586d36a173db53",
+      "editedTextSha256Lf": "0f9f76fe0144e6cbab8a6b3bd6a3f33965b574756df024d76528e72a4dd0ed7a"
+    },
+    {
+      "path": "docs/DEPLOY-WINDOWS-SERVER.md",
+      "baselineTextSha256Lf": "ae9b80d0a3c3da715791c1cfc4aeb9eab69829498c5dc3a2b3c8cf767d8ddad0",
+      "editedTextSha256Lf": "a4e63911d7a01d0a97579e9737a9e2b8d863092366d3ed6bad040c5507a86f84"
+    },
+    {
+      "path": "docs/DEVELOPMENT.md",
+      "baselineTextSha256Lf": "508ae9f9464adc7cffd2da882d3f82be0a30d06ffd27e247799f15d9acd54dc2",
+      "editedTextSha256Lf": "bc44b9937b71f42d4451a40883e3fadeae00044f43869eddf54b123c71b217ba"
+    },
+    {
+      "path": "docs/MODEL-CONFIG.md",
+      "baselineTextSha256Lf": "61ca21c99c3f6c1f4c35cc30bd62eea6ab9374aa3a4ffbeae037a1f5cc1eeefe",
+      "editedTextSha256Lf": "117111dfdecdcf8a055d31ef8660e1572a2f33e88cc68ec2a0713dc17e84b449"
+    },
+    {
+      "path": "docs/PHASES.md",
+      "baselineTextSha256Lf": "4241dc9f2563859d0e61872c9565c265b11d5a4127434ca76d2c5b497b0e20b3",
+      "editedTextSha256Lf": "708d21965ce0654694ff783f618badc5d629159eccec4a95c295770c74682bbe"
+    },
+    {
+      "path": "docs/README.md",
+      "baselineTextSha256Lf": "593f58c10c031adce7c0ff2b21f58935148d288b94591ba9aa3421e0dde65aeb",
+      "editedTextSha256Lf": "03e4d930d72d970793952d2184c4a9a08a4eaf9e9ff3eeb3a5965c235d630241"
+    },
+    {
+      "path": "docs/STRUCTURE.md",
+      "baselineTextSha256Lf": "b80a7f424f8a54b48243db6f371f2385bcb3cb032a3f9594eb94bd9507bd7218",
+      "editedTextSha256Lf": "2339d6a4da99d4f8508485872bc8c497563fab42df8fe47abd95d1cbb5ec2ed4"
+    },
+    {
+      "path": "docs/evaluations/holdout-v1-plan.md",
+      "baselineTextSha256Lf": "491a5e4b4987ceb31f9acd2ffda37d7fa9bd538255450b61de560ae97e897753",
+      "editedTextSha256Lf": "2fffc340f8dcdcbaa63060b10274294202668261b50de3badec6ce4792eb5b97"
+    },
+    {
+      "path": "docs/submission/README.md",
+      "baselineTextSha256Lf": "466d981d64c579e37449c5f99847053ab88ef715957f28d738c967d64365ef4c",
+      "editedTextSha256Lf": "999a6e997ce5860c2d36f9041e66964fd2f551b0ac3c93637f3e1a8f2cc4411d"
+    },
+    {
+      "path": "docs/submission/closeout/README.md",
+      "baselineTextSha256Lf": "3f34ce4ad48a4a50aadba9ea46292c5b7c2996185f24a7cb28f01af916a035d6",
+      "editedTextSha256Lf": "343d35e292a05e0e941806a893c3a370cd40d66370143e880d42d7849729f3f7"
+    },
+    {
+      "path": "docs/submission/closeout/accounting-handoff.md",
+      "baselineTextSha256Lf": "ea50bd61f5339d09ad2e8d3ae2f47f1c4bdef2100978a466ae9aacac501347d0",
+      "editedTextSha256Lf": "ca3b00a5e90c5e7f34377adc24f18be39320298c92d44f4af67d58646aa95b59"
+    },
+    {
+      "path": "docs/submission/closeout/non-video-handoff.md",
+      "baselineTextSha256Lf": "f6625fa079a7c0cbf0c6896a988091128b3c3255f894c55e0da84155014be820",
+      "editedTextSha256Lf": "e31a0fc82f59cffabc504010287c1e5051de365ffe4fdeaf48a3ddbebe3c3ce1"
+    },
+    {
+      "path": "docs/submission/competition-report.html",
+      "baselineTextSha256Lf": "2160a00568c348fa2ae478476fb92446cbcdf348f24e7da2a7f090f142514614",
+      "editedTextSha256Lf": "063e9b793109b5ed7ea463d2e42139c06dfcdde5c20db14bc4aaee10df82adb1"
+    },
+    {
+      "path": "docs/submission/demo-2026-10-18/voiceover.md",
+      "baselineTextSha256Lf": "6591fb62693687b37d78d1df511c97a2316a7142fb69cec40a7f3ac6651dd7c2",
+      "editedTextSha256Lf": "215bbbc471761479aec943ebee98802c036571978a1031ce824620b5832d640d"
+    },
+    {
+      "path": "docs/submission/reader-study/README.md",
+      "baselineTextSha256Lf": "c7f01fd922c7449e061a4b6f894fdcbf48aa89531449463d37fafc17dada6c7b",
+      "editedTextSha256Lf": "095d19fe0e2348f76e018c1adb39869ce2bbe8c6de6948344530feda0340e55f"
+    },
+    {
+      "path": "docs/submission/reader-study/facilitator.md",
+      "baselineTextSha256Lf": "f2a68490bc79d5828ab0975b91e6e9f2f0dd6131c19c5087f04f6e62b502c636",
+      "editedTextSha256Lf": "b0ba3c55b035505ae77d195d64127a67a36d5ebd182d15adf15bd65f84f99e95"
+    },
+    {
+      "path": "docs/submission/technical-report.html",
+      "baselineTextSha256Lf": "da7bf4f2a39f15c2f1e30c51a8b94606cb38418a76e769df08f16e92e932ed36",
+      "editedTextSha256Lf": "dc9ab58f9a7c63dad5e86612b22d09a011f3a973ade73a6fb05b34ffeadf83fc"
+    },
+    {
+      "path": "scripts/README.md",
+      "baselineTextSha256Lf": "f40497b95476365d20eccc70946a5446aafd5868d1a0d94e2804b940959021ad",
+      "editedTextSha256Lf": "461dbe7746c652f10f097205072d5bddb25f0038e61127ce914029c1b7b3f68d"
+    }
+  ],
+  "localBackups": ".cache/humanizer-2026-10-23/before",
+  "modelRequests": 0
+}

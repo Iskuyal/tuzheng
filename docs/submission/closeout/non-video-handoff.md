@@ -6,7 +6,7 @@
 
 起点 `4d37f74c45862006880edf53b0b19fd6f8b8cc30` 的远端主线、成功 CI 与权限记录已[归档](../../evidence/non-video-closeout-2026-10-23/github-recheck.json)。本机已有该 SHA 的固定交付包，并于本轮重新验证。新文档提交后按[固定包入口](README.md)另建新包，包的 `manifest.json` 是该包源码 SHA、材料指纹及候选哈希的依据。
 
-本轮离线检查记录见[非视频收尾报告](../../reviews/2026-10-23-non-video-closeout.md)。本机检查、GitHub Windows CI、另一台 Windows 的人工操作和负责人签字分别记录。
+本轮离线检查见[非视频收尾报告](../../reviews/2026-10-23-non-video-closeout.md)。本机检查、GitHub Windows CI、另一台 Windows 的人工操作及负责人签字应分别记录，不能相互替代。
 
 ## 已补齐的信息与剩余输入
 
@@ -21,7 +21,7 @@
 | 负责人抽查 | 真实负责人、日期、固定包候选哈希、h01–h12 逐题意见 | 在[签字模板](../../evaluations/holdout-owner-review-template.json)新副本填写；[核对点](../../../samples/holdout-v1/README.md)及原始题面/期望不改写 |
 | 赛事提交 | 报名/缴费状态、个人中心所报赛项的上传形式、大小或链接限制 | 最终视频补齐后核对完整材料，填 `contestSubmission` 的时间、平台回执及文件哈希；当前不提交缺视频材料 |
 
-本轮已取得的事实另存[非视频记录](non-video-record-2026-10-23.json)，材料工具只采用其中已提供的团队资料和已归档的匿名访问结果。表中的 `team` 等人工字段位于[人工回执模板](acceptance-receipt.json)；签字模板的 `candidateHash` 应使用所选交付包的值，后续提交改变 SHA 时重新生成并确认。
+本轮已有的信息保存在[非视频记录](non-video-record-2026-10-23.json)。材料工具只读取其中已提供的团队资料和已归档的匿名访问结果。表中的 `team` 等人工字段见[人工回执模板](acceptance-receipt.json)；签字模板的 `candidateHash` 须与所选交付包一致，后续提交改变 SHA 时须重新生成并确认。
 
 ## 第二台 Windows 的直接操作
 

@@ -1,0 +1,32 @@
+{
+  "kind": "document-language-pdf-check",
+  "date": "2026-10-23",
+  "scope": "Editorial prose only; historical claims and verification states retained. Development report is an archive, not the current submission report.",
+  "reports": [
+    {
+      "path": "docs/submission/web-match-competition-report.pdf",
+      "sha256": "4519559479de8de465e916b4a2e644dfd2a47fc403cb91b873aab7ec9719a3bd",
+      "pages": 17,
+      "maximumPages": 30,
+      "allPagesRendered": 17,
+      "textBlocksOutsidePage": [],
+      "contactSheet": "docs/evidence/document-language-2026-10-23/competition-pages.jpg",
+      "fullRenders": ".cache/humanizer-2026-10-23/pdf/competition",
+      "visualReview": "passed",
+      "visualReviewScope": "All pages inspected in contact sheet; changed competition page 16 and development pages 1, 19, 20 checked at full rendered size. Latest development page 19 rechecked after wording correction. No clipping or overlap observed; original pagination retained."
+    },
+    {
+      "path": "docs/submission/web-match-technical-report.pdf",
+      "sha256": "518d49a47c470aa525b6b970c5676099fc9e098a8849e2551f2ea922336ad9ee",
+      "pages": 23,
+      "maximumPages": 30,
+      "allPagesRendered": 23,
+      "textBlocksOutsidePage": [],
+      "contactSheet": "docs/evidence/document-language-2026-10-23/development-pages.jpg",
+      "fullRenders": ".cache/humanizer-2026-10-23/pdf/development",
+      "visualReview": "passed",
+      "visualReviewScope": "All pages inspected in contact sheet; changed competition page 16 and development pages 1, 19, 20 checked at full rendered size. Latest development page 19 rechecked after wording correction. No clipping or overlap observed; original pagination retained."
+    }
+  ],
+  "modelRequests": 0
+}
