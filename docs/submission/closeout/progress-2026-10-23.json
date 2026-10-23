@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "kind": "closeout-progress-update-not-owner-signoff",
+  "date": "2026-10-23",
+  "previousRecord": "docs/submission/closeout/non-video-record-2026-10-23.json",
+  "registration": {
+    "status": "confirmed-by-user",
+    "statement": "已报名缴费，联系人已核对",
+    "registrationComplete": true,
+    "paymentComplete": true,
+    "contactDetailsChecked": true,
+    "confirmationMethod": "user-attestation",
+    "agentReadPersonalCenter": false,
+    "platformSubmissionReceipt": null,
+    "personalPhoneOrEmailCollected": false
+  },
+  "unknownHttp13": {
+    "status": "pending-provider-history",
+    "lookupMethod": "Read-only operation of the user's signed-in Google Chrome, at the user's request",
+    "pagesRead": ["https://commandcode.ai/usage", "https://commandcode.ai/billing"],
+    "targetUtc": "2026-10-07T02:35:05.044Z",
+    "targetBeijing": "2026-10-07 10:35:05.044 +08:00",
+    "observation": "Recent request rows were readable. After paging, Older was disabled while the last visible row was still on October 22. No date control for October 7 was found. Subscription invoices do not identify the target request.",
+    "targetPeriodObtained": false,
+    "providerRetentionConfirmed": false,
+    "providerDelivery": "unknown",
+    "inputTokens": null,
+    "outputTokens": null,
+    "chargedAmount": null,
+    "currency": null,
+    "accountOwnerDecision": null,
+    "providerInquiryDraft": "docs/submission/closeout/accounting-inquiry-draft.md",
+    "providerInquirySent": false,
+    "privateAccountEvidencePublished": false
+  },
+  "secondWindows": { "status": "pending", "environmentAvailable": false },
+  "ownerReview": { "status": "pending", "signedReview": null },
+  "formalVideo": { "status": "deferred-by-user", "finalMandarinVideo": null },
+  "contestSubmission": { "status": "pending", "portalReceipt": null },
+  "modelRequests": 0
+}
