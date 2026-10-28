@@ -1,0 +1,110 @@
+{
+  "checkedAt": "2026-10-28",
+  "sources": [
+    {
+      "id": "stats-cpi-2025-12",
+      "url": "https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html",
+      "title": "2025年12月份居民消费价格同比上涨0.8%",
+      "publishedAt": "2026-01-09",
+      "statusCode": 200,
+      "retrievalMethod": "Firecrawl live scrape, maxAge=0",
+      "responseContentSha256": "97fae6b4b2d302206feb79e8d8ef62a37a7d65eee7eaf5b8b4f86190d372fbbd",
+      "measuresCompared": 2,
+      "allComparedMeasuresMatch": true,
+      "observedMeasures": {
+        "month-on-month": "0.2",
+        "year-on-year": "0.8"
+      }
+    },
+    {
+      "id": "stats-term-yoy-mom",
+      "url": "https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912960.html",
+      "title": "同比与环比有何不同",
+      "publishedAt": "2025-07-17",
+      "statusCode": 200,
+      "retrievalMethod": "Firecrawl live scrape, maxAge=0",
+      "responseContentSha256": "7ef01f23b6fc1eb26c21c1606749090c04af75f8a6f0fb937b731c38e3c97879",
+      "measuresCompared": 0,
+      "allComparedMeasuresMatch": true,
+      "observedMeasures": {}
+    },
+    {
+      "id": "stats-cpi-2026-08",
+      "url": "https://www.stats.gov.cn/sj/zxfb/202609/t20260909_1965263.html",
+      "title": "2026年8月份居民消费价格同比上涨0.8%",
+      "publishedAt": "2026-09-09",
+      "statusCode": 200,
+      "retrievalMethod": "Firecrawl live scrape, maxAge=0",
+      "responseContentSha256": "b29090b7fc906ecfefbb97e2494a70402352380e5e335764ffbf1881998a7ea3",
+      "measuresCompared": 2,
+      "allComparedMeasuresMatch": true,
+      "observedMeasures": {
+        "month-on-month": "0.4",
+        "year-on-year": "0.8"
+      }
+    },
+    {
+      "id": "stats-retail-2026-07",
+      "url": "https://www.stats.gov.cn/sj/zxfb/202608/t20260817_1965052.html",
+      "title": "2026年1—7月份社会消费品零售总额增长1.2%",
+      "publishedAt": "2026-08-17",
+      "statusCode": 200,
+      "retrievalMethod": "Firecrawl live scrape, maxAge=0",
+      "responseContentSha256": "c32beeaf2596b61d29306789f9518922df8d5dccca603d171473dfdedfb9b9fe",
+      "measuresCompared": 13,
+      "allComparedMeasuresMatch": true,
+      "observedMeasures": {
+        "2025-07": "0.01",
+        "2025-08": "0.18",
+        "2025-09": "-0.08",
+        "2025-10": "0.15",
+        "2025-11": "-0.10",
+        "2025-12": "-0.01",
+        "2026-01": "0.18",
+        "2026-02": "0.23",
+        "2026-03": "0.10",
+        "2026-04": "-0.27",
+        "2026-05": "-0.15",
+        "2026-06": "0.35",
+        "2026-07": "0.06"
+      }
+    },
+    {
+      "id": "stats-retail-2026-08",
+      "url": "https://www.stats.gov.cn/sj/zxfb/202609/t20260915_1965311.html",
+      "title": "2026年1—8月份社会消费品零售总额增长1.1%",
+      "publishedAt": "2026-09-15",
+      "statusCode": 200,
+      "retrievalMethod": "Firecrawl live scrape, maxAge=0",
+      "responseContentSha256": "181c554b9bd22d37fcae45493f187612d096b012758aee0d37e08786bd3f111b",
+      "measuresCompared": 13,
+      "allComparedMeasuresMatch": true,
+      "observedMeasures": {
+        "2025-08": "0.22",
+        "2025-09": "-0.07",
+        "2025-10": "0.14",
+        "2025-11": "-0.13",
+        "2025-12": "-0.06",
+        "2026-01": "0.21",
+        "2026-02": "0.27",
+        "2026-03": "0.12",
+        "2026-04": "-0.23",
+        "2026-05": "-0.10",
+        "2026-06": "0.40",
+        "2026-07": "0.01",
+        "2026-08": "-0.13"
+      }
+    }
+  ],
+  "sourceCount": 5,
+  "numericMeasuresCompared": 30,
+  "allComparedMeasuresMatch": true,
+  "h09ScopeFinding": {
+    "seasonallyAdjustedMomAugust": -0.13,
+    "julyAbsoluteValueInJulyRelease": 39022,
+    "augustAbsoluteValueInAugustRelease": 39824,
+    "unit": "亿元",
+    "absoluteDifferenceAcrossReleaseSnapshots": 802,
+    "scope": "Absolute values are from different dated releases, not a same-vintage raw monthly growth calculation. They illustrate why seasonally adjusted and unadjusted comparisons must not be silently interchanged."
+  }
+}

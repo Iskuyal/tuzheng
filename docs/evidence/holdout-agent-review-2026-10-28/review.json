@@ -1,0 +1,257 @@
+{
+  "schemaVersion": 1,
+  "kind": "agent-question-review-not-human-owner-signoff",
+  "reviewedAt": "2026-10-28",
+  "reviewer": {
+    "name": "Codex",
+    "role": "AI agent",
+    "delegatedBy": "user",
+    "authorization": "你做吧",
+    "humanOwnerSignature": false,
+    "personnelBlindReview": false
+  },
+  "reviewedSourceSha": "850fb48f8ddf29b966927c679645acb89399a1bb",
+  "candidateHash": "41271321d7b159426bccfb332e0be4e1e5fae9379967e527f417e816a839a202",
+  "holdoutManifestHash": "96ec31e9cdb685b10f5d0307c967be29203c2f08d42e28e65844f4d409bda376",
+  "status": "needs-info",
+  "agentPassedQuestions": 11,
+  "needsInfoQuestions": [
+    "h09"
+  ],
+  "ownerReview": "pending",
+  "modelRequests": 0,
+  "paidEvaluationAuthorized": false,
+  "frozenInputsModified": false,
+  "verification": {
+    "frozenIntegrity": "passed",
+    "docs": { "documents": 164, "localLinks": 796, "missingLinks": 0 },
+    "materials": { "files": 48, "status": "passed" },
+    "formalReviewGate": "rejected-h09-not-approved",
+    "productionCodeChanged": false,
+    "productRegressionRerun": false
+  },
+  "method": [
+    "逐张查看12张原PNG",
+    "重新读取5个国家统计局原页",
+    "对照全部30条资料数值及5个正文发布日期",
+    "只读核对before/after口径、来源边界、改写和版本链",
+    "运行冻结完整性检查；不使用生产判定器生成期望"
+  ],
+  "questions": [
+    {
+      "id": "h01",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "原图和配文均为全国社零3月环比0.12%；9月15日发布附注5同月值0.12%，冻结期望相符。",
+      "image": "samples/holdout-v1/images/h01.png",
+      "imageSha256": "f210d5d2d2d47da64caa7de4c60437726f17ecca43e97621ddc5e73b3e956626",
+      "visuallyObserved": {
+        "period": "2026-03",
+        "scope": "全国",
+        "basis": "month-on-month",
+        "value": 0.12
+      },
+      "caption": "2026年3月全国社会消费品零售总额环比增长0.12%。",
+      "supplement": null
+    },
+    {
+      "id": "h02",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "原图为8月CPI环比0.40%；配文含环比0.4%及同比0.8%两个主张，官方发布分别支持，冻结期望覆盖图内1条和配文2条。",
+      "image": "samples/holdout-v1/images/h02.png",
+      "imageSha256": "26fa259153a2bf7c980f355692c96a410e1c962fbae01b47279c9523a607180a",
+      "visuallyObserved": {
+        "period": "2026-08",
+        "scope": "全国",
+        "basis": "month-on-month",
+        "value": 0.4
+      },
+      "caption": "2026年8月全国CPI环比上涨0.4%；2026年8月全国CPI同比上涨0.8%。",
+      "supplement": null
+    },
+    {
+      "id": "h03",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "图文主张为+0.13%，官方8月环比为-0.13%；方向相反、相差0.26个百分点，冻结矛盾判断及改写目标相符。",
+      "image": "samples/holdout-v1/images/h03.png",
+      "imageSha256": "b28edea02cbdeff51fffe9fab170b4cc99881ea38e0f918abe7211982d7f802a",
+      "visuallyObserved": {
+        "period": "2026-08",
+        "scope": "全国",
+        "basis": "month-on-month",
+        "value": 0.13
+      },
+      "caption": "2026年8月全国社会消费品零售总额环比增长0.13%。",
+      "supplement": null
+    },
+    {
+      "id": "h04",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "图文为-0.32%，官方修订表4月为-0.23%；差0.09个百分点，冻结矛盾判断相符。",
+      "image": "samples/holdout-v1/images/h04.png",
+      "imageSha256": "0a7556ce56307962cd3eefc314c271e428ae553a3926fff5e0b8ba5812229589",
+      "visuallyObserved": {
+        "period": "2026-04",
+        "scope": "全国",
+        "basis": "month-on-month",
+        "value": -0.32
+      },
+      "caption": "2026年4月全国社会消费品零售总额环比为-0.32%。",
+      "supplement": null
+    },
+    {
+      "id": "h05",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "图文均未注明比较方式；补充环比只指向配文，after仅配文获来源支持，图内basis仍空且待核对。",
+      "image": "samples/holdout-v1/images/h05.png",
+      "imageSha256": "ec45a41bf4af555a18c7f5a232e0c14490b756e5531f483da4e17ee0471eedce",
+      "visuallyObserved": {
+        "period": "2026-01",
+        "scope": "全国",
+        "basis": null,
+        "value": 0.21
+      },
+      "caption": "2026年1月全国社会消费品零售总额增长0.21%。",
+      "supplement": {
+        "answer": "环比",
+        "field": "basis",
+        "claimText": "2026年1月全国社会消费品零售总额增长0.21%。"
+      }
+    },
+    {
+      "id": "h06",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "图文均未注明范围；补充全国只指向配文，after仅配文获来源支持，图内scope仍空且待核对。",
+      "image": "samples/holdout-v1/images/h06.png",
+      "imageSha256": "212ef76131aa6253870c7ae2fd39a536326a76d14a0dfe22048d4c46e19635bb",
+      "visuallyObserved": {
+        "period": "2026-02",
+        "scope": null,
+        "basis": "month-on-month",
+        "value": 0.27
+      },
+      "caption": "2026年2月社会消费品零售总额环比增长0.27%。",
+      "supplement": {
+        "answer": "全国",
+        "field": "scope",
+        "claimText": "2026年2月社会消费品零售总额环比增长0.27%。"
+      }
+    },
+    {
+      "id": "h07",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "逐份检查冻结资料，未收录2026年9月社零；no-source只表示本库不能核验，不推断现实数据不存在。",
+      "image": "samples/holdout-v1/images/h07.png",
+      "imageSha256": "b9092195a5f433a09cd24c2857763b0fb2db20e556a60b89c3e16dd63861d46d",
+      "visuallyObserved": {
+        "period": "2026-09",
+        "scope": "全国",
+        "basis": "month-on-month",
+        "value": 0.09
+      },
+      "caption": "2026年9月全国社会消费品零售总额环比增长0.09%。",
+      "supplement": null
+    },
+    {
+      "id": "h08",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "冻结资料只有全国社零，没有南京市适用来源；不能借同值-0.10%替代地区口径，no-source合理。",
+      "image": "samples/holdout-v1/images/h08.png",
+      "imageSha256": "8a4ba907a5ffebdc9b2282de8a2b781edb4484e42ce80682a6c494573f9508c2",
+      "visuallyObserved": {
+        "period": "2026-05",
+        "scope": "南京市",
+        "basis": "month-on-month",
+        "value": -0.1
+      },
+      "caption": "2026年5月南京市社会消费品零售总额环比为-0.10%。",
+      "supplement": null
+    },
+    {
+      "id": "h09",
+      "agentApproved": false,
+      "status": "needs-info",
+      "note": "原图环比-0.13%与来源数值相符；但配文只说比上月减少，未注明季节调整口径。附注5来自季节调整模型，不能无条件外推未调整总额方向，暂不批准。",
+      "image": "samples/holdout-v1/images/h09.png",
+      "imageSha256": "29809cbe0ebf069af2fe6dbabd83193a665886cfc829323d7281762856896e93",
+      "visuallyObserved": {
+        "period": "2026-08",
+        "scope": "全国",
+        "basis": "month-on-month",
+        "value": -0.13
+      },
+      "caption": "2026年8月全国社会消费品零售总额比上月减少。",
+      "supplement": null
+    },
+    {
+      "id": "h10",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "原图为自制5月CPI同比0.90%，配文推断比上月便宜；同比不足以推出环比方向，本库也无5月CPI资料，冻结停止条件合理。",
+      "image": "samples/holdout-v1/images/h10.png",
+      "imageSha256": "087136f398c3ea80229b4fd2a6f82d233e2d58f22a452f724d928221ecabc753",
+      "visuallyObserved": {
+        "period": "2026-05",
+        "scope": "全国",
+        "basis": "year-on-year",
+        "value": 0.9
+      },
+      "caption": "2026年5月全国CPI比上月便宜。",
+      "supplement": null
+    },
+    {
+      "id": "h11",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "8月17日修订表3月0.10%，9月15日修订表3月0.12%；新发布有修订说明，冻结revisionFrom及改写0.12%相符。",
+      "image": "samples/holdout-v1/images/h11.png",
+      "imageSha256": "894811a4ffa7aa0b3141a175363b19095e21757c9ce729ea5b6e17a10295e672",
+      "visuallyObserved": {
+        "period": "2026-03",
+        "scope": "全国",
+        "basis": "month-on-month",
+        "value": 0.1
+      },
+      "caption": "2026年3月全国社会消费品零售总额环比增长0.10%。",
+      "supplement": null
+    },
+    {
+      "id": "h12",
+      "agentApproved": true,
+      "status": "passed-within-frozen-scope",
+      "note": "旧图4月-0.27%对应8月17日表，新配文-0.23%对应9月15日修订表；图内矛盾而配文支持，冻结期望未误改配文。",
+      "image": "samples/holdout-v1/images/h12.png",
+      "imageSha256": "23ca9cf715962d6fbd15d4307dbc49c19cbdcf3891cabdae69f37ce13d492a78",
+      "visuallyObserved": {
+        "period": "2026-04",
+        "scope": "全国",
+        "basis": "month-on-month",
+        "value": -0.27
+      },
+      "caption": "2026年4月全国社会消费品零售总额环比为-0.23%。",
+      "supplement": null
+    }
+  ],
+  "findings": [
+    {
+      "id": "H09-SEASONAL-ADJUSTMENT",
+      "questionId": "h09",
+      "severity": "blocks-unconditional-approval",
+      "sourceIds": [
+        "stats-retail-2026-08",
+        "stats-retail-2026-07",
+        "stats-term-yoy-mom"
+      ],
+      "problem": "季调环比和未调整绝对量的比较口径未在推断配文中区分。负环比本身的算式正确，不足以批准无限定的总额减少说法。",
+      "proposedFutureWording": "按2026-09-15发布的季节调整口径，2026年8月全国社会消费品零售总额环比下降0.13%。",
+      "action": "不改v1；若修订题面、资料字段或期望，另建v2并保留v1、旧判及此次发现。"
+    }
+  ]
+}
