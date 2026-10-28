@@ -1,0 +1,87 @@
+{
+  "kind": "user-provided-competition-video-with-audio",
+  "verifiedAt": "2026-10-28",
+  "path": "docs/submission/tuzheng-competition-demo-2026-10-28.mp4",
+  "sourceFileName": "图证演示视频.mp4",
+  "seconds": 398.233333,
+  "frames": 11947,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 30,
+  "codec": "h264",
+  "pixelFormat": "yuv420p",
+  "audioTracks": 1,
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 44100,
+    "channels": 1,
+    "seconds": 398.23,
+    "meanVolumeDb": -18.9,
+    "maxVolumeDb": -2.0,
+    "nonSilent": true,
+    "mandarinListeningReview": "not-performed",
+    "mixQualityReview": "not-performed"
+  },
+  "bytes": 36498045,
+  "sha256": "5fdae469d8fde160b4111da76de8da8d1e3286062530e1fb67c057eb6ff91e09",
+  "fullDecode": "passed",
+  "decodeCommand": "ffmpeg -v error -xerror -i <video> -f null -",
+  "videoStreamSha256": "59c9b6e4a978ba52506fe03370d2537855c280a96342ffa05e3eee929547aa34",
+  "videoStreamMatchesSilentMaster": true,
+  "silentMaster": {
+    "path": "docs/submission/tuzheng-competition-demo-2026-10-18-silent.mp4",
+    "sha256": "74813f4e688da1d49780c1ba92a818b3fff68001b3ed1702997b6fa9d76169ae",
+    "verification": "docs/evidence/formal-demo-2026-10-18/video-verification.json"
+  },
+  "sampledFrameSeconds": [
+    1,
+    35,
+    70,
+    105,
+    140,
+    175,
+    210,
+    245,
+    280,
+    315,
+    350,
+    395
+  ],
+  "sampledFrameVisualReview": "passed-12-frames",
+  "thirteenItemFinalWalkthrough": "pending",
+  "modelRequests": 0,
+  "scope": "Technical decode, encoded video-stream equality and audio signal measurement only. No transcription, listening signoff or second-machine execution.",
+  "materialToolValidation": {
+    "sourceState": "worktree based on 9046fda885519b08ab196f6a2b72b70d0b7c711d",
+    "npmTest": {
+      "status": "passed",
+      "files": 28,
+      "tests": 456
+    },
+    "typecheck": "passed",
+    "materials": {
+      "status": "passed",
+      "files": 45
+    },
+    "docs": {
+      "status": "passed",
+      "documents": 162,
+      "localLinks": 784,
+      "missingLinks": 0
+    },
+    "competitionPdf": {
+      "pages": 17,
+      "visualReview": "passed",
+      "reviewedPages": [
+        1,
+        2,
+        16,
+        17
+      ],
+      "scope": "changed pages and full contact sheet"
+    },
+    "modelRequests": 0
+  }
+}

@@ -37,14 +37,14 @@ npm run dev
 
 | 材料 | 当前入口 |
 | --- | --- |
-| 新版实机视频 | [6 分 38 秒无声 MP4](docs/submission/tuzheng-competition-demo-2026-10-18-silent.mp4)，1080p / 30 fps；等待用户后期配音 |
+| 新版实机视频 | [6 分 38 秒有声 MP4](docs/submission/tuzheng-competition-demo-2026-10-28.mp4)，1080p / 30 fps；[技术检查](docs/evidence/final-video-2026-10-28/README.md)通过，用户已完整看听并确认可作为提交版 |
 | 配音 | [九段时间轴与完整讲稿](docs/submission/demo-2026-10-18/voiceover.md)、[章节 SRT](docs/submission/demo-2026-10-18/chapters.srt) |
 | 赛事技术文档 | [17 页 PDF](docs/submission/web-match-competition-report.pdf)、[HTML 源](docs/submission/competition-report.html)，已补充当前交付状态 |
 | 当前材料和人工待办 | [提交材料索引](docs/submission/README.md)、[交付包与第二环境回执](docs/submission/closeout/README.md) |
 
 2026-10-18 实录使用当前生产页面和 DeepSeek 官方真实请求：7 次模型 HTTP，用量完整。这段实录展示产品操作；模型效果评测、CI、人工验收和真实读者收益另有各自的记录，见[证据索引](docs/evidence/README.md)。
 
-2026-10-23 已补入用户提供的团队信息，并经用户授权将 [GitHub 仓库](https://github.com/Iskuyal/tuzheng)设为 PUBLIC；未登录浏览器验证了当时远端主线的仓库、README、PDF、无声视频和运行说明可访问，见[访问证据](docs/evidence/non-video-closeout-2026-10-23/anonymous-access.json)。视频由用户决定稍后制作；第二台 Windows、旧网关核账、负责人签字与平台提交仍按[非视频接管](docs/submission/closeout/non-video-handoff.md)保留实际状态。
+2026-10-23 已补入团队资料，并按用户授权将 [GitHub 仓库](https://github.com/Iskuyal/tuzheng)设为 PUBLIC；当时仓库和材料的[匿名访问检查](docs/evidence/non-video-closeout-2026-10-23/anonymous-access.json)通过。2026-10-28 用户提供有声视频，并确认第二台 Windows 已由另一位开发者验收，见[交付更新](docs/submission/closeout/delivery-update-2026-10-28.json)；该机器原始报告未提供。旧请求已按用户决定停止核账，负责人抽查和赛事作品提交仍待完成。
 
 ## 开发与检查
 

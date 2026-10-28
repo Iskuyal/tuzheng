@@ -79,7 +79,8 @@ if (args[0] === '--check-materials' && (args.length === 1 || args.length === 2 &
     candidateHash: hash(JSON.stringify(candidate)), modelRequests: 0,
     acceptance: checked.acceptance,
     ...(checked.acceptanceEvidence ? { acceptanceEvidence: checked.acceptanceEvidence } : {}),
-    note: 'Local handoff only. Current silent formal video and voiceover material included; Mandarin audio and final human acceptance remain pending. GitHub retains Git history.', files,
+    ...(checked.deliveryUpdateEvidence ? { deliveryUpdateEvidence: checked.deliveryUpdateEvidence } : {}),
+    note: 'Local handoff only. Video status and the scope of user confirmations are recorded separately; owner signoff and contest submission require their own evidence. GitHub retains Git history.', files,
   });
   await verify(directory);
   console.log(directory);

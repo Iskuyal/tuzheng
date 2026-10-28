@@ -8,7 +8,7 @@
 | 安装、端口、模型配置与离线验证 | [开发与运行](DEVELOPMENT.md)、[模型配置](MODEL-CONFIG.md) |
 | 找文件、调整目录或工具入口 | [项目结构](STRUCTURE.md)、[脚本导航](../scripts/README.md) |
 | 核对完成范围和下一步 | [当前路线图](PHASES.md) |
-| 准备视频配音、PDF 和最终提交 | [当前提交材料及剩余事项](submission/README.md) |
+| 查看演示视频、PDF 和最终提交 | [当前提交材料及剩余事项](submission/README.md) |
 | 检查交付清单、制作固定版本包 | [固定交付与人工回执](submission/closeout/README.md) |
 | 视频延期时接管其他材料 | [非视频接管](submission/closeout/non-video-handoff.md)、[2026-10-23 规则复核](competition/official-rules-verification-2026-10-23.md) |
 | 阅读模型和界面验证证据 | [证据索引](evidence/README.md)、[维护报告](reviews/) |

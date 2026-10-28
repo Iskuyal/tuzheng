@@ -2,7 +2,7 @@
 
 这里提供固定版本、材料哈希和离线检查入口，供接管者核对。它不代替正式视频、评审账号访问、账户核账或赛事提交。
 
-当前材料选择与人工事项见[提交材料页](../README.md)，本轮用户信息与权限证据见[非视频记录](non-video-record-2026-10-23.json)，具体接管步骤见[非视频接管](non-video-handoff.md)。先在工作区执行 `npm run verify:materials`，确认新版无声正式视频、配音稿、时间轴、PDF 与交付说明齐备；此预检不要求工作区干净，不生成版本包，也不调用模型。等价入口为 `node --import tsx docs/submission/closeout/prepare-package.mjs --check-materials`，加 `--json` 可读出完整文件指纹。
+当前材料选择与人工事项见[提交材料页](../README.md)，团队与权限证明见[非视频记录](non-video-record-2026-10-23.json)，有声视频和第二环境用户确认见[2026-10-28 交付更新](delivery-update-2026-10-28.json)。先执行 `npm run verify:materials`，检查所选视频、讲稿、时间轴、PDF 与交付说明；此预检不要求工作区干净，不生成版本包，也不调用模型。等价入口为 `node --import tsx docs/submission/closeout/prepare-package.mjs --check-materials`，加 `--json` 可读出完整文件指纹。
 
 ## 固定交付包
 
@@ -15,7 +15,7 @@ node --import tsx docs/submission/closeout/prepare-package.mjs --prepare
 产物保存到 `.cache/closeout-packages/<完整提交SHA>/`：
 
 - `source.zip`：由 `git archive` 导出该提交的已跟踪源码、证据与材料；不包含忽略的本机配置、依赖、缓存，也不包含 `.git` 历史。历史继续保留在原 GitHub 仓库。
-- `materials/`：由 [materials.json](../materials.json)列出的当前 README/说明、赛事 PDF/源稿、新版正式无声视频、配音稿、精确时间轴、录制证明及接管材料，逐项从同一提交读取。旧 90 秒片段作为历史素材继续保存在源码归档中。
+- `materials/`：由 [materials.json](../materials.json)选择的说明、赛事 PDF/源稿、当前有声视频、原母版、讲稿、时间轴、检查证明及用户确认，逐项从同一提交读取。旧短片继续保存在源码归档中。
 - `candidate.json`：基于干净 HEAD 的新候选预检锁；不是负责人签字或模型成绩。
 - `manifest.json`：完整源码 SHA、候选哈希、每个产物的大小和 SHA-256，以及尚未完成的人工验收状态。
 
@@ -27,9 +27,11 @@ node --import tsx docs/submission/closeout/prepare-package.mjs --verify .cache/c
 
 验证会检查材料字节是否与 Git 提交一致、预检锁是否有效，以及工作区是否干净。交付包只保存在本机缓存，不会自动上传或提交 ZIP。PDF 中旧的“代码参考”仍指向原材料基线；生成新包并不表示正文已经覆盖新版本的全部验收。
 
-新包使用 schema 2，正式视频状态记为 `picture-complete-voiceover-pending`。材料清单可指定 `acceptanceRecord`：只接纳团队资料已提供和归档匿名访问已验证两项，记录访问证明对应的远端 SHA；第二环境、负责人签字和赛事提交仍待独立回执。未知请求字段保留未核实状态，停止核账的用户决定另见追加进度。schema 1 旧包沿用原材料集核验，旧文件与哈希保持原样；在它原来的干净源码版本上操作。
+新包使用 schema 2。当前视频为 `approved-by-user`：技术检查通过，用户确认已完整检查、可作为提交版，确认记录须与视频哈希匹配；旧无声母版和未获最终确认的有声文件状态继续可核验。`acceptanceRecord` 保存团队及指定 SHA 的公开访问证明；`deliveryUpdateRecord` 同时将第二环境标为 `confirmed-by-user`，注明这是用户转述、原报告未提供。负责人签字和赛事提交仍待完成。未知请求保留未核实状态，停止核账的决定见[此前进度](progress-2026-10-23.json)。旧包保留原文件与哈希，在对应干净源码版本上核验。
 
 ## 第二台 Windows
+
+2026-10-28 用户确认该项已由另一位开发者验收，见[交付更新](delivery-update-2026-10-28.json)。本轮不要求重验；开发者姓名、环境、测试版本与原报告未提供。以下流程保留供追溯或未来版本复验，不表示该开发者逐项执行了这些命令。
 
 使用标准 Node 24 安装（含 npm）与系统 Edge。在第二台机器从有访问权限的 GitHub 仓库克隆，检出交付 manifest 的完整 SHA，确认工作区干净后执行：
 
@@ -52,6 +54,6 @@ node docs/submission/closeout/verify-windows.mjs --install
 
 ## 账户、视频与最终验收
 
-中断请求的核对入口见[账户核账交接](accounting-handoff.md)。新版[398.233 秒无声实录及讲稿](../demo-2026-10-18/README.md)已完成，接下来由用户加入普通话人声并最终走查。旧[录制方案](../demo-video-script.md)和短片仅作备选；实际配音以新版讲稿和最终帧时间为准。
+中断请求按用户决定停止核账，见[账户交接](accounting-handoff.md)。[当前有声视频](../tuzheng-competition-demo-2026-10-28.mp4)已通过[技术检查](../../evidence/final-video-2026-10-28/README.md)，并获用户完整看听后的最终确认。原[无声工程及讲稿](../demo-2026-10-18/README.md)和旧[录制方案](../demo-video-script.md)保留供对照。
 
-2026-10-23 用户已提供成员资料并授权公开仓库，匿名访问通过；随后确认已报名缴费、联系人已核对，并决定停止旧请求核账、不发送查询邮件，见[进度记录](progress-2026-10-23.json)。独立记录收录在当前材料中，不覆盖空白人工模板。正式成片走查、第二台 Windows、负责人抽查与赛事平台回执仍待完成。旧请求费用保持未知，manifest 中的 pending 表示缺少核账证明；本轮已按用户决定停止查询。
+团队、公开访问、报名及停止核账的决定见[此前进度](progress-2026-10-23.json)与归档证明。视频最终接受和第二环境用户确认另作追加，不覆盖历史记录或空白模板。当前待办为负责人抽查、最终材料冻结及赛事作品提交。

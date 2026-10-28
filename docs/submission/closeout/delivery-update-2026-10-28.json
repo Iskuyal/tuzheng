@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "kind": "user-delivery-update",
+  "date": "2026-10-28",
+  "previousRecord": "docs/submission/closeout/progress-2026-10-23.json",
+  "formalVideo": {
+    "status": "approved-by-user",
+    "path": "docs/submission/tuzheng-competition-demo-2026-10-28.mp4",
+    "verification": "docs/evidence/final-video-2026-10-28/video-verification.json",
+    "providedBy": "user in current conversation",
+    "sha256": "5fdae469d8fde160b4111da76de8da8d1e3286062530e1fb67c057eb6ff91e09",
+    "confirmationMethod": "user-attestation",
+    "confirmationStatement": "已完整检查，可作为提交版",
+    "confirmedAt": "2026-10-28",
+    "confirmationQuestion": "这份视频是否已由你或开发者完整看完、听完，并确认普通话讲解、音画对应、混音和最终走查可作为提交版？",
+    "mandarinListeningReview": "confirmed-by-user",
+    "audioMixReview": "confirmed-by-user",
+    "finalWalkthrough": "confirmed-by-user",
+    "thirteenItemIndividualReceiptsProvided": false,
+    "agentListeningSignoff": false
+  },
+  "secondWindows": {
+    "status": "confirmed-by-user",
+    "confirmationMethod": "user-attestation",
+    "statement": "第二台Windows在另一位开发者已验收",
+    "confirmedAt": "2026-10-28",
+    "operator": null,
+    "originalReportProvided": false,
+    "machineEnvironment": null,
+    "testedSourceSha": null,
+    "scriptReportPath": null,
+    "manualWalkthroughEvidence": [],
+    "agentExecutedOnSecondMachine": false,
+    "note": "用户确认另一位开发者已完成验收；未提供开发者姓名、实际验收日期、版本、机器配置或原始报告，均不推定。不要求重复验收。"
+  },
+  "ownerReview": { "status": "pending", "signedTwelveQuestionReview": null },
+  "contestSubmission": { "status": "pending", "portalReceipt": null },
+  "modelRequests": 0
+}

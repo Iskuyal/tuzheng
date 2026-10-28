@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -33,17 +33,20 @@ function fixtureRegistry() {
 }
 
 describe("提交材料交接", () => {
-  it("工作区预检收录新版正式画面、配音稿与精确时间轴，并保留人工待办", () => {
+  it("工作区预检收录用户提供的有声视频，区分用户确认与人工签字", () => {
     const reply = spawnSync(process.execPath, ["--import", "tsx", "docs/submission/closeout/prepare-package.mjs", "--check-materials", "--json"], {
       cwd: resolve(import.meta.dirname, ".."), encoding: "utf8", windowsHide: true,
     });
     expect(reply.status, reply.stderr).toBe(0);
     const result = JSON.parse(reply.stdout);
     const paths = result.files.map((file: { path: string }) => file.path);
-    expect(paths).toContain("docs/submission/tuzheng-competition-demo-2026-10-18-silent.mp4");
+    expect(paths).toContain("docs/submission/tuzheng-competition-demo-2026-10-28.mp4");
     expect(paths).toContain("docs/submission/demo-2026-10-18/voiceover.md");
     expect(paths).toContain("docs/submission/demo-2026-10-18/chapters.srt");
-    expect(result.acceptance.formalVideo).toBe("picture-complete-voiceover-pending");
+    expect(result.acceptance.formalVideo).toBe("approved-by-user");
+    expect(result.formalVideo.audioTracks).toBe(1);
+    expect(result.acceptance.secondWindows).toBe("confirmed-by-user");
+    expect(result.acceptance.ownerReview).toBe("pending");
     expect(result.acceptance.contestSubmission).toBe("pending");
     expect(result.modelRequests).toBe(0);
   });
@@ -56,6 +59,69 @@ describe("提交材料交接", () => {
   it("配音稿遗漏时不生成就绪交付清单", async () => withMaterials(async (root, registry) => {
     await rm(join(root, registry.formalVideo.voiceover));
     await expect(verifySubmissionMaterials(root)).rejects.toThrow("交付材料不存在");
+  }));
+
+  it("有声视频按音轨与字节验收，仍不代签最终听审", async () => withMaterials(async (root, registry) => {
+    registry.formalVideo.status = "audio-provided-final-review-pending";
+    const proofPath = join(root, registry.formalVideo.verification);
+    const proof = JSON.parse(await readFile(proofPath, "utf8"));
+    proof.audioTracks = 1;
+    await writeFile(proofPath, JSON.stringify(proof));
+    await writeFile(join(root, "docs/submission/materials.json"), JSON.stringify(registry));
+    const result = await verifySubmissionMaterials(root);
+    expect(result.acceptance.formalVideo).toBe("audio-provided-final-review-pending");
+    expect(result.acceptance.ownerReview).toBe("pending");
+  }));
+
+  it("无音轨证明不能把无声母版升级为有声视频", async () => withMaterials(async (root, registry) => {
+    registry.formalVideo.status = "audio-provided-final-review-pending";
+    await writeFile(join(root, "docs/submission/materials.json"), JSON.stringify(registry));
+    await expect(verifySubmissionMaterials(root)).rejects.toThrow("音轨记录");
+  }));
+
+  it("最终视频确认必须绑定当前文件哈希，不能沿用另一个文件的确认", async () => withMaterials(async (root, registry) => {
+    registry.formalVideo.status = "approved-by-user";
+    const proofPath = join(root, registry.formalVideo.verification);
+    const proof = JSON.parse(await readFile(proofPath, "utf8"));
+    proof.audioTracks = 1;
+    await writeFile(proofPath, JSON.stringify(proof));
+    await writeFile(join(root, "docs/submission/materials.json"), JSON.stringify(registry));
+    await expect(verifySubmissionMaterials(root)).rejects.toThrow("缺少用户确认记录");
+    const recordPath = "docs/delivery-update.json";
+    Object.assign(registry, { deliveryUpdateRecord: recordPath });
+    registry.files.push(recordPath);
+    const update = { schemaVersion: 1, kind: "user-delivery-update",
+      formalVideo: { status: "approved-by-user", sha256: "0".repeat(64), confirmationMethod: "user-attestation",
+        confirmationStatement: "已完整检查，可作为提交版", confirmedAt: "2026-10-28" },
+      secondWindows: { status: "confirmed-by-user", confirmationMethod: "user-attestation",
+        statement: "另一位开发者已验收", confirmedAt: "2026-10-28", operator: null, originalReportProvided: false } };
+    await writeFile(join(root, recordPath), JSON.stringify(update));
+    await writeFile(join(root, "docs/submission/materials.json"), JSON.stringify(registry));
+    await expect(verifySubmissionMaterials(root)).rejects.toThrow("不属于当前视频字节");
+    update.formalVideo.sha256 = proof.sha256;
+    await writeFile(join(root, recordPath), JSON.stringify(update));
+    const result = await verifySubmissionMaterials(root);
+    expect(result.acceptance.formalVideo).toBe("approved-by-user");
+    expect(result.acceptance.ownerReview).toBe("pending");
+    expect(result.deliveryUpdateEvidence?.formalVideoScope).toContain("exact video hash");
+  }));
+
+  it("用户确认第二环境进入交付清单，缺少报告的范围限制随包保留", async () => withMaterials(async (root, registry) => {
+    const recordPath = "docs/delivery-update.json";
+    Object.assign(registry, { deliveryUpdateRecord: recordPath });
+    registry.files.push(recordPath);
+    await writeFile(join(root, recordPath), JSON.stringify({ schemaVersion: 1, kind: "user-delivery-update",
+      secondWindows: { status: "confirmed-by-user", confirmationMethod: "user-attestation",
+        statement: "另一位开发者已验收", confirmedAt: "2026-10-28", operator: null, originalReportProvided: false },
+      ownerReview: { status: "passed" } }));
+    await writeFile(join(root, "docs/submission/materials.json"), JSON.stringify(registry));
+    const result = await verifySubmissionMaterials(root);
+    expect(result.acceptance.secondWindows).toBe("confirmed-by-user");
+    expect(result.deliveryUpdateEvidence?.secondWindowsScope).toContain("original machine report not provided");
+    expect(result.acceptance.ownerReview).toBe("pending");
+    registry.files = registry.files.filter(path => path !== recordPath);
+    await writeFile(join(root, "docs/submission/materials.json"), JSON.stringify(registry));
+    await expect(verifySubmissionMaterials(root)).rejects.toThrow("清单重复或遗漏");
   }));
 
   it("清单中的仓库外路径在读取前被拒绝", async () => withMaterials(async (root, registry) => {
