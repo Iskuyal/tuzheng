@@ -4,6 +4,7 @@
 
 | 要核对什么 | 入口 | 可证明的范围 |
 | --- | --- | --- |
+| h09修订与预指导准备 | [2026-10-29报告](../reviews/2026-10-29-pre-guidance-prep.md)、[两入口要求](submission-prep-2026-10-29/requirements.json)、[v2代理复核](submission-prep-2026-10-29/h09-v2-review.json) | v1不改、v2明确季调口径；表单与正式赛道已只读核对，介绍PDF及指南已准备，未上传或提交 |
 | 12 题代理复核 | [2026-10-28 报告](../reviews/2026-10-28-holdout-agent-review.md)、[逐题 JSON](holdout-agent-review-2026-10-28/review.json)、[原页对照](holdout-agent-review-2026-10-28/source-verification.json) | 五个原页与 30 条资料数值重新核对；11 项通过，h09 季调口径待澄清。AI 代理复核，不是人员盲审、负责人签字或模型成绩 |
 | 有声视频与第二环境确认 | [2026-10-28 视频检查](final-video-2026-10-28/README.md)、[交付更新](../submission/closeout/delivery-update-2026-10-28.json) | 有声文件通过解码和画面对应检查，用户最终接受绑定文件哈希；第二 Windows 为用户转述另一开发者已验收，原始报告未提供；负责人 12 题抽查另行完成 |
 | 非视频收尾与公开访问 | [本轮报告](../reviews/2026-10-23-non-video-closeout.md)、[匿名访问](non-video-closeout-2026-10-23/anonymous-access.json)、[非视频记录](../submission/closeout/non-video-record-2026-10-23.json) | 用户提供的团队信息、指定远端 SHA 的公开访问、官网读取及离线检查；视频延期，第二环境/账单/负责人/平台仍分别待办 |

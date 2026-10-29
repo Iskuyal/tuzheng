@@ -1,0 +1,84 @@
+{
+  "checkedAt": "2026-10-29",
+  "track": {
+    "url": "https://www.boxuegu.com/matchTrack/detail/?id=10037",
+    "method": "Firecrawl live scrape, maxAge=0",
+    "formalDeadline": "2026-11-18",
+    "codeRepository": [
+      "GitHub/Gitee",
+      "Public or reviewer access",
+      "full Git history",
+      "README and environment instructions"
+    ],
+    "video": {
+      "container": "MP4",
+      "secondsMin": 300,
+      "secondsMax": 480,
+      "minimumResolution": [
+        1920,
+        1080
+      ],
+      "narration": "普通话"
+    },
+    "technicalPdfMaxPages": 30,
+    "publicDemo": "optional",
+    "packageNameRuleFound": false,
+    "totalZipSizeLimitFound": false
+  },
+  "form": {
+    "url": "https://f.kdocs.cn/ksform/w/write/YEH4ZvlT#routePromt",
+    "title": "全国计算机应用能力与数字素养大赛&第九届传智杯AIWEB网页开发挑战赛省赛作品预指导提交地址",
+    "method": "Local Edge via Playwright; read-only DOM inspection",
+    "httpStatus": 200,
+    "textSha256": "6003f00d0607b868a7929cb9b346c1f26cae30c2ee33cdcd88c806278ce139a3",
+    "purpose": "省赛作品预指导",
+    "deadlineAsDisplayed": "2026-10-31 15:00:00",
+    "formalSubmissionStillRequired": true,
+    "oneSubmissionPerTeam": true,
+    "loginRequiredToFill": true,
+    "fields": [
+      "提交成员uid",
+      "团队名称",
+      "学校",
+      "联系人手机号",
+      "完整作品网盘链接",
+      "作品介绍文档",
+      "公开平台演示视频链接"
+    ],
+    "fullWorkLink": {
+      "allowedExamples": [
+        "百度网盘",
+        "夸克网盘",
+        "阿里云盘"
+      ],
+      "recommended": "有效可访问，建议长期有效并附提取码"
+    },
+    "introductionUpload": {
+      "maxFiles": 1,
+      "maxBytesAsDisplayed": "100MB以内",
+      "requiredSections": [
+        "项目详情及使用方式",
+        "项目亮点",
+        "AI测试技术落地使用情况",
+        "关键技术",
+        "项目图片/照片",
+        "此前发表或获奖情况",
+        "基于其他项目时的优化部分"
+      ]
+    },
+    "videoLink": {
+      "publicVideoPlatformRequired": true,
+      "examples": [
+        "B站",
+        "抖音"
+      ],
+      "baiduNetdiskVideoLinkAllowed": false
+    },
+    "packageNameRuleFound": false,
+    "fullWorkZipSizeLimitFound": false,
+    "fieldsFilled": false,
+    "filesUploaded": false,
+    "submitted": false
+  },
+  "interpretation": "预指导与正式省赛分两次提交。100MB为第6项单个介绍文档限制，不是完整作品网盘包限制；ZIP与下列命名为整理建议。"
+}

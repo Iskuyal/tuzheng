@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-29",
+  "confirmationMethod": "user-attestation",
+  "statement": "未发表、未获奖；团队原创，仅使用开源依赖",
+  "priorPublication": false,
+  "priorAward": false,
+  "basedOnExistingProject": false,
+  "usesOpenSourceDependencies": true,
+  "teamName": "岭南凤翔团队",
+  "members": [
+    "梁钦健",
+    "梁智量"
+  ],
+  "school": "岭南职业技术学院（清远校区）",
+  "group": "C组",
+  "uid": null,
+  "phone": null,
+  "note": "不从公开仓库本身推定此前成果发表；未收集UID和手机号，表单中由提交者填写。"
+}

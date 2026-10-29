@@ -41,6 +41,8 @@ API 入口为 `server/index.ts`，应用工厂在 `server/app.ts`。模型协议
 
 有声视频以独立文件和技术检查记录加入清单，旧无声母版保留。`deliveryUpdateRecord` 可携带绑定视频哈希的用户最终接受，以及第二环境的用户确认，交付包注明后者的原报告未提供。音轨存在不自动算作听审，视频和第二环境的确认也不代替负责人 12 题签字或赛事提交回执。
 
+预指导介绍文档由 `node docs/submission/build-report.mjs --introduction` 构建，`--introduction --check`检查已保存PDF。表单要求、操作指南与本机ZIP用途见 `docs/submission/pre-guidance-submit-guide.md`。`samples/holdout-v2/`只修订h09输入口径，v1及原运行入口保留；显式加载v2的完整性检查不等于默认收费入口已迁移。
+
 根 `tsconfig.json` 引用 `config/tsconfig.web.json`、`config/tsconfig.server.json` 和 `config/tsconfig.e2e.json`。服务端层已覆盖 `server/**/*.ts`、`shared/**/*.ts`、`scripts/**/*.ts`、`tests/**/*.ts`；新增材料工具不需要另建编译工程。前端构建目录为 `dist/client/`，编译后的服务端入口为 `dist/server/server/index.js`。
 
 CI 运行文档/材料检查、类型检查、构建、行为/API、录制预算恢复、冻结样例和三视口浏览器验证。材料检查仅核对已保存字节和录制指纹，不发模型请求。离线三臂/候选产物仍由 `holdout-offline-fixture` artifact 收集；失败浏览器 trace 仍在既有路径，无新增上传范围。

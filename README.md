@@ -41,6 +41,7 @@ npm run dev
 | 配音 | [九段时间轴与完整讲稿](docs/submission/demo-2026-10-18/voiceover.md)、[章节 SRT](docs/submission/demo-2026-10-18/chapters.srt) |
 | 赛事技术文档 | [17 页 PDF](docs/submission/web-match-competition-report.pdf)、[HTML 源](docs/submission/competition-report.html)，已补充当前交付状态 |
 | 当前材料和人工待办 | [提交材料索引](docs/submission/README.md)、[交付包与第二环境回执](docs/submission/closeout/README.md) |
+| 预指导提交 | [4页作品介绍](docs/submission/tuzheng-project-introduction.pdf)、[两入口要求与操作指南](docs/submission/pre-guidance-submit-guide.md)；预指导截止10月31日15:00，正式省赛仍需另行提交 |
 
 2026-10-18 实录使用当前生产页面和 DeepSeek 官方真实请求：7 次模型 HTTP，用量完整。这段实录展示产品操作；模型效果评测、CI、人工验收和真实读者收益另有各自的记录，见[证据索引](docs/evidence/README.md)。
 

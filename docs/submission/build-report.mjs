@@ -1,5 +1,5 @@
 // 生成开发技术 PDF 或独立赛事 PDF（A4、页脚页码；开发版目录自动回填）。
-// 用法：node docs/submission/build-report.mjs [--competition] [--check]
+// 用法：node docs/submission/build-report.mjs [--competition | --introduction] [--check]
 //   --check 只校验页数（≤30）并打印，不重写 PDF。
 // 依赖：playwright（仓库已有，使用系统自带 Edge）＋ 可选的 python pypdf（用于回填目录页码）。
 // 赛事要求 PDF 不超过 30 页，本脚本在超页时以退出码 1 结束。
@@ -11,10 +11,12 @@ import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const competition = process.argv.includes("--competition");
-const htmlPath = `docs/submission/${competition ? "competition-report" : "technical-report"}.html`;
-const pdfPath = `docs/submission/web-match-${competition ? "competition" : "technical"}-report.pdf`;
+const introduction = process.argv.includes("--introduction");
+if (competition && introduction) throw new Error("请选择一种报告模式。");
+const htmlPath = `docs/submission/${introduction ? "pre-guidance-introduction" : competition ? "competition-report" : "technical-report"}.html`;
+const pdfPath = `docs/submission/${introduction ? "tuzheng-project-introduction" : competition ? "web-match-competition-report" : "web-match-technical-report"}.pdf`;
 // 临时副本必须落在 assets/ 同级目录：图片用的是相对路径，file:// 页面只能读同目录树。
-const stagedPath = `docs/submission/.${competition ? "competition" : "technical"}-report-build.html`;
+const stagedPath = `docs/submission/.${introduction ? "introduction" : competition ? "competition" : "technical"}-report-build.html`;
 const checkOnly = process.argv.includes("--check");
 const MAX_PAGES = 30;
 
@@ -68,7 +70,7 @@ async function render(html, target) {
     headerTemplate: "<div></div>",
     footerTemplate:
       '<div style="width:100%;font-size:8pt;color:#52646b;padding:0 15mm;display:flex;justify-content:space-between;">' +
-      `<span>图证 · ${competition ? "赛事技术报告" : "技术报告"}（${today}）</span>` +
+      `<span>图证 · ${introduction ? "作品介绍文档" : competition ? "赛事技术报告" : "技术报告"}（${today}）</span>` +
       '<span>第 <span class="pageNumber"></span> / <span class="totalPages"></span> 页</span></div>',
   });
   await page.close();
@@ -138,7 +140,7 @@ try {
   if (pages > MAX_PAGES || pages < 1) throw new Error("PDF 页数不满足赛事要求，保留已有交付文件。");
   // 赛事源一节一页，目录写明页码；内容溢出时不能悄悄发布错误的目录。
   const sectionCount = [...baseHtml.matchAll(/<section class="sheet\b/g)].length;
-  if (competition && pages !== sectionCount) throw new Error(`赛事版 ${sectionCount} 节排成 ${pages} 页，请修复分页与目录，保留已有文件。`);
+  if ((competition || introduction) && pages !== sectionCount) throw new Error(`${sectionCount} 节排成 ${pages} 页，请修复分页，保留已有文件。`);
   writeFileSync(pdfPath, readFileSync(candidate));
   console.log("已写入", pdfPath);
 } finally {

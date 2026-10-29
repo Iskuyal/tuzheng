@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-29",
+  "sourceState": "worktree based on 853bae68abf2a014092617190f7fc5918b0e6287",
+  "tests": {
+    "files": 28,
+    "passed": 456
+  },
+  "typecheck": "passed",
+  "modelConfigMatrix": {
+    "groups": 4,
+    "fileAndEnv": true,
+    "defaultAndCustomPorts": true,
+    "status": "passed"
+  },
+  "introPdf": {
+    "pages": 4,
+    "bytes": 1394210,
+    "allSevenSectionsPresent": true,
+    "under100MB": true,
+    "visualReview": "passed-four-pages"
+  },
+  "technicalPdf": {
+    "pages": 17,
+    "changedInThisRound": false
+  },
+  "v1Integrity": "passed",
+  "v2Integrity": "passed",
+  "modelRequests": 0,
+  "formSubmitted": false
+}

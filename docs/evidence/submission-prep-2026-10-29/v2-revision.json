@@ -1,0 +1,19 @@
+{
+  "kind": "holdout-v2-narrow-revision",
+  "date": "2026-10-29",
+  "parent": "samples/holdout-v1",
+  "parentManifestSha256": "96ec31e9cdb685b10f5d0307c967be29203c2f08d42e28e65844f4d409bda376",
+  "path": "samples/holdout-v2",
+  "manifestSha256": "068f5896e933f018240f6e0a5986a803466f361e909491e17cc75d016d20c715",
+  "changedContentFiles": [
+    "expectations.json",
+    "protocol.json",
+    "questions.json",
+    "README.md"
+  ],
+  "unchangedImages": 12,
+  "unchangedQuestions": 11,
+  "h09Caption": "按季节调整口径，2026年8月全国社会消费品零售总额比上月减少。",
+  "runtimeChanged": false,
+  "modelRequests": 0
+}

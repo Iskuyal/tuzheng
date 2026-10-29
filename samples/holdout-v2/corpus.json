@@ -1,0 +1,337 @@
+[
+  {
+    "id": "stats-cpi-2025-12",
+    "kind": "data-release",
+    "title": "2025年12月份居民消费价格同比上涨0.8%",
+    "publisher": "国家统计局",
+    "url": "https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html",
+    "publishedAt": "2026-01-09",
+    "basis": {
+      "metric": "全国居民消费价格",
+      "period": "2025-12",
+      "scope": "全国"
+    },
+    "aliases": [
+      "CPI",
+      "居民消费价格指数",
+      "居民消费价格",
+      "全国居民消费价格",
+      "消费价格"
+    ],
+    "excerpt": "2025年12月份，全国居民消费价格同比上涨0.8%。12月份，全国居民消费价格环比上涨0.2%。",
+    "measures": [
+      {
+        "basis": "year-on-year",
+        "value": 0.8,
+        "unit": "%",
+        "excerpt": "2025年12月份，全国居民消费价格同比上涨0.8%。"
+      },
+      {
+        "basis": "month-on-month",
+        "value": 0.2,
+        "unit": "%",
+        "excerpt": "12月份，全国居民消费价格环比上涨0.2%。"
+      }
+    ],
+    "fingerprint": "67828d756d2d683d"
+  },
+  {
+    "id": "stats-term-yoy-mom",
+    "kind": "term-explanation",
+    "title": "同比与环比有何不同",
+    "publisher": "国家统计局",
+    "url": "https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912960.html",
+    "publishedAt": "2025-07-17",
+    "basis": {
+      "metric": "统计术语：同比与环比",
+      "period": null,
+      "scope": null
+    },
+    "aliases": [
+      "同比",
+      "环比",
+      "比较方式",
+      "基期",
+      "统计周期"
+    ],
+    "excerpt": "同比是以上年同期为基期相比较，即本期某一时间段（点）与上年某一时间段（点）相比，可以理解为今年第n月与去年第n月的比较。环比是与上一个相邻统计周期相比较，表明统计指标逐期的发展变化，可以理解为第n月与第n－1月的比较。",
+    "measures": [],
+    "note": "页面正文标注的发布时间为 2025-07-17；URL 路径段为 202301，两者不一致，按页面标注记录。",
+    "fingerprint": "3873318af079acdd"
+  },
+  {
+    "id": "stats-cpi-2026-08",
+    "kind": "data-release",
+    "title": "2026年8月份居民消费价格同比上涨0.8%",
+    "publisher": "国家统计局",
+    "url": "https://www.stats.gov.cn/sj/zxfb/202609/t20260909_1965263.html",
+    "publishedAt": "2026-09-09",
+    "basis": {
+      "metric": "全国居民消费价格",
+      "period": "2026-08",
+      "scope": "全国"
+    },
+    "aliases": [
+      "CPI",
+      "居民消费价格指数",
+      "居民消费价格",
+      "全国居民消费价格",
+      "消费价格"
+    ],
+    "excerpt": "2026年8月份，全国居民消费价格同比上涨0.8%。8月份，全国居民消费价格环比上涨0.4%。",
+    "measures": [
+      {
+        "basis": "year-on-year",
+        "value": 0.8,
+        "unit": "%",
+        "excerpt": "2026年8月份，全国居民消费价格同比上涨0.8%。"
+      },
+      {
+        "basis": "month-on-month",
+        "value": 0.4,
+        "unit": "%",
+        "excerpt": "8月份，全国居民消费价格环比上涨0.4%。"
+      }
+    ],
+    "distractor": true,
+    "note": "干扰项：同比数值与 2025 年 12 月发布相同（均为 0.8%），月份不同，环比为 0.4%。",
+    "fingerprint": "1629bc6cd4a8e45f"
+  },
+  {
+    "id": "stats-retail-2026-07",
+    "kind": "data-release",
+    "title": "2026年1—7月份社会消费品零售总额增长1.2%",
+    "publisher": "国家统计局",
+    "url": "https://www.stats.gov.cn/sj/zxfb/202608/t20260817_1965052.html",
+    "publishedAt": "2026-08-17",
+    "basis": {
+      "metric": "社会消费品零售总额",
+      "period": null,
+      "scope": "全国"
+    },
+    "aliases": [
+      "社会消费品零售总额",
+      "消费品零售总额",
+      "消费品零售额",
+      "零售总额",
+      "社零"
+    ],
+    "excerpt": "2026年1—7月份，社会消费品零售总额287744亿元，同比增长1.2%。附注5「环比数据修订」：根据季节调整模型自动修正的结果，对2025年7月份以来的社会消费品零售总额环比增速进行修订。",
+    "measures": [
+      {
+        "basis": "month-on-month",
+        "period": "2025-07",
+        "value": 0.01,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 7月 环比增速（%）0.01。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2025-08",
+        "value": 0.18,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 8月 环比增速（%）0.18。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2025-09",
+        "value": -0.08,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 9月 环比增速（%）-0.08。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2025-10",
+        "value": 0.15,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 10月 环比增速（%）0.15。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2025-11",
+        "value": -0.1,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 11月 环比增速（%）-0.1。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2025-12",
+        "value": -0.01,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 12月 环比增速（%）-0.01。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-01",
+        "value": 0.18,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 1月 环比增速（%）0.18。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-02",
+        "value": 0.23,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 2月 环比增速（%）0.23。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-03",
+        "value": 0.1,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 3月 环比增速（%）0.1。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-04",
+        "value": -0.27,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 4月 环比增速（%）-0.27。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-05",
+        "value": -0.15,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 5月 环比增速（%）-0.15。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-06",
+        "value": 0.35,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 6月 环比增速（%）0.35。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-07",
+        "value": 0.06,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 7月 环比增速（%）0.06。"
+      }
+    ],
+    "note": "多月份发布：basis.period 为空，各月数值在 measures[].period。本发布的「环比数据修订」表 0.35（2026-06）、0.06（2026-07）已被 2026-09-15 发布的《2026年1—8月份社会消费品零售总额增长1.1%》再次修订。",
+    "fingerprint": "017220654d110dda"
+  },
+  {
+    "id": "stats-retail-2026-08",
+    "kind": "data-release",
+    "title": "2026年1—8月份社会消费品零售总额增长1.1%",
+    "publisher": "国家统计局",
+    "url": "https://www.stats.gov.cn/sj/zxfb/202609/t20260915_1965311.html",
+    "publishedAt": "2026-09-15",
+    "basis": {
+      "metric": "社会消费品零售总额",
+      "period": null,
+      "scope": "全国"
+    },
+    "aliases": [
+      "社会消费品零售总额",
+      "消费品零售总额",
+      "消费品零售额",
+      "零售总额",
+      "社零"
+    ],
+    "excerpt": "2026年1—8月份，社会消费品零售总额327569亿元，同比增长1.1%。附注5「环比数据修订」：根据季节调整模型自动修正的结果，对2025年8月份以来的社会消费品零售总额环比增速进行修订。",
+    "measures": [
+      {
+        "basis": "month-on-month",
+        "period": "2025-08",
+        "value": 0.22,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 8月 环比增速（%）0.22。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2025-09",
+        "value": -0.07,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 9月 环比增速（%）-0.07。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2025-10",
+        "value": 0.14,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 10月 环比增速（%）0.14。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2025-11",
+        "value": -0.13,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 11月 环比增速（%）-0.13。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2025-12",
+        "value": -0.06,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2025年 12月 环比增速（%）-0.06。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-01",
+        "value": 0.21,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 1月 环比增速（%）0.21。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-02",
+        "value": 0.27,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 2月 环比增速（%）0.27。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-03",
+        "value": 0.12,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 3月 环比增速（%）0.12。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-04",
+        "value": -0.23,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 4月 环比增速（%）-0.23。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-05",
+        "value": -0.1,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 5月 环比增速（%）-0.1。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-06",
+        "value": 0.4,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 6月 环比增速（%）0.4。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-07",
+        "value": 0.01,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 7月 环比增速（%）0.01。"
+      },
+      {
+        "basis": "month-on-month",
+        "period": "2026-08",
+        "value": -0.13,
+        "unit": "%",
+        "excerpt": "附注5「环比数据修订」的修订结果表：2026年 8月 环比增速（%）-0.13。"
+      }
+    ],
+    "revision": {
+      "statement": "根据季节调整模型自动修正的结果，对2025年8月份以来的社会消费品零售总额环比增速进行修订。",
+      "revisedAt": "2026-09-15",
+      "supersedes": "stats-retail-2026-07"
+    },
+    "note": "修订链在本库内从 2026-08-17 发布开始记录；更早的 2026-07-15 发布（1—6 月）同样带修订声明，本次未收录。修订幅度 0.01—0.10 个百分点，属季节调整模型自动修正，与 CPI 基期轮换不是同一件事。",
+    "fingerprint": "382eec551290742b"
+  }
+]

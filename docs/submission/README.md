@@ -1,12 +1,13 @@
 # 当前提交材料与收尾事项
 
-更新：2026-10-28。用户已提供有声演示视频，并确认第二台 Windows 已由另一位开发者验收，见[本次交付更新](closeout/delivery-update-2026-10-28.json)。当前材料由 [materials.json](materials.json)选择；团队和访问证明见[非视频记录](closeout/non-video-record-2026-10-23.json)，报名确认及停止核账的决定见[此前进度](closeout/progress-2026-10-23.json)。历史记录和空白人工回执模板保留。
+更新：2026-10-29。h09已在新v2包明确季调口径，v1及旧判保留；本轮核对预指导与正式提交入口，具体操作见[预指导提交指南](pre-guidance-submit-guide.md)。有声视频及第二Windows确认见[交付更新](closeout/delivery-update-2026-10-28.json)。当前材料由 [materials.json](materials.json)选择；团队、访问、报名和停止核账的旧记录保留。
 
 ## 当前材料
 
 | 材料 | 入口 | 状态 |
 | --- | --- | --- |
 | 项目说明与运行 | [README](../../README.md)、[开发指南](../DEVELOPMENT.md) | 已写入岭南凤翔团队、梁钦健/梁智量、岭南职业技术学院（清远校区）和 C组；个人电话邮箱未提供 |
+| 预指导作品介绍 | [4页PDF](tuzheng-project-introduction.pdf)、[HTML源](pre-guidance-introduction.html) | 按表单七项编写；用户确认此前未发表/未获奖、团队原创且仅使用开源依赖 |
 | 赛事技术报告 | [PDF](web-match-competition-report.pdf)、[HTML 源](competition-report.html) | 17 页，2026-10-28 更新有声视频和第二环境确认；历史模型结论按原轮次解释 |
 | 当前有声演示视频 | [MP4](tuzheng-competition-demo-2026-10-28.mp4)、[技术检查](../evidence/final-video-2026-10-28/README.md) | 398.233 秒、1920×1080/30 fps、一条 AAC 音轨，完整解码通过；画面与原母版一致，用户已完整看听并确认可作为提交版，确认绑定文件哈希 |
 | 配音资料 | [九段时间轴与完整讲稿](demo-2026-10-18/voiceover.md)、[章节 SRT](demo-2026-10-18/chapters.srt) | 已按最终成片对齐 |
@@ -15,9 +16,9 @@
 | 代码访问 | [GitHub 仓库](https://github.com/Iskuyal/tuzheng)、[匿名访问证据](../evidence/non-video-closeout-2026-10-23/anonymous-access.json) | 用户授权后已设为 PUBLIC；当时远端 `4d37f74` 的仓库、README、PDF、无声视频和运行说明匿名访问通过 |
 | 报名、缴费与联系人 | [用户确认记录](closeout/progress-2026-10-23.json) | 用户确认“已报名缴费，联系人已核对”；未读取赛事个人中心，尚无作品提交回执 |
 | 第二台 Windows | [用户确认记录](closeout/delivery-update-2026-10-28.json) | 用户确认另一位开发者已验收；原机器报告、环境与测试版本未提供，不代填，也不要求重复验收 |
-| 12 题代理复核 | [2026-10-28 报告](../reviews/2026-10-28-holdout-agent-review.md) | 用户委托 Codex 核对原图、期望与五个官方原页；11 项通过，h09 季调口径待澄清，不冒充负责人签字或模型成绩 |
+| 12 题代理复核 | [原v1报告](../reviews/2026-10-28-holdout-agent-review.md)、[v2修订](../../samples/holdout-v2/README.md)、[v2复核记录](../evidence/submission-prep-2026-10-29/h09-v2-review.json) | v1的11通过/1待澄清结果保留；新v2明确h09口径，代理复核12项通过；无人员盲审、人工签字或新模型成绩 |
 | 旧网关第 13 次请求 | [处理决定与代查记录](closeout/accounting-handoff.md) | 按用户决定停止核账，不发送查询邮件；历史用量和费用仍未知，已移出当前待办 |
-| 赛事规则 | [2026-10-23 官网核对](../competition/official-rules-verification-2026-10-23.md) | 省赛截止 2026-11-18；提交入口在缴费后的个人中心；账号内具体限制仍待负责人核对 |
+| 赛事规则与预指导 | [2026-10-29两入口对照](../competition/submission-requirements-2026-10-29.md)、[操作指南](pre-guidance-submit-guide.md) | 预指导截止10月31日15:00；正式省赛截止11月18日，需另行提交。两处材料限制分别解释 |
 
 有声文件的视频流与原母版相同。口径不明案例仍为待核对，没有触发追问或执行 resume；格式恢复只演示到输入合法图片。旧脚本中的预期动作不能算作本片已演示的内容。普通话讲解、音画对应、混音及最终走查的完成依据是用户明确回复“已完整检查，可作为提交版”；技术工具未转录或听审，旧 13 项表没有收到逐项回执，不伪造勾选记录。
 
@@ -39,8 +40,9 @@ PDF 重建使用 `node docs/submission/build-report.mjs --competition`；无声�
 
 | 事项 | 当前状态 | 下一步与完成依据 |
 | --- | --- | --- |
-| 最终候选、负责人抽查及材料冻结 | 代理复核完成；11 项通过，h09 暂不批准，尚无人工签字 | 按[复核报告](../reviews/2026-10-28-holdout-agent-review.md)澄清 h09 的季调口径；涉及冻结内容修订时另建 v2，再复核实际候选并冻结材料，历史锁保留 |
-| 赛事提交 | 尚未提交作品 | 核对账号内上传形式、大小或链接限制，提交最终材料并留存平台回执 |
+| 预指导上传与填表 | 指南、介绍PDF和本机打包材料已准备，尚未提交 | 指定一人填写实际UID及手机号；取得网盘完整包链接与公开视频链接，登录WPS后一次提交，保存回执 |
+| 负责人确认与最终冻结 | h09修订及v2代理复核完成，尚无人工签字 | 实际候选、负责人认可和最终文件分别记录；不把AI代理审阅称作人工盲审，不把未授权付费评测当作填表前置 |
+| 正式省赛提交 | 尚未提交作品 | 预指导后仍须在赛事个人中心正式入口另行提交并留存回执；正式入口内限制届时再核对 |
 
 正式三臂盲审和真实读者收益声明分别需要完整评测及[真实读者记录](reader-study/README.md)。没有这些证据时，按已有能力与演示范围准备作品；实验的失败、阻塞与未知用量继续保留。
 

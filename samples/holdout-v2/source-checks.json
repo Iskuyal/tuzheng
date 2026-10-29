@@ -1,0 +1,75 @@
+{
+  "checkedAt": "2026-10-02",
+  "method": "独立打开国家统计局原页核对正文和附注5；本文件是核对笔记，measures.excerpt中的表格行是标准化转录，不冒充原文句子。",
+  "pages": [
+    {
+      "id": "stats-cpi-2025-12",
+      "url": "https://www.stats.gov.cn/sj/zxfb/202601/t20260109_1962273.html",
+      "publishedAt": "2026-01-09"
+    },
+    {
+      "id": "stats-term-yoy-mom",
+      "url": "https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912960.html",
+      "publishedAt": "2025-07-17"
+    },
+    {
+      "id": "stats-cpi-2026-08",
+      "url": "https://www.stats.gov.cn/sj/zxfb/202609/t20260909_1965263.html",
+      "publishedAt": "2026-09-09"
+    },
+    {
+      "id": "stats-retail-2026-07",
+      "url": "https://www.stats.gov.cn/sj/zxfb/202608/t20260817_1965052.html",
+      "publishedAt": "2026-08-17"
+    },
+    {
+      "id": "stats-retail-2026-08",
+      "url": "https://www.stats.gov.cn/sj/zxfb/202609/t20260915_1965311.html",
+      "publishedAt": "2026-09-15"
+    }
+  ],
+  "retailOld": {
+    "publisher": "国家统计局",
+    "publishedAt": "2026-08-17",
+    "rows": {
+      "2026-01": 0.18,
+      "2026-02": 0.23,
+      "2026-03": 0.1,
+      "2026-04": -0.27,
+      "2026-05": -0.15,
+      "2026-06": 0.35,
+      "2026-07": 0.06
+    }
+  },
+  "retailNew": {
+    "publisher": "国家统计局",
+    "publishedAt": "2026-09-15",
+    "statement": "根据季节调整模型自动修正的结果，对2025年8月份以来的社会消费品零售总额环比增速进行修订。",
+    "rows": {
+      "2026-01": 0.21,
+      "2026-02": 0.27,
+      "2026-03": 0.12,
+      "2026-04": -0.23,
+      "2026-05": -0.1,
+      "2026-06": 0.4,
+      "2026-07": 0.01,
+      "2026-08": -0.13
+    }
+  },
+  "cpiAugust": {
+    "period": "2026-08",
+    "scope": "全国",
+    "yoy": 0.8,
+    "mom": 0.4
+  },
+  "cpiDecember": {
+    "period": "2025-12",
+    "scope": "全国",
+    "yoy": 0.8,
+    "mom": 0.2
+  },
+  "terms": {
+    "yoy": "上年同期",
+    "mom": "相邻统计周期"
+  }
+}
