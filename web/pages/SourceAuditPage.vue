@@ -5,6 +5,8 @@ import SiteHeader from "../components/SiteHeader.vue";
 import OriginalImageViewer from "../components/OriginalImageViewer.vue";
 import { takeLandingUpload, takeLandingSourceSampleRequest } from "../upload-transfer.js";
 import SourceClaimCard from "../components/SourceClaimCard.vue";
+import SourceShareDialog from "../components/SourceShareDialog.vue";
+import { buildShareSummary } from "../source-share.js";
 import {
   CAPTION_CHANGE_LABELS,
   CLAIM_STATUS_LABELS,
@@ -42,6 +44,7 @@ interface HistoryEntry {
 
 const route = useRoute();
 const imageViewerOpen = ref(false);
+const shareOpen = ref(false);
 const clarificationDeferred = ref(false);
 const settingsLocation = computed(() => ({ name: "settings", query: { returnTo: route.fullPath.split("#")[0] } }));
 
@@ -249,6 +252,18 @@ const matchedSuggestionNotes = computed(() => (result.value?.captionSuggestion?.
 const citedSourceIds = computed(() => new Set(
   (result.value?.acceptedCitations ?? []).map((citation) => citation.sourceId),
 ));
+
+/** 分享的是当前这一次结果：结果一被顶替或作废就整段重算，不留旧摘要。 */
+const shareSummary = computed(() => {
+  const investigation = result.value;
+  if (!investigation) return "";
+  return buildShareSummary({ result: investigation, caption: caption.value });
+});
+
+function openShare(): void {
+  if (!result.value) return;
+  shareOpen.value = true;
+}
 
 function toolLabel(tool: string): string {
   return TOOL_LABELS[tool] ?? tool;
@@ -590,6 +605,10 @@ function adoptSuggestion(): void {
         <h2 id="source-result-title" tabindex="-1">本次核验结果</h2>
         <p class="room-result-boundary">仅核对当前主张与适用的收录来源；未确认整张图、原始数据或制作过程的真实性。</p>
         <nav class="room-result-directory" aria-label="本页结果目录"><span>接下来</span><a href="#source-claims">查看依据 ↓</a><a href="#source-citations">引用来源 ↓</a><a v-if="result.captionSuggestion" href="#source-suggestions">查看修改建议 ↓</a><a v-if="result.clarification && !clarificationDeferred" href="#source-clarification">补充回答 ↓</a><a href="#source-process" @click.prevent="navigateSection('source-process')">核验过程 ↓</a></nav>
+        <div class="room-share-entry">
+          <button type="button" class="room-button secondary" data-testid="open-share" @click="openShare">分享这次核验</button>
+          <span>生成纯文本摘要，含结论、引用来源与使用边界；不带图片。</span>
+        </div>
         <div class="source-overview" data-testid="source-overview">
           <p class="room-primary-finding">{{ primaryFinding }}</p>
           <p v-for="line in resultOverview" :key="line">{{ line }}</p>
@@ -1002,6 +1021,7 @@ function adoptSuggestion(): void {
       </section>
       <footer class="room-footer"><span>图证 · 每一项判断，都留下依据。</span><RouterLink to="/audit">仅核对截图：图内检查 ↗</RouterLink></footer>
       <OriginalImageViewer v-model:open="imageViewerOpen" :src="previewUrl" :name="selectedFileName" />
+      <SourceShareDialog v-model:open="shareOpen" :summary="shareSummary" />
     </main>
   </div>
 </template>

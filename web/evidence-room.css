@@ -190,6 +190,21 @@
 .room-viewer-controls { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:12px; margin-top:20px; }.room-viewer-controls output { min-width:62px; text-align:center; font:18px Georgia,serif; }
 .room-viewer-controls .room-button { padding:9px 16px; min-width:46px; }
 .room-viewer-hint { margin:15px 0 0; font-size:13px; color:#596174; }
+.room-source .source-result > .room-share-entry { order:5; }
+.room-share-entry { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:0 0 26px; }
+.room-share-entry span { color:var(--muted); font-size:13px; line-height:1.7; }
+.room-share-dialog { width:min(720px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); padding:24px; border:1px solid var(--line-strong); border-radius:6px; background:var(--canvas); color:var(--ink); }
+.room-share-dialog::backdrop { background:rgb(27 33 51 / 65%); }
+.room-share-header { display:flex; justify-content:space-between; align-items:start; gap:15px; margin-bottom:18px; }
+.room-share-header > div { min-width:0; }
+.room-share-header .room-button { flex:none; white-space:nowrap; }
+.room-share-header h2 { margin:0 0 7px; font:500 26px/1.5 "Noto Serif SC",SimSun,serif; }
+.room-share-header p { margin:0; color:#596174; font-size:13px; line-height:1.75; overflow-wrap:anywhere; }
+.room-share-text { width:100%; min-height:44dvh; max-height:52dvh; resize:vertical; padding:14px; border:1px solid var(--line-strong); border-radius:3px; background:var(--paper); color:var(--ink); font:13px/1.85 ui-monospace,SFMono-Regular,Consolas,"Microsoft YaHei",monospace; overflow-wrap:anywhere; white-space:pre-wrap; }
+.room-share-actions { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-top:16px; }
+.room-share-actions .read-image-button { padding:11px 22px; min-height:44px; }
+.room-share-status { margin:0; min-height:22px; color:var(--ink); font-size:13px; }
+.room-share-hint { margin:14px 0 0; font-size:13px; color:#596174; line-height:1.75; }
 [id^=source-],#how-it-works { scroll-margin-top:24px; }
 @media (max-width:1100px) {
   .evidence-room .room-container,.page-shell.room-source { width:calc(100% - 72px); }
@@ -238,4 +253,13 @@
 @media (max-width:760px) {
   .room-viewer-stage { height:auto; min-height:180px; max-height:57dvh; }
   .room-viewer-controls { gap:12px; flex-direction:column; }
+  .room-share-entry { gap:9px; }
+  .room-share-entry span { font-size:14px; }
+  .room-share-entry .room-button { width:100%; }
+  .room-share-dialog { width:calc(100vw - 20px); padding:17px; max-height:calc(100dvh - 20px); }
+  .room-share-header h2 { font-size:22px; }
+  .room-share-header .room-button { padding:9px 13px; }
+  .room-share-text { min-height:40dvh; max-height:50dvh; font-size:12px; }
+  .room-share-actions { gap:12px; flex-direction:column; align-items:stretch; }
+  .room-share-actions .read-image-button { width:100%; }
 }
