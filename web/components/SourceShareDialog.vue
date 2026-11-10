@@ -9,12 +9,11 @@ import {
 const props = defineProps<{ open: boolean; summary: string }>();
 const emit = defineEmits<{ "update:open": [value: boolean] }>();
 
-type ShareFormat = "text" | "image" | "both";
+type ShareFormat = "text" | "image";
 
 const FORMATS: { value: ShareFormat; label: string; hint: string }[] = [
   { value: "text", label: "文字", hint: "纯文本摘要，可粘贴进聊天或文档。" },
   { value: "image", label: "图片", hint: "一张竖版长图，适合发在图片为主的场合。" },
-  { value: "both", label: "文字+图片", hint: "两种都给：文字可核对，图片可转发。" },
 ];
 
 const dialog = ref<HTMLDialogElement | null>(null);
@@ -36,8 +35,8 @@ const COPY_FAILED = "复制未成功，已选中摘要文本，请按 Ctrl+C 重
 const IMAGE_COPIED = "已复制图片到剪贴板。";
 const IMAGE_COPY_FAILED = "图片复制未成功，请用「下载图片」保存。";
 
-const showText = computed(() => format.value !== "image");
-const showImage = computed(() => format.value !== "text");
+const showText = computed(() => format.value === "text");
+const showImage = computed(() => format.value === "image");
 const formatHint = computed(() => FORMATS.find((entry) => entry.value === format.value)?.hint ?? "");
 
 function close(): void {
@@ -122,7 +121,6 @@ onBeforeUnmount(close);
   <dialog
     ref="dialog"
     class="room-share-dialog"
-    :class="{ 'has-image': showText && showImage }"
     aria-labelledby="source-share-title"
     aria-describedby="source-share-note"
     @close="closed"

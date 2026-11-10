@@ -385,8 +385,8 @@ async function stubImageClipboard(page: Page, record: boolean): Promise<void> {
   }, record);
 }
 
-test("分享格式切到「图片」：给出长图预览与下载，文字区收起", async ({ page }) => {
-  await stubClipboard(page, true);
+test("分享格式切到「图片」：给出长图预览，可下载也可复制，文字区收起", async ({ page }) => {
+  await stubImageClipboard(page, true);
   await page.route("**/api/source-audit/investigate", (route) =>
     route.fulfill({ json: { investigation: FULL_INVESTIGATION } }),
   );
@@ -400,6 +400,9 @@ test("分享格式切到「图片」：给出长图预览与下载，文字区�
   await expect(page.getByTestId("share-format-text")).toBeChecked();
   await expect(page.getByTestId("share-summary-text")).toBeVisible();
   await expect(page.getByTestId("share-image-preview")).toHaveCount(0);
+  // 只有两档：没有单独的「文字+图片」选项。
+  await expect(page.locator('input[name="share-format"]')).toHaveCount(2);
+  await expect(page.getByTestId("share-format-both")).toHaveCount(0);
 
   await page.getByTestId("share-format-image").check();
   await expect(page.getByTestId("share-format-hint")).toContainText("竖版长图");
@@ -422,31 +425,6 @@ test("分享格式切到「图片」：给出长图预览与下载，文字区�
   await expect(download).toHaveAttribute("href", /^data:image\/png;base64,/);
   await expect(page.getByTestId("share-image-meta")).toContainText("图片是文字摘要的排版截图");
 
-  await page.keyboard.press("Escape");
-  await expect(dialog).not.toBeVisible();
-  await expect(page.getByTestId("open-share")).toBeFocused();
-
-  await expectNoHorizontalOverflow(page);
-});
-
-test("分享格式切到「文字+图片」：两种都给，复制图片写入 PNG", async ({ page }) => {
-  await stubImageClipboard(page, true);
-  await page.route("**/api/source-audit/investigate", (route) =>
-    route.fulfill({ json: { investigation: FULL_INVESTIGATION } }),
-  );
-
-  await reachResult(page);
-  await page.getByTestId("open-share").click();
-
-  await page.getByTestId("share-format-both").check();
-  await expect(page.getByTestId("share-summary-text")).toBeVisible();
-  await expect(page.getByTestId("share-image-preview")).toBeVisible();
-  await expect(page.getByTestId("share-format-hint")).toContainText("文字可核对");
-
-  // 文字照旧可复制。
-  await page.getByTestId("share-copy").click();
-  await expect(page.getByTestId("share-status")).toHaveText("已复制到剪贴板。");
-
   // 图片走 clipboard.write，类型必须是 image/png。
   await page.getByTestId("share-image-copy").click();
   await expect(page.getByTestId("share-image-status")).toHaveText("已复制图片到剪贴板。");
@@ -454,7 +432,7 @@ test("分享格式切到「文字+图片」：两种都给，复制图片写入 
   expect(copiedTypes).toEqual(["image/png"]);
 
   await page.keyboard.press("Escape");
-  await expect(page.locator("dialog.room-share-dialog")).not.toBeVisible();
+  await expect(dialog).not.toBeVisible();
   await expect(page.getByTestId("open-share")).toBeFocused();
 
   await expectNoHorizontalOverflow(page);
@@ -474,8 +452,9 @@ test("分享格式键盘可达：Tab 到格式选项，方向键切换格式", a
   await page.keyboard.press("ArrowRight");
   await expect(page.getByTestId("share-format-image")).toBeChecked();
   await expect(page.getByTestId("share-image-preview")).toBeVisible();
+  // 只有两档，再按方向键回绕到「文字」。
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByTestId("share-format-both")).toBeChecked();
+  await expect(page.getByTestId("share-format-text")).toBeChecked();
   await expect(page.getByTestId("share-summary-text")).toBeVisible();
 
   await page.keyboard.press("Escape");
@@ -484,4 +463,3 @@ test("分享格式键盘可达：Tab 到格式选项，方向键切换格式", a
 
   await expectNoHorizontalOverflow(page);
 });
-

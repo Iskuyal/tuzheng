@@ -101,7 +101,7 @@ describe("分享图片的排版", () => {
     const huge = [SHARE_TITLE, SHARE_BOUNDARY, ...Array.from({ length: 2000 }, (_, i) => `第 ${i} 行：${"内容".repeat(20)}`)].join("\n");
     const layout = layoutShareImage(huge, measure);
     expect(layout.height).toBeLessThanOrEqual(SHARE_IMAGE_MAX_HEIGHT);
-    expect(layout.lines.some((line) => line.text.includes("完整文字请用"))).toBe(true);
+    expect(layout.lines.some((line) => line.text.includes("完整内容请改用"))).toBe(true);
   });
 
   it("空摘要退回标题与边界声明，仍有最小高度", () => {

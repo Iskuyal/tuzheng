@@ -21,7 +21,7 @@ export const SHARE_IMAGE_ACCENT_HEIGHT = 10;
 const SHARE_IMAGE_MIN_HEIGHT = 640;
 const GAP_HEIGHT = 26;
 
-const TRUNCATION_NOTE = "（摘要过长，图片只显示到这里；完整文字请用「文字」或「文字+图片」分享。）";
+const TRUNCATION_NOTE = "（摘要过长，图片只显示到这里；完整内容请改用「文字」分享。）";
 
 export type ShareImageFace = "serif" | "sans" | "mono";
 
