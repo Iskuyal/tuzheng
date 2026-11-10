@@ -607,7 +607,7 @@ function adoptSuggestion(): void {
         <nav class="room-result-directory" aria-label="本页结果目录"><span>接下来</span><a href="#source-claims">查看依据 ↓</a><a href="#source-citations">引用来源 ↓</a><a v-if="result.captionSuggestion" href="#source-suggestions">查看修改建议 ↓</a><a v-if="result.clarification && !clarificationDeferred" href="#source-clarification">补充回答 ↓</a><a href="#source-process" @click.prevent="navigateSection('source-process')">核验过程 ↓</a></nav>
         <div class="room-share-entry">
           <button type="button" class="room-button secondary" data-testid="open-share" @click="openShare">分享这次核验</button>
-          <span>生成纯文本摘要，含结论、引用来源与使用边界；不带图片。</span>
+          <span>可用文字、图片或两者一起分享；内容含结论、引用来源与使用边界。</span>
         </div>
         <div class="source-overview" data-testid="source-overview">
           <p class="room-primary-finding">{{ primaryFinding }}</p>

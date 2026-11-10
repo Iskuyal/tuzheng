@@ -358,3 +358,130 @@ test("分享核验结果：剪贴板不可用时选中摘要并提示手动复�
 
   await expectNoHorizontalOverflow(page);
 });
+
+// 图片剪贴板替身：记录写进去的图片类型；浏览器不支持时也可复用。
+async function stubImageClipboard(page: Page, record: boolean): Promise<void> {
+  await page.addInitScript((shouldRecord: boolean) => {
+    const scope = window as unknown as { __copiedImage?: string[] };
+    if (!shouldRecord) {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+      return;
+    }
+    class FakeClipboardItem {
+      constructor(public items: Record<string, Blob>) {}
+    }
+    Object.defineProperty(window, "ClipboardItem", { configurable: true, value: FakeClipboardItem });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          (window as unknown as { __copiedShare?: string }).__copiedShare = text;
+        },
+        write: async (items: InstanceType<typeof FakeClipboardItem>[]) => {
+          scope.__copiedImage = items.map((item) => Object.keys(item.items).join(","));
+        },
+      },
+    });
+  }, record);
+}
+
+test("分享格式切到「图片」：给出长图预览与下载，文字区收起", async ({ page }) => {
+  await stubClipboard(page, true);
+  await page.route("**/api/source-audit/investigate", (route) =>
+    route.fulfill({ json: { investigation: FULL_INVESTIGATION } }),
+  );
+
+  await reachResult(page);
+  await page.getByTestId("open-share").click();
+
+  const dialog = page.locator("dialog.room-share-dialog");
+  await expect(dialog).toBeVisible();
+  // 默认是「文字」：文字区在，图片区不在。
+  await expect(page.getByTestId("share-format-text")).toBeChecked();
+  await expect(page.getByTestId("share-summary-text")).toBeVisible();
+  await expect(page.getByTestId("share-image-preview")).toHaveCount(0);
+
+  await page.getByTestId("share-format-image").check();
+  await expect(page.getByTestId("share-format-hint")).toContainText("竖版长图");
+
+  const preview = page.getByTestId("share-image-preview");
+  await expect(preview).toBeVisible();
+  // 图片是真的画出来的：1080 宽、有实际高度、不是空 data URL。
+  const rendered = await preview.evaluate((element) => {
+    const img = element as HTMLImageElement;
+    return { width: img.naturalWidth, height: img.naturalHeight, prefix: img.src.slice(0, 22) };
+  });
+  expect(rendered.prefix).toBe("data:image/png;base64,");
+  expect(rendered.width).toBe(1080);
+  expect(rendered.height).toBeGreaterThan(600);
+  // 切到图片后文字区收起，避免「以为也在分享文字」。
+  await expect(page.getByTestId("share-summary-text")).toHaveCount(0);
+
+  const download = page.getByTestId("share-image-download");
+  await expect(download).toHaveAttribute("download", /^图证-来源核验摘要-[0-9a-f]{8}\.png$/);
+  await expect(download).toHaveAttribute("href", /^data:image\/png;base64,/);
+  await expect(page.getByTestId("share-image-meta")).toContainText("图片是文字摘要的排版截图");
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByTestId("open-share")).toBeFocused();
+
+  await expectNoHorizontalOverflow(page);
+});
+
+test("分享格式切到「文字+图片」：两种都给，复制图片写入 PNG", async ({ page }) => {
+  await stubImageClipboard(page, true);
+  await page.route("**/api/source-audit/investigate", (route) =>
+    route.fulfill({ json: { investigation: FULL_INVESTIGATION } }),
+  );
+
+  await reachResult(page);
+  await page.getByTestId("open-share").click();
+
+  await page.getByTestId("share-format-both").check();
+  await expect(page.getByTestId("share-summary-text")).toBeVisible();
+  await expect(page.getByTestId("share-image-preview")).toBeVisible();
+  await expect(page.getByTestId("share-format-hint")).toContainText("文字可核对");
+
+  // 文字照旧可复制。
+  await page.getByTestId("share-copy").click();
+  await expect(page.getByTestId("share-status")).toHaveText("已复制到剪贴板。");
+
+  // 图片走 clipboard.write，类型必须是 image/png。
+  await page.getByTestId("share-image-copy").click();
+  await expect(page.getByTestId("share-image-status")).toHaveText("已复制图片到剪贴板。");
+  const copiedTypes = await page.evaluate(() => (window as unknown as { __copiedImage?: string[] }).__copiedImage);
+  expect(copiedTypes).toEqual(["image/png"]);
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator("dialog.room-share-dialog")).not.toBeVisible();
+  await expect(page.getByTestId("open-share")).toBeFocused();
+
+  await expectNoHorizontalOverflow(page);
+});
+
+test("分享格式键盘可达：Tab 到格式选项，方向键切换格式", async ({ page }) => {
+  await stubClipboard(page, true);
+  await page.route("**/api/source-audit/investigate", (route) =>
+    route.fulfill({ json: { investigation: FULL_INVESTIGATION } }),
+  );
+
+  await reachResult(page);
+  await page.getByTestId("open-share").click();
+
+  // 打开后焦点落在格式选择上，不落在不可见的对话框本身。
+  await expect(page.getByTestId("share-format-text")).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByTestId("share-format-image")).toBeChecked();
+  await expect(page.getByTestId("share-image-preview")).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByTestId("share-format-both")).toBeChecked();
+  await expect(page.getByTestId("share-summary-text")).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator("dialog.room-share-dialog")).not.toBeVisible();
+  await expect(page.getByTestId("open-share")).toBeFocused();
+
+  await expectNoHorizontalOverflow(page);
+});
+
