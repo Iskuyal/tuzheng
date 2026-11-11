@@ -1,14 +1,17 @@
 # 当前提交材料与收尾事项
 
-更新：2026-10-29。h09已在新v2包明确季调口径，v1及旧判保留；本轮核对预指导与正式提交入口，具体操作见[预指导提交指南](pre-guidance-submit-guide.md)。有声视频及第二Windows确认见[交付更新](closeout/delivery-update-2026-10-28.json)。当前材料由 [materials.json](materials.json)选择；团队、访问、报名和停止核账的旧记录保留。
+更新：2026-11-11。当前正式提交以[11月11日正式指南](formal-submit-guide-2026-11-11.md)为准，截止2026-11-18 15:00；新表单为SltUAlpn。分享已复核并修复来源链接/长图排版，介绍PDF4页、技术PDF18页。用户报告预参赛81分，正式上传及回执尚未完成。
+
+以下保留前轮材料来源：h09已在新v2包明确季调口径，v1及旧判保留；本轮核对预指导与正式提交入口，具体操作见[预指导提交指南](pre-guidance-submit-guide.md)。有声视频及第二Windows确认见[交付更新](closeout/delivery-update-2026-10-28.json)。当前材料由 [materials.json](materials.json)选择；团队、访问、报名和停止核账的旧记录保留。
 
 ## 当前材料
 
 | 材料 | 入口 | 状态 |
 | --- | --- | --- |
+| 正式七项及反馈落实 | [正式指南](formal-submit-guide-2026-11-11.md)、[落实说明](reviewer-feedback-2026-11-11.md)、[本轮报告](../reviews/2026-11-11-formal-submission-prep.md) | 新表单SltUAlpn；截止11月18日15:00；网盘/公开视频实际链接及正式回执待提供 |
 | 项目说明与运行 | [README](../../README.md)、[开发指南](../DEVELOPMENT.md) | 已写入岭南凤翔团队、梁钦健/梁智量、岭南职业技术学院（清远校区）和 C组；个人电话邮箱未提供 |
-| 预指导作品介绍 | [4页PDF](tuzheng-project-introduction.pdf)、[HTML源](pre-guidance-introduction.html) | 按表单七项编写；用户确认此前未发表/未获奖、团队原创且仅使用开源依赖 |
-| 赛事技术报告 | [PDF](web-match-competition-report.pdf)、[HTML 源](competition-report.html) | 17 页，2026-10-28 更新有声视频和第二环境确认；历史模型结论按原轮次解释 |
+| 正式作品介绍 | [4页PDF](tuzheng-project-introduction.pdf)、[HTML源](pre-guidance-introduction.html) | 2026-11-11按正式表单七项修订，含分享截图、81分的预参赛性质及原创说明 |
+| 赛事技术报告 | [PDF](web-match-competition-report.pdf)、[HTML 源](competition-report.html) | 18页，2026-11-11新增分享功能、验证及边界，保留此前有声视频和第二环境确认；历史模型结论按原轮次解释 |
 | 当前有声演示视频 | [MP4](tuzheng-competition-demo-2026-10-28.mp4)、[技术检查](../evidence/final-video-2026-10-28/README.md) | 398.233 秒、1920×1080/30 fps、一条 AAC 音轨，完整解码通过；画面与原母版一致，用户已完整看听并确认可作为提交版，确认绑定文件哈希 |
 | 配音资料 | [九段时间轴与完整讲稿](demo-2026-10-18/voiceover.md)、[章节 SRT](demo-2026-10-18/chapters.srt) | 已按最终成片对齐 |
 | 实录工程与证明 | [工程及原片](demo-2026-10-18/README.md)、[视频检查](../evidence/formal-demo-2026-10-18/video-verification.json) | 当次官方模型 7 次实际 HTTP；当前图文路径演示，非独立评测 |
@@ -40,9 +43,9 @@ PDF 重建使用 `node docs/submission/build-report.mjs --competition`；无声�
 
 | 事项 | 当前状态 | 下一步与完成依据 |
 | --- | --- | --- |
-| 预指导上传与填表 | 指南、介绍PDF和本机打包材料已准备，尚未提交 | 指定一人填写实际UID及手机号；取得网盘完整包链接与公开视频链接，登录WPS后一次提交，保存回执 |
+| 预参赛记录 | 用户于2026-11-11报告81分及评语，未收录原始回执 | 仅作预参赛反馈；不沿用旧表单再提交，不当作正式回执 |
 | 负责人确认与最终冻结 | h09修订及v2代理复核完成，尚无人工签字 | 实际候选、负责人认可和最终文件分别记录；不把AI代理审阅称作人工盲审，不把未授权付费评测当作填表前置 |
-| 正式省赛提交 | 尚未提交作品 | 预指导后仍须在赛事个人中心正式入口另行提交并留存回执；正式入口内限制届时再核对 |
+| 正式省赛提交 | 本地材料已核对，正式表单尚未提交 | 按[新表单七项](formal-submit-guide-2026-11-11.md)提供真实UID、手机号、网盘链接及公开视频；11月18日15:00前由指定一人提交并保存回执 |
 
 正式三臂盲审和真实读者收益声明分别需要完整评测及[真实读者记录](reader-study/README.md)。没有这些证据时，按已有能力与演示范围准备作品；实验的失败、阻塞与未知用量继续保留。
 
@@ -58,6 +61,8 @@ PDF 重建使用 `node docs/submission/build-report.mjs --competition`；无声�
 | [旧演示方案](demo-video-script.md) | 冻结题与录制备选，不是新版成片时间轴 |
 | [开发技术报告](web-match-technical-report.pdf) | 开发过程归档，当前赛事阅读版使用上方独立 PDF |
 | [2026-10-15 收尾记录](closeout-2026-10-15.md)、[2026-10-07 接管记录](final-handoff-2026-10-07.md) | 保留原基线、失败与当时待办，当前选择以本页为准 |
+
+主视频未展示11月新增分享功能；新功能由介绍/技术PDF及[分享复核报告](../reviews/2026-11-11-formal-submission-prep.md)说明，未冒称新版真实模型实录。
 
 原件和现有分享路径继续保留，通过索引区分各批归档材料，旧批次指纹不变。
 

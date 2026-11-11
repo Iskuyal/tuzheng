@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-11",
+  "sourceCodeCommit": "dbc2561",
+  "checks": {
+    "unitApi": {
+      "passed": 479,
+      "files": 30,
+      "failed": 0
+    },
+    "build": {
+      "passed": true,
+      "includesTypecheck": true
+    },
+    "shareE2e": {
+      "passed": 15,
+      "viewports": [
+        320,
+        390,
+        1280
+      ],
+      "actualPngSaved": true,
+      "clipboardStubbed": true
+    },
+    "allE2e": {
+      "passed": 155,
+      "skipped": 1,
+      "failed": 0,
+      "elapsed": "2.8m",
+      "log": "e2e-output.txt"
+    },
+    "pdf": {
+      "introductionPages": 4,
+      "technicalReportPages": 18,
+      "allPagesRendered": true,
+      "visualInspection": "passed"
+    },
+    "modelConfig": {
+      "passed": true,
+      "configSources": [
+        "file",
+        "env"
+      ],
+      "portPairs": [
+        [
+          3001,
+          5173
+        ],
+        [
+          3107,
+          5187
+        ]
+      ],
+      "temporarySettings": true,
+      "fakeKeys": true,
+      "log": "model-config-output.txt"
+    },
+    "docs": {
+      "documents": 178,
+      "links": 872,
+      "missing": 0
+    },
+    "materials": {
+      "files": 118,
+      "videoHashMatchesArchivedProof": true,
+      "videoChanged": false
+    }
+  },
+  "modelRequests": 0,
+  "formSubmitted": false,
+  "knownLimits": [
+    "系统级剪贴板与其他应用粘贴未验证",
+    "未做真机社交分享或读屏",
+    "主视频没有新增分享片段",
+    "网盘与公开视频链接尚未提供",
+    "人工12题抽查与正式三臂评测保持原状态"
+  ]
+}

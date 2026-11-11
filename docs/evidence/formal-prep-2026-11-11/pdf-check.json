@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-11",
+  "pdfs": [
+    {
+      "path": "docs/submission/web-match-competition-report.pdf",
+      "pages": 18,
+      "expectedPages": 18,
+      "textChecks": [
+        "分享",
+        "原文",
+        "479"
+      ],
+      "render": "Poppler pdftoppm PNG, 1250px longest side",
+      "bytes": 1314041,
+      "sha256": "5fcce518158304acf69c73b2808028e013a672bf56044f4d3609a638a8175fa0"
+    },
+    {
+      "path": "docs/submission/tuzheng-project-introduction.pdf",
+      "pages": 4,
+      "expectedPages": 4,
+      "textChecks": [
+        "分享",
+        "原文",
+        "479"
+      ],
+      "render": "Poppler pdftoppm PNG, 1250px longest side",
+      "bytes": 1047105,
+      "sha256": "85e0e6536c0e77dead1b3afecbeb81e915569905410ac4a6c3a8fdf0d87cb8b4"
+    }
+  ],
+  "modelRequests": 0,
+  "visualInspection": "all pages checked in contact sheets; updated report page17 inspected at full rendered size; passed"
+}

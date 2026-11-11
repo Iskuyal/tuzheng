@@ -78,3 +78,5 @@ npm run test:e2e
 项目问题与反馈可提交到[仓库 Issues](https://github.com/Iskuyal/tuzheng/issues)。个人电话和邮箱尚未提供，材料中不代填。
 
 技术标识和仓库名为 `tuzheng`。旧材料文件名中的 `web-match` 为历史标识，保留路径供追溯。
+
+正式省赛材料已于2026-11-11更新，包含核验结果文字/图片分享及复核证据；介绍文档、技术PDF和新提交表单见[正式提交指南](docs/submission/formal-submit-guide-2026-11-11.md)。既有有声视频未展示新增分享功能；预参赛反馈不等于正式提交回执。

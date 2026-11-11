@@ -57,3 +57,7 @@ node docs/submission/closeout/verify-windows.mjs --install
 中断请求按用户决定停止核账，见[账户交接](accounting-handoff.md)。[当前有声视频](../tuzheng-competition-demo-2026-10-28.mp4)已通过[技术检查](../../evidence/final-video-2026-10-28/README.md)，并获用户完整看听后的最终确认。原[无声工程及讲稿](../demo-2026-10-18/README.md)和旧[录制方案](../demo-video-script.md)保留供对照。
 
 团队、公开访问、报名及停止核账的决定见[此前进度](progress-2026-10-23.json)与归档证明。视频最终接受和第二环境用户确认另作追加，不覆盖历史记录或空白模板。当前待办为负责人抽查、最终材料冻结及赛事作品提交。
+
+## 2026-11-11正式省赛完整包
+
+先用上方命令生成当前SHA的固定交付包，再运行`python -X utf8 docs/submission/closeout/create-formal-package.py --date 2026-11-11`。输出7项正式材料及ZIP校验，拒绝覆盖旧包，不上传或提交。字段与最终待办以[正式指南](../formal-submit-guide-2026-11-11.md)为准；旧预指导打包器仅用于历史追溯。

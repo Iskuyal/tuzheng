@@ -1,0 +1,8 @@
+
+> tuzheng@0.1.0 verify:model-config
+> tsx scripts/verify-model-config.ts
+
+file：API 3001 / 网页 5173，真实进程与 Vite 代理、设置页、密钥边界通过；模型调用 0 次。
+file：API 3107 / 网页 5187，真实进程与 Vite 代理、设置页、密钥边界通过；模型调用 0 次。
+env：API 3001 / 网页 5173，真实进程与 Vite 代理、设置页、密钥边界通过；模型调用 0 次。
+env：API 3107 / 网页 5187，真实进程与 Vite 代理、设置页、密钥边界通过；模型调用 0 次。
