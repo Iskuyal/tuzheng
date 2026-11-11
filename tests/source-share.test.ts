@@ -111,6 +111,7 @@ describe("分享摘要的文本生成", () => {
     expect(summary).toContain("「比上月上涨 0.8%」（配文）· 与来源不一致");
     expect(summary).toContain("数值对照：原文 0.8% → 适用来源 0.2%，环比");
     expect(summary).toContain("引用：《2025年12月份居民消费价格同比上涨0.8%》（国家统计局，2026-01-09） · 用作数值依据");
+    expect(summary).toContain(`原文链接：${RELEASE.url}`);
     expect(summary).toContain("停止原因：模型在看完工具结果后给出汇总。");
     expect(summary).toContain("配文原文：比上月上涨 0.8%");
   });
@@ -230,6 +231,6 @@ describe("分享摘要的指纹", () => {
 
   it("指纹说明写明它只用于发现文字被改动", () => {
     const summary = buildShareSummary({ result: baseResult(), caption: "比上月上涨 0.8%" });
-    expect(summary).toContain("（指纹由摘要正文计算；文字被改动后指纹即不同。）");
+    expect(summary).toContain("（指纹用于比对摘要正文，不证明内容正确或发布者身份。）");
   });
 });

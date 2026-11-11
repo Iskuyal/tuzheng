@@ -45,7 +45,7 @@ const SAMPLE = [
   "   引用：《2025 年 12 月居民消费价格变动情况》（国家统计局，2026-01-09） · 用作数值依据",
   "",
   "摘要指纹：3f9c1d2a5b7e4c60",
-  "（指纹由摘要正文计算；文字被改动后指纹即不同。）",
+  "（指纹用于比对摘要正文，不证明内容正确或发布者身份。）",
 ].join("\n");
 
 describe("分享图片的排版", () => {
@@ -76,7 +76,7 @@ describe("分享图片的排版", () => {
   it("指纹单独一行并与说明行区分字号", () => {
     const layout = layoutShareImage(SAMPLE, measure);
     const fingerprint = layout.lines.find((line) => line.text.startsWith("摘要指纹："));
-    const footnote = layout.lines.find((line) => line.text.startsWith("（指纹由"));
+    const footnote = layout.lines.find((line) => line.text.startsWith("（指纹用于"));
     expect(fingerprint?.style.face).toBe("mono");
     expect(footnote?.style.face).toBe("sans");
     expect(fingerprint?.style.size).toBeGreaterThan(footnote?.style.size ?? 0);
@@ -90,11 +90,31 @@ describe("分享图片的排版", () => {
     expect(parts.map((line) => line.text).join("")).toBe(body);
   });
 
+  it("独占一行的超长网址折行，完整保留且不越界", () => {
+    const url = `https://example.com/${"reference".repeat(80)}`;
+    const layout = layoutShareImage(`${SHARE_TITLE}\n${url}`, measure);
+    const parts = layout.lines.slice(1);
+    expect(parts.length).toBeGreaterThan(1);
+    expect(parts.map((line) => line.text).join("")).toBe(url);
+    for (const line of parts) {
+      expect(line.x + measure(line.text, line.style)).toBeLessThanOrEqual(SHARE_IMAGE_WIDTH - SHARE_IMAGE_PADDING);
+    }
+  });
+
   it("缩进保留，子行不回到顶格", () => {
     const layout = layoutShareImage(SAMPLE, measure);
     const indented = layout.lines.find((line) => line.text.startsWith("说明："));
     expect(indented).toBeDefined();
     expect(indented!.x).toBeGreaterThan(SHARE_IMAGE_PADDING);
+  });
+
+  it("配文带大量前导空格时限制缩进，仍完整排版", () => {
+    const text = "需要完整保留的配文".repeat(20);
+    const layout = layoutShareImage(`${SHARE_TITLE}\n${" ".repeat(200)}${text}`, measure);
+    expect(layout.lines.slice(1).map((line) => line.text).join("")).toBe(text);
+    for (const line of layout.lines.slice(1)) {
+      expect(line.x + measure(line.text, line.style)).toBeLessThanOrEqual(SHARE_IMAGE_WIDTH - SHARE_IMAGE_PADDING);
+    }
   });
 
   it("超长摘要被截断并写明提示，高度不超过上限", () => {

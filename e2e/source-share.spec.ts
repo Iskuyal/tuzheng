@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 
 // 来源核验结果分享：替身响应，不触发真实模型调用。
 // 网络响应由 page.route 覆盖，页面渲染、摘要拼装、剪贴板降级与焦点管理都走真实实现。
@@ -307,6 +308,7 @@ test("分享核验结果：摘要含结论与边界，复制后焦点可恢复",
   expect(value).toContain("仅核对当前主张与适用的收录来源");
   expect(value).toContain("与来源不一致");
   expect(value).toContain("尚未采用");
+  expect(value).toContain(`原文链接：${RELEASE_DOCUMENT.url}`);
   // 指纹行由摘要正文算出，16 位十六进制；同一段文字应得到同一个值。
   const fingerprintLine = lines.find((line) => line.startsWith("摘要指纹："));
   expect(fingerprintLine).toBeDefined();
@@ -385,7 +387,7 @@ async function stubImageClipboard(page: Page, record: boolean): Promise<void> {
   }, record);
 }
 
-test("分享格式切到「图片」：给出长图预览，可下载也可复制，文字区收起", async ({ page }) => {
+test("分享格式切到「图片」：给出长图预览，可下载也可复制，文字区收起", async ({ page }, testInfo) => {
   await stubImageClipboard(page, true);
   await page.route("**/api/source-audit/investigate", (route) =>
     route.fulfill({ json: { investigation: FULL_INVESTIGATION } }),
@@ -425,6 +427,16 @@ test("分享格式切到「图片」：给出长图预览，可下载也可复�
   await expect(download).toHaveAttribute("href", /^data:image\/png;base64,/);
   await expect(page.getByTestId("share-image-meta")).toContainText("图片是文字摘要的排版截图");
 
+  const [saved] = await Promise.all([page.waitForEvent("download"), download.click()]);
+  const savedPath = testInfo.outputPath("share-summary.png");
+  await saved.saveAs(savedPath);
+  expect(await saved.failure()).toBeNull();
+  const png = await readFile(savedPath);
+  expect(png.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  expect(png.readUInt32BE(16)).toBe(rendered.width);
+  expect(png.readUInt32BE(20)).toBe(rendered.height);
+  await page.screenshot({ path: testInfo.outputPath("share-dialog.png") });
+
   // 图片走 clipboard.write，类型必须是 image/png。
   await page.getByTestId("share-image-copy").click();
   await expect(page.getByTestId("share-image-status")).toHaveText("已复制图片到剪贴板。");
@@ -445,7 +457,8 @@ test("分享格式键盘可达：Tab 到格式选项，方向键切换格式", a
   );
 
   await reachResult(page);
-  await page.getByTestId("open-share").click();
+  await page.getByTestId("open-share").focus();
+  await page.keyboard.press("Enter");
 
   // 打开后焦点落在格式选择上，不落在不可见的对话框本身。
   await expect(page.getByTestId("share-format-text")).toBeFocused();
@@ -457,9 +470,35 @@ test("分享格式键盘可达：Tab 到格式选项，方向键切换格式", a
   await expect(page.getByTestId("share-format-text")).toBeChecked();
   await expect(page.getByTestId("share-summary-text")).toBeVisible();
 
+  await page.keyboard.press("Tab");
+  await expect(page.getByTestId("share-summary-text")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByTestId("share-copy")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("share-status")).toHaveText("已复制到剪贴板。");
+
   await page.keyboard.press("Escape");
   await expect(page.locator("dialog.room-share-dialog")).not.toBeVisible();
   await expect(page.getByTestId("open-share")).toBeFocused();
 
+  await expectNoHorizontalOverflow(page);
+});
+
+test("图片剪贴板不可用时提示下载；配文改动后历史结果不能继续分享", async ({ page }) => {
+  await stubImageClipboard(page, false);
+  await page.route("**/api/source-audit/investigate", (route) =>
+    route.fulfill({ json: { investigation: FULL_INVESTIGATION } }),
+  );
+  await reachResult(page);
+  await page.getByTestId("open-share").click();
+  await page.getByTestId("share-format-image").check();
+  await page.getByTestId("share-image-copy").click();
+  await expect(page.getByTestId("share-image-status")).toHaveText("图片复制未成功，请用「下载图片」保存。");
+  await expect(page.getByTestId("share-image-download")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator("textarea").first().fill("修改后的配文，需要重新核验。");
+  await expect(page.getByTestId("open-share")).toHaveCount(0);
+  await expect(page.getByTestId("history-section")).toBeVisible();
+  await expect(page.getByTestId("history-section").getByText("分享这次核验")).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 });

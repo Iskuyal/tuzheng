@@ -45,13 +45,16 @@ function findDocument(hits: readonly SourceHit[], sourceId: string): SourceHit["
 }
 
 function citationLines(conclusion: ClaimSourceConclusion, hits: readonly SourceHit[], citations: readonly ModelCitation[]): string[] {
-  return conclusion.citedSourceIds.map((sourceId) => {
+  return conclusion.citedSourceIds.flatMap((sourceId) => {
     const citation = citations.find((entry) => entry.sourceId === sourceId);
     const document = findDocument(hits, sourceId);
     const title = document ? `《${document.title}》（${document.publisher}，${document.publishedAt}）` : sourceId;
     const role = roleLabel(citation);
     const note = citation?.note ? `：${citation.note}` : "";
-    return `   引用：${title}${role ? ` · ${role}${note}` : ""}`;
+    return [
+      `   引用：${title}${role ? ` · ${role}${note}` : ""}`,
+      ...(document?.url ? [`   原文链接：${document.url}`] : []),
+    ];
   });
 }
 
@@ -168,5 +171,5 @@ export function shareSummaryFingerprint(body: string): string {
 /** 生成可以整段复制的分享摘要（正文 + 指纹行）。 */
 export function buildShareSummary(input: ShareSummaryInput): string {
   const body = buildShareSummaryBody(input);
-  return `${body}\n\n摘要指纹：${shareSummaryFingerprint(body)}\n（指纹由摘要正文计算；文字被改动后指纹即不同。）`;
+  return `${body}\n\n摘要指纹：${shareSummaryFingerprint(body)}\n（指纹用于比对摘要正文，不证明内容正确或发布者身份。）`;
 }

@@ -99,7 +99,7 @@ function classify(line: string, index: number): BlockKind {
   if (index === 0 || text === SHARE_TITLE) return "title";
   if (text === SHARE_BOUNDARY) return "boundary";
   if (text.startsWith("摘要指纹：")) return "fingerprint";
-  if (text.startsWith("（指纹由")) return "footnote";
+  if (text.startsWith("（指纹用于")) return "footnote";
   if (/^ +\S/.test(line)) return "body";
   return "header";
 }
@@ -134,15 +134,16 @@ function wrap(text: string, style: ShareImageTextStyle, maxWidth: number, measur
     if (current && measure(candidate, style) > maxWidth) {
       parts.push(current.trimEnd());
       current = token.trimStart();
-      // 单个词比整行还宽：按字符硬切，否则会溢出图片。
-      while (current && measure(current, style) > maxWidth) {
-        let cut = current.length - 1;
-        while (cut > 1 && measure(current.slice(0, cut), style) > maxWidth) cut -= 1;
-        parts.push(current.slice(0, cut));
-        current = current.slice(cut);
-      }
     } else {
       current = candidate;
+    }
+    // 行首的单个长词也要折行（例如独占一行的网址），不能只处理有前缀的长词。
+    while (current && measure(current, style) > maxWidth) {
+      const chars = Array.from(current);
+      let cut = Math.max(1, chars.length - 1);
+      while (cut > 1 && measure(chars.slice(0, cut).join(""), style) > maxWidth) cut -= 1;
+      parts.push(chars.slice(0, cut).join(""));
+      current = chars.slice(cut).join("");
     }
   }
   if (current.trim()) parts.push(current.trimEnd());
@@ -161,7 +162,8 @@ function toBlocks(source: string[], innerWidth: number, measure: ShareTextMeasur
     if (kind === "gap") return { kind: "gap", segments: [], indent: 0 };
     const { style } = spec(kind);
     const leading = /^ */.exec(raw)?.[0].length ?? 0;
-    const indent = style.size * 0.6 * leading;
+    // 配文可能自带大量空格，最多保留四分之一行缩进，给正文留下可排版宽度。
+    const indent = Math.min(style.size * 0.6 * leading, innerWidth / 4);
     return { kind, segments: wrap(raw.trim(), style, innerWidth - indent, measure), indent };
   });
 }
