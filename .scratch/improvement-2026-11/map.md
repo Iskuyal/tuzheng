@@ -67,9 +67,20 @@
 | P0-1 | 进行中 | 焦点环、favicon、评审报告、证据目录、PHASES/证据索引 | 由主控统一提交，见文末提交记录 |
 | P0-2 | 已完成 | `e2e/submission-screenshots.mjs` 三处失效选择器修好（折叠区先展开）；20 张截图按当前主题重生成到 `docs/submission/assets/`；技术报告 PDF 待按新图重建 | 3 张纯文字小图 <20KB 属内容体量，非空图；运行统计胶囊不再单独成图 |
 | P0-3 | **部分完成（口径已修正）** | `scripts/prune-large-files.mjs`（dry-run）、`docs/reviews/2026-11-13-repo-size.md`、README「评审获取方式」 | 原验收「size-pack < 60MB」与「不重写历史」互相矛盾：不重写历史时 `.git` 不会变小，能做的是**停止增长 + 浅克隆/zip 指引 + 可选的 `git rm --cached`**。真瘦身需 filter-repo 并接受 SHA 与材料哈希全失效，**需负责人拍板**，本轮不做 |
-| P0-4 | 核对表已交付，人工项待提供 | `docs/submission/formal-checklist-2026-11-13.md` | 七项里 UID、手机号、网盘链接、视频播放页四项只能由提交人提供；PDF 指纹行待重建后更新 |
+| P0-4 | 核对表已交付，人工项待提供 | `docs/submission/formal-checklist-2026-11-13.md` | 七项里 UID、手机号、网盘链接、视频播放页四项只能由提交人提供；PDF 指纹行已按重建结果更新 |
 
-团队实测：`npm run typecheck`、`npm test`（30 文件 / 479 项）、`npm run build`、`npm run docs:check`（182 文档 / 924 链接 / 0 缺失）、`npm run verify:materials`（118 项）、全量 e2e（155 通过 / 1 既定跳过）全绿；真实模型调用 0 次。
+团队实测：`npm run typecheck`、`npm test`（30 文件 / 479 项）、`npm run build`、`npm run docs:check`（182 文档 / 928 链接 / 0 缺失）、`npm run verify:materials`（118 项）、全量 e2e（155 通过 / 1 既定跳过）全绿；真实模型调用 0 次。
+
+### 落地提交（2026-11-13，已推送 `origin/main`）
+
+| 提交 | 内容 |
+| --- | --- |
+| `54ef92b` | fix(ui)：标题焦点只保留读屏落点、补 favicon 与品牌主题色 |
+| `b5452ea` | docs(review)：81 分后验收结论与 P0–P3 计划（含证据目录与 PHASES/索引同步） |
+| `6589dd9` | chore(submission)：修复报告截图脚本、20 张插图按当前主题重生成、仓库体积方案与 README 获取指引 |
+| `cdb72ef` | docs(submission)：按新插图重建 18 页技术报告 PDF（1,539,022 字节，`9185b3c4…`）、正式提交核对表 |
+
+PDF 重建时发现新旧截图宽高比变化会把 4 个小节挤成两页，`competition-report.html` 因此加了按高度约束的打印规则；逐节测量 + 第 4/8/17 页目视通过，页数守卫仍是 18 节 / 18 页。
 
 ---
 
