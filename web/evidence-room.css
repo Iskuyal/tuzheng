@@ -25,6 +25,9 @@
 .room-header .menu-glyph i { background:#f7f1e6; }
 .evidence-room :is(button,a,input,textarea,summary,[tabindex]):focus-visible,.room-header :is(button,a):focus-visible,.room-return-link:focus-visible { outline:3px solid #ae4634; outline-offset:4px; }
 .evidence-room .room-header :is(button,a):focus-visible { outline-color:#e1c28e; }
+/* 标题只是读屏与键盘的落点（router 导航后 focus 到 h1[tabindex="-1"]）。程序化聚焦在首屏会被判为
+   focus-visible，若沿用交互元素的描边，页面一打开标题就像被红框圈住，故标题层不画描边。 */
+.evidence-room :is(h1,h2)[tabindex="-1"]:focus,.evidence-room :is(h1,h2)[tabindex="-1"]:focus-visible { outline:none; }
 .room-button { display:inline-flex; align-items:center; justify-content:center; gap:18px; min-height:48px; padding:12px 23px; border:1px solid #2b3551; border-radius:4px; background:#2b3551; color:#fffefa!important; text-decoration:none; font:500 14px/1.6 "Noto Sans SC","Microsoft YaHei",sans-serif; cursor:pointer; box-shadow:none; }
 .room-button:hover { background:#3b496c; }
 .room-button.secondary { color:#2b3551!important; background:var(--paper); border-color:var(--line-strong); }

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" role="img" aria-label="图证">
+  <rect width="36" height="36" rx="7" fill="#2b3551"/>
+  <g transform="translate(4.5 4.5) scale(0.75)">
+    <path d="M2 10V2h8M26 2h8v8M34 26v8h-8M10 34H2v-8" fill="none" stroke="#f7f1e6" stroke-width="2.4"/>
+    <path d="M10 25V17m8 8V10m8 15V5" stroke="#f7f1e6" stroke-width="3"/>
+    <circle cx="29" cy="29" r="4" fill="#ae4634"/>
+  </g>
+</svg>
