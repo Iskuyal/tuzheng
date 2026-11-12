@@ -346,11 +346,23 @@ async function stubInvestigate(page, investigation) {
   });
 }
 
+// 用「本次核验结果」概览判断返回：它随结果同屏出现，且不像 .source-run-summary
+// 那样被包在 .source-run-details 折叠区里（默认收起 → 不可见）。
+const RESULT_OVERVIEW = "[data-testid='source-overview']";
+
+/** 折叠区（<details>）默认收起，截图前展开；已展开就不再点击，避免又收起来。 */
+async function expand(page, selector) {
+  const details = page.locator(selector).first();
+  await details.waitFor();
+  if (!(await details.evaluate((el) => el.open))) await details.locator("summary").first().click();
+  await page.waitForTimeout(200);
+}
+
 async function runSample(page) {
   await page.getByTestId("load-source-sample").click();
   await page.locator(".source-image-stage img").waitFor();
   await page.getByTestId("run-source-audit").click();
-  await page.locator(".source-run-summary").waitFor();
+  await page.locator(RESULT_OVERVIEW).waitFor();
 }
 
 const SECTION = (title) => `.source-section:has(h2:text-is("${title}"))`;
@@ -386,7 +398,9 @@ const SECTION = (title) => `.source-section:has(h2:text-is("${title}"))`;
   const page = await open("/source-audit", 1440, 1100);
   await stubInvestigate(page, FULL_INVESTIGATION);
   await runSample(page);
-  await save(page, "source-summary", ".source-run-summary");
+  // 结果概要截概览块：模型与运行统计的 .source-run-summary 已被包进折叠区，单截只有一行
+  // 状态胶囊（约 4 KB），单独成图看不出来龙去脉；概览块自带主要结论与分组计数，更适合作报告插图。
+  await save(page, "source-summary", RESULT_OVERVIEW);
   // 主张卡的依据与未解决项默认折叠，展开后再截图，让复查者看到判断依据。
   for (const summary of await page.locator(".source-claim-details summary").all()) {
     await summary.click();
@@ -395,7 +409,9 @@ const SECTION = (title) => `.source-section:has(h2:text-is("${title}"))`;
   await save(page, "source-claims", SECTION("配文主张"));
   await save(page, "source-image-claims", SECTION("图内观察"));
   await save(page, "source-citations", SECTION("引用与检索命中"));
-  await save(page, "source-trace", SECTION("工具轨迹"));
+  // 工具轨迹现在是 details#source-process（标题在 summary 里，默认折叠），展开后截它本身。
+  await expand(page, "#source-process");
+  await save(page, "source-trace", "#source-process");
   await save(page, "source-unresolved", SECTION("未解决项"));
   await save(page, "source-suggestion", "[data-testid='caption-suggestion']");
   await page.close();
@@ -486,7 +502,7 @@ const SECTION = (title) => `.source-section:has(h2:text-is("${title}"))`;
     await summary.click();
   }
   await page.waitForTimeout(300);
-  await save(page, "source-mobile-summary", ".source-run-summary");
+  await save(page, "source-mobile-summary", RESULT_OVERVIEW);
   await save(page, "source-mobile-claims", SECTION("配文主张"));
   await page.close();
 }
