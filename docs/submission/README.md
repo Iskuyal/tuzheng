@@ -11,7 +11,8 @@
 | 正式七项及反馈落实 | [正式指南](formal-submit-guide-2026-11-11.md)、[落实说明](reviewer-feedback-2026-11-11.md)、[本轮报告](../reviews/2026-11-11-formal-submission-prep.md) | 新表单SltUAlpn；截止11月18日15:00；网盘/公开视频实际链接及正式回执待提供 |
 | 项目说明与运行 | [README](../../README.md)、[开发指南](../DEVELOPMENT.md) | 已写入岭南凤翔团队、梁钦健/梁智量、岭南职业技术学院（清远校区）和 C组；个人电话邮箱未提供 |
 | 正式作品介绍 | [4页PDF](tuzheng-project-introduction.pdf)、[HTML源](pre-guidance-introduction.html) | 2026-11-11按正式表单七项修订，含分享截图、81分的预参赛性质及原创说明 |
-| 赛事技术报告 | [PDF](web-match-competition-report.pdf)、[HTML 源](competition-report.html) | 18页，2026-11-11新增分享功能、验证及边界，保留此前有声视频和第二环境确认；历史模型结论按原轮次解释 |
+| 赛事技术报告 | [PDF](web-match-competition-report.pdf)、[HTML 源](competition-report.html)、[重建记录](../evidence/formal-prep-2026-11-13/pdf-rebuild.json) | 18页；2026-11-13 按当前主题截图重建（1,539,022 字节，`9185b3c4…`），11-11 版作废；含分享功能、验证与边界 |
+| 正式提交核对表 | [七项逐项状态](formal-checklist-2026-11-13.md) | 团队/学校/PDF 已具备；UID、手机号、网盘链接、公开视频播放页待你提供；提交后在此表登记回执 |
 | 当前有声演示视频 | [MP4](tuzheng-competition-demo-2026-10-28.mp4)、[技术检查](../evidence/final-video-2026-10-28/README.md) | 398.233 秒、1920×1080/30 fps、一条 AAC 音轨，完整解码通过；画面与原母版一致，用户已完整看听并确认可作为提交版，确认绑定文件哈希 |
 | 配音资料 | [九段时间轴与完整讲稿](demo-2026-10-18/voiceover.md)、[章节 SRT](demo-2026-10-18/chapters.srt) | 已按最终成片对齐 |
 | 实录工程与证明 | [工程及原片](demo-2026-10-18/README.md)、[视频检查](../evidence/formal-demo-2026-10-18/video-verification.json) | 当次官方模型 7 次实际 HTTP；当前图文路径演示，非独立评测 |

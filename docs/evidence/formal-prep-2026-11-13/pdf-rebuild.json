@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-13",
+  "scope": "技术报告 PDF 按当前主题截图重建；不含模型调用",
+  "trigger": "2026-11-11 版 PDF 内嵌的是旧（绿色）主题截图，与当前站点不一致；P0-2 重生成截图后需同步重建 PDF",
+  "commands": [
+    "node e2e/submission-screenshots.mjs .tmp-shot",
+    "node e2e/submission-screenshots.mjs",
+    "node docs/submission/build-report.mjs --competition"
+  ],
+  "screenshots": {
+    "count": 20,
+    "target": "docs/submission/assets/",
+    "note": "由 2026-11-13 修复后的脚本在本机 dev 服务上重生成；3 张纯文字小图 < 20KB 属内容体量，已目视为真实文字块"
+  },
+  "pdf": {
+    "path": "docs/submission/web-match-competition-report.pdf",
+    "pages": 18,
+    "bytes": 1539022,
+    "sha256": "9185b3c495fa43e71bd999846fa7d9a0d33d68893a87f42d70b8c8d3cd8b4fcc",
+    "previous": {
+      "bytes": 1314041,
+      "sha256": "5fcce518158304acf69c73b2808028e013a672bf56044f4d3609a638a8175fa0",
+      "note": "作废：内嵌旧主题截图，仅作历史记录"
+    },
+    "layoutFix": "新截图更窄更高（1320 宽 → 925~1296 宽），整宽铺满会把 4 个小节挤成两页；competition-report.html 增加按高度约束的打印规则，保持一节一页"
+  },
+  "verification": {
+    "pageCountGuard": "build-report.mjs 要求页数等于小节数，18 节 / 18 页通过",
+    "visual": "pymupdf 渲染第 4、8、17 页并目视确认：截图为主题一致的当前界面，无空白框、无越界，页脚页码与日期正确",
+    "pageOverflowProbe": "680px 打印宽度下逐节测量高度，全部 ≤ 1002px 内容区"
+  },
+  "notCovered": [
+    "第 17 页仍为 11-11 版文字，未写入 11-13 之后的 P1 计划",
+    "微信/手机端阅读软件中的实际显示未验证",
+    "未新增真实模型调用：核验响应仍为离线替身"
+  ]
+}

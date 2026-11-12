@@ -4,6 +4,7 @@
 
 | 要核对什么 | 入口 | 可证明的范围 |
 | --- | --- | --- |
+| 技术报告按当前主题重建 | [重建记录](formal-prep-2026-11-13/pdf-rebuild.json)、[核对表](../submission/formal-checklist-2026-11-13.md) | 截图脚本修复后重生成20张插图并重建18页PDF；逐节测量无溢出、第4/8/17页目视通过；未新增真实模型调用 |
 | 81分后的网站验收与提升盘点 | [本轮评审](../reviews/2026-11-11-improvement-review.md)、[四路由与结果态截图](improvement-review-2026-11-11/) | 当前基线`53aaf82`的只读验收：479项单元、155项浏览器、生产构建与首屏焦点环、favicon、截图脚本失效的实测；模型调用0次，估分与提升项均为判断 |
 | 11月分享复核及正式材料 | [本轮报告](../reviews/2026-11-11-formal-submission-prep.md)、[验证记录](formal-prep-2026-11-11/validation.json)、[正式表单原文](formal-prep-2026-11-11/submission-form.txt) | 分享实际PNG下载、三视口回归及PDF/正式要求；无新真实模型调用，尚无正式回执 |
 | h09修订与预指导准备 | [2026-10-29报告](../reviews/2026-10-29-pre-guidance-prep.md)、[两入口要求](submission-prep-2026-10-29/requirements.json)、[v2代理复核](submission-prep-2026-10-29/h09-v2-review.json) | v1不改、v2明确季调口径；表单与正式赛道已只读核对，介绍PDF及指南已准备，未上传或提交 |

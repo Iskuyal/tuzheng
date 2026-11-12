@@ -23,6 +23,13 @@ figure{margin:3mm 0}figure.narrow img{width:50mm}
 .collaboration img[src$="source-suggestion.png"]{max-height:72mm;object-fit:contain}
 .collaboration img[src$="source-clarify.png"]{max-height:32mm;object-fit:contain}
 .current-delivery img{max-height:65mm;width:auto;max-width:100%;margin:0 auto}
+/* 2026-11-13：截图按当前主题重生成后比旧图更窄更高（1320 宽 → 925~1296 宽、比例变竖），
+   按整宽铺满会把一节撑成两页。改为按高度约束、宽度自适应，保持「一节一页」。 */
+figure img{max-height:88mm;width:auto;max-width:100%;margin:0 auto}
+figure.narrow img{width:auto;max-height:108mm}
+/* 两节版面本身接近满页：资料库一节只差 23px，双图一节差 148px，单独再压一档。 */
+figure img[src$="source-library.png"]{max-height:74mm}
+figure img[src$="source-claims.png"],figure img[src$="cpi-2025-12.png"]{max-height:66mm}
 </style>
 </head>
 <body>
