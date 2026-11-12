@@ -8,7 +8,7 @@
 | 构建与测试 | `build`、`typecheck`、`test`、`test:e2e`、`test:recording` | 行为、API、替身浏览器及录制预算恢复检查，0 次真实模型调用 |
 | 文档与材料 | `docs:check`、`verify:materials` | 本地链接、材料与视频指纹；可收录团队资料及指定 SHA 的匿名访问证据，不联网或代签其他人工条件 |
 | 配置与界面 | `verify:model-config`、`verify:ui` | 临时配置/假密钥、端口矩阵和替身界面；模型请求为 0 |
-| 样例 | `eval:samples`、`verify:sample-renders` | 规则固定评测与 SVG/PNG 同源核对；栅格哈希受字体环境影响 |
+| 样例 | `eval:samples`、`verify:sample-renders` | 规则固定评测与 SVG/PNG 同源核对；同源核对按 PASS/WARN/SKIP/FAIL 四档输出，环境指纹不同会 SKIP（不代表通过） |
 | 冻结与离线三臂 | `eval:preflight`、`eval:holdout` | 候选锁、冻结包或替身机制，不能作为模型成绩 |
 | 真实模型评测 | `eval:source-audit`、`eval:demo:http`、`eval:holdout:http` | 另行授权、预算和账本后执行；`eval:source-audit -- --check-only` 与 replay 为零调用分支 |
 | 读者试用 | `study:readers` | 空白任务包与记录统计；没有原始真实答复时不产生用户收益结论 |

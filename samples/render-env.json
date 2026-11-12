@@ -1,0 +1,13 @@
+{
+  "fingerprint": "a9f9c20b4592c75c",
+  "env": {
+    "renderer": "msedge 157.0.4341.46",
+    "platform": "win32 x64",
+    "fonts": {
+      "yaheiPresent": false,
+      "yaheiWidth": 192
+    }
+  },
+  "recordedAt": "2026-11-12T16:28:04.666Z",
+  "note": "登记时请同时重渲染全部 PNG；否则下次核对会把旧 PNG 判成内容变化。"
+}

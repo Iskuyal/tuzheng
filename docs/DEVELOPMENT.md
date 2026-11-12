@@ -64,7 +64,7 @@ npm run test:e2e
 
 `npm run verify:model-config` 使用临时用户目录和假密钥，串行验证 file/env × 默认 3001/5173、自定义 3107/5187 四组真实进程；这些端口须先空闲，脚本不停止已有服务。它检查配置读取和代理，不做模型调用。
 
-`npm run verify:ui -- --states --text-200 --output=.cache/ui-check` 生成四路由与状态的界面检查；模型连接使用替身。`npm run verify:sample-renders` 逐字节比对 SVG 对应 PNG，字体栅格化受 Edge 版本影响，CI 将其作为不阻塞的信号。
+`npm run verify:ui -- --states --text-200 --output=.cache/ui-check` 生成四路由与状态的界面检查；模型连接使用替身。`npm run verify:sample-renders` 核对 SVG 与同名 PNG 是否同源：字节一致即 PASS；字节不同但像素差异 ≤0.3% 判 WARN（抗锯齿级）；环境指纹与 `samples/render-env.json` 不同且差异中等则 SKIP 并写明「未核对」；同一环境下差异超阈值、或任何环境下差异 ≥25% 判 FAIL。换机器或换 CI 镜像后需重渲染 PNG 再跑一次 `--record` 登记环境；CI 仍把它当作不阻塞的信号。
 
 PDF 检查使用 `node docs/submission/build-report.mjs --competition --check`，重建时移除 `--check`。截图脚本 `node e2e/submission-screenshots.mjs` 使用替身，只生成界面说明材料。
 
