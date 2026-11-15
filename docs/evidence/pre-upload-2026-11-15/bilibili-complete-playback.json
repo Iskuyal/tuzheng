@@ -1,0 +1,20 @@
+{
+  "completed": null,
+  "url": "https://www.bilibili.com/video/BV1iKxF6bE3o/",
+  "title": "图证：一张截图，也能查清它的证据链｜AI 原生图表证据审计台_哔哩哔哩_bilibili",
+  "players": [
+    {
+      "currentTime": 61.463909,
+      "duration": 399,
+      "ended": false,
+      "paused": true,
+      "error": null
+    }
+  ],
+  "date": "2026-11-15",
+  "httpStatus": 200,
+  "loggedIn": false,
+  "normalPlaybackReachedEnd": false,
+  "fullContentListeningReview": false,
+  "method": "Natural anonymous autoplay; listened for ended event; no seek, speed change, download or restriction bypass"
+}

@@ -39,7 +39,7 @@ npm run dev
 | 比较两张图或检查视觉呈现 | 核对时间、单位和范围，再比较数字；柱状图可查看纵轴风险与零起点对照 |
 | 核对图表和配文的来源 | `/source-audit`：主张拆解、固定公开资料库检索、口径对照、引用与真实工具轨迹 |
 | 修改一段配文 | 逐处查看建议、理由和引用，主动采用；输入改变后旧结论进入历史，需重新核验 |
-| 把核验结果交给别人复核 | 结果区「分享这次核验」：弹层里选①文字 ②图片。文字档给纯文本摘要（结论、引用来源与角色、数值对照、未解决项、停止原因、使用边界），可复制或选中后 Ctrl+C；图片档把同一份文字排成 1080 宽竖版长图，可下载或复制；带 `fnv1a64` 指纹，只说明文字未被改动 |
+| 把核验结果交给别人复核 | 结果区「分享这次核验」：弹层里选①文字 ②图片。文字档给纯文本摘要（结论、引用来源与角色、数值对照、未解决项、停止原因、使用边界），可复制或选中后 Ctrl+C；图片档把同一份文字排成 1080 宽竖版长图，可下载或复制；带 `fnv1a64` 指纹，用于比对正文，不证明内容正确或发布者身份 |
 
 图中的数字相互一致，不能证明原始数据真实。来源核验只覆盖当前收录的资料，检索命中的材料还要核对是否适用。必要补证能力已实现，但是否追问取决于实际运行；新版视频中的缺口径案例仍为待核对，没有触发追问或恢复调查。
 
@@ -49,9 +49,10 @@ npm run dev
 | --- | --- |
 | 新版实机视频 | [6 分 38 秒有声 MP4](docs/submission/tuzheng-competition-demo-2026-10-28.mp4)，1080p / 30 fps；[技术检查](docs/evidence/final-video-2026-10-28/README.md)通过，用户已完整看听并确认可作为提交版 |
 | 配音 | [九段时间轴与完整讲稿](docs/submission/demo-2026-10-18/voiceover.md)、[章节 SRT](docs/submission/demo-2026-10-18/chapters.srt) |
-| 赛事技术文档 | [17 页 PDF](docs/submission/web-match-competition-report.pdf)、[HTML 源](docs/submission/competition-report.html)，已补充当前交付状态 |
+| 赛事技术文档 | [18 页 PDF](docs/submission/web-match-competition-report.pdf)、[HTML 源](docs/submission/competition-report.html)，2026-11-13按当前主题截图重建，11月15日复核 |
 | 当前材料和人工待办 | [提交材料索引](docs/submission/README.md)、[交付包与第二环境回执](docs/submission/closeout/README.md) |
-| 预指导提交 | [4页作品介绍](docs/submission/tuzheng-project-introduction.pdf)、[两入口要求与操作指南](docs/submission/pre-guidance-submit-guide.md)；预指导截止10月31日15:00，正式省赛仍需另行提交 |
+| 正式省赛提交 | [4页作品介绍](docs/submission/tuzheng-project-introduction.pdf)、[11月15日上传指南](docs/submission/formal-submit-guide-2026-11-15.md)；正式表单截止11月18日15:00，每队仅提交一次 |
+| 公开视频 | [B站播放页](https://www.bilibili.com/video/BV1iKxF6bE3o/)，用户提供；页面标注6分39秒、1920×1080；不将平台转码文件当作本地MP4字节完全相同 |
 
 2026-10-18 实录使用当前生产页面和 DeepSeek 官方真实请求：7 次模型 HTTP，用量完整。这段实录展示产品操作；模型效果评测、CI、人工验收和真实读者收益另有各自的记录，见[证据索引](docs/evidence/README.md)。
 
@@ -88,4 +89,4 @@ npm run test:e2e
 
 技术标识和仓库名为 `tuzheng`。旧材料文件名中的 `web-match` 为历史标识，保留路径供追溯。
 
-正式省赛材料已于2026-11-11更新，包含核验结果文字/图片分享及复核证据；介绍文档、技术PDF和新提交表单见[正式提交指南](docs/submission/formal-submit-guide-2026-11-11.md)。既有有声视频未展示新增分享功能；预参赛反馈不等于正式提交回执。
+正式省赛材料已于2026-11-15复核，以当日新生成的完整包为准；介绍文档、技术PDF和正式表单见[上传指南](docs/submission/formal-submit-guide-2026-11-15.md)。11月11日旧包没有11月13日重建后的报告及后续提交，不用于本轮上传。既有有声视频未展示新增分享功能；预参赛反馈不等于正式提交回执。

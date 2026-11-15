@@ -1,0 +1,5 @@
+
+> tuzheng@0.1.0 eval:holdout
+> tsx scripts/evaluate-holdout.ts --verify
+
+冻结包：12题/三臂/来源/图片/提示词/运行代码指纹通过。0次模型请求。

@@ -1,0 +1,147 @@
+{
+  "date": "2026-11-15",
+  "checkedCodeBaseline": "64f062bcce5c18780ff294cb60099848b9d92096",
+  "tests": {
+    "unitApi": {
+      "files": 30,
+      "passed": 479,
+      "failed": 0
+    },
+    "build": {
+      "typecheck": true,
+      "vite": true,
+      "serverTypeScript": true
+    },
+    "browser": {
+      "passed": 155,
+      "skipped": 1,
+      "failed": 0,
+      "elapsed": "2.2m",
+      "viewports": [
+        320,
+        390,
+        1280
+      ],
+      "shareCases": 15
+    },
+    "modelConfig": {
+      "passed": true,
+      "sources": [
+        "file",
+        "env"
+      ],
+      "portPairs": [
+        [
+          3001,
+          5173
+        ],
+        [
+          3107,
+          5187
+        ]
+      ],
+      "temporaryConfigAndFakeKeys": true
+    },
+    "recordingRegression": {
+      "passed": 6,
+      "failed": 0
+    },
+    "fixedSamples": {
+      "passed": 23,
+      "total": 23
+    },
+    "holdoutFreeze": {
+      "questions": 12,
+      "passed": true,
+      "threeArmsAreOfflineMechanism": true
+    },
+    "sourceQuestions": {
+      "questions": 22,
+      "checkOnly": true,
+      "passed": true
+    },
+    "sampleRenders": {
+      "byteEqual": 18,
+      "unchecked": 0,
+      "failed": 0
+    }
+  },
+  "documents": {
+    "count": 185,
+    "localLinks": 943,
+    "missing": 0,
+    "checkedBeforeFinalEvidenceAdditions": true
+  },
+  "materials": {
+    "files": 147,
+    "checkedBeforeFinalEvidenceAdditions": true,
+    "passed": true
+  },
+  "pdfs": [
+    {
+      "path": "docs/submission/web-match-competition-report.pdf",
+      "pages": 18,
+      "bytes": 1539022,
+      "sha256": "9185b3c495fa43e71bd999846fa7d9a0d33d68893a87f42d70b8c8d3cd8b4fcc"
+    },
+    {
+      "path": "docs/submission/tuzheng-project-introduction.pdf",
+      "pages": 4,
+      "bytes": 1047105,
+      "sha256": "85e0e6536c0e77dead1b3afecbeb81e915569905410ac4a6c3a8fdf0d87cb8b4"
+    }
+  ],
+  "video": {
+    "durationSeconds": 398.233333,
+    "resolution": [
+      1920,
+      1080
+    ],
+    "fps": 30,
+    "audioCodec": "aac",
+    "fullDecodeExitCode": 0,
+    "userAudioAcceptance": "Earlier user attestation bound to original MP4 hash; no new listening signoff"
+  },
+  "history": {
+    "date": "2026-11-15",
+    "head": "64f062bcce5c18780ff294cb60099848b9d92096",
+    "commits": 146,
+    "shallow": "false",
+    "scannedUniqueTextBlobs": 1239,
+    "skippedBlobs": 1,
+    "suspectSecretPaths": [],
+    "findings": [],
+    "limits": [
+      "Only selected text extensions and blobs <=2MB",
+      "Checks recognizable credential prefixes, not every possible secret",
+      "No actual keys are printed or stored in this report"
+    ]
+  },
+  "publicVideoUrl": "https://www.bilibili.com/video/BV1iKxF6bE3o/",
+  "publicVideoAtLeast35Seconds": true,
+  "fullPublicPlaybackEvidence": "bilibili-complete-playback.json",
+  "submissionForm": {
+    "url": "https://f.kdocs.cn/ksform/w/write/SltUAlpn",
+    "deadline": "2026-11-18T15:00:00+08:00",
+    "readOnly": true,
+    "submitted": false
+  },
+  "cliValidation": {
+    "helpPassed": true,
+    "httpPublicVideoUrlRejected": true
+  },
+  "modelRequests": 0,
+  "boundaries": [
+    "Public platform transcode not byte-compared to local MP4",
+    "No real reader study, real-device social-app test or new owner signoff",
+    "No netdisk link supplied; no actual contest submission"
+  ],
+  "publicVideoAnonymousPlayback": {
+    "reachedEnd": false,
+    "pausedAtSeconds": 61.463909,
+    "loginDialogVisible": true,
+    "note": "Visible close and play controls work; full 399s viewing not verified",
+    "normalCloseAllowsContinueToSeconds": 70.013535,
+    "normalCloseEvidence": "bilibili-prompt-check.json"
+  }
+}

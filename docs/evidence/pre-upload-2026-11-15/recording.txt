@@ -1,0 +1,18 @@
+
+> tuzheng@0.1.0 test:recording
+> node --import tsx --test docs/submission/code-demo/capture-budget.test.mjs
+
+✔ 断线后完成未知，恢复不得再次发送HTTP (1.0209ms)
+✔ 成功响应usage未知，恢复不得再次发送HTTP (0.1275ms)
+✔ 已有停机原因不会被重启清零 (0.0819ms)
+✔ 模型截断后的停机在重启后保留 (0.0729ms)
+✔ 已完成且用量明确的记录允许在剩余预算内发送 (15.7703ms)
+✔ 跨重启保留12次上限，不能清零预算 (0.3735ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 468.8119

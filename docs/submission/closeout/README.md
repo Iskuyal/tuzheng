@@ -61,3 +61,5 @@ node docs/submission/closeout/verify-windows.mjs --install
 ## 2026-11-11正式省赛完整包
 
 先用上方命令生成当前SHA的固定交付包，再运行`python -X utf8 docs/submission/closeout/create-formal-package.py --date 2026-11-11`。输出7项正式材料及ZIP校验，拒绝覆盖旧包，不上传或提交。字段与最终待办以[正式指南](../formal-submit-guide-2026-11-11.md)为准；旧预指导打包器仅用于历史追溯。
+
+11月15日上传改用`--date 2026-11-15 --public-video-url https://www.bilibili.com/video/BV1iKxF6bE3o/`，同日期指南及反馈说明已提供。视频参数只校验HTTPS格式并写入manifest，不自动声明全片观看或字节相同；网盘链接尚未提供时仍为空。当前操作见[今天上传指南](../formal-submit-guide-2026-11-15.md)，不要使用11月11日旧包中的技术PDF。

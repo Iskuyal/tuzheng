@@ -1,0 +1,23 @@
+
+> tuzheng@0.1.0 verify:sample-renders
+> node scripts/verify-sample-renders.mjs
+
+PASS conflict SVG→PNG（字节一致）
+PASS consistent SVG→PNG（字节一致）
+PASS unclear SVG→PNG（字节一致）
+PASS multi-claims SVG→PNG（字节一致）
+PASS cross-a-revenue SVG→PNG（字节一致）
+PASS cross-b-consistent SVG→PNG（字节一致）
+PASS cross-b-conflict SVG→PNG（字节一致）
+PASS cross-b-scope-mismatch SVG→PNG（字节一致）
+PASS axis-zero-based SVG→PNG（字节一致）
+PASS axis-truncated SVG→PNG（字节一致）
+PASS axis-unknown-start SVG→PNG（字节一致）
+PASS eval-rounding SVG→PNG（字节一致）
+PASS eval-zero-base SVG→PNG（字节一致）
+PASS eval-reversed-period SVG→PNG（字节一致）
+PASS eval-cross-period-mismatch SVG→PNG（字节一致）
+PASS eval-cross-unit-mismatch SVG→PNG（字节一致）
+PASS eval-axis-below-zero SVG→PNG（字节一致）
+PASS eval-decline SVG→PNG（字节一致）
+图片同源核对：18 项；一致 18，未核对 0，失败 0（msedge 157.0.4341.46，环境指纹 a9f9c20b4592c75c）

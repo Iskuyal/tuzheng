@@ -1,0 +1,6 @@
+
+> tuzheng@0.1.0 eval:source-audit
+> tsx scripts/evaluate-source-audit.ts --check-only
+
+题集：22 题（冻结于 2026-10-01），期望独立保存于 samples/source-audit-expectations.json。
+冻结检查通过；未读取密钥，真实模型调用 0 次。

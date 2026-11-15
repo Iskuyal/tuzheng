@@ -16,3 +16,5 @@
 `holdout-evaluation.ts`、`holdout-http.ts`、`holdout-fixtures.ts`、`source-audit-recording.ts` 是相关入口共用的执行、计数和记录实现。固定交付脚本放在 [docs/submission/closeout/](../docs/submission/closeout/README.md)，视频原始工程随对应日期材料保留。
 
 新增当前交付文件时编辑 [materials.json](../docs/submission/materials.json) 并运行 `npm run verify:materials`。改脚本或目录时同步 npm 入口、TypeScript 覆盖与 CI；当前配置已覆盖 `scripts/**/*.ts`，产物路径见[结构说明](../docs/STRUCTURE.md)。
+
+11月15日正式打包及已核对公开视频参数见[上传指南](../docs/submission/formal-submit-guide-2026-11-15.md)。Python打包器支持`--public-video-url`，只接受HTTPS格式并记录，不发起上传、模型或表单请求。

@@ -1,6 +1,6 @@
 # 当前提交材料与收尾事项
 
-更新：2026-11-11。当前正式提交以[11月11日正式指南](formal-submit-guide-2026-11-11.md)为准，截止2026-11-18 15:00；新表单为SltUAlpn。分享已复核并修复来源链接/长图排版，介绍PDF4页、技术PDF18页。用户报告预参赛81分，正式上传及回执尚未完成。
+更新：2026-11-15。当前正式提交以[今天上传指南](formal-submit-guide-2026-11-15.md)为准；11月11日旧包不含后续技术PDF重建和提交，今天使用新包，截止2026-11-18 15:00；新表单为SltUAlpn。分享已复核并修复来源链接/长图排版，介绍PDF4页、技术PDF18页。用户报告预参赛81分，正式上传及回执尚未完成。
 
 以下保留前轮材料来源：h09已在新v2包明确季调口径，v1及旧判保留；本轮核对预指导与正式提交入口，具体操作见[预指导提交指南](pre-guidance-submit-guide.md)。有声视频及第二Windows确认见[交付更新](closeout/delivery-update-2026-10-28.json)。当前材料由 [materials.json](materials.json)选择；团队、访问、报名和停止核账的旧记录保留。
 
@@ -8,12 +8,13 @@
 
 | 材料 | 入口 | 状态 |
 | --- | --- | --- |
-| 正式七项及反馈落实 | [正式指南](formal-submit-guide-2026-11-11.md)、[落实说明](reviewer-feedback-2026-11-11.md)、[本轮报告](../reviews/2026-11-11-formal-submission-prep.md) | 新表单SltUAlpn；截止11月18日15:00；网盘/公开视频实际链接及正式回执待提供 |
+| 正式七项及反馈落实 | [上传指南](formal-submit-guide-2026-11-15.md)、[落实说明](reviewer-feedback-2026-11-15.md)、[本轮报告](../reviews/2026-11-15-pre-upload-recheck.md) | 新表单SltUAlpn；截止11月18日15:00；B站播放页已提供；网盘实际链接及正式回执待提供 |
 | 项目说明与运行 | [README](../../README.md)、[开发指南](../DEVELOPMENT.md) | 已写入岭南凤翔团队、梁钦健/梁智量、岭南职业技术学院（清远校区）和 C组；个人电话邮箱未提供 |
 | 正式作品介绍 | [4页PDF](tuzheng-project-introduction.pdf)、[HTML源](pre-guidance-introduction.html) | 2026-11-11按正式表单七项修订，含分享截图、81分的预参赛性质及原创说明 |
 | 赛事技术报告 | [PDF](web-match-competition-report.pdf)、[HTML 源](competition-report.html)、[重建记录](../evidence/formal-prep-2026-11-13/pdf-rebuild.json) | 18页；2026-11-13 按当前主题截图重建（1,539,022 字节，`9185b3c4…`），11-11 版作废；含分享功能、验证与边界 |
-| 正式提交核对表 | [七项逐项状态](formal-checklist-2026-11-13.md) | 团队/学校/PDF 已具备；UID、手机号、网盘链接、公开视频播放页待你提供；提交后在此表登记回执 |
+| 正式提交核对表 | [今天七项对应](formal-submit-guide-2026-11-15.md)、[13日历史核对](formal-checklist-2026-11-13.md) | 团队/学校/PDF已具备，B站链接已提供；UID、手机号由本人填写，网盘链接及回执待提供 |
 | 当前有声演示视频 | [MP4](tuzheng-competition-demo-2026-10-28.mp4)、[技术检查](../evidence/final-video-2026-10-28/README.md) | 398.233 秒、1920×1080/30 fps、一条 AAC 音轨，完整解码通过；画面与原母版一致，用户已完整看听并确认可作为提交版，确认绑定文件哈希 |
+| 公开视频播放页 | [图证B站视频](https://www.bilibili.com/video/BV1iKxF6bE3o/)、[元数据检查](../evidence/pre-upload-2026-11-15/bilibili-read.json) | 用户11月15日提供；未登录页面HTTP200、399秒、源分辨率1920×1080；约61秒弹登录窗，正常关闭后可续播至70秒，未证明全片连续观看；不与本地MP4作字节相同声明 |
 | 配音资料 | [九段时间轴与完整讲稿](demo-2026-10-18/voiceover.md)、[章节 SRT](demo-2026-10-18/chapters.srt) | 已按最终成片对齐 |
 | 实录工程与证明 | [工程及原片](demo-2026-10-18/README.md)、[视频检查](../evidence/formal-demo-2026-10-18/video-verification.json) | 当次官方模型 7 次实际 HTTP；当前图文路径演示，非独立评测 |
 | 版本交付与人工回执 | [固定交付工具](closeout/README.md)、[非视频接管](closeout/non-video-handoff.md)、[空白回执](closeout/acceptance-receipt.json) | 基线固定包已重新验证；新提交的包以其 manifest 为准，模板不是人工验收结果 |
@@ -46,7 +47,7 @@ PDF 重建使用 `node docs/submission/build-report.mjs --competition`；无声�
 | --- | --- | --- |
 | 预参赛记录 | 用户于2026-11-11报告81分及评语，未收录原始回执 | 仅作预参赛反馈；不沿用旧表单再提交，不当作正式回执 |
 | 负责人确认与最终冻结 | h09修订及v2代理复核完成，尚无人工签字 | 实际候选、负责人认可和最终文件分别记录；不把AI代理审阅称作人工盲审，不把未授权付费评测当作填表前置 |
-| 正式省赛提交 | 本地材料已核对，正式表单尚未提交 | 按[新表单七项](formal-submit-guide-2026-11-11.md)提供真实UID、手机号、网盘链接及公开视频；11月18日15:00前由指定一人提交并保存回执 |
+| 正式省赛提交 | 本地材料已核对，正式表单尚未提交 | 按[今天七项](formal-submit-guide-2026-11-15.md)填写真实UID、手机号和网盘链接，视频使用已提供B站播放页；11月18日15:00前由指定一人提交并保存回执 |
 
 正式三臂盲审和真实读者收益声明分别需要完整评测及[真实读者记录](reader-study/README.md)。没有这些证据时，按已有能力与演示范围准备作品；实验的失败、阻塞与未知用量继续保留。
 

@@ -1,0 +1,28 @@
+
+> tuzheng@0.1.0 eval:samples
+> tsx scripts/evaluate-samples.ts
+
+PASS conflict
+PASS consistent
+PASS unclear
+PASS multi-claims
+PASS cross-a-revenue
+PASS cross-b-consistent
+PASS cross-b-conflict
+PASS cross-b-scope-mismatch
+PASS axis-zero-based
+PASS axis-truncated
+PASS axis-unknown-start
+PASS eval-rounding
+PASS eval-zero-base
+PASS eval-reversed-period
+PASS eval-cross-period-mismatch
+PASS eval-cross-unit-mismatch
+PASS eval-axis-below-zero
+PASS eval-decline
+PASS cross-consistent
+PASS cross-conflict
+PASS cross-scope-mismatch
+PASS cross-period-mismatch
+PASS cross-unit-mismatch
+固定评测：23/23 通过。

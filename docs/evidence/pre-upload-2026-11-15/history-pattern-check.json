@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-15",
+  "head": "64f062bcce5c18780ff294cb60099848b9d92096",
+  "commits": 146,
+  "shallow": "false",
+  "scannedUniqueTextBlobs": 1239,
+  "skippedBlobs": 1,
+  "suspectSecretPaths": [],
+  "findings": [],
+  "limits": [
+    "Only selected text extensions and blobs <=2MB",
+    "Checks recognizable credential prefixes, not every possible secret",
+    "No actual keys are printed or stored in this report"
+  ]
+}

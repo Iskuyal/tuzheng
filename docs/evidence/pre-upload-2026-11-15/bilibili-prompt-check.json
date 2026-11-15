@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-15",
+  "httpStatus": 200,
+  "loggedIn": false,
+  "usedOnlyVisibleControls": true,
+  "fullPlaybackVerified": false,
+  "timeAtPrompt": 61.163812,
+  "afterNormalDismissal": {
+    "time": 70.013535,
+    "paused": false,
+    "readyState": 4,
+    "error": null
+  },
+  "canContinueAfterClosingPrompt": true
+}

@@ -6,13 +6,19 @@ from pathlib import Path
 import shutil
 import subprocess
 import zipfile
+from urllib.parse import urlparse
 
 root = Path(__file__).resolve().parents[3]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--date', required=True, help='材料日期，例如2026-11-11')
+parser.add_argument('--public-video-url', help='已核对的公开视频HTTPS播放页，可省略')
 args = parser.parse_args()
 from datetime import date
 date.fromisoformat(args.date)
+if args.public_video_url:
+    video_url = urlparse(args.public_video_url)
+    if video_url.scheme != 'https' or not video_url.netloc:
+        raise SystemExit('公开视频链接必须为有效的HTTPS播放页。')
 
 
 def git(*arguments):
@@ -66,7 +72,7 @@ manifest = {
     'sourceCommitUrl': f'https://github.com/Iskuyal/tuzheng/commit/{sha}',
     'submissionFormUrl': 'https://f.kdocs.cn/ksform/w/write/SltUAlpn',
     'deadline': '2026-11-18T15:00:00+08:00', 'readyForCloudUpload': True,
-    'formSubmitted': False, 'netdiskLink': None, 'publicVideoLink': None,
+    'formSubmitted': False, 'netdiskLink': None, 'publicVideoLink': args.public_video_url,
     'videoIncludesShareFeature': False, 'acceptance': base['acceptance'],
     'files': entries, 'manifestSelfHashExcluded': True, 'modelRequests': 0,
 }

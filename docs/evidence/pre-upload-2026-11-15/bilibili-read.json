@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-15",
+  "httpStatus": 200,
+  "loggedIn": false,
+  "record": {
+    "title": "图证：一张截图，也能查清它的证据链｜AI 原生图表证据审计台_哔哩哔哩_bilibili",
+    "url": "https://www.bilibili.com/video/BV1iKxF6bE3o/",
+    "videoData": {
+      "bvid": "BV1iKxF6bE3o",
+      "title": "图证：一张截图，也能查清它的证据链｜AI 原生图表证据审计台",
+      "duration": 399,
+      "desc": "图证给只有一张截图、没有原始数据的读者用：模型负责读图，程序负责算数，检索负责找公开来源，最后由你自己决定改不改。这 7 分钟演示一条完整路径——图内自检、配文与来源核对、必要补证、修改建议，以及跑失败时到底显示什么。",
+      "pages": [
+        {
+          "cid": 43150083559,
+          "page": 1,
+          "from": "vupload",
+          "part": "图证：一张截图，也能查清它的证据链｜AI 原生图表证据审计台",
+          "duration": 399,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i1.hdslb.com/bfs/storyff/_00001axkmg4co4ksw2riibzgbztbp3b_firsti.jpg",
+          "ctime": 1793266714
+        }
+      ],
+      "owner": {
+        "mid": 3747576356539644,
+        "name": "bili_10904084531",
+        "face": "https://i0.hdslb.com/bfs/face/member/noface.jpg"
+      }
+    },
+    "meta": {
+      "author": "bili_10904084531",
+      "og:title": "图证：一张截图，也能查清它的证据链｜AI 原生图表证据审计台_哔哩哔哩_bilibili",
+      "og:video:width": "1920",
+      "og:video:height": "1080",
+      "video:duration": "399"
+    },
+    "players": [
+      {
+        "duration": 399,
+        "currentTime": 6.890663,
+        "paused": false,
+        "readyState": 4,
+        "width": 640,
+        "height": 360,
+        "error": null
+      }
+    ]
+  },
+  "fullPlaybackVerified": false
+}

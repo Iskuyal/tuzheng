@@ -71,3 +71,5 @@ CI 运行文档/材料检查、类型检查、构建、行为/API、录制预算
 先检查导入路径、npm 命令、TypeScript 引用和 CI 产物，再更新文档索引及材料清单。运行 `docs:check`、`verify:materials`、相关测试、构建和默认/自定义端口验证。新提交重新生成候选锁，保留旧版本记录；本地链接存在、远端可访问和验收通过分别确认。
 
 2026-11-11正式包使用`docs/submission/closeout/create-formal-package.py --date 2026-11-11`，先验证同一干净SHA的固定包，再复制正式PDF、视频、源码和指南并检查哈希/CRC。输出在`.cache/submission-ready-2026-11-11/<SHA>/`，不上传。沿用现有npm、TypeScript和CI产物路径，无需新增编译引用；正式字段见[本轮指南](submission/formal-submit-guide-2026-11-11.md)。
+
+2026-11-15复核后使用`--date 2026-11-15`及同日期的指南/反馈说明，可加`--public-video-url <HTTPS播放页>`把已提供的真实视频链接写入校验清单；不代替访问检查。输出到`.cache/submission-ready-2026-11-15/<SHA>/`，旧包保留。Python打包入口和输出职责未变，npm、TypeScript及CI产物路径无需调整。
