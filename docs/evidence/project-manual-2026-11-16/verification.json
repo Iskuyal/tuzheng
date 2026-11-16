@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-16",
+  "pdf": {
+    "path": "docs/submission/tuzheng-project-manual.pdf",
+    "pages": 10,
+    "bytes": 775514,
+    "sha256": "0d013daf91b8977db6959fe5a0423fb090afbef2920e0d72c2b74c25047e6f3b"
+  },
+  "changes": [
+    "移除封面匿名版",
+    "删除正文匿名处理说明",
+    "补回已确认团队成员学校",
+    "Word与PDF标题不含匿名"
+  ],
+  "team": "岭南凤翔团队",
+  "members": [
+    "梁钦健",
+    "梁智量"
+  ],
+  "school": "岭南职业技术学院（清远校区）",
+  "renderer": "Microsoft Word native PDF export; bundled Poppler page images",
+  "visual": "all10 pages reviewed; cover and final page inspected at full page size",
+  "unchangedBodyPagePixelComparison": {
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": true,
+    "6": true,
+    "7": true,
+    "8": true,
+    "9": true
+  },
+  "modelRequests": 0,
+  "packageRole": "08_图证作品说明书.pdf, supplemental; original4page introduction still selected for form field6",
+  "preflight": {
+    "docs": {
+      "files": 187,
+      "links": 959,
+      "missing": 0
+    },
+    "materials": {
+      "files": 157,
+      "passed": true
+    },
+    "ports": {
+      "sources": [
+        "file",
+        "env"
+      ],
+      "pairs": [
+        [
+          3001,
+          5173
+        ],
+        [
+          3107,
+          5187
+        ]
+      ],
+      "passed": true,
+      "fakeKeysAndTempConfig": true
+    }
+  }
+}

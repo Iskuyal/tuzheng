@@ -73,3 +73,5 @@ CI 运行文档/材料检查、类型检查、构建、行为/API、录制预算
 2026-11-11正式包使用`docs/submission/closeout/create-formal-package.py --date 2026-11-11`，先验证同一干净SHA的固定包，再复制正式PDF、视频、源码和指南并检查哈希/CRC。输出在`.cache/submission-ready-2026-11-11/<SHA>/`，不上传。沿用现有npm、TypeScript和CI产物路径，无需新增编译引用；正式字段见[本轮指南](submission/formal-submit-guide-2026-11-11.md)。
 
 2026-11-15复核后使用`--date 2026-11-15`及同日期的指南/反馈说明，可加`--public-video-url <HTTPS播放页>`把已提供的真实视频链接写入校验清单；不代替访问检查。输出到`.cache/submission-ready-2026-11-15/<SHA>/`，旧包保留。Python打包入口和输出职责未变，npm、TypeScript及CI产物路径无需调整。
+
+11月16日新增docs/submission/tuzheng-project-manual的PDF、DOCX与drawio，清单收录PDF时正式打包器追加08号文件；无说明书的旧包仍保持原7项。文件计数动态计算，沿用既有npm、TypeScript和CI产物路径。outputs/仅保留本机文档草稿，排除于Git归档；正式材料使用docs/submission中的跟踪版本。

@@ -6,6 +6,7 @@ dist/
 dist-server/
 coverage/
 .cache/
+/outputs/
 .env
 .env.*
 !.env.example

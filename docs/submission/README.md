@@ -1,6 +1,6 @@
 # 当前提交材料与收尾事项
 
-更新：2026-11-15。当前正式提交以[今天上传指南](formal-submit-guide-2026-11-15.md)为准；11月11日旧包不含后续技术PDF重建和提交，今天使用新包，截止2026-11-18 15:00；新表单为SltUAlpn。分享已复核并修复来源链接/长图排版，介绍PDF4页、技术PDF18页。用户报告预参赛81分，正式上传及回执尚未完成。
+更新：2026-11-16。当前正式提交以[当前提交指南](formal-submit-guide-2026-11-16.md)为准；11月11日旧包不含后续技术PDF重建和提交，今天使用新包，截止2026-11-18 15:00；新表单为SltUAlpn。分享已复核并修复来源链接/长图排版，介绍PDF4页、技术PDF18页。用户报告预参赛81分，正式上传及回执尚未完成。
 
 以下保留前轮材料来源：h09已在新v2包明确季调口径，v1及旧判保留；本轮核对预指导与正式提交入口，具体操作见[预指导提交指南](pre-guidance-submit-guide.md)。有声视频及第二Windows确认见[交付更新](closeout/delivery-update-2026-10-28.json)。当前材料由 [materials.json](materials.json)选择；团队、访问、报名和停止核账的旧记录保留。
 
@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | 正式七项及反馈落实 | [上传指南](formal-submit-guide-2026-11-15.md)、[落实说明](reviewer-feedback-2026-11-15.md)、[本轮报告](../reviews/2026-11-15-pre-upload-recheck.md) | 新表单SltUAlpn；截止11月18日15:00；B站播放页已提供；网盘实际链接及正式回执待提供 |
 | 项目说明与运行 | [README](../../README.md)、[开发指南](../DEVELOPMENT.md) | 已写入岭南凤翔团队、梁钦健/梁智量、岭南职业技术学院（清远校区）和 C组；个人电话邮箱未提供 |
+| 作品说明书 | [10页PDF](tuzheng-project-manual.pdf)、[Word源稿](tuzheng-project-manual.docx)、[draw.io图源](tuzheng-project-manual.drawio) | 11月16日新增；移除匿名字样及说明，补回团队成员学校；新包08号文件，表单第6项仍用4页介绍 |
 | 正式作品介绍 | [4页PDF](tuzheng-project-introduction.pdf)、[HTML源](pre-guidance-introduction.html) | 2026-11-11按正式表单七项修订，含分享截图、81分的预参赛性质及原创说明 |
 | 赛事技术报告 | [PDF](web-match-competition-report.pdf)、[HTML 源](competition-report.html)、[重建记录](../evidence/formal-prep-2026-11-13/pdf-rebuild.json) | 18页；2026-11-13 按当前主题截图重建（1,539,022 字节，`9185b3c4…`），11-11 版作废；含分享功能、验证与边界 |
 | 正式提交核对表 | [今天七项对应](formal-submit-guide-2026-11-15.md)、[13日历史核对](formal-checklist-2026-11-13.md) | 团队/学校/PDF已具备，B站链接已提供；UID、手机号由本人填写，网盘链接及回执待提供 |

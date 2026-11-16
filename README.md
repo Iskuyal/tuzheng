@@ -51,7 +51,7 @@ npm run dev
 | 配音 | [九段时间轴与完整讲稿](docs/submission/demo-2026-10-18/voiceover.md)、[章节 SRT](docs/submission/demo-2026-10-18/chapters.srt) |
 | 赛事技术文档 | [18 页 PDF](docs/submission/web-match-competition-report.pdf)、[HTML 源](docs/submission/competition-report.html)，2026-11-13按当前主题截图重建，11月15日复核 |
 | 当前材料和人工待办 | [提交材料索引](docs/submission/README.md)、[交付包与第二环境回执](docs/submission/closeout/README.md) |
-| 正式省赛提交 | [4页作品介绍](docs/submission/tuzheng-project-introduction.pdf)、[11月15日上传指南](docs/submission/formal-submit-guide-2026-11-15.md)；正式表单截止11月18日15:00，每队仅提交一次 |
+| 正式省赛提交 | [4页作品介绍](docs/submission/tuzheng-project-introduction.pdf)、[11月16日提交指南](docs/submission/formal-submit-guide-2026-11-16.md)；正式表单截止11月18日15:00，每队仅提交一次 |
 | 公开视频 | [B站播放页](https://www.bilibili.com/video/BV1iKxF6bE3o/)，用户提供；页面标注6分39秒、1920×1080；不将平台转码文件当作本地MP4字节完全相同 |
 
 2026-10-18 实录使用当前生产页面和 DeepSeek 官方真实请求：7 次模型 HTTP，用量完整。这段实录展示产品操作；模型效果评测、CI、人工验收和真实读者收益另有各自的记录，见[证据索引](docs/evidence/README.md)。
@@ -90,3 +90,5 @@ npm run test:e2e
 技术标识和仓库名为 `tuzheng`。旧材料文件名中的 `web-match` 为历史标识，保留路径供追溯。
 
 正式省赛材料已于2026-11-15复核，以当日新生成的完整包为准；介绍文档、技术PDF和正式表单见[上传指南](docs/submission/formal-submit-guide-2026-11-15.md)。11月11日旧包没有11月13日重建后的报告及后续提交，不用于本轮上传。既有有声视频未展示新增分享功能；预参赛反馈不等于正式提交回执。
+
+2026-11-16新增[10页作品说明书](docs/submission/tuzheng-project-manual.pdf)，配有[Word稿](docs/submission/tuzheng-project-manual.docx)和[可编辑流程图](docs/submission/tuzheng-project-manual.drawio)。本轮提交包含该PDF，实际上传以[11月16日指南](docs/submission/formal-submit-guide-2026-11-16.md)为准，表单第6项仍用4页作品介绍。

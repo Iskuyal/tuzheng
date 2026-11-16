@@ -161,7 +161,14 @@
     "docs/evidence/pre-upload-2026-11-15/video-probe.json",
     "docs/evidence/pre-upload-2026-11-15/validation.json",
     "docs/evidence/pre-upload-2026-11-15/bilibili-complete-playback.json",
-    "docs/evidence/pre-upload-2026-11-15/bilibili-prompt-check.json"
+    "docs/evidence/pre-upload-2026-11-15/bilibili-prompt-check.json",
+    "docs/submission/tuzheng-project-manual.pdf",
+    "docs/submission/tuzheng-project-manual.docx",
+    "docs/submission/tuzheng-project-manual.drawio",
+    "docs/submission/formal-submit-guide-2026-11-16.md",
+    "docs/submission/reviewer-feedback-2026-11-16.md",
+    "docs/evidence/project-manual-2026-11-16/verification.json",
+    "docs/evidence/project-manual-2026-11-16/contact-sheet.jpg"
   ],
   "acceptanceRecord": "docs/submission/closeout/non-video-record-2026-10-23.json",
   "deliveryUpdateRecord": "docs/submission/closeout/delivery-update-2026-10-28.json"

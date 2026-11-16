@@ -55,6 +55,9 @@ mapping = {
     '05_运行与提交说明.md': f'docs/submission/formal-submit-guide-{args.date}.md',
     '06_评审意见落实说明.md': f'docs/submission/reviewer-feedback-{args.date}.md',
 }
+manual_path = 'docs/submission/tuzheng-project-manual.pdf'
+if any(item.get('sourcePath') == manual_path for item in base['files']):
+    mapping['08_图证作品说明书.pdf'] = manual_path
 entries = []
 for name, source in mapping.items():
     artifact_path = f'materials/{source}' if source else 'source.zip'
@@ -91,4 +94,4 @@ with zipfile.ZipFile(archive) as bundle:
 archive_hash = digest(archive)
 (directory / 'ZIP-SHA256.txt').write_text(f'{archive_hash}  {archive.name}\n', encoding='utf-8')
 print(json.dumps({'path': str(archive), 'bytes': archive.stat().st_size, 'sha256': archive_hash,
-                  'sourceSha': sha, 'files': 7, 'formSubmitted': False}, ensure_ascii=False, indent=2))
+                  'sourceSha': sha, 'files': len(mapping) + 1, 'formSubmitted': False}, ensure_ascii=False, indent=2))
